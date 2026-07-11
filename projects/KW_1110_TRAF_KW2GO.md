@@ -1,7 +1,7 @@
 ---
 title: "KW-1110 (Inhibition of host TRAFs by virus) — KW2GO remapping"
 maturity: SCOPING
-tags: [KW2GO, OBSOLETION]
+tags: [PIPELINE, OBSOLETION]
 ---
 
 # KW-1110 (Inhibition of host TRAFs by virus) — KW2GO remapping

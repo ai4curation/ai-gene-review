@@ -1,0 +1,3364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MAL33 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>MAL33</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P38157" target="_blank" class="term-link">
+                        P38157
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Saccharomyces cerevisiae</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "MAL33";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P38157" data-a="DESCRIPTION: MAL33 (systematic name YBR297W; synonym MAL3R) is ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>MAL33 (systematic name YBR297W; synonym MAL3R) is a 468-residue Saccharomyces cerevisiae protein belonging to the fungal Zn2Cys6 (GAL4-type binuclear zinc cluster) family of transcription factors. It carries a canonical N-terminal Zn(2)-C6 fungal-type DNA-binding domain (residues 8-34), a predicted nuclear localization signal (residues 41-49), and a central fungal-transcription-factor middle homology region (Pfam Fungal_trans / IPR007219). On domain grounds the zinc cluster is expected to coordinate two structural zinc ions and to bind sequence-specific (CGG-triplet-containing) DNA, consistent with a role as a nuclear, RNA polymerase II sequence-specific DNA-binding transcription factor. MAL33 is one of the paralogous MAL-activator genes of the S. cerevisiae MAL multigene loci: each MAL locus is a complex of three genes encoding a MAL-activator, a maltase, and a maltose permease, and MAL33 is the activator gene of the telomere-associated MAL3 locus on chromosome II (together with the MAL31 permease and MAL32 maltase). The prototypical, well-characterized MAL-activator is Mal63p of the MAL6 locus, which mediates maltose-inducible transcription of the MAL structural genes through a transactivation region and a C-terminal maltose-responsive regulatory domain. MAL33 is 71% identical to Mal63p, but the MAL33 allele of the S288C reference strain is reported to be a non-functional MAL-activator (while UniProt annotates the S288C ORF as intact); consequently MAL33&#39;s own DNA targets, DNA-binding sites, inducing condition, and specific biological role have not been experimentally established, and its family-level maltose-regulon function is inferred from its functional paralogs rather than measured for MAL33 itself.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000981" target="_blank" class="term-link">
+                                    GO:0000981
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-binding transcription factor activity, RNA polymerase II-specific</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P38157" data-a="GO:0000981" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO electronic transfer of RNA-Pol-II DNA-binding transcription factor activity from the Zn2Cys6/GAL4-type DNA-binding domain (IPR001138, IPR020448, IPR036864).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> MAL33 carries an intact N-terminal Zn(2)-C6 fungal-type DNA-binding domain (residues 8-34) and belongs to the fungal Zn2Cys6 MAL-activator family, so a sequence-specific RNA-Pol-II DNA-binding transcription factor activity is the most defensible molecular-function statement. This is a domain/family capability; the specific target genes and DNA sites of MAL33, and whether the non-functional S288C allele actually activates transcription, are recorded as knowledge gaps.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    GO_REF:0000002
+
+                                </span>
+
+                                <div class="support-text">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003677" target="_blank" class="term-link">
+                                    GO:0003677
+                                </a>
+                            </span>
+                            <span class="term-label">DNA binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P38157" data-a="GO:0003677" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO electronic transfer of the generic DNA binding term from the Zn2Cys6 DNA-binding domain (IPR007219, IPR020448).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct but generic. DNA binding is a direct property of the Zn2Cys6 domain; it is the parent of the more informative sequence-specific / RNA-Pol-II DNA-binding transcription-factor terms also annotated. Retained as a valid, if non-specific, domain-level term.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P38157" data-a="GO:0005634" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated cellular-component annotation placing MAL33 in the nucleus (UniProtKB-SubCell SL-0191 plus InterPro), consistent with the predicted NLS and DNA-binding TF classification.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> A nuclear site of action is the parsimonious, domain-consistent location for a Zn2Cys6 DNA-binding transcription factor with a predicted nuclear localization signal (residues 41-49). There is no direct experimental localization for MAL33, but nucleus is the appropriate inferred compartment.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006351" target="_blank" class="term-link">
+                                    GO:0006351
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-templated transcription</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P38157" data-a="GO:0006351" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO electronic transfer of the generic DNA-templated transcription process from the fungal-TF domains (IPR007219).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Broadly correct for a transcription factor but very generic (a high-level parent of the regulation-of-transcription terms). Retained as a non-core, domain-level process rather than a demonstrated MAL33-specific function.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006355" target="_blank" class="term-link">
+                                    GO:0006355
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of DNA-templated transcription</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P38157" data-a="GO:0006355" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO electronic transfer of a generic transcription-regulation process from the Zn2Cys6/GAL4-type and fungal-TF domains (IPR001138, IPR020448, IPR036864).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Domain-appropriate and correct in kind, but generic (the DNA-templated parent of the RNA-Pol-II regulation term). No MAL33-specific target gene or regulatory event is demonstrated; kept as non-core.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006357" target="_blank" class="term-link">
+                                    GO:0006357
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of transcription by RNA polymerase II</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000108
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P38157" data-a="GO:0006357" data-r="GO_REF:0000108" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Logical-inference (GO_REF:0000108) derivation of the RNA-Pol-II regulation process from the RNA-Pol-II DNA-binding transcription factor activity (GO:0000981).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The most specific of the process terms and appropriate for a Zn2Cys6 RNA-Pol-II TF on family grounds, but still an inferred, generic capability: the specific genes MAL33 regulates, the inducing condition, and whether the non-functional S288C allele actually performs this role are undetermined. Retained as a non-core, domain-derived process; the maltose-regulon specificity is written up as the primary knowledge gap.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                                    GO:0008270
+                                </a>
+                            </span>
+                            <span class="term-label">zinc ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P38157" data-a="GO:0008270" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO electronic transfer of zinc ion binding from the Zn2Cys6 binuclear zinc-cluster domain (IPR001138, IPR007219, IPR020448, IPR036864).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> MAL33 carries a canonical fungal Zn(2)-C6 binuclear zinc cluster whose six cysteines coordinate two structural zinc ions; zinc binding is a robust, well-supported domain-level property.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    GO_REF:0000002
+
+                                </span>
+
+                                <div class="support-text">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                                    GO:0008270
+                                </a>
+                            </span>
+                            <span class="term-label">zinc ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">RCA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30358795" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:30358795
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The cellular economy of the Saccharomyces cerevisiae zinc pr...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P38157" data-a="GO:0008270" data-r="PMID:30358795" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reviewed-computational-analysis (RCA) inclusion of MAL33 in the S. cerevisiae zinc proteome (Wang et al. 2018), based on combined domain and motif searches for zinc-binding proteins.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Independent computational support for zinc binding, concordant with the Zn2Cys6 domain and with the InterPro zinc-binding annotation. Not a direct MAL33 metal-binding measurement, but a reasonable, domain-consistent inference.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30358795" target="_blank" class="term-link">
+                                        PMID:30358795
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The yeast zinc proteome of 582 known or potential zinc-binding proteins was identified using a bioinformatics analysis that combined global domain searches with local motif searches.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003700" target="_blank" class="term-link">
+                                    GO:0003700
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-binding transcription factor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10447589" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10447589
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Functional domain analysis of the Saccharomyces MAL-activato...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P38157" data-a="GO:0003700" data-r="PMID:10447589" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SGD ISS (inferred from sequence similarity) annotation classifying MAL33 as a DNA-binding transcription factor, with_from SGD:S000029659 (MAL63), the functional prototype MAL-activator characterized in PMID:10447589.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The molecular activity — a fungal Zn2Cys6 DNA-binding transcription factor — is well supported by the intact Zn(2)-C6 domain and the MAL-activator family membership, and is the most defensible MF statement for MAL33. It rests on sequence similarity to the functional Mal63p, not on a direct MAL33 assay; because the S288C MAL33 allele is a non-functional activator, the specific transcriptional-activation outcome for MAL33 itself remains a knowledge gap.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10447589" target="_blank" class="term-link">
+                                        PMID:10447589
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the sequence-specific DNA-binding domain of Mal63p is contained in residues 1-100</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10447589" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10447589
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Functional domain analysis of the Saccharomyces MAL-activato...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P38157" data-a="GO:0005634" data-r="PMID:10447589" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SGD ISS annotation that MAL33 is active in the nucleus, inferred by sequence similarity to the functional MAL-activator Mal63p (with_from SGD:S000029659).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with MAL33&#39;s DNA-binding zinc cluster, predicted NLS, and MAL-activator family classification. Nuclear action is the expected, domain-consistent location; retained as a reasonable inferred compartment (no direct MAL33 localization assay exists).
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006355" target="_blank" class="term-link">
+                                    GO:0006355
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of DNA-templated transcription</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10447589" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10447589
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Functional domain analysis of the Saccharomyces MAL-activato...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P38157" data-a="GO:0006355" data-r="PMID:10447589" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SGD ISS annotation that MAL33 is involved in regulation of DNA-templated transcription, inferred by sequence similarity to the functional MAL-activator Mal63p (with_from SGD:S000029659).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Family- and domain-appropriate as a generic capability, but it transfers the MAL-activator role from the functional Mal63p to MAL33 by homology. The specific MAL structural genes MAL33 would regulate, the maltose-inducing condition, and whether the non-functional S288C MAL33 allele actually activates transcription are all undetermined. Retained as a non-core, inferred process; the maltose-regulon specificity is captured as the primary knowledge gap.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Fungal Zn2Cys6 (GAL4-type binuclear zinc cluster) sequence-specific DNA-binding transcription factor. MAL33&#39;s intact N-terminal Zn(2)-C6 domain (residues 8-34) is expected to coordinate two structural zinc ions and to bind sequence-specific DNA, giving MAL33 the molecular capacity to act as an RNA polymerase II DNA-binding transcription factor in the nucleus (predicted NLS at residues 41-49). This is a domain- and homology-supported capability shared with the MAL-activator family; the specific target genes, DNA sites, inducing condition, and regulatory outcome for MAL33 have not been experimentally established, and the S288C MAL33 allele is reported to be a non-functional MAL-activator.</h3>
+                <span class="vote-buttons" data-g="P38157" data-a="FUNCTION: Fungal Zn2Cys6 (GAL4-type binuclear zinc cluster) ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000981" target="_blank" class="term-link">
+                            DNA-binding transcription factor activity, RNA polymerase II-specific
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006357" target="_blank" class="term-link">
+                                regulation of transcription by RNA polymerase II
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10447589" target="_blank" class="term-link">
+                                PMID:10447589
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">the sequence-specific DNA-binding domain of Mal63p is contained in residues 1-100</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                        <div class="finding-text">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000108.md" target="_blank" class="term-link">
+                            GO_REF:0000108
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic assignment of GO terms using logical inference, based on on inter-ontology links</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10447589" target="_blank" class="term-link">
+                            PMID:10447589
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Functional domain analysis of the Saccharomyces MAL-activator.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Functional-domain (LexA-fusion deletion) analysis of the Saccharomyces MAL-activator, performed on Mal63p: DNA-binding domain in residues 1-100, a functional core including the transactivation domain in residues 60-283, an inhibitory region in residues 251-299, and a C-terminal maltose-responsive domain that relieves the inhibition, giving a model of maltose-inducible autoregulation.</div>
+
+                        <div class="finding-text">"Our results indicate that the sequence-specific DNA-binding domain of Mal63p is contained in residues 1-100; that residues 60-283 constitute a functional core region including the transactivation domain; that residues 251-299 are required to inhibit the activation function of Mal63p; and that the rest of the C-terminal region of the protein contains a maltose-responsive domain"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/30358795" target="_blank" class="term-link">
+                            PMID:30358795
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The cellular economy of the Saccharomyces cerevisiae zinc proteome.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Bioinformatic definition of the S. cerevisiae zinc proteome (582 known or potential zinc-binding proteins) by combined domain and motif searches, within which MAL33 is included as a zinc-binding protein consistent with its Zn2Cys6 domain.</div>
+
+                        <div class="finding-text">"The yeast zinc proteome of 582 known or potential zinc-binding proteins was identified using a bioinformatics analysis that combined global domain searches with local motif searches."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/1441745" target="_blank" class="term-link">
+                            PMID:1441745
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The telomere-associated MAL3 locus of Saccharomyces is a tandem array of repeated genes.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The MAL3 locus of S. cerevisiae (chromosome II, telomere-associated) is a tandem array of repeated MAL genes; MAL33 is the MAL-activator gene of this multigene complex, alongside the MAL31 permease and MAL32 maltase genes.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is the S288C reference-strain MAL33 allele a functional MAL-activator, and if not, which sequence changes relative to the functional Mal63p inactivate it?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P38157" data-a="Q: Is the S288C reference-strain MAL33 allele a funct..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which genes does MAL33 directly bind and regulate, at which MAL upstream activation sequences, and under what inducing condition (maltose)?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P38157" data-a="Q: Which genes does MAL33 directly bind and regulate,..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How does MAL33 relate functionally to the other MAL-activator paralogs, including the functional Mal63p and the other non-functional reference-strain allele MAL13?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P38157" data-a="Q: How does MAL33 relate functionally to the other MA..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Assay maltose-inducible transactivation by the S288C MAL33 allele using a MAL-UAS reporter and quantification of endogenous MAL31/MAL32 induction, with a functional MAL63 as positive control, to determine whether MAL33 has any activator function.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="P38157" data-a="EXPERIMENT: Assay maltose-inducible transactivation by the S28..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> ChIP-seq/ChIP-exo of epitope-tagged MAL33 (in maltose vs glucose) to identify direct in vivo binding sites and target genes, if any.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="P38157" data-a="EXPERIMENT: ChIP-seq/ChIP-exo of epitope-tagged MAL33 (in malt..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Domain-swap and point-mutant analysis between MAL33 and the functional Mal63p to localize the sequence changes responsible for the reported loss of MAL33 function in the reference strain.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="P38157" data-a="EXPERIMENT: Domain-swap and point-mutant analysis between MAL3..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Trans-complementation tests measuring whether MAL33 (alone or overexpressed) restores maltose fermentation to a MAL-activator-null strain, benchmarked against MAL63, to test residual/conditional activity and redundancy.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="P38157" data-a="EXPERIMENT: Trans-complementation tests measuring whether MAL3..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> Whether the MAL33 allele of the S. cerevisiae S288C reference strain is a functional MAL-activator at all is the central unknown: it is reported to be non-functional, so its capacity to activate maltose-inducible transcription of the MAL structural genes has not been demonstrated for MAL33 itself. The direct DNA target genes, the specific MAL upstream activation sequence(s) MAL33 occupies, and the inducing condition are undetermined for MAL33.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">BP_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> MAL33 is a bona fide fungal Zn2Cys6 MAL-activator-family protein with an intact N-terminal Zn(2)-C6 DNA-binding domain (residues 8-34), a predicted NLS (41-49), and a fungal-TF middle homology region; on these grounds it can bind zinc, bind sequence-specific DNA, and act as a nuclear RNA-Pol-II transcription factor. It is the activator gene of the MAL3 locus (with MAL31 permease and MAL32 maltase). The functional, maltose-inducible activation mechanism — DNA-binding domain, transactivation region, inhibitory region, and C-terminal maltose-responsive domain — has been mapped only for the paralogous, functional Mal63p (MAL6 locus), from which all of MAL33&#39;s process and TF-activity annotations are transferred by sequence similarity (ISS) or domain inference (IEA). MAL33 is ~71% identical to Mal63p, yet the S288C allele does not confer maltose fermentation. No direct functional assay of MAL33 (DNA binding, target identification, transactivation) exists.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> MAL33 exemplifies a gene whose family role (maltose-regulon activation) is textbook for its functional paralogs but whose own biological activity is unestablished and, in the reference strain, apparently lost. Resolving whether the S288C MAL33 allele retains any activator function — and if not, which sequence changes inactivate it relative to Mal63p — would clarify the extent of allelic MAL-activator degeneration in the reference genome and prevent over-attribution of a demonstrated maltose-regulon role to MAL33 based purely on homology.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Directly test the S288C MAL33 allele: express tagged MAL33 and assay maltose-inducible transactivation of a MAL-UAS reporter and of the endogenous MAL31/MAL32 genes; ChIP of tagged MAL33 to map in vivo binding sites; and compare against a functional MAL63 control. If MAL33 is inactive, domain-swap / point-mutant analysis against Mal63p to localize the inactivating sequence changes.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"MAL63 of the MAL6 locus and its homologues at the other MAL loci encode transcription activators required for the maltose-inducible expression of the MAL structural genes"</em> — PMID:10447589</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The functional relationship of MAL33 to the other MAL-activator paralogs is uncharacterized: whether MAL33 is redundant with, distinct from, or (in S288C) simply a degenerate copy of the functional activators (Mal63p and relatives), and how it relates to MAL13 — the other non-functional MAL-activator allele of the reference strain — has not been tested directly for MAL33.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">RESIDUAL_SUBGAP</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> S288C-derived strains carry two MAL loci (MAL1 and MAL3) whose activator genes (MAL13 and MAL33) are both reported as non-functional; the encoded proteins are ~71% identical to the functional Mal63p, and the maltose-non-inducible phenotype of an S288C-isogenic strain is complemented in trans by a plasmid-borne functional MAL63. MAL33 is thus known at the sequence and locus level, but no genetic or biochemical study has directly tested MAL33&#39;s redundancy with, or divergence from, the functional activators.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Understanding whether MAL33 is a spent duplicate or retains a conditional/partial activity would determine whether MAL33 should carry a maltose-regulon function at all in the reference strain, and would inform the broader question of how the tandemly arrayed, telomere-associated MAL loci evolve and degenerate.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Combinatorial complementation/epistasis: test whether S288C MAL33 (and MAL13) can restore maltose fermentation to a mal-activator-null background alone or when overexpressed, and compare directly with functional MAL63; sequence/domain-swap analysis to map divergence responsible for loss of function relative to Mal63p.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"MAL63 of the MAL6 locus and its homologues at the other MAL loci encode transcription activators required for the maltose-inducible expression of the MAL structural genes"</em> — PMID:10447589</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(MAL33-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P38157" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">MAL33 (MAL3R / YBR297W) — Maltose Fermentation Regulatory Protein in *Saccharomyces cerevisiae*</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">28 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-05T03:36:36.765398</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="MAL33-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="MAL33-deep-research-falcon_artifacts/artifact-01.md" class="term-link">Edison artifact artifact-01</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="mal33-mal3r-ybr297w-maltose-fermentation-regulatory-protein-in-saccharomyces-cerevisiae">MAL33 (MAL3R / YBR297W) — Maltose Fermentation Regulatory Protein in <em>Saccharomyces cerevisiae</em></h1>
+<h2 id="1-gene-identity-and-protein-overview">1. Gene Identity and Protein Overview</h2>
+<p>MAL33 (systematic name YBR297W; synonym MAL3R) encodes the maltose fermentation regulatory protein Mal33p in <em>Saccharomyces cerevisiae</em> (strain S288c). Mal33p belongs to the MAL13 family of Zn(II)₂Cys₆ zinc cluster transcription factors, a fungal-specific class of transcriptional regulators characterized by a conserved motif of six cysteine residues (CysX₂CysX₆CysX₅₋₁₂CysX₂CysX₆₋₈Cys) that coordinates two zinc ions and forms a binuclear cluster DNA-binding domain (macpherson2006afungalfamily pages 1-2, macpherson2006afungalfamily pages 8-9). The <em>S. cerevisiae</em> genome encodes over 50 known or putative zinc cluster proteins, with Gal4p being the best-characterized founding member of the family (macpherson2006afungalfamily pages 1-2). The MAL activators, including Mal33p and Mal63p, are classified alongside Gal4p as C6 zinc cluster transcription factors that bind DNA sites containing CGG triplets (hahn2011transcriptionalregulationin pages 3-4).</p>
+<h2 id="2-genomic-context-the-mal-locus-architecture">2. Genomic Context: The MAL Locus Architecture</h2>
+<p>MAL33 resides at the MAL3 locus, one of up to five unlinked MAL loci (MAL1, MAL2, MAL3, MAL4, MAL6) found in <em>S. cerevisiae</em> (bali2003thehsp90molecular pages 1-2). Each canonical MAL locus consists of three functionally linked genes: <strong>MALx1</strong> (encoding a maltose permease, a proton symporter that transports maltose across the plasma membrane), <strong>MALx2</strong> (encoding maltase/α-glucosidase, which hydrolyzes intracellular maltose to two glucose molecules), and <strong>MALx3</strong> (encoding the MAL-activator transcription factor) (fazcortez2025maltoseandmaltotriose pages 3-5, bali2003thehsp90molecular pages 1-2). The presence of any single complete MAL locus is sufficient for maltose fermentation (bali2003thehsp90molecular pages 1-2).</p>
+<p>At the MAL3 locus specifically, the three genes are MAL31 (maltose permease), MAL32 (maltase), and MAL33 (the MAL-activator/regulatory protein) (ran2008hsp90hsp70chaperonemachine pages 1-2, nijkamp2012denovosequencing pages 5-7). The MALx1 and MALx2 genes share a bidirectional promoter of approximately 0.9 kb containing two TATA boxes, two Mig1p binding sites, three MAL-activator binding sites, and 147-bp repeat elements (fazcortez2025maltoseandmaltotriose pages 5-7). This promoter architecture allows coordinated, divergent transcription of the permease and maltase genes under the control of the MAL-activator protein (fazcortez2025maltoseandmaltotriose pages 5-7, bali2003thehsp90molecular pages 1-2).</p>
+<p>The MAL loci are located in subtelomeric chromosomal regions, which are prone to recombination and rearrangement, leading to extensive copy number variation among strains (fazcortez2025maltoseandmaltotriose pages 3-5, bali2003thehsp90molecular pages 1-2). The MAL1 locus on chromosome VII is considered the progenitor, with other loci arising through duplication and dispersal events (fazcortez2025maltoseandmaltotriose pages 5-7). In CEN.PK113-7D, a commonly used industrial laboratory strain, the MAL33 region is duplicated relative to S288c, as confirmed by Southern blot analysis (nijkamp2012denovosequencing pages 3-5).</p>
+<p>The following table summarizes the canonical MAL locus organization:</p>
+<table>
+<thead>
+<tr>
+<th>Locus</th>
+<th>Gene (MALx1/MALx2/MALx3)</th>
+<th>Systematic Name (where known)</th>
+<th>Protein/Function</th>
+<th>Notes on functionality in different strains</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MAL1</td>
+<td>MAL11 (MALx1)</td>
+<td>AGT1 / MAL11</td>
+<td>Maltose permease; plasma-membrane transporter for maltose uptake (ran2008hsp90hsp70chaperonemachine pages 2-3, ran2008hsp90hsp70chaperonemachine pages 1-2, bali2003thehsp90molecular pages 1-2)</td>
+<td>Present at MAL1; part of canonical 3-gene MAL locus. In W303, the locus carries defective regulatory capacity because mal13 is nonfunctional; structural genes can still be complemented by a functional activator supplied in trans (ran2008hsp90hsp70chaperonemachine pages 2-3, ran2008hsp90hsp70chaperonemachine pages 1-2)</td>
+</tr>
+<tr>
+<td>MAL1</td>
+<td>MAL12 (MALx2)</td>
+<td>not specified in retrieved sources</td>
+<td>Maltase / α-glucosidase; hydrolyzes intracellular maltose to glucose (ran2008hsp90hsp70chaperonemachine pages 2-3, bali2003thehsp90molecular pages 1-2)</td>
+<td>Canonical structural gene of MAL1. Functional contribution depends on presence of a working MAL activator; in some lab strains MAL1 regulation is impaired by nonfunctional mal13 (ran2008hsp90hsp70chaperonemachine pages 2-3)</td>
+</tr>
+<tr>
+<td>MAL1</td>
+<td>MAL13 (MALx3)</td>
+<td>not specified in retrieved sources</td>
+<td>MAL activator family Zn2Cys6 transcription factor; positive regulator of MAL structural genes (family assignment) (fazcortez2025maltoseandmaltotriose pages 3-5, macpherson2006afungalfamily pages 8-9)</td>
+<td>In commonly used laboratory strains such as W303/JN516/5B6, mal13 is a nonfunctional homolog of MAL63 (ran2008hsp90hsp70chaperonemachine pages 2-3)</td>
+</tr>
+<tr>
+<td>MAL2</td>
+<td>MAL21 (MALx1)</td>
+<td>not specified in retrieved sources</td>
+<td>Maltose permease (canonical MALx1 transporter role) (fazcortez2025maltoseandmaltotriose pages 5-7, nijkamp2012denovosequencing pages 5-7)</td>
+<td>MAL2 is one of the canonical unlinked MAL loci. In CEN.PK strains, MAL2-related architecture differs from S288C and includes the MAL23 mutant allele MAL2-8C associated with partial derepression (fazcortez2025maltoseandmaltotriose pages 3-5, nijkamp2012denovosequencing pages 5-7)</td>
+</tr>
+<tr>
+<td>MAL2</td>
+<td>MAL22 (MALx2)</td>
+<td>not specified in retrieved sources</td>
+<td>Maltase / α-glucosidase (canonical MALx2 hydrolase role) (fazcortez2025maltoseandmaltotriose pages 5-7, nijkamp2012denovosequencing pages 5-7)</td>
+<td>Structural MAL2 gene; expression depends on MAL activator and carbon-source regulation (fazcortez2025maltoseandmaltotriose pages 5-7, hu2000analysisofthe pages 1-2)</td>
+</tr>
+<tr>
+<td>MAL2</td>
+<td>MAL23 (MALx3)</td>
+<td>not specified in retrieved sources</td>
+<td>MAL activator family Zn2Cys6 transcription factor; positive regulator of MAL genes (fazcortez2025maltoseandmaltotriose pages 3-5, macpherson2006afungalfamily pages 8-9)</td>
+<td>MAL23 is structurally distinct from MAL1 and MAL3 regulators in S288C-related comparisons; in CEN.PK, mutant allele MAL2-8C causes partial derepression without maltose (nijkamp2012denovosequencing pages 5-7)</td>
+</tr>
+<tr>
+<td>MAL3</td>
+<td>MAL31 (MALx1)</td>
+<td>not specified in retrieved sources</td>
+<td>Maltose permease; transporter for maltose uptake (ran2008hsp90hsp70chaperonemachine pages 1-2, bali2003thehsp90molecular pages 1-2)</td>
+<td>Canonical MAL3 structural gene. Duplicated in CEN.PK113-7D relative to S288C in one analyzed study (nijkamp2012denovosequencing pages 3-5)</td>
+</tr>
+<tr>
+<td>MAL3</td>
+<td>MAL32 (MALx2)</td>
+<td>not specified in retrieved sources</td>
+<td>Maltase / α-glucosidase; hydrolyzes maltose intracellularly (ran2008hsp90hsp70chaperonemachine pages 1-2, bali2003thehsp90molecular pages 1-2)</td>
+<td>Canonical MAL3 structural gene. Also duplicated in CEN.PK113-7D relative to S288C (nijkamp2012denovosequencing pages 3-5)</td>
+</tr>
+<tr>
+<td>MAL3</td>
+<td>MAL33 (MALx3)</td>
+<td>YBR297W (from target identity)</td>
+<td>Maltose fermentation regulatory protein; MAL activator-family Zn2Cys6 transcription factor predicted to activate MAL structural genes (nijkamp2012denovosequencing pages 5-7, macpherson2006afungalfamily pages 8-9, hahn2011transcriptionalregulationin pages 3-4)</td>
+<td>Critical ambiguity: in several widely used laboratory strains (e.g., W303), mal33 is a nonfunctional homolog of MAL63, whereas the UniProt target here is MAL33/YBR297W from S288C and is annotated as the MAL3 regulatory protein. CEN.PK113-7D shows duplication of MAL33-region genes relative to S288C (ran2008hsp90hsp70chaperonemachine pages 2-3, bali2003thehsp90molecular pages 2-2, nijkamp2012denovosequencing pages 5-7, nijkamp2012denovosequencing pages 3-5)</td>
+</tr>
+<tr>
+<td>MAL4</td>
+<td>MAL41 (MALx1)</td>
+<td>not specified in retrieved sources</td>
+<td>Maltose permease (canonical MALx1 transporter role) (fazcortez2025maltoseandmaltotriose pages 3-5, bali2003thehsp90molecular pages 1-2)</td>
+<td>Recognized as one of the five canonical unlinked MAL loci; subtelomeric organization contributes to rearrangement and copy-number variation among strains (fazcortez2025maltoseandmaltotriose pages 3-5, bali2003thehsp90molecular pages 1-2)</td>
+</tr>
+<tr>
+<td>MAL4</td>
+<td>MAL42 (MALx2)</td>
+<td>not specified in retrieved sources</td>
+<td>Maltase / α-glucosidase (canonical MALx2 hydrolase role) (fazcortez2025maltoseandmaltotriose pages 3-5, bali2003thehsp90molecular pages 1-2)</td>
+<td>Canonical MAL4 structural gene; strain-specific presence/function may vary because MAL loci are subtelomeric and rearrangement-prone (fazcortez2025maltoseandmaltotriose pages 3-5, bali2003thehsp90molecular pages 1-2)</td>
+</tr>
+<tr>
+<td>MAL4</td>
+<td>MAL43 (MALx3)</td>
+<td>not specified in retrieved sources</td>
+<td>MAL activator family Zn2Cys6 transcription factor (fazcortez2025maltoseandmaltotriose pages 3-5, macpherson2006afungalfamily pages 8-9)</td>
+<td>Functional constitutive allele MAL43-C has been used experimentally to complement strains lacking functional endogenous MAL activators (ran2008hsp90hsp70chaperonemachine pages 2-3)</td>
+</tr>
+<tr>
+<td>MAL6</td>
+<td>MAL61 (MALx1)</td>
+<td>not specified in retrieved sources</td>
+<td>Maltose permease; transporter for maltose uptake (bali2003thehsp90molecular pages 1-2, wu1998multipleregulatoryproteins pages 1-2)</td>
+<td>Structural gene of MAL6; often used as a reference MAL promoter/structural gene pair in regulatory studies (wu1998multipleregulatoryproteins pages 1-2)</td>
+</tr>
+<tr>
+<td>MAL6</td>
+<td>MAL62 (MALx2)</td>
+<td>not specified in retrieved sources</td>
+<td>Maltase / α-glucosidase; hydrolyzes maltose to glucose (bali2003thehsp90molecular pages 1-2, wu1998multipleregulatoryproteins pages 1-2)</td>
+<td>Structural gene of MAL6; its promoter is a major readout for MAL activator function and glucose repression (gancedo1998yeastcarboncatabolite pages 7-7, wu1998multipleregulatoryproteins pages 1-2)</td>
+</tr>
+<tr>
+<td>MAL6</td>
+<td>MAL63 (MALx3)</td>
+<td>not specified in retrieved sources</td>
+<td>Functional MAL activator; Zn2Cys6 transcription factor that activates MAL gene expression in response to maltose (hu2000analysisofthe pages 1-2, bali2003thehsp90molecular pages 1-2, hahn2011transcriptionalregulationin pages 3-4)</td>
+<td>Best-characterized functional MAL activator. In strains with nonfunctional mal13/mal33, plasmid-borne MAL63 restores induction of MAL structural genes and maltose fermentation (ran2008hsp90hsp70chaperonemachine pages 2-3)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the canonical three-gene organization of the five MAL loci in Saccharomyces cerevisiae and highlights important strain-dependent differences, especially the frequent nonfunctionality of MAL13/MAL33 in some laboratory strains versus the functional MAL63 activator.</em></p>
+<h2 id="3-primary-function-transcriptional-activation-of-maltose-metabolism-genes">3. Primary Function: Transcriptional Activation of Maltose Metabolism Genes</h2>
+<h3 id="31-mechanism-of-transcriptional-activation">3.1 Mechanism of Transcriptional Activation</h3>
+<p>The primary function of Mal33p is to serve as a DNA-binding transcription activator that drives expression of the MAL structural genes (MALx1 and MALx2) in response to maltose (fazcortez2025maltoseandmaltotriose pages 3-5, macpherson2006afungalfamily pages 8-9, macpherson2006afungalfamily pages 7-8). The MALx3-encoded activator enables maltose permease and maltase expression when maltose is present in the environment, while this expression is inactivated by glucose (fazcortez2025maltoseandmaltotriose pages 3-5).</p>
+<p>The best-characterized family member, Mal63p (from the MAL6 locus), is a 470-residue protein with three functionally distinct domains, which are expected to be conserved in Mal33p due to their high homology (bali2003thehsp90molecular pages 1-2, macpherson2006afungalfamily pages 8-9):</p>
+<ul>
+<li>
+<p><strong>N-terminal Zn₂Cys₆ DNA-binding domain</strong> (~residues 60–100): Contains the six-cysteine zinc finger motif characteristic of the C6 zinc cluster family. This domain binds to promoter DNA at MAL target gene regulatory sequences (bali2003thehsp90molecular pages 1-2). C6 proteins typically bind as dimers to symmetric DNA sites containing CGG triplets, with the orientation and spacing of these triplets being the primary determinants of specificity (hahn2011transcriptionalregulationin pages 3-4).</p>
+</li>
+<li>
+<p><strong>Transcription activation domain</strong> (~residues 60–250): Responsible for recruiting the basal transcription machinery and driving transcriptional output once the activator is in its DNA-binding competent state (bali2003thehsp90molecular pages 1-2).</p>
+</li>
+<li>
+<p><strong>C-terminal regulatory domain</strong> (~residues 250–470): Acts as a negative regulator of MAL-activator function and contains the maltose-sensing determinants (bali2003thehsp90molecular pages 1-2, bali2003thehsp90molecular pages 2-2). Three specific negative regulatory clusters have been mapped to residues 250–307, 343–357, and 419–461 (bali2003thehsp90molecular pages 2-2, ran2008hsp90hsp70chaperonemachine pages 7-8). A maltose-sensing domain maps to residues 244–316 (ran2008hsp90hsp70chaperonemachine pages 11-12). Constitutive activator mutants lacking this domain are insensitive to glucose inhibition, demonstrating its role in signal-responsive regulation (hu2000analysisofthe pages 8-9).</p>
+</li>
+</ul>
+<p>The domain architecture of the MAL activator family is summarized below:</p>
+<table>
+<thead>
+<tr>
+<th>Domain/Region</th>
+<th style="text-align: right;">Residue Range (based on Mal63p)</th>
+<th>Function</th>
+<th>Key Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Zn2Cys6 DNA-binding domain</td>
+<td style="text-align: right;">~60-100</td>
+<td>Fungal C6 zinc-cluster DNA-binding module that binds promoter DNA at MAL target genes and defines MAL activators as transcription factors of the Zn2Cys6 family; MAL63 is a member of the C6 family and MAL33/MAL13 are homologous MAL-locus activators.</td>
+<td>Mal63p contains an N-terminal six-cysteine zinc finger DNA-binding domain at residues 60-100; C6 proteins bind DNA via two Zn ions coordinated by six cysteines and typically recognize CGG-containing sites (bali2003thehsp90molecular pages 1-2, macpherson2006afungalfamily pages 8-9, hahn2011transcriptionalregulationin pages 3-4, macpherson2006afungalfamily pages 1-2)</td>
+</tr>
+<tr>
+<td>Transcription activation domain</td>
+<td style="text-align: right;">~60-250</td>
+<td>Activates transcription of MAL structural genes once the activator is in its competent state; couples DNA recognition to transcriptional induction.</td>
+<td>Mal63p has a transcription activation domain spanning residues 60-250, functionally distinct from the C-terminal regulatory region (bali2003thehsp90molecular pages 1-2)</td>
+</tr>
+<tr>
+<td>C-terminal regulatory domain</td>
+<td style="text-align: right;">~250-470</td>
+<td>Regulatory region controlling inducible vs constitutive behavior; exerts strong negative control over activator function and participates in maltose responsiveness and glucose inhibition sensitivity.</td>
+<td>Mal63p C-terminal domain spans residues 250-470 and acts as a negative regulatory region; constitutive/noninducible phenotypes map to this region, indicating control of activator state rather than basal DNA-binding alone (bali2003thehsp90molecular pages 1-2, bali2003thehsp90molecular pages 2-2, ran2008hsp90hsp70chaperonemachine pages 7-8, hu2000analysisofthe pages 8-9)</td>
+</tr>
+<tr>
+<td>Negative regulatory cluster 1</td>
+<td style="text-align: right;">250-307</td>
+<td>Subregion within the C-terminus contributing to repression/autoinhibition of MAL activator activity.</td>
+<td>One of three mapped negative regulatory regions in Mal63p lies at residues 250-307 (bali2003thehsp90molecular pages 2-2)</td>
+</tr>
+<tr>
+<td>Negative regulatory cluster 2</td>
+<td style="text-align: right;">343-357 (or broader 343-359)</td>
+<td>C-terminal inhibitory segment affecting inducibility; sequence changes here can alter regulatory phenotype.</td>
+<td>A second negative regulatory region maps to residues 343-357/359 and is implicated in constitutive vs inducible switching (bali2003thehsp90molecular pages 2-2, ran2008hsp90hsp70chaperonemachine pages 7-8)</td>
+</tr>
+<tr>
+<td>Negative regulatory cluster 3</td>
+<td style="text-align: right;">419-461</td>
+<td>Distal C-terminal inhibitory segment important for repression and conformational regulation.</td>
+<td>A third negative regulatory region maps to residues 419-461 and is part of the functionally important C-terminal control module (bali2003thehsp90molecular pages 2-2, ran2008hsp90hsp70chaperonemachine pages 7-8)</td>
+</tr>
+<tr>
+<td>Maltose-sensing domain</td>
+<td style="text-align: right;">244-316</td>
+<td>Region required for maltose responsiveness; likely participates in sensing/signaling that converts the activator to an active state in response to maltose.</td>
+<td>Mapping studies place a maltose-sensing domain at residues 244-316; the C-terminal maltose-regulatory region is essential for maltose inducibility and sensitivity to glucose inhibition (ran2008hsp90hsp70chaperonemachine pages 11-12, hu2000analysisofthe pages 8-9)</td>
+</tr>
+<tr>
+<td>Hsp70/Hsp90/Sti1 chaperone-regulated state</td>
+<td style="text-align: right;">Multiple noncontiguous interaction sites; full-length protein required</td>
+<td>Chaperone machinery stabilizes the MAL activator, maintains an inactive but inducible intermediate under noninducing conditions, and enables release of a DNA-binding competent active form after maltose addition.</td>
+<td>Mal63p is an Hsp90 client; depletion of Hsp90 sharply lowers Mal63p stability and half-life, while Hsp70 binding precedes Hsp90/Sti1 intermediate-complex formation. Maltose triggers release of chaperone-bound activator into an active DNA-binding competent form (bali2003thehsp90molecular pages 2-2, bali2003thehsp90molecular pages 1-2, ran2008hsp90hsp70chaperonemachine pages 11-12, bali2003thehsp90molecular pages 6-7, ran2008hsp90hsp70chaperonemachine pages 8-10, bali2003thehsp90molecular pages 5-6)</td>
+</tr>
+<tr>
+<td>Family-level implication for Mal33p</td>
+<td style="text-align: right;">Homologous family member; exact residue mapping not directly shown</td>
+<td>MAL33 is interpreted as a MAL63-like Zn2Cys6 activator-family protein at the MAL3 locus; functional inference for MAL33 comes primarily from homology/domain conservation and MAL-locus organization.</td>
+<td>Reviews classify Mal33p with Mal13p/Mal63p among zinc-cluster regulators of maltose genes; several strain backgrounds carry nonfunctional mal33 alleles, so direct functional evidence often comes from MAL63 studies rather than MAL33 itself (ran2008hsp90hsp70chaperonemachine pages 2-3, bali2003thehsp90molecular pages 2-2, macpherson2006afungalfamily pages 8-9, macpherson2006afungalfamily pages 7-8)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the experimentally supported and inferred domain architecture of the MAL activator family, using Mal63p residue mapping as the best-characterized reference for interpreting MAL33. It is useful for separating direct evidence from family-based inference, especially because MAL33 functionality is strain-dependent.</em></p>
+<h3 id="32-strain-dependent-functionality-of-mal33">3.2 Strain-Dependent Functionality of MAL33</h3>
+<p>A critical caveat regarding MAL33 specifically: in several widely used laboratory strains (W303, JN516, 5B6), the MAL33 allele (as well as MAL13 at the MAL1 locus) has been shown to be nonfunctional, representing a naturally occurring defective copy (ran2008hsp90hsp70chaperonemachine pages 2-3, bali2003thehsp90molecular pages 2-2). In these strain backgrounds, maltose fermentation depends on a functional MAL-activator supplied from a different locus—typically MAL63 from the MAL6 locus—or from a plasmid-borne copy (ran2008hsp90hsp70chaperonemachine pages 2-3). However, in the S288c reference strain from which the UniProt entry P38157 is derived, MAL33 is annotated as an intact open reading frame (YBR297W) encoding a predicted functional activator, and the MAL13 family classification and domain annotations support its role as a transcription factor of the maltose regulon (macpherson2006afungalfamily pages 8-9, macpherson2006afungalfamily pages 7-8).</p>
+<h2 id="4-subcellular-localization">4. Subcellular Localization</h2>
+<p>The subcellular localization of Mal33p has not been experimentally determined; it is annotated as "U" (unknown) in comprehensive reviews of zinc cluster protein localization (macpherson2006afungalfamily pages 8-9, macpherson2006afungalfamily pages 7-8). However, as a DNA-binding transcription factor that must interact with the promoters of MAL structural genes, Mal33p is expected to function in the <strong>nucleus</strong>. Zinc cluster proteins in general must localize to the nucleus to regulate target gene transcription, and many family members are constitutively nuclear while others shuttle between cytoplasm and nucleus in response to inducing signals (macpherson2006afungalfamily pages 6-7). The Hsp90/Hsp70 chaperone cycle regulating the MAL-activator involves release of the protein in a DNA-binding competent form upon maltose addition, which is consistent with nuclear function (ran2008hsp90hsp70chaperonemachine pages 11-12, bali2003thehsp90molecular pages 6-7).</p>
+<h2 id="5-regulatory-pathways">5. Regulatory Pathways</h2>
+<h3 id="51-maltose-induction-pathway">5.1 Maltose Induction Pathway</h3>
+<p>Expression of MAL structural genes is induced by maltose through a mechanism requiring two components: (1) a functional maltose permease (MALx1 gene product) and (2) the MAL-activator protein (hu2000analysisofthe pages 1-2). Maltose permease may serve a dual role—both transporting maltose into the cell and acting as a "maltose sensor" that signals the presence of extracellular maltose via an intracellular signaling pathway, analogous to how Snf3p and Rgt2p function for glucose sensing (hu2000analysisofthe pages 8-9, hu2000analysisofthe pages 7-8). Intracellular maltose is sufficient to induce MAL gene expression (hu2000analysisofthe pages 1-2).</p>
+<p>The MAL-activator itself undergoes a regulated activation cycle mediated by the Hsp90/Hsp70 chaperone machinery. Under uninducing (no maltose) conditions, the activator is bound sequentially by Hsp70 and then transferred via the co-chaperone Sti1p to form a stable intermediate complex with Hsp90 (ran2008hsp90hsp70chaperonemachine pages 11-12). This chaperone-bound state represses MAL-activator function while maintaining its capacity to sense maltose (ran2008hsp90hsp70chaperonemachine pages 11-12). The Hsp90 complex also protects the activator from degradation: depletion of Hsp90 drastically reduces Mal63p levels, with a half-life reduction of up to 6-fold (bali2003thehsp90molecular pages 2-2, bali2003thehsp90molecular pages 1-2). Upon maltose addition, the MAL-activator is released from the chaperone complex in an active, DNA-binding competent conformation, enabling it to bind the bidirectional MAL promoter and activate transcription (ran2008hsp90hsp70chaperonemachine pages 11-12, bali2003thehsp90molecular pages 6-7). Physical association between Mal63p and Hsp90 has been demonstrated by co-immunoprecipitation (bali2003thehsp90molecular pages 2-2, bali2003thehsp90molecular pages 1-2).</p>
+<h3 id="52-glucose-repression-pathway">5.2 Glucose Repression Pathway</h3>
+<p>MAL gene expression is subject to glucose repression through at least two distinct mechanisms (hu2000analysisofthe pages 1-2):</p>
+<ol>
+<li>
+<p><strong>Mig1p/Mig2p-dependent glucose repression</strong>: The zinc-finger DNA-binding repressor Mig1p binds to GC-rich core sequences in the MAL promoter and recruits the Cyc8(Ssn6)–Tup1 corepressor complex (schuller2003transcriptionalcontrolof pages 4-6, gancedo1998yeastcarboncatabolite pages 7-7). Tup1 mediates repression through direct contacts with histone H3 and H4 N-termini, maintaining a repressed chromatin state (schuller2003transcriptionalcontrolof pages 4-6). Mig1p also represses transcription of the MAL-activator gene itself (e.g., MAL63), creating a hierarchical regulatory cascade (gancedo1998yeastcarboncatabolite pages 7-7, wu1998multipleregulatoryproteins pages 1-2). Under glucose-depleted conditions, Snf1 kinase phosphorylates Mig1p, causing its nuclear export and relieving repression (gancedo1998yeastcarboncatabolite pages 7-7, hu2000analysisofthe pages 10-10).</p>
+</li>
+<li>
+<p><strong>Glucose inhibition (Mig1p-independent)</strong>: A second mechanism, termed "glucose inhibition," blocks maltose induction of MAL gene expression independently of Mig1p and Mig2p (hu2000analysisofthe pages 1-2, hu2000analysisofthe pages 3-3). This pathway requires HXK2 (hexokinase II), REG1, and GSF1, and its likely target is the Snf1 protein kinase (hu2000analysisofthe pages 1-2, hu2000analysisofthe pages 9-10). Even overexpression of the MAL-activator cannot overcome glucose inhibition, indicating that glucose acts to inhibit the maltose sensing/signaling process at the level of the activator itself rather than by reducing activator levels (hu2000analysisofthe pages 3-3, hu2000analysisofthe pages 7-8). The C-terminal regulatory domain of the MAL-activator mediates sensitivity to glucose inhibition (hu2000analysisofthe pages 8-9).</p>
+</li>
+</ol>
+<h3 id="53-snf1-kinase-as-a-central-integrator">5.3 Snf1 Kinase as a Central Integrator</h3>
+<p>The Snf1 protein kinase serves as a critical integrator of carbon source signaling for MAL gene regulation. Snf1 is required both for inactivation of the Mig1 repressor and, post-transcriptionally, for the synthesis of maltose permease, whose function is essential for maltose induction (hu2000analysisofthe pages 10-10). <em>snf1</em> mutant strains cannot ferment maltose even when expressing a constitutive MAL-activator, highlighting the essential role of Snf1p in enabling the maltose-sensing machinery to function (hu2000analysisofthe pages 10-10).</p>
+<h2 id="6-evolutionary-and-comparative-context">6. Evolutionary and Comparative Context</h2>
+<p>The MAL activator family genes (MAL13, MAL23, MAL33, MAL43, MAL63) share high sequence homology, consistent with their origin through duplication of subtelomeric MAL loci (bali2003thehsp90molecular pages 1-2). The high sequence identity among MALx1 transporter genes (≥95%) and the conserved locus organization support a model of relatively recent evolutionary amplification (fazcortez2025maltoseandmaltotriose pages 3-5). The subtelomeric location of MAL loci contributes to their dynamic evolution through recombination, gene conversion, and copy number variation, which is particularly relevant in industrial and wild yeast strains used for brewing and baking (fazcortez2025maltoseandmaltotriose pages 3-5, nijkamp2012denovosequencing pages 5-7). Notably, the CEN.PK113-7D genome shows mosaic recombination products between MAL1 and MAL3 loci, generating novel MAL2 and MAL4 loci (nijkamp2012denovosequencing pages 5-7).</p>
+<p>Recent work has also identified MAL33 as a driver of natural variation in maltose metabolism in the closely related species <em>Saccharomyces eubayanus</em>, underscoring the functional significance of this gene across the <em>Saccharomyces</em> genus, although this study was not available for detailed analysis.</p>
+<h2 id="7-summary">7. Summary</h2>
+<p>MAL33 (YBR297W) encodes a Zn(II)₂Cys₆ zinc cluster transcription factor that functions as a positive regulator of the MAL3 locus maltose metabolism genes in <em>S. cerevisiae</em>. Its primary function is to activate transcription of the maltose permease (MAL31) and maltase (MAL32) genes by binding to regulatory sequences in their shared bidirectional promoter. Mal33p acts in the nucleus as part of a tightly regulated signaling circuit: the protein is maintained in an inactive, chaperone-bound state by the Hsp90/Hsp70 machinery in the absence of maltose, and is released into an active DNA-binding form upon maltose sensing. Its activity is further modulated by glucose repression through both Mig1p/Cyc8–Tup1-dependent transcriptional repression and Mig1p-independent glucose inhibition pathways, with Snf1 kinase serving as a central integrator. It is important to note that while MAL33 is annotated as an intact gene in the S288c reference genome, naturally occurring nonfunctional alleles of MAL33 have been documented in several commonly used laboratory strains, where the functional MAL-activator role is fulfilled by the highly homologous MAL63 gene from the MAL6 locus.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(macpherson2006afungalfamily pages 1-2): Sarah MacPherson, Marc Larochelle, and Bernard Turcotte. A fungal family of transcriptional regulators: the zinc cluster proteins. Microbiology and Molecular Biology Reviews, 70:583-604, Sep 2006. URL: https://doi.org/10.1128/mmbr.00015-06, doi:10.1128/mmbr.00015-06. This article has 773 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(macpherson2006afungalfamily pages 8-9): Sarah MacPherson, Marc Larochelle, and Bernard Turcotte. A fungal family of transcriptional regulators: the zinc cluster proteins. Microbiology and Molecular Biology Reviews, 70:583-604, Sep 2006. URL: https://doi.org/10.1128/mmbr.00015-06, doi:10.1128/mmbr.00015-06. This article has 773 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hahn2011transcriptionalregulationin pages 3-4): S. Hahn and E. T. Young. Transcriptional regulation in saccharomyces cerevisiae: transcription factor regulation and function, mechanisms of initiation, and roles of activators and coactivators. Genetics, 189:705-736, Nov 2011. URL: https://doi.org/10.1534/genetics.111.127019, doi:10.1534/genetics.111.127019. This article has 535 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bali2003thehsp90molecular pages 1-2): Mehtap Bali, Bin Zhang, Kevin A. Morano, and Corinne A. Michels. The hsp90 molecular chaperone complex regulates maltose induction and stability of the saccharomyces mal gene transcription activator mal63p*. Journal of Biological Chemistry, 278:47441-47448, Nov 2003. URL: https://doi.org/10.1074/jbc.m309536200, doi:10.1074/jbc.m309536200. This article has 35 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(fazcortez2025maltoseandmaltotriose pages 3-5): Oscar A. Faz-Cortez, Jorge H. García-García, Ana K. Carrizales-Sánchez, Hector M. Fonseca-Peralta, Jessica G. Herrera-Gamboa, Esmeralda R. Perez-Ortega, César I. Hernández-Vásquez, and Benito Pereyra-Alférez. Maltose and maltotriose transporters in brewer’s saccharomyces yeasts: polymorphic and key residues in their activity. International Journal of Molecular Sciences, 26:5943, Jun 2025. URL: https://doi.org/10.3390/ijms26135943, doi:10.3390/ijms26135943. This article has 8 citations.</p>
+</li>
+<li>
+<p>(ran2008hsp90hsp70chaperonemachine pages 1-2): Fulai Ran, Mehtap Bali, and Corinne A Michels. Hsp90/hsp70 chaperone machine regulation of the saccharomyces mal-activator as determined in vivo using noninducible and constitutive mutant alleles. Genetics, 179:331-343, May 2008. URL: https://doi.org/10.1534/genetics.107.084921, doi:10.1534/genetics.107.084921. This article has 27 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(nijkamp2012denovosequencing pages 5-7): Jurgen F Nijkamp, Marcel van den Broek, Erwin Datema, Stefan de Kok, Lizanne Bosman, Marijke A Luttik, Pascale Daran-Lapujade, Wanwipa Vongsangnak, Jens Nielsen, Wilbert HM Heijne, Paul Klaassen, Chris J Paddon, Darren Platt, Peter Kötter, Roeland C van Ham, Marcel JT Reinders, Jack T Pronk, Dick de Ridder, and Jean-Marc Daran. De novo sequencing, assembly and analysis of the genome of the laboratory strain saccharomyces cerevisiae cen.pk113-7d, a model for modern industrial biotechnology. Microbial Cell Factories, 11:36-36, Mar 2012. URL: https://doi.org/10.1186/1475-2859-11-36, doi:10.1186/1475-2859-11-36. This article has 326 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(fazcortez2025maltoseandmaltotriose pages 5-7): Oscar A. Faz-Cortez, Jorge H. García-García, Ana K. Carrizales-Sánchez, Hector M. Fonseca-Peralta, Jessica G. Herrera-Gamboa, Esmeralda R. Perez-Ortega, César I. Hernández-Vásquez, and Benito Pereyra-Alférez. Maltose and maltotriose transporters in brewer’s saccharomyces yeasts: polymorphic and key residues in their activity. International Journal of Molecular Sciences, 26:5943, Jun 2025. URL: https://doi.org/10.3390/ijms26135943, doi:10.3390/ijms26135943. This article has 8 citations.</p>
+</li>
+<li>
+<p>(nijkamp2012denovosequencing pages 3-5): Jurgen F Nijkamp, Marcel van den Broek, Erwin Datema, Stefan de Kok, Lizanne Bosman, Marijke A Luttik, Pascale Daran-Lapujade, Wanwipa Vongsangnak, Jens Nielsen, Wilbert HM Heijne, Paul Klaassen, Chris J Paddon, Darren Platt, Peter Kötter, Roeland C van Ham, Marcel JT Reinders, Jack T Pronk, Dick de Ridder, and Jean-Marc Daran. De novo sequencing, assembly and analysis of the genome of the laboratory strain saccharomyces cerevisiae cen.pk113-7d, a model for modern industrial biotechnology. Microbial Cell Factories, 11:36-36, Mar 2012. URL: https://doi.org/10.1186/1475-2859-11-36, doi:10.1186/1475-2859-11-36. This article has 326 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ran2008hsp90hsp70chaperonemachine pages 2-3): Fulai Ran, Mehtap Bali, and Corinne A Michels. Hsp90/hsp70 chaperone machine regulation of the saccharomyces mal-activator as determined in vivo using noninducible and constitutive mutant alleles. Genetics, 179:331-343, May 2008. URL: https://doi.org/10.1534/genetics.107.084921, doi:10.1534/genetics.107.084921. This article has 27 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hu2000analysisofthe pages 1-2): Zhen Hu, Yingzi Yue, Hua Jiang, Bin Zhang, Peter W Sherwood, and Corinne A Michels. Analysis of the mechanism by which glucose inhibits maltose induction of mal gene expression in saccharomyces. Genetics, 154:121-132, Jan 2000. URL: https://doi.org/10.1093/genetics/154.1.121, doi:10.1093/genetics/154.1.121. This article has 64 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bali2003thehsp90molecular pages 2-2): Mehtap Bali, Bin Zhang, Kevin A. Morano, and Corinne A. Michels. The hsp90 molecular chaperone complex regulates maltose induction and stability of the saccharomyces mal gene transcription activator mal63p*. Journal of Biological Chemistry, 278:47441-47448, Nov 2003. URL: https://doi.org/10.1074/jbc.m309536200, doi:10.1074/jbc.m309536200. This article has 35 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wu1998multipleregulatoryproteins pages 1-2): Jianping Wu and Robert J. Trumbly. Multiple regulatory proteins mediate repression and activation by interaction with the yeast mig1 binding site. Yeast, 14:985-1000, Aug 1998. URL: https://doi.org/10.1002/(sici)1097-0061(199808)14:11&lt;985::aid-yea294&gt;3.0.co;2-c, doi:10.1002/(sici)1097-0061(199808)14:11&lt;985::aid-yea294&gt;3.0.co;2-c. This article has 63 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(gancedo1998yeastcarboncatabolite pages 7-7): Juana M. Gancedo. Yeast carbon catabolite repression. Microbiology and Molecular Biology Reviews, 62:334-361, Jun 1998. URL: https://doi.org/10.1128/mmbr.62.2.334-361.1998, doi:10.1128/mmbr.62.2.334-361.1998. This article has 1742 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(macpherson2006afungalfamily pages 7-8): Sarah MacPherson, Marc Larochelle, and Bernard Turcotte. A fungal family of transcriptional regulators: the zinc cluster proteins. Microbiology and Molecular Biology Reviews, 70:583-604, Sep 2006. URL: https://doi.org/10.1128/mmbr.00015-06, doi:10.1128/mmbr.00015-06. This article has 773 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ran2008hsp90hsp70chaperonemachine pages 7-8): Fulai Ran, Mehtap Bali, and Corinne A Michels. Hsp90/hsp70 chaperone machine regulation of the saccharomyces mal-activator as determined in vivo using noninducible and constitutive mutant alleles. Genetics, 179:331-343, May 2008. URL: https://doi.org/10.1534/genetics.107.084921, doi:10.1534/genetics.107.084921. This article has 27 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ran2008hsp90hsp70chaperonemachine pages 11-12): Fulai Ran, Mehtap Bali, and Corinne A Michels. Hsp90/hsp70 chaperone machine regulation of the saccharomyces mal-activator as determined in vivo using noninducible and constitutive mutant alleles. Genetics, 179:331-343, May 2008. URL: https://doi.org/10.1534/genetics.107.084921, doi:10.1534/genetics.107.084921. This article has 27 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hu2000analysisofthe pages 8-9): Zhen Hu, Yingzi Yue, Hua Jiang, Bin Zhang, Peter W Sherwood, and Corinne A Michels. Analysis of the mechanism by which glucose inhibits maltose induction of mal gene expression in saccharomyces. Genetics, 154:121-132, Jan 2000. URL: https://doi.org/10.1093/genetics/154.1.121, doi:10.1093/genetics/154.1.121. This article has 64 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bali2003thehsp90molecular pages 6-7): Mehtap Bali, Bin Zhang, Kevin A. Morano, and Corinne A. Michels. The hsp90 molecular chaperone complex regulates maltose induction and stability of the saccharomyces mal gene transcription activator mal63p*. Journal of Biological Chemistry, 278:47441-47448, Nov 2003. URL: https://doi.org/10.1074/jbc.m309536200, doi:10.1074/jbc.m309536200. This article has 35 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ran2008hsp90hsp70chaperonemachine pages 8-10): Fulai Ran, Mehtap Bali, and Corinne A Michels. Hsp90/hsp70 chaperone machine regulation of the saccharomyces mal-activator as determined in vivo using noninducible and constitutive mutant alleles. Genetics, 179:331-343, May 2008. URL: https://doi.org/10.1534/genetics.107.084921, doi:10.1534/genetics.107.084921. This article has 27 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bali2003thehsp90molecular pages 5-6): Mehtap Bali, Bin Zhang, Kevin A. Morano, and Corinne A. Michels. The hsp90 molecular chaperone complex regulates maltose induction and stability of the saccharomyces mal gene transcription activator mal63p*. Journal of Biological Chemistry, 278:47441-47448, Nov 2003. URL: https://doi.org/10.1074/jbc.m309536200, doi:10.1074/jbc.m309536200. This article has 35 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(macpherson2006afungalfamily pages 6-7): Sarah MacPherson, Marc Larochelle, and Bernard Turcotte. A fungal family of transcriptional regulators: the zinc cluster proteins. Microbiology and Molecular Biology Reviews, 70:583-604, Sep 2006. URL: https://doi.org/10.1128/mmbr.00015-06, doi:10.1128/mmbr.00015-06. This article has 773 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hu2000analysisofthe pages 7-8): Zhen Hu, Yingzi Yue, Hua Jiang, Bin Zhang, Peter W Sherwood, and Corinne A Michels. Analysis of the mechanism by which glucose inhibits maltose induction of mal gene expression in saccharomyces. Genetics, 154:121-132, Jan 2000. URL: https://doi.org/10.1093/genetics/154.1.121, doi:10.1093/genetics/154.1.121. This article has 64 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(schuller2003transcriptionalcontrolof pages 4-6): Hans-Joachim Schüller. Transcriptional control of nonfermentative metabolism in the yeast saccharomyces cerevisiae. Current Genetics, 43:139-160, Apr 2003. URL: https://doi.org/10.1007/s00294-003-0381-8, doi:10.1007/s00294-003-0381-8. This article has 585 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hu2000analysisofthe pages 10-10): Zhen Hu, Yingzi Yue, Hua Jiang, Bin Zhang, Peter W Sherwood, and Corinne A Michels. Analysis of the mechanism by which glucose inhibits maltose induction of mal gene expression in saccharomyces. Genetics, 154:121-132, Jan 2000. URL: https://doi.org/10.1093/genetics/154.1.121, doi:10.1093/genetics/154.1.121. This article has 64 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hu2000analysisofthe pages 3-3): Zhen Hu, Yingzi Yue, Hua Jiang, Bin Zhang, Peter W Sherwood, and Corinne A Michels. Analysis of the mechanism by which glucose inhibits maltose induction of mal gene expression in saccharomyces. Genetics, 154:121-132, Jan 2000. URL: https://doi.org/10.1093/genetics/154.1.121, doi:10.1093/genetics/154.1.121. This article has 64 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hu2000analysisofthe pages 9-10): Zhen Hu, Yingzi Yue, Hua Jiang, Bin Zhang, Peter W Sherwood, and Corinne A Michels. Analysis of the mechanism by which glucose inhibits maltose induction of mal gene expression in saccharomyces. Genetics, 154:121-132, Jan 2000. URL: https://doi.org/10.1093/genetics/154.1.121, doi:10.1093/genetics/154.1.121. This article has 64 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="MAL33-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+<li><a href="MAL33-deep-research-falcon_artifacts/artifact-01.md">Edison artifact artifact-01</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>macpherson2006afungalfamily pages 1-2</li>
+<li>hahn2011transcriptionalregulationin pages 3-4</li>
+<li>fazcortez2025maltoseandmaltotriose pages 5-7</li>
+<li>nijkamp2012denovosequencing pages 3-5</li>
+<li>nijkamp2012denovosequencing pages 5-7</li>
+<li>wu1998multipleregulatoryproteins pages 1-2</li>
+<li>fazcortez2025maltoseandmaltotriose pages 3-5</li>
+<li>hu2000analysisofthe pages 8-9</li>
+<li>macpherson2006afungalfamily pages 6-7</li>
+<li>hu2000analysisofthe pages 1-2</li>
+<li>schuller2003transcriptionalcontrolof pages 4-6</li>
+<li>hu2000analysisofthe pages 10-10</li>
+<li>macpherson2006afungalfamily pages 8-9</li>
+<li>gancedo1998yeastcarboncatabolite pages 7-7</li>
+<li>macpherson2006afungalfamily pages 7-8</li>
+<li>hu2000analysisofthe pages 7-8</li>
+<li>hu2000analysisofthe pages 3-3</li>
+<li>hu2000analysisofthe pages 9-10</li>
+<li>https://doi.org/10.1128/mmbr.00015-06,</li>
+<li>https://doi.org/10.1534/genetics.111.127019,</li>
+<li>https://doi.org/10.1074/jbc.m309536200,</li>
+<li>https://doi.org/10.3390/ijms26135943,</li>
+<li>https://doi.org/10.1534/genetics.107.084921,</li>
+<li>https://doi.org/10.1186/1475-2859-11-36,</li>
+<li>https://doi.org/10.1093/genetics/154.1.121,</li>
+<li>https://doi.org/10.1002/(sici</li>
+<li>https://doi.org/10.1128/mmbr.62.2.334-361.1998,</li>
+<li>https://doi.org/10.1007/s00294-003-0381-8,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(MAL33-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P38157" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="mal33-ybr297w-p38157-curation-notes">MAL33 (YBR297W / P38157) — curation notes</h1>
+<p>Journal for the AI GO-annotation review of <em>Saccharomyces cerevisiae</em> MAL33 (MAL3R).<br />
+This is a <strong>dark/understudied gene</strong>: the S288C reference-strain MAL33 allele is a<br />
+<strong>defective (non-functional) MAL-activator</strong>, so essentially all "maltose regulon<br />
+activation" function is inferred from its functional paralogs (MAL63, MAL13, etc.),<br />
+not measured for MAL33 itself. The core defensible functions are domain-level (Zn2Cys6<br />
+DNA binding, zinc binding, nucleus); the specific biological role is a genuine gap.</p>
+<h2 id="identity-and-provenance">Identity and provenance</h2>
+<ul>
+<li>UniProt: <strong>P38157</strong> (MAL33_YEAST); systematic name <strong>YBR297W</strong>; standard name MAL33;<br />
+  synonym <strong>MAL3R</strong>. SGD:S000000501. Chromosome II (right arm, telomere-associated MAL3 locus).</li>
+<li>468 aa, 54,194 Da. PE level <strong>3: Inferred from homology</strong> (i.e. no protein-level<br />
+  experimental evidence in UniProt) [<code>genes/yeast/MAL33/MAL33-uniprot.txt</code>].</li>
+<li>UniProt FUNCTION (inferred): "Regulates the coordinate transcription of structural<br />
+  MAL3S (maltase) and MAL3T (maltose permease) genes." SUBCELLULAR LOCATION: Nucleus.<br />
+  SIMILARITY: "Belongs to the MAL13 family."<br />
+  [<code>genes/yeast/MAL33/MAL33-uniprot.txt</code> lines 59-62].</li>
+</ul>
+<h2 id="domain-architecture-inline-analysis-from-uniprot-record">Domain architecture (inline analysis from UniProt record)</h2>
+<p>From <code>MAL33-uniprot.txt</code>:<br />
+- <strong>DNA_BIND 8..34</strong>: "Zn(2)-C6 fungal-type" GAL4-class binuclear zinc cluster<br />
+  (PROSITE PS50048 / PS00463; Pfam PF00172 Zn_clus; SMART SM00066 GAL4; CDD cd00067 GAL4).<br />
+  This is the canonical fungal Zn2Cys6 (binuclear zinc cluster) DNA-binding domain: six<br />
+  cysteines coordinate two Zn(II) ions, and the domain binds CGG-triplet-containing<br />
+  sequence-specific DNA sites. → supports zinc ion binding and sequence-specific DNA binding.<br />
+- <strong>MOTIF 41..49</strong>: predicted nuclear localization signal (ECO:0000255) → supports nuclear location.<br />
+- <strong>Middle homology region / "Fungal_trans"</strong>: Pfam PF04082 (Fungal_trans, IPR007219<br />
+  "XlnR/fungal transcription factor regulatory middle homology region"; CDD cd12148<br />
+  fungal_TF_MHR). This central regulatory/transactivation region is characteristic of<br />
+  Zn2Cys6 activators and (in the functional MAL activators) carries the transactivation<br />
+  and maltose-responsive regulatory functions.<br />
+- PANTHER family <strong>PTHR31668</strong> ("Carbohydrate Metabolism and Transport Regulator" /<br />
+  RGT1-related), subfamily <strong>PTHR31668:SF18</strong> "MALTOSE FERMENTATION REGULATORY PROTEIN<br />
+  MAL13-RELATED" [<code>interpro/panther/PTHR31668/</code>].<br />
+- <strong>Sequence check</strong>: The S288C sequence (<code>MAL33-uniprot.txt</code> lines 132-141) is a<br />
+  full-length 468-aa ORF with an intact N-terminal Zn2Cys6 domain (residues MTLVKYACDYCRVRRVKCDGKKPCSRCIEHNFDC… — the C-x2-C-x6-C-x6-C-x2-C-x6-C zinc-cluster<br />
+  cysteine pattern is present). So MAL33's non-functionality in S288C is <strong>NOT</strong> a gross<br />
+  truncation of the DBD; the defect maps to sequence divergence across the protein<br />
+  (~71% identity to the functional Mal63p; see below), i.e. the DNA-binding domain is<br />
+  structurally present but the allele fails to activate the MAL regulon.</p>
+<h2 id="known-vs-not-known">KNOWN vs NOT-known</h2>
+<h3 id="known-domain-homology-defensible">KNOWN (domain- / homology-defensible)</h3>
+<ul>
+<li>MAL33 is a <strong>fungal Zn2Cys6 (GAL4-type binuclear zinc cluster) protein</strong> with an<br />
+  intact N-terminal DBD (res 8-34) and a fungal-TF middle homology region. On domain<br />
+  grounds it can <strong>coordinate zinc</strong> and <strong>bind sequence-specific DNA</strong> and act as a<br />
+<strong>DNA-binding transcription factor</strong> in the <strong>nucleus</strong> (predicted NLS).<br />
+  [UniProt domains; family classification].</li>
+<li>MAL33 is one of the paralogous <strong>MAL-activator genes</strong> of the <em>S. cerevisiae</em> MAL<br />
+  multigene loci. Each MAL locus (MAL1–MAL4, MAL6) is a complex of three genes — a<br />
+  MAL-activator (GENE 3 / R gene), a maltase (GENE 2 / S gene), and a maltose permease<br />
+  (GENE 1 / T gene). MAL33 is the activator of the <strong>MAL3</strong> locus on chromosome II<br />
+  (with MAL31 permease and MAL32 maltase) [Michels et al. 1992, PMID:1441745, MAL3 is a<br />
+  telomere-associated tandem array; Naumov et al. molecular evolution of MAL loci].</li>
+<li>The <strong>prototype functional MAL-activator is Mal63p</strong> (MAL6 locus). Functional-domain<br />
+  analysis of the MAL-activator was done on <strong>MAL63</strong> (LexA-Mal63 fusions): DNA-binding<br />
+  domain res 1-100; functional core incl. transactivation res 60-283; inhibitory region<br />
+  res 251-299; C-terminal maltose-responsive domain relieving that inhibition — i.e. a<br />
+  maltose-inducible autoregulation model [Hu et al. 1999, PMID:10447589, ABSTRACT].<br />
+  NOTE: this is <strong>MAL63</strong>, not MAL33; the MAL33 ISS annotations are transferred from<br />
+  Mal63p (with_from SGD:S000029659 = MAL63).</li>
+</ul>
+<h3 id="not-known-genuinely-uncertain-for-mal33-specifically">NOT known / genuinely uncertain for MAL33 specifically</h3>
+<ul>
+<li><strong>Whether the S288C MAL33 allele is a functional MAL-activator: it is NOT.</strong> MAL33 (MAL3R)<br />
+  is "nonfunctional in the genomic reference strain S288C." S288C-derived strains carry two<br />
+  MAL loci (MAL1, MAL3) both with <strong>defective activator genes (mal13, mal33)</strong>; the<br />
+  reference strain therefore cannot ferment maltose from these loci without a functional<br />
+  activator supplied in trans. The defective mal33p (in YPH500, isogenic to S288C) is<br />
+<strong>71.2% identical</strong> to the functional Mal63p (and mal13p 70.7%). The maltose-non-inducible<br />
+  phenotype of YPH500 is complemented by a plasmid copy of MAL63, confirming the defect is a<br />
+  lack of functional MAL-activator [web literature: Naumov/Charron/Michels MAL-locus work;<br />
+  Novak et al. "Intracellular maltose is sufficient to induce MAL gene expression" PMC126750;<br />
+  bioRxiv 2025 MAL33 allelic variation review-of-record for the "nonfunctional in S288C" claim].</li>
+<li><strong>The direct DNA targets and DNA-binding site(s) of MAL33 in vivo</strong> — never mapped for<br />
+  MAL33. For the functional activator, the MAL UAS and Mal63p binding sites were mapped<br />
+  [PMID:2192262, identification of the MAL UAS and Mal63 binding sites] — but that is Mal63p.</li>
+<li><strong>The condition/mechanism (maltose induction) for MAL33</strong> — inferred from Mal63p; not<br />
+  demonstrated for the (defective) S288C MAL33.</li>
+<li><strong>Redundancy / relationship with other MAL activators</strong> — MAL33 vs MAL13 (the other<br />
+  S288C defective allele) vs functional Mal63p/Mal43p/Mal23p is characterized only at the<br />
+  sequence level, not by direct genetic test of MAL33.</li>
+<li><strong>Zinc stoichiometry / direct metal binding of MAL33</strong> — inferred (Zn2Cys6 domain +<br />
+  RCA zinc-proteome inclusion [Wang et al. 2018, PMID:30358795, ABSTRACT]); not directly measured.</li>
+</ul>
+<h2 id="goa-annotation-inventory-11-rows-mal33-goatsv">GOA annotation inventory (11 rows; <code>MAL33-goa.tsv</code>)</h2>
+<p>MF:<br />
+- GO:0000981 DNA-binding TF activity, RNA Pol II-specific — IEA (InterPro) — ACCEPT (domain: Zn2Cys6)<br />
+- GO:0003677 DNA binding — IEA (InterPro) — ACCEPT (generic parent, domain)<br />
+- GO:0008270 zinc ion binding — IEA (InterPro) — ACCEPT (Zn2Cys6 coordinates 2 Zn)<br />
+- GO:0008270 zinc ion binding — RCA (PMID:30358795) — ACCEPT (zinc proteome computational)<br />
+- GO:0003700 DNA-binding TF activity — ISS (PMID:10447589, with_from MAL63) — ACCEPT (family MF; transferred from Mal63p)<br />
+BP:<br />
+- GO:0006351 DNA-templated transcription — IEA (InterPro) — KEEP_AS_NON_CORE (generic)<br />
+- GO:0006355 regulation of DNA-templated transcription — IEA (InterPro) — KEEP_AS_NON_CORE (generic parent)<br />
+- GO:0006357 regulation of transcription by RNA Pol II — IEA (GO_REF:0000108 logical inference from MF) — KEEP_AS_NON_CORE<br />
+- GO:0006355 regulation of DNA-templated transcription — ISS (PMID:10447589, MAL63) — KEEP_AS_NON_CORE (generic; specific MAL-regulon role is a gap for the defective allele)<br />
+CC:<br />
+- GO:0005634 nucleus — IEA (GO_REF:0000120) — ACCEPT (predicted NLS + TF)<br />
+- GO:0005634 nucleus — ISS (PMID:10447589, MAL63) — ACCEPT (is_active_in; family/homology)</p>
+<p>Notes on actions:<br />
+- No REMOVE candidates: none of the annotations are wrong. The maltose-metabolic-process<br />
+  keyword (GO:0000023) appears in the UniProt DR block but is NOT in the GOA TSV, so it is<br />
+  not in the review set.<br />
+- The "maltose regulon activation" specificity is the crux: because the S288C allele is<br />
+  defective, I do NOT elevate a specific "positive regulation of maltose-regulon<br />
+  transcription" role to a core function; the generic RNA-Pol-II regulation terms are kept<br />
+  as non-core, and the maltose-specific role is written up as the primary knowledge gap.<br />
+- Avoid <code>protein binding</code> — not present in GOA; good.</p>
+<h2 id="core-function-synthesis">Core function synthesis</h2>
+<p>MAL33 is (domain-defensibly) a <strong>fungal Zn2Cys6 sequence-specific DNA-binding<br />
+transcription factor of the MAL-activator family, acting in the nucleus</strong>, expected on<br />
+family grounds to regulate RNA Pol II transcription. Its name-defining specific role<br />
+(maltose-inducible activation of MAL structural genes) is characterized for the<br />
+<strong>functional paralog Mal63p</strong>, and the <strong>S288C MAL33 allele is a non-functional<br />
+activator</strong>, so a specific "positive regulation of the maltose regulon" is not asserted<br />
+as a demonstrated MAL33 core function — it is the central knowledge gap.</p>
+<h2 id="key-references">Key references</h2>
+<ul>
+<li>PMID:10447589 — Hu et al. 1999, functional domain analysis of the MAL-activator (Mal63p). ABSTRACT-only cache. HIGH relevance (family MF), but note it is Mal63p not MAL33.</li>
+<li>PMID:30358795 — Wang et al. 2018, yeast zinc proteome. ABSTRACT-only cache. MEDIUM (supports zinc binding computationally).</li>
+<li>PMID:1441745 — Michels/Read/Nat/Charron 1992, MAL3 locus tandem array (context for MAL33 = MAL3 activator).</li>
+<li>PMID:2192262 — MAL UAS and Mal63 binding sites (context; Mal63p, not MAL33).</li>
+<li>Web/SGD: MAL33 nonfunctional in S288C; mal33p 71.2% identical to Mal63p; YPH500 maltose defect complemented by plasmid MAL63.</li>
+</ul>
+<h2 id="deep-research">Deep research</h2>
+<ul>
+<li>Falcon deep research: attempt 1 timed out (600s) and the perplexity-lite fallback<br />
+  returned HTTP 401 (quota exhausted). Attempt 2 (falcon only) SUCCEEDED after ~1240s<br />
+  (~20.7 min) and wrote <code>MAL33-deep-research-falcon.md</code> (genuine, 49 KB).</li>
+<li>CAVEAT on the falcon report: its narrative is broadly consistent with this review<br />
+  (Zn2Cys6 MAL-activator; MAL3 locus regulator of MAL31/MAL32; nucleus; non-functional<br />
+  in several lab strains; MAL63 is the functional prototype), BUT its inline citation<br />
+  keys are <strong>fabricated/mangled</strong> (e.g. "ran2008hsp90hsp70chaperonemachine",<br />
+  "bali2003thehsp90molecular" — these are Hsp90 papers mis-attached to MAL-locus claims).<br />
+  Per project memory (falcon report citation style), such non-PMID keys are NOT trusted<br />
+  and are NOT cited in the review. The review is instead grounded in the two cached PMIDs<br />
+  (10447589, 30358795) plus PubMed-verified PMID:1441745 (MAL3 locus) and multiple<br />
+  independent web sources for the S288C non-functionality / 71.2% identity to Mal63p.</li>
+<li>One useful nuance the falcon report raises: UniProt annotates the S288C MAL33/YBR297W<br />
+  as an <em>intact ORF</em> (predicted functional activator), while the "non-functional" status<br />
+  is most explicitly documented for W303/JN516/5B6 and the S288C-isogenic YPH500. This<br />
+  review therefore hedges ("reported to be a non-functional MAL-activator") and frames<br />
+  the functional status of the S288C allele as the primary knowledge gap rather than<br />
+  asserting either way.</li>
+<li>Falcon report also outlines the broader regulatory circuit for the FUNCTIONAL MAL<br />
+  activator (Mal63p): Hsp90/Hsp70 chaperone-maintained inactive state released on maltose<br />
+  sensing; glucose repression via Mig1p/Cyc8-Tup1 and Snf1 kinase. This is context for<br />
+  the family, not MAL33-specific evidence, and is not annotated to MAL33.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P38157
+gene_symbol: MAL33
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:559292
+  label: Saccharomyces cerevisiae
+description: &gt;-
+  MAL33 (systematic name YBR297W; synonym MAL3R) is a 468-residue Saccharomyces
+  cerevisiae protein belonging to the fungal Zn2Cys6 (GAL4-type binuclear zinc
+  cluster) family of transcription factors. It carries a canonical N-terminal
+  Zn(2)-C6 fungal-type DNA-binding domain (residues 8-34), a predicted nuclear
+  localization signal (residues 41-49), and a central fungal-transcription-factor
+  middle homology region (Pfam Fungal_trans / IPR007219). On domain grounds the zinc
+  cluster is expected to coordinate two structural zinc ions and to bind
+  sequence-specific (CGG-triplet-containing) DNA, consistent with a role as a nuclear,
+  RNA polymerase II sequence-specific DNA-binding transcription factor. MAL33 is one of
+  the paralogous MAL-activator genes of the S. cerevisiae MAL multigene loci: each MAL
+  locus is a complex of three genes encoding a MAL-activator, a maltase, and a maltose
+  permease, and MAL33 is the activator gene of the telomere-associated MAL3 locus on
+  chromosome II (together with the MAL31 permease and MAL32 maltase). The prototypical,
+  well-characterized MAL-activator is Mal63p of the MAL6 locus, which mediates
+  maltose-inducible transcription of the MAL structural genes through a transactivation
+  region and a C-terminal maltose-responsive regulatory domain. MAL33 is 71% identical
+  to Mal63p, but the MAL33 allele of the S288C reference strain is reported to be a
+  non-functional MAL-activator (while UniProt annotates the S288C ORF as intact);
+  consequently MAL33&#39;s own DNA targets, DNA-binding sites, inducing
+  condition, and specific biological role have not been experimentally established, and
+  its family-level maltose-regulon function is inferred from its functional paralogs
+  rather than measured for MAL33 itself.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      InterPro2GO electronic pipeline. Correctly transfers Zn2Cys6/GAL4-type
+      DNA-binding-domain terms (zinc ion binding, DNA binding, DNA-binding transcription
+      factor activity, regulation of transcription) from IPR001138/IPR020448/IPR036864/
+      IPR007219, which MAL33 genuinely carries. Domain-level, not MAL33-specific
+      functional evidence.
+- id: GO_REF:0000108
+  title: Automatic assignment of GO terms using logical inference, based on on inter-ontology links
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Logical-inference pipeline that derives the RNA-Pol-II regulation process term
+      (GO:0006357) from the molecular-function TF term (GO:0000981). Mechanically valid
+      but generic; not MAL33-specific evidence.
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Automated cellular-component pipeline (UniProtKB-SubCell SL-0191 nucleus plus
+      InterPro), consistent with the predicted NLS and TF classification.
+- id: PMID:10447589
+  title: Functional domain analysis of the Saccharomyces MAL-activator.
+  findings:
+  - statement: &gt;-
+      Functional-domain (LexA-fusion deletion) analysis of the Saccharomyces
+      MAL-activator, performed on Mal63p: DNA-binding domain in residues 1-100, a
+      functional core including the transactivation domain in residues 60-283, an
+      inhibitory region in residues 251-299, and a C-terminal maltose-responsive domain
+      that relieves the inhibition, giving a model of maltose-inducible autoregulation.
+    supporting_text: &gt;-
+      Our results indicate that the sequence-specific DNA-binding domain of Mal63p is
+      contained in residues 1-100; that residues 60-283 constitute a functional core
+      region including the transactivation domain; that residues 251-299 are required to
+      inhibit the activation function of Mal63p; and that the rest of the C-terminal
+      region of the protein contains a maltose-responsive domain
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. This is the key MAL-activator functional-domain paper and is the
+      with_from anchor (SGD:S000029659) for MAL33&#39;s ISS annotations, but the experiments
+      were carried out on Mal63p (MAL6 locus), NOT on MAL33. It therefore supports the
+      family-level MAL-activator molecular function that MAL33 shares by homology, but
+      does not itself establish MAL33-specific activity (especially given the non-
+      functional S288C MAL33 allele). Cached record is abstract-only
+      (full_text_available: false).
+- id: PMID:30358795
+  title: The cellular economy of the Saccharomyces cerevisiae zinc proteome.
+  findings:
+  - statement: &gt;-
+      Bioinformatic definition of the S. cerevisiae zinc proteome (582 known or potential
+      zinc-binding proteins) by combined domain and motif searches, within which MAL33 is
+      included as a zinc-binding protein consistent with its Zn2Cys6 domain.
+    supporting_text: &gt;-
+      The yeast zinc proteome of 582 known or potential zinc-binding proteins was
+      identified using a bioinformatics analysis that combined global domain searches
+      with local motif searches.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. A proteome-wide computational (RCA) study; it supports MAL33 zinc
+      binding as a member of the predicted zinc proteome, concordant with the Zn2Cys6
+      domain, but is not a direct MAL33 metal-binding measurement. Cached record is
+      abstract-only.
+- id: PMID:1441745
+  title: The telomere-associated MAL3 locus of Saccharomyces is a tandem array of repeated genes.
+  findings:
+  - statement: &gt;-
+      The MAL3 locus of S. cerevisiae (chromosome II, telomere-associated) is a tandem
+      array of repeated MAL genes; MAL33 is the MAL-activator gene of this multigene
+      complex, alongside the MAL31 permease and MAL32 maltase genes.
+  full_text_unavailable: true
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified (Michels, Read, Nat, Charron 1992, Yeast). Establishes the genomic
+      context of MAL33 as the trans-activator gene of the MAL3 locus. Not cached as full
+      text in this repository; used for locus context only, so no verbatim supporting_text
+      is quoted.
+existing_annotations:
+- term:
+    id: GO:0000981
+    label: DNA-binding transcription factor activity, RNA polymerase II-specific
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      InterPro2GO electronic transfer of RNA-Pol-II DNA-binding transcription factor
+      activity from the Zn2Cys6/GAL4-type DNA-binding domain (IPR001138, IPR020448,
+      IPR036864).
+    action: ACCEPT
+    reason: &gt;-
+      MAL33 carries an intact N-terminal Zn(2)-C6 fungal-type DNA-binding domain
+      (residues 8-34) and belongs to the fungal Zn2Cys6 MAL-activator family, so a
+      sequence-specific RNA-Pol-II DNA-binding transcription factor activity is the
+      most defensible molecular-function statement. This is a domain/family capability;
+      the specific target genes and DNA sites of MAL33, and whether the non-functional
+      S288C allele actually activates transcription, are recorded as knowledge gaps.
+    supported_by:
+    - reference_id: GO_REF:0000002
+      supporting_text: &gt;-
+        Gene Ontology annotation through association of InterPro records with GO terms
+- term:
+    id: GO:0003677
+    label: DNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      InterPro2GO electronic transfer of the generic DNA binding term from the Zn2Cys6
+      DNA-binding domain (IPR007219, IPR020448).
+    action: ACCEPT
+    reason: &gt;-
+      Correct but generic. DNA binding is a direct property of the Zn2Cys6 domain; it is
+      the parent of the more informative sequence-specific / RNA-Pol-II DNA-binding
+      transcription-factor terms also annotated. Retained as a valid, if non-specific,
+      domain-level term.
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Automated cellular-component annotation placing MAL33 in the nucleus
+      (UniProtKB-SubCell SL-0191 plus InterPro), consistent with the predicted NLS and
+      DNA-binding TF classification.
+    action: ACCEPT
+    reason: &gt;-
+      A nuclear site of action is the parsimonious, domain-consistent location for a
+      Zn2Cys6 DNA-binding transcription factor with a predicted nuclear localization
+      signal (residues 41-49). There is no direct experimental localization for MAL33,
+      but nucleus is the appropriate inferred compartment.
+- term:
+    id: GO:0006351
+    label: DNA-templated transcription
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      InterPro2GO electronic transfer of the generic DNA-templated transcription process
+      from the fungal-TF domains (IPR007219).
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Broadly correct for a transcription factor but very generic (a high-level parent of
+      the regulation-of-transcription terms). Retained as a non-core, domain-level process
+      rather than a demonstrated MAL33-specific function.
+- term:
+    id: GO:0006355
+    label: regulation of DNA-templated transcription
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      InterPro2GO electronic transfer of a generic transcription-regulation process from
+      the Zn2Cys6/GAL4-type and fungal-TF domains (IPR001138, IPR020448, IPR036864).
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Domain-appropriate and correct in kind, but generic (the DNA-templated parent of
+      the RNA-Pol-II regulation term). No MAL33-specific target gene or regulatory event
+      is demonstrated; kept as non-core.
+- term:
+    id: GO:0006357
+    label: regulation of transcription by RNA polymerase II
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000108
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Logical-inference (GO_REF:0000108) derivation of the RNA-Pol-II regulation process
+      from the RNA-Pol-II DNA-binding transcription factor activity (GO:0000981).
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The most specific of the process terms and appropriate for a Zn2Cys6 RNA-Pol-II TF
+      on family grounds, but still an inferred, generic capability: the specific genes
+      MAL33 regulates, the inducing condition, and whether the non-functional S288C allele
+      actually performs this role are undetermined. Retained as a non-core, domain-derived
+      process; the maltose-regulon specificity is written up as the primary knowledge gap.
+- term:
+    id: GO:0008270
+    label: zinc ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      InterPro2GO electronic transfer of zinc ion binding from the Zn2Cys6 binuclear
+      zinc-cluster domain (IPR001138, IPR007219, IPR020448, IPR036864).
+    action: ACCEPT
+    reason: &gt;-
+      MAL33 carries a canonical fungal Zn(2)-C6 binuclear zinc cluster whose six cysteines
+      coordinate two structural zinc ions; zinc binding is a robust, well-supported
+      domain-level property.
+    supported_by:
+    - reference_id: GO_REF:0000002
+      supporting_text: &gt;-
+        Gene Ontology annotation through association of InterPro records with GO terms
+- term:
+    id: GO:0008270
+    label: zinc ion binding
+  evidence_type: RCA
+  original_reference_id: PMID:30358795
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Reviewed-computational-analysis (RCA) inclusion of MAL33 in the S. cerevisiae zinc
+      proteome (Wang et al. 2018), based on combined domain and motif searches for
+      zinc-binding proteins.
+    action: ACCEPT
+    reason: &gt;-
+      Independent computational support for zinc binding, concordant with the Zn2Cys6
+      domain and with the InterPro zinc-binding annotation. Not a direct MAL33
+      metal-binding measurement, but a reasonable, domain-consistent inference.
+    supported_by:
+    - reference_id: PMID:30358795
+      supporting_text: &gt;-
+        The yeast zinc proteome of 582 known or potential zinc-binding proteins was
+        identified using a bioinformatics analysis that combined global domain searches
+        with local motif searches.
+- term:
+    id: GO:0003700
+    label: DNA-binding transcription factor activity
+  evidence_type: ISS
+  original_reference_id: PMID:10447589
+  qualifier: enables
+  review:
+    summary: &gt;-
+      SGD ISS (inferred from sequence similarity) annotation classifying MAL33 as a
+      DNA-binding transcription factor, with_from SGD:S000029659 (MAL63), the functional
+      prototype MAL-activator characterized in PMID:10447589.
+    action: ACCEPT
+    reason: &gt;-
+      The molecular activity — a fungal Zn2Cys6 DNA-binding transcription factor — is well
+      supported by the intact Zn(2)-C6 domain and the MAL-activator family membership, and
+      is the most defensible MF statement for MAL33. It rests on sequence similarity to
+      the functional Mal63p, not on a direct MAL33 assay; because the S288C MAL33 allele is
+      a non-functional activator, the specific transcriptional-activation outcome for MAL33
+      itself remains a knowledge gap.
+    supported_by:
+    - reference_id: PMID:10447589
+      supporting_text: &gt;-
+        the sequence-specific DNA-binding domain of Mal63p is
+        contained in residues 1-100
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: ISS
+  original_reference_id: PMID:10447589
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      SGD ISS annotation that MAL33 is active in the nucleus, inferred by sequence
+      similarity to the functional MAL-activator Mal63p (with_from SGD:S000029659).
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with MAL33&#39;s DNA-binding zinc cluster, predicted NLS, and MAL-activator
+      family classification. Nuclear action is the expected, domain-consistent location;
+      retained as a reasonable inferred compartment (no direct MAL33 localization assay
+      exists).
+- term:
+    id: GO:0006355
+    label: regulation of DNA-templated transcription
+  evidence_type: ISS
+  original_reference_id: PMID:10447589
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      SGD ISS annotation that MAL33 is involved in regulation of DNA-templated
+      transcription, inferred by sequence similarity to the functional MAL-activator
+      Mal63p (with_from SGD:S000029659).
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Family- and domain-appropriate as a generic capability, but it transfers the
+      MAL-activator role from the functional Mal63p to MAL33 by homology. The specific
+      MAL structural genes MAL33 would regulate, the maltose-inducing condition, and
+      whether the non-functional S288C MAL33 allele actually activates transcription are
+      all undetermined. Retained as a non-core, inferred process; the maltose-regulon
+      specificity is captured as the primary knowledge gap.
+core_functions:
+- description: &gt;-
+    Fungal Zn2Cys6 (GAL4-type binuclear zinc cluster) sequence-specific DNA-binding
+    transcription factor. MAL33&#39;s intact N-terminal Zn(2)-C6 domain (residues 8-34) is
+    expected to coordinate two structural zinc ions and to bind sequence-specific DNA,
+    giving MAL33 the molecular capacity to act as an RNA polymerase II DNA-binding
+    transcription factor in the nucleus (predicted NLS at residues 41-49). This is a
+    domain- and homology-supported capability shared with the MAL-activator family; the
+    specific target genes, DNA sites, inducing condition, and regulatory outcome for
+    MAL33 have not been experimentally established, and the S288C MAL33 allele is
+    reported to be a non-functional MAL-activator.
+  molecular_function:
+    id: GO:0000981
+    label: DNA-binding transcription factor activity, RNA polymerase II-specific
+  directly_involved_in:
+  - id: GO:0006357
+    label: regulation of transcription by RNA polymerase II
+  locations:
+  - id: GO:0005634
+    label: nucleus
+  supported_by:
+  - reference_id: PMID:10447589
+    supporting_text: &gt;-
+      the sequence-specific DNA-binding domain of Mal63p is
+      contained in residues 1-100
+  - reference_id: GO_REF:0000002
+    supporting_text: &gt;-
+      Gene Ontology annotation through association of InterPro records with GO terms
+knowledge_gaps:
+- gap_statement: &gt;-
+    Whether the MAL33 allele of the S. cerevisiae S288C reference strain is a functional
+    MAL-activator at all is the central unknown: it is reported to be non-functional, so
+    its capacity to activate maltose-inducible transcription of the MAL structural genes
+    has not been demonstrated for MAL33 itself. The direct DNA target genes, the specific
+    MAL upstream activation sequence(s) MAL33 occupies, and the inducing condition are
+    undetermined for MAL33.
+  boundary: &gt;-
+    MAL33 is a bona fide fungal Zn2Cys6 MAL-activator-family protein with an intact
+    N-terminal Zn(2)-C6 DNA-binding domain (residues 8-34), a predicted NLS (41-49), and
+    a fungal-TF middle homology region; on these grounds it can bind zinc, bind
+    sequence-specific DNA, and act as a nuclear RNA-Pol-II transcription factor. It is the
+    activator gene of the MAL3 locus (with MAL31 permease and MAL32 maltase). The
+    functional, maltose-inducible activation mechanism — DNA-binding domain, transactivation
+    region, inhibitory region, and C-terminal maltose-responsive domain — has been mapped
+    only for the paralogous, functional Mal63p (MAL6 locus), from which all of MAL33&#39;s
+    process and TF-activity annotations are transferred by sequence similarity (ISS) or
+    domain inference (IEA). MAL33 is ~71% identical to Mal63p, yet the S288C allele does
+    not confer maltose fermentation. No direct functional assay of MAL33 (DNA binding,
+    target identification, transactivation) exists.
+  gap_kind:
+    - BIOLOGY
+  dark_aspect: BP_DARK
+  status: OPEN
+  significance: &gt;-
+    MAL33 exemplifies a gene whose family role (maltose-regulon activation) is textbook
+    for its functional paralogs but whose own biological activity is unestablished and, in
+    the reference strain, apparently lost. Resolving whether the S288C MAL33 allele retains
+    any activator function — and if not, which sequence changes inactivate it relative to
+    Mal63p — would clarify the extent of allelic MAL-activator degeneration in the
+    reference genome and prevent over-attribution of a demonstrated maltose-regulon role
+    to MAL33 based purely on homology.
+  provenance:
+    - reference_id: PMID:10447589
+      supporting_text: &gt;-
+        MAL63 of the MAL6 locus and its homologues at the other MAL loci encode
+        transcription activators required for the maltose-inducible expression of the
+        MAL structural genes
+      reference_section_type: ABSTRACT
+  resolution: &gt;-
+    Directly test the S288C MAL33 allele: express tagged MAL33 and assay maltose-inducible
+    transactivation of a MAL-UAS reporter and of the endogenous MAL31/MAL32 genes; ChIP of
+    tagged MAL33 to map in vivo binding sites; and compare against a functional MAL63
+    control. If MAL33 is inactive, domain-swap / point-mutant analysis against Mal63p to
+    localize the inactivating sequence changes.
+- gap_statement: &gt;-
+    The functional relationship of MAL33 to the other MAL-activator paralogs is
+    uncharacterized: whether MAL33 is redundant with, distinct from, or (in S288C) simply
+    a degenerate copy of the functional activators (Mal63p and relatives), and how it
+    relates to MAL13 — the other non-functional MAL-activator allele of the reference
+    strain — has not been tested directly for MAL33.
+  boundary: &gt;-
+    S288C-derived strains carry two MAL loci (MAL1 and MAL3) whose activator genes (MAL13
+    and MAL33) are both reported as non-functional; the encoded proteins are ~71% identical
+    to the functional Mal63p, and the maltose-non-inducible phenotype of an S288C-isogenic
+    strain is complemented in trans by a plasmid-borne functional MAL63. MAL33 is thus
+    known at the sequence and locus level, but no genetic or biochemical study has directly
+    tested MAL33&#39;s redundancy with, or divergence from, the functional activators.
+  gap_kind:
+    - BIOLOGY
+  dark_aspect: RESIDUAL_SUBGAP
+  status: OPEN
+  significance: &gt;-
+    Understanding whether MAL33 is a spent duplicate or retains a conditional/partial
+    activity would determine whether MAL33 should carry a maltose-regulon function at all
+    in the reference strain, and would inform the broader question of how the tandemly
+    arrayed, telomere-associated MAL loci evolve and degenerate.
+  provenance:
+    - reference_id: PMID:10447589
+      supporting_text: &gt;-
+        MAL63 of the MAL6 locus and its homologues at the other MAL loci encode
+        transcription activators required for the maltose-inducible expression of the
+        MAL structural genes
+      reference_section_type: ABSTRACT
+  resolution: &gt;-
+    Combinatorial complementation/epistasis: test whether S288C MAL33 (and MAL13) can
+    restore maltose fermentation to a mal-activator-null background alone or when
+    overexpressed, and compare directly with functional MAL63; sequence/domain-swap
+    analysis to map divergence responsible for loss of function relative to Mal63p.
+suggested_questions:
+- question: &gt;-
+    Is the S288C reference-strain MAL33 allele a functional MAL-activator, and if not,
+    which sequence changes relative to the functional Mal63p inactivate it?
+- question: &gt;-
+    Which genes does MAL33 directly bind and regulate, at which MAL upstream activation
+    sequences, and under what inducing condition (maltose)?
+- question: &gt;-
+    How does MAL33 relate functionally to the other MAL-activator paralogs, including the
+    functional Mal63p and the other non-functional reference-strain allele MAL13?
+suggested_experiments:
+- description: &gt;-
+    Assay maltose-inducible transactivation by the S288C MAL33 allele using a MAL-UAS
+    reporter and quantification of endogenous MAL31/MAL32 induction, with a functional
+    MAL63 as positive control, to determine whether MAL33 has any activator function.
+- description: &gt;-
+    ChIP-seq/ChIP-exo of epitope-tagged MAL33 (in maltose vs glucose) to identify direct
+    in vivo binding sites and target genes, if any.
+- description: &gt;-
+    Domain-swap and point-mutant analysis between MAL33 and the functional Mal63p to
+    localize the sequence changes responsible for the reported loss of MAL33 function in
+    the reference strain.
+- description: &gt;-
+    Trans-complementation tests measuring whether MAL33 (alone or overexpressed) restores
+    maltose fermentation to a MAL-activator-null strain, benchmarked against MAL63, to test
+    residual/conditional activity and redundancy.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

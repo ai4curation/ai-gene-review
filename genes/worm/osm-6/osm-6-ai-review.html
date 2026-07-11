@@ -1,0 +1,4621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>osm-6 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>osm-6</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/G5EDF6" target="_blank" class="term-link">
+                        G5EDF6
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Caenorhabditis elegans</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "osm-6";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="G5EDF6" data-a="DESCRIPTION: OSM-6 is the Caenorhabditis elegans ortholog of hu..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>OSM-6 is the Caenorhabditis elegans ortholog of human IFT52 (also called NGD5; Chlamydomonas IFT52/BLD1) and is a core structural subunit of the intraflagellar transport complex B (IFT-B). Intraflagellar transport is the bidirectional, microtubule-motor-driven movement of large multiprotein particles that build and maintain cilia: kinesin-2 motors carry IFT particles and their cargo anterogradely from the ciliary base to the tip, and cytoplasmic dynein-2 returns them retrogradely. OSM-6/IFT52 is itself a component (and moving cargo) of the IFT-B particle rather than an enzyme; its GATase-like N-terminal (GIFT) domain, central domain and C-terminal domain are used to scaffold the complex. In C. elegans, osm-6 is expressed exclusively in ciliated sensory neurons under control of the RFX transcription factor DAF-19, and the protein localizes to the ciliary base (basal body, transition zone), along the sensory (non-motile) cilium, and in the cytoplasm/cell body of these neurons. OSM-6 is required for assembly of the ciliary axoneme: loss-of-function mutants retain normal transition zones but have severely truncated axonemes and ectopic microtubule assembly, causing dye-filling defects. Because the 60 ciliated sensory neurons mediate chemosensation, osmotic avoidance, mechanosensation, and dauer-pathway signaling, osm-6 mutants are broadly defective in these sensory behaviors as a downstream consequence of lacking functional cilia. OSM-6/IFT52 is conserved from algae to humans, and the pathway it serves is central to the biology of ciliopathies.</p>
+    </div>
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Proposed New Ontology Terms</h2>
+
+        <div class="proposed-term">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>structural constituent of intraflagellar transport particle</h3>
+                <span class="vote-buttons" data-g="G5EDF6" data-a="structural constituent of intraflagellar transport particle" data-r="" data-act="NEW">
+                    <button class="vote-btn" data-v="up" title="Agree this term should be created">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with creating this term">👎</button>
+                </span>
+            </div>
+
+
+            <p><strong>Definition:</strong> A structural molecule activity in which a protein acts as a structural subunit of an intraflagellar transport (IFT) particle (IFT-A or IFT-B), contributing to the assembly and integrity of the particle that is trafficked along the ciliary axoneme by kinesin-2 and dynein-2 motors.</p>
+
+
+
+            <p><strong>Justification:</strong> OSM-6/IFT52 and its IFT-B/IFT-A paralogs act as structural subunits of the IFT particle, a role currently expressible only as the generic GO:0005198 structural molecule activity. A dedicated MF term would capture the shared function of IFT structural subunits.</p>
+
+
+
+
+
+
+
+            <p><strong>Supporting Evidence:</strong></p>
+            <ul style="margin-left: 1rem;">
+
+                <li>
+
+                    <a href="https://pubmed.ncbi.nlm.nih.gov/22922713" target="_blank" class="term-link">
+                        PMID:22922713
+                    </a>
+
+
+                    : the GFP-tagged IFT-B component OSM-6 (the ortholog of human IFT52)
+
+                </li>
+
+            </ul>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005929" target="_blank" class="term-link">
+                                    GO:0005929
+                                </a>
+                            </span>
+                            <span class="term-label">cilium</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDF6" data-a="GO:0005929" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> OSM-6/IFT52 localizes to and functions within the cilium; phylogenetic (IBA) inference agrees with direct C. elegans localization data.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Cilium localization is directly supported by multiple experimental studies (OSM-6::GFP is a canonical ciliary/IFT marker) and is a core aspect of osm-6 function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22922713" target="_blank" class="term-link">
+                                        PMID:22922713
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the GFP-tagged IFT-B component OSM-6 (the ortholog of human IFT52)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030992" target="_blank" class="term-link">
+                                    GO:0030992
+                                </a>
+                            </span>
+                            <span class="term-label">intraciliary transport particle B</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDF6" data-a="GO:0030992" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> OSM-6 is a structural subunit of the IFT-B particle; this is the single most important annotation for the gene and is supported by orthology to IFT52 and by ComplexPortal (CPX-1290).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core molecular role. OSM-6 is explicitly the IFT-B component / IFT52 ortholog and a member of Intraflagellar transport complex B (CPX-1290).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22922713" target="_blank" class="term-link">
+                                        PMID:22922713
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the GFP-tagged IFT-B component OSM-6 (the ortholog of human IFT52)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042073" target="_blank" class="term-link">
+                                    GO:0042073
+                                </a>
+                            </span>
+                            <span class="term-label">intraciliary transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDF6" data-a="GO:0042073" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> As an IFT-B subunit and moving IFT cargo, OSM-6 is directly involved in intraciliary transport.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core biological process. OSM-6::GFP moves bidirectionally by IFT and is part of the transported IFT particle.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10545497" target="_blank" class="term-link">
+                                        PMID:10545497
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">OSM-1 and OSM-6, all move at approximately 1.1 microm/s in the retrograde direction along cilia and dendrites</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060271" target="_blank" class="term-link">
+                                    GO:0060271
+                                </a>
+                            </span>
+                            <span class="term-label">cilium assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDF6" data-a="GO:0060271" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> OSM-6 is required for building the ciliary axoneme; phylogenetic inference is corroborated by the loss-of-function ultrastructural phenotype.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core process. osm-6 mutants have severely truncated axonemes, establishing a role in cilium assembly.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/2428682" target="_blank" class="term-link">
+                                        PMID:2428682
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The cilia in che-13 (e1805), osm-1 (p808), osm-5 (p813), and osm-6 (p811) mutants have normal transition zones and severely shortened axonemes.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005814" target="_blank" class="term-link">
+                                    GO:0005814
+                                </a>
+                            </span>
+                            <span class="term-label">centriole</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDF6" data-a="GO:0005814" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically propagated centriole localization. In C. elegans the directly demonstrated basal-body/transition-zone localization is the relevant structure (the ciliary basal body is a docked, modified centriole).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Plausible but not the core functional site and not directly demonstrated in C. elegans; the experimentally supported location is the ciliary basal body (GO:0036064). Retained as a non-core, orthology-based location rather than removed.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005929" target="_blank" class="term-link">
+                                    GO:0005929
+                                </a>
+                            </span>
+                            <span class="term-label">cilium</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28479320" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28479320
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dynein-Driven Retrograde Intraflagellar Transport Is Triphas...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDF6" data-a="GO:0005929" data-r="PMID:28479320" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ComplexPortal (CPX-1290) statement that OSM-6 localizes to the cilium, consistent with direct experimental data.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core ciliary localization; corroborated by IDA evidence from multiple studies.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28479320" target="_blank" class="term-link">
+                                        PMID:28479320
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Dynein-Driven Retrograde Intraflagellar Transport Is Triphasic in C. elegans Sensory Cilia</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030992" target="_blank" class="term-link">
+                                    GO:0030992
+                                </a>
+                            </span>
+                            <span class="term-label">intraciliary transport particle B</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28479320" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28479320
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dynein-Driven Retrograde Intraflagellar Transport Is Triphas...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDF6" data-a="GO:0030992" data-r="PMID:28479320" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ComplexPortal assertion of OSM-6 membership in IFT particle B, the core structural annotation, based on the C. elegans IFT-B complex.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core molecular role, redundant with and reinforcing the IBA IFT-B membership annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28479320" target="_blank" class="term-link">
+                                        PMID:28479320
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Disruption of the dynein-2 tail domain, light intermediate chain, or intraflagellar transport (IFT)-B complex abolishes dynein-2&#39;s ciliary localization</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042073" target="_blank" class="term-link">
+                                    GO:0042073
+                                </a>
+                            </span>
+                            <span class="term-label">intraciliary transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28479320" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28479320
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dynein-Driven Retrograde Intraflagellar Transport Is Triphas...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDF6" data-a="GO:0042073" data-r="PMID:28479320" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ComplexPortal statement of IFT-B involvement in intraciliary transport.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core process consistent with OSM-6 being a transported IFT-B subunit.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28479320" target="_blank" class="term-link">
+                                        PMID:28479320
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Disruption of the dynein-2 tail domain, light intermediate chain, or intraflagellar transport (IFT)-B complex abolishes dynein-2&#39;s ciliary localization</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060271" target="_blank" class="term-link">
+                                    GO:0060271
+                                </a>
+                            </span>
+                            <span class="term-label">cilium assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28479320" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28479320
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dynein-Driven Retrograde Intraflagellar Transport Is Triphas...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDF6" data-a="GO:0060271" data-r="PMID:28479320" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ComplexPortal statement of IFT-B involvement in cilium assembly.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core process; redundant with the IMP/IBA cilium-assembly annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/2428682" target="_blank" class="term-link">
+                                        PMID:2428682
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The cilia in che-13 (e1805), osm-1 (p808), osm-5 (p813), and osm-6 (p811) mutants have normal transition zones and severely shortened axonemes.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060271" target="_blank" class="term-link">
+                                    GO:0060271
+                                </a>
+                            </span>
+                            <span class="term-label">cilium assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24013594" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24013594
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Neuropeptide signaling remodels chemosensory circuit composi...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDF6" data-a="GO:0060271" data-r="PMID:24013594" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> osm-6 loss abolishes functional sensory cilia (dendritic endings), confirming a requirement in cilium assembly.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core process. Although this paper is about a salt circuit, it explicitly uses osm-6 as a cilium-assembly loss-of-function allele.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24013594" target="_blank" class="term-link">
+                                        PMID:24013594
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We analyzed hypomorphic osm-6 mutants that lack functional sensory cilia (dendritic endings)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1902075" target="_blank" class="term-link">
+                                    GO:1902075
+                                </a>
+                            </span>
+                            <span class="term-label">cellular response to salt</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24013594" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24013594
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Neuropeptide signaling remodels chemosensory circuit composi...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDF6" data-a="GO:1902075" data-r="PMID:24013594" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> osm-6 mutants have reduced salt-evoked neuronal responses, but only because they lack functional cilia; OSM-6 has no salt-sensing or salt-signalling activity of its own.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Indirect, downstream sensory phenotype of ciliary loss rather than a core molecular/biological function of OSM-6. Retained (per curator) but marked non-core to avoid implying a direct salt-response role.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24013594" target="_blank" class="term-link">
+                                        PMID:24013594
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">found them to have greatly reduced ASEL salt responses and AWCON salt and odor responses</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005929" target="_blank" class="term-link">
+                                    GO:0005929
+                                </a>
+                            </span>
+                            <span class="term-label">cilium</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27930654" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27930654
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Whole-Organism Developmental Expression Profiling Identifies...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDF6" data-a="GO:0005929" data-r="PMID:27930654" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct localization of OSM-6::GFP to the cilium, used as a ciliary reference marker.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core ciliary localization directly observed; OSM-6::GFP (IFT52 orthologue) is imaged throughout normal-length cilia.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27930654" target="_blank" class="term-link">
+                                        PMID:27930654
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Localisation of an IFT protein, OSM-6 (IFT52 orthologue), throughout normal-length cilia confirms this finding</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1905515" target="_blank" class="term-link">
+                                    GO:1905515
+                                </a>
+                            </span>
+                            <span class="term-label">non-motile cilium assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/2428682" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:2428682
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mutant sensory cilia in the nematode Caenorhabditis elegans.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDF6" data-a="GO:1905515" data-r="PMID:2428682" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> osm-6 mutants fail to build full sensory (non-motile) cilia; this is the most precise cilium-assembly term for the worm&#39;s sensory cilia.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core process, and appropriately specific (C. elegans sensory cilia are non-motile). Directly supported by the ultrastructural phenotype.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/2428682" target="_blank" class="term-link">
+                                        PMID:2428682
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The cilia in che-13 (e1805), osm-1 (p808), osm-5 (p813), and osm-6 (p811) mutants have normal transition zones and severely shortened axonemes.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060271" target="_blank" class="term-link">
+                                    GO:0060271
+                                </a>
+                            </span>
+                            <span class="term-label">cilium assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/1732156" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:1732156
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Genetic analysis of chemosensory control of dauer formation ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDF6" data-a="GO:0060271" data-r="PMID:1732156" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Genetic-interaction evidence placing osm-6 among cilium-structure genes required for chemosensory cilium function in the dauer pathway.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core process; osm-6 is one of nine genes whose mutation gives structurally defective chemosensory cilia.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1732156" target="_blank" class="term-link">
+                                        PMID:1732156
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Dauer-defective mutations in nine genes cause structurally defective chemosensory cilia, thereby blocking chemosensation.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097730" target="_blank" class="term-link">
+                                    GO:0097730
+                                </a>
+                            </span>
+                            <span class="term-label">non-motile cilium</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22342749" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22342749
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Endocytosis genes facilitate protein and membrane transport ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDF6" data-a="GO:0097730" data-r="PMID:22342749" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct localization of OSM-6 to the sensory (non-motile) cilium.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core ciliary localization; the sensory-cilium term is appropriately specific.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22342749" target="_blank" class="term-link">
+                                        PMID:22342749
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">cilium-based intraflagellar transport (IFT)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003674" target="_blank" class="term-link">
+                                    GO:0003674
+                                </a>
+                            </span>
+                            <span class="term-label">molecular_function</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDF6" data-a="GO:0003674" data-r="GO_REF:0000015" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root-level placeholder recording that no specific molecular function had been assigned at the time of annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Retained as the standard ND placeholder. A subunit-specific molecular function (structural molecule activity within IFT-B) is now proposed as a NEW annotation and in core_functions; no catalytic activity is known or expected for this GATase-fold scaffold.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005198" target="_blank" class="term-link">
+                                    GO:0005198
+                                </a>
+                            </span>
+                            <span class="term-label">structural molecule activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDF6" data-a="GO:0005198" data-r="GO_REF:0000033" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> OSM-6/IFT52 has no catalytic activity; as an IFT-B subunit its molecular function is best captured as a subunit-specific structural molecule activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Proposed new molecular-function annotation reflecting OSM-6&#39;s role as a structural subunit of the IFT-B particle (the current GOA carries only the ND root MF for this gene). This IBA/GO_REF:0000033 evidence pairing does NOT currently exist in the GOA export; it is the expected phylogenetic evidence basis if the annotation were made (IFT52 orthologues across species are IFT-B structural subunits). Ideally a more specific &#39;structural constituent of intraflagellar transport particle&#39; term (see proposed_new_terms) would be used.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22922713" target="_blank" class="term-link">
+                                        PMID:22922713
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the GFP-tagged IFT-B component OSM-6 (the ortholog of human IFT52)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0036064" target="_blank" class="term-link">
+                                    GO:0036064
+                                </a>
+                            </span>
+                            <span class="term-label">ciliary basal body</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22922713" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22922713
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The BBSome controls IFT assembly and turnaround in cilia.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDF6" data-a="GO:0036064" data-r="PMID:22922713" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> OSM-6::GFP directly localizes to the ciliary basal body, where IFT particles assemble before entering the cilium.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core localization at the site of IFT assembly.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22922713" target="_blank" class="term-link">
+                                        PMID:22922713
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the GFP-tagged IFT-B component OSM-6 (the ortholog of human IFT52)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035869" target="_blank" class="term-link">
+                                    GO:0035869
+                                </a>
+                            </span>
+                            <span class="term-label">ciliary transition zone</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10545497" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10545497
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Role of a class DHC1b dynein in retrograde transport of IFT ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDF6" data-a="GO:0035869" data-r="PMID:10545497" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> OSM-6::GFP is observed at/through the ciliary transition zone as it moves between the base and the axoneme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core localization consistent with IFT trafficking through the transition zone.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10545497" target="_blank" class="term-link">
+                                        PMID:10545497
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">OSM-1 and OSM-6, all move at approximately 1.1 microm/s in the retrograde direction along cilia and dendrites</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097730" target="_blank" class="term-link">
+                                    GO:0097730
+                                </a>
+                            </span>
+                            <span class="term-label">non-motile cilium</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10545497" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10545497
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Role of a class DHC1b dynein in retrograde transport of IFT ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDF6" data-a="GO:0097730" data-r="PMID:10545497" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> OSM-6::GFP localizes along the sensory (non-motile) cilium.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core ciliary localization, appropriately specific.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10545497" target="_blank" class="term-link">
+                                        PMID:10545497
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">OSM-1 and OSM-6, all move at approximately 1.1 microm/s in the retrograde direction along cilia and dendrites</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9475731" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9475731
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Analysis of osm-6, a gene that affects sensory cilium struct...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDF6" data-a="GO:0005737" data-r="PMID:9475731" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> OSM-6::GFP is present in the cytoplasm (including neuronal processes) prior to and outside of ciliary transport.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly observed but a broad, non-informative location; the functionally relevant sites are the cilium and its base. Retained as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9475731" target="_blank" class="term-link">
+                                        PMID:9475731
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The OSM-6::GFP protein was localized to cytoplasm, including processes and dendritic endings where sensory cilia are situated.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006935" target="_blank" class="term-link">
+                                    GO:0006935
+                                </a>
+                            </span>
+                            <span class="term-label">chemotaxis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/2428682" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:2428682
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mutant sensory cilia in the nematode Caenorhabditis elegans.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDF6" data-a="GO:0006935" data-r="PMID:2428682" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> osm-6 mutants are chemosensory-defective (dye-filling defective) because their chemosensory cilia are truncated.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Downstream sensory consequence of defective cilia rather than a direct role of OSM-6 in chemotaxis signalling. Retained but non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/2428682" target="_blank" class="term-link">
+                                        PMID:2428682
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Mutations in 14 genes prevent dye uptake and disrupt chemosensory behaviors.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006970" target="_blank" class="term-link">
+                                    GO:0006970
+                                </a>
+                            </span>
+                            <span class="term-label">response to osmotic stress</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/730048" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:730048
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Osmotic avoidance defective mutants of the nematode Caenorha...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDF6" data-a="GO:0006970" data-r="PMID:730048" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> osm-6 is named for its osmotic-avoidance-defective phenotype; mutants fail to avoid high osmolarity because their sensory cilia are non-functional.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Indirect, downstream behavioral phenotype of ciliary loss, not a direct osmotic-stress-response activity of OSM-6. Retained (curator IMP) but non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/730048" target="_blank" class="term-link">
+                                        PMID:730048
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">mutants were selected for their inability to avoid high concentrations of fructose or NaCl</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043025" target="_blank" class="term-link">
+                                    GO:0043025
+                                </a>
+                            </span>
+                            <span class="term-label">neuronal cell body</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9475731" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9475731
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Analysis of osm-6, a gene that affects sensory cilium struct...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDF6" data-a="GO:0043025" data-r="PMID:9475731" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> OSM-6::GFP accumulates in the cell bodies of ciliated sensory neurons, where the protein is synthesized before delivery to cilia.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Real localization but reflects the site of synthesis rather than the core functional site (the cilium/basal body). Retained as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9475731" target="_blank" class="term-link">
+                                        PMID:9475731
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">showed accumulation of GFP in ciliated sensory neurons exclusively</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050954" target="_blank" class="term-link">
+                                    GO:0050954
+                                </a>
+                            </span>
+                            <span class="term-label">sensory perception of mechanical stimulus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8460126" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8460126
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A dual mechanosensory and chemosensory neuron in Caenorhabdi...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDF6" data-a="GO:0050954" data-r="PMID:8460126" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Nose-touch mechanosensation requires intact ciliated sensory endings, which osm-6 is needed to build; osm-6 mutants are mechanosensory-defective.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Downstream sensory consequence of defective cilia rather than a direct mechanotransduction role of OSM-6. The cached abstract does not name osm-6, but the WormBase IMP reflects curator full-text evidence and is not overruled.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8460126" target="_blank" class="term-link">
+                                        PMID:8460126
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Mutant animals that have defective ciliated sensory endings as well as laser-operated animals that lack ASH, FLP, and OLQ fail to respond to touch to the nose.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>OSM-6/IFT52 is a structural subunit of the intraflagellar transport complex B (IFT-B), the anterograde IFT particle that is itself carried as cargo by kinesin-2 and returned by dynein-2. It scaffolds the IFT-B complex (it does not have independent catalytic activity) and is required to build and maintain the sensory ciliary axoneme in C. elegans ciliated neurons.</h3>
+                <span class="vote-buttons" data-g="G5EDF6" data-a="FUNCTION: OSM-6/IFT52 is a structural subunit of the intrafl..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005198" target="_blank" class="term-link">
+                            structural molecule activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042073" target="_blank" class="term-link">
+                                intraciliary transport
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1905515" target="_blank" class="term-link">
+                                non-motile cilium assembly
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097730" target="_blank" class="term-link">
+                                non-motile cilium
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0036064" target="_blank" class="term-link">
+                                ciliary basal body
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035869" target="_blank" class="term-link">
+                                ciliary transition zone
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030992" target="_blank" class="term-link">
+                            intraciliary transport particle B
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22922713" target="_blank" class="term-link">
+                                PMID:22922713
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">the GFP-tagged IFT-B component OSM-6 (the ortholog of human IFT52)</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/2428682" target="_blank" class="term-link">
+                                PMID:2428682
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">The cilia in che-13 (e1805), osm-1 (p808), osm-5 (p813), and osm-6 (p811) mutants have normal transition zones and severely shortened axonemes.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000015.md" target="_blank" class="term-link">
+                            GO_REF:0000015
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Use of the ND evidence code for Gene Ontology (GO) terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10545497" target="_blank" class="term-link">
+                            PMID:10545497
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Role of a class DHC1b dynein in retrograde transport of IFT motors and IFT raft particles along cilia, but not dendrites, in chemosensory neurons of living Caenorhabditis elegans.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">OSM-6 is a homologue of a Chlamydomonas 16S IFT raft (IFT particle) polypeptide and, together with OSM-1 and kinesin-II, undergoes retrograde IFT along cilia at ~1.1 um/s; retrograde ciliary transport requires the CHE-3 (DHC1b/dynein-2) motor.</div>
+
+                        <div class="finding-text">"OSM-1 and OSM-6, all move at approximately 1.1 microm/s in the retrograde direction along cilia and dendrites"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/1732156" target="_blank" class="term-link">
+                            PMID:1732156
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Genetic analysis of chemosensory control of dauer formation in Caenorhabditis elegans.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">osm-6 is one of nine cilium-structure genes whose mutation causes structurally defective chemosensory cilia and blocks chemosensation, placing it at a single step in the dauer-formation epistasis pathway.</div>
+
+                        <div class="finding-text">"Dauer-defective mutations in nine genes cause structurally defective chemosensory cilia, thereby blocking chemosensation."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22342749" target="_blank" class="term-link">
+                            PMID:22342749
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Endocytosis genes facilitate protein and membrane transport in C. elegans sensory cilia.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">OSM-6 is used as an IFT/ciliary marker in C. elegans sensory cilia; the study examines transport of ciliary and periciliary membrane and IFT proteins.</div>
+
+                        <div class="finding-text">"These pathways include cilium-based intraflagellar transport (IFT) and poorly understood membrane trafficking events."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22922713" target="_blank" class="term-link">
+                            PMID:22922713
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The BBSome controls IFT assembly and turnaround in cilia.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">GFP-tagged OSM-6 is the canonical IFT-B reporter (explicitly the ortholog of human IFT52) used to screen for IFT assembly/turnaround mutants; OSM-6 marks IFT particles at the ciliary base and along cilia.</div>
+
+                        <div class="finding-text">"the GFP-tagged IFT-B component OSM-6 (the ortholog of human IFT52)"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24013594" target="_blank" class="term-link">
+                            PMID:24013594
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Neuropeptide signaling remodels chemosensory circuit composition in Caenorhabditis elegans.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Hypomorphic osm-6 mutants lack functional sensory cilia and consequently show greatly reduced salt (ASEL) and salt/odor (AWC) sensory responses; ciliary function is restored cell-autonomously by osm-6 rescue.</div>
+
+                        <div class="finding-text">"We analyzed hypomorphic osm-6 mutants that lack functional sensory cilia (dendritic endings) and found them to have greatly reduced ASEL salt responses and AWCON salt and odor responses"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/2428682" target="_blank" class="term-link">
+                            PMID:2428682
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Mutant sensory cilia in the nematode Caenorhabditis elegans.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">osm-6(p811) mutants have normal ciliary transition zones but severely shortened axonemes with ectopic doublet microtubules, establishing OSM-6 as required for axoneme (cilium) assembly rather than transition-zone formation.</div>
+
+                        <div class="finding-text">"The cilia in che-13 (e1805), osm-1 (p808), osm-5 (p813), and osm-6 (p811) mutants have normal transition zones and severely shortened axonemes."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27930654" target="_blank" class="term-link">
+                            PMID:27930654
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Whole-Organism Developmental Expression Profiling Identifies RAB-28 as a Novel Ciliary GTPase Associated with the BBSome and Intraflagellar Transport.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">OSM-6::GFP (explicitly the IFT52 orthologue) localizes throughout normal-length sensory cilia and is used as an established IFT/ciliary marker.</div>
+
+                        <div class="finding-text">"Localisation of an IFT protein, OSM-6 (IFT52 orthologue), throughout normal-length cilia confirms this finding"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28479320" target="_blank" class="term-link">
+                            PMID:28479320
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Dynein-Driven Retrograde Intraflagellar Transport Is Triphasic in C. elegans Sensory Cilia.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Ciliary entry of dynein-2 requires an intact IFT-B complex (of which OSM-6/IFT52 is a component); this study is the ComplexPortal source (CPX-1290) for OSM-6 IFT-B/IFT particle B membership and ciliary localization.</div>
+
+                        <div class="finding-text">"Disruption of the dynein-2 tail domain, light intermediate chain, or intraflagellar transport (IFT)-B complex abolishes dynein-2&#39;s ciliary localization"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/730048" target="_blank" class="term-link">
+                            PMID:730048
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Osmotic avoidance defective mutants of the nematode Caenorhabditis elegans.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Founding screen that isolated osmotic-avoidance-defective (Osm) mutants of C. elegans, the phenotypic class for which osm-6 is named; such mutants fail to avoid high concentrations of salts/sugars.</div>
+
+                        <div class="finding-text">"mutants were selected for their inability to avoid high concentrations of fructose or NaCl"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8460126" target="_blank" class="term-link">
+                            PMID:8460126
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A dual mechanosensory and chemosensory neuron in Caenorhabditis elegans.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Animals with defective ciliated sensory endings fail to respond to nose touch, linking intact sensory cilia (which require osm-6) to mechanosensation.</div>
+
+                        <div class="finding-text">"Mutant animals that have defective ciliated sensory endings as well as laser-operated animals that lack ASH, FLP, and OLQ fail to respond to touch to the nose."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9475731" target="_blank" class="term-link">
+                            PMID:9475731
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Analysis of osm-6, a gene that affects sensory cilium structure and sensory neuron function in Caenorhabditis elegans.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">osm-6 was cloned and shown to encode a protein of previously unknown function expressed exclusively in ciliated sensory neurons; OSM-6::GFP rescues the mutant and localizes to cytoplasm/processes/dendritic endings, and osm-6 acts cell-autonomously in cilium structure. DAF-19 is required for OSM-6 accumulation.</div>
+
+                        <div class="finding-text">"The OSM-6::GFP protein was localized to cytoplasm, including processes and dendritic endings where sensory cilia are situated."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Genetic mosaic analysis shows osm-6 acts cell-autonomously in the ciliated neuron.</div>
+
+                        <div class="finding-text">"we conclude from an analysis of genetic mosaics that osm-6 acts cell autonomously in affecting cilium structure"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which IFT-B subunits does OSM-6 directly contact in C. elegans, and are the GIFT, central and C-terminal domains functionally separable?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Oliver E. Blacque</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="G5EDF6" data-a="Q: Which IFT-B subunits does OSM-6 directly contact i..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does the IFT52 GIFT domain retain any ligand-binding capacity, or is it a purely structural remnant of the glutamine-amidotransferase fold?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="G5EDF6" data-a="Q: Does the IFT52 GIFT domain retain any ligand-bindi..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Perform in vivo proximity labeling (TurboID) with domain-truncated OSM-6 variants expressed in ciliated neurons, followed by mass spectrometry, to map domain-specific IFT-B interaction partners.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: OSM-6/IFT52 bridges the IFT-B core to peripheral subunits via distinct domains, and disrupting individual domains selectively destabilizes parts of IFT-B.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: proximity labeling / interaction mapping</p>
+
+                </div>
+                <span class="vote-buttons" data-g="G5EDF6" data-a="EXPERIMENT: Perform in vivo proximity labeling (TurboID) with ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Use live imaging of tagged tubulin and IFT trains in osm-6 partial loss-of-function backgrounds to quantify anterograde cargo delivery versus transition-zone integrity.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The severely truncated axoneme of osm-6 mutants reflects failure to deliver axonemal tubulin/cargo by IFT-B rather than a transition-zone defect.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: live-cell imaging</p>
+
+                </div>
+                <span class="vote-buttons" data-g="G5EDF6" data-a="EXPERIMENT: Use live imaging of tagged tubulin and IFT trains ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The specific intra-complex protein contacts of OSM-6/IFT52 within the C. elegans IFT-B particle have not been experimentally mapped. In other organisms IFT52 bridges the IFT-B1 core (contacting IFT88, IFT70 and IFT46) and links the core to peripheral subunits, but which partners its GIFT, central and C-terminal domains engage in the worm, and how these contacts are used during IFT-particle assembly and tip turnaround, is undetermined.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span><span class="badge">ONTOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> It is firmly established that OSM-6 is an IFT-B/IFT52 structural subunit that moves bidirectionally by IFT, localizes to basal body, transition zone and axoneme, and is required for axoneme assembly.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Defining OSM-6&#39;s specific IFT-B contacts would explain how the IFT-B particle is built and how ciliopathy-relevant IFT52 mutations destabilize the complex.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> In vivo proximity labeling (BioID/TurboID) or cross-linking mass spectrometry of tagged OSM-6 in ciliated neurons, plus structure determination of the C. elegans IFT-B subcomplex, paired with an ontology term for structural constituent of the IFT particle.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"the GFP-tagged IFT-B component OSM-6 (the ortholog of human IFT52)"</em> — PMID:22922713</li>
+
+            </ul>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Proposed term (ontology gap):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><strong>structural constituent of intraflagellar transport particle</strong> — GO currently expresses this role only as the generic &#39;structural molecule activity&#39; (GO:0005198).</li>
+
+            </ul>
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> No independent biochemical or enzymatic activity has been demonstrated for OSM-6/IFT52, and although its N-terminal domain adopts a class-I glutamine-amidotransferase-like (GIFT) fold, whether this fold has any residual ligand-binding or catalytic role beyond scaffolding is unknown.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> The GATase-like fold is annotated structurally (Pfam IFT52_GIFT / SSF52317); catalytic residues appear absent, consistent with a purely structural function.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Ruling in or out any ligand-binding role of the GIFT domain would clarify whether IFT52 does more than scaffold IFT-B.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Structure-guided mutagenesis of the GIFT domain and in vitro binding/activity assays to test for retained ligand interaction.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"a protein that is 40% identical in amino acid sequence to a predicted mammalian protein of unknown function"</em> — PMID:9475731</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Tags</h2>
+        <div class="aliases">
+
+            <span class="badge">caeel-ciliopathy</span>
+
+        </div>
+    </div>
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(osm-6-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="G5EDF6" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="osm-6-c-elegans-research-notes">osm-6 (C. elegans) research notes</h1>
+<blockquote>
+<p>Provenance note: <code>just deep-research-falcon worm osm-6 --fallback perplexity-lite</code><br />
+was attempted twice and both runs timed out with no output (SIGTERM, exit 143/144);<br />
+no <code>-deep-research-*.md</code> file was produced and none was fabricated. This review is<br />
+grounded directly in the UniProt record (G5EDF6), the QuickGO GOA export, and the 11<br />
+cached primary publications (all listed below with verbatim provenance). All existing<br />
+annotations could be adjudicated from primary literature, so no UNDECIDED calls were<br />
+required.</p>
+</blockquote>
+<p>UniProt: G5EDF6 (G5EDF6_CAEEL) · WormBase: WBGene00003886 / R31.3 · ORF R31.3 · Chromosome V<br />
+Ortholog: <strong>IFT52</strong> (human IFT52 / NGD5; Chlamydomonas IFT52/BLD1). Core structural subunit of the<br />
+intraflagellar transport complex B (IFT-B). PANTHER PTHR12969 (NGD5/OSM-6/IFT52), subfamily SF7.<br />
+ComplexPortal: CPX-1290 "Intraflagellar transport complex B".</p>
+<p>Protein: 472 aa. Domain architecture (InterPro/Pfam): N-terminal IFT52 GIFT domain (PF23355, ~18-257,<br />
+a class-I glutamine-amidotransferase-like fold, SSF52317), IFT52 central domain (PF23352, ~274-357),<br />
+and IFT52 C-terminal domain (PF21178, ~368-417, CDD cd23683 IFT52_CTD). No catalytic residues / no EC;<br />
+the GATase-like fold is used structurally, not enzymatically (consistent with a scaffold subunit).</p>
+<h2 id="summary-what-osm-6ift52-is-known">Summary: what osm-6/IFT52 IS (KNOWN)</h2>
+<ul>
+<li>
+<p><strong>Structural subunit of the IFT-B complex.</strong> In <em>Chlamydomonas</em>, the 16S IFT "raft" (IFT particle)<br />
+  contains ≥16 polypeptides, two of which are homologues of the <em>C. elegans</em> OSM-1 and OSM-6 proteins<br />
+  required for sensory ciliary function <a href="https://pubmed.ncbi.nlm.nih.gov/10545497" title="the basic subunit of IFT rafts is a 16S   multiprotein complex containing at least 16 polypeptides, two of which share sequence homology with   the OSM-1 and OSM-6 proteins that are required for sensory ciliary function in C. elegans">PMID:10545497</a>.<br />
+  OSM-6 is explicitly "the ortholog of human IFT52" and is used as the canonical GFP-tagged <strong>IFT-B<br />
+  component</strong> reporter <a href="https://pubmed.ncbi.nlm.nih.gov/22922713" title="the GFP-tagged IFT-B component OSM-6 (the ortholog of human   IFT52)">PMID:22922713</a>.</p>
+</li>
+<li>
+<p><strong>Cargo of the IFT motors / moves by IFT.</strong> OSM-6::GFP moves anterogradely (kinesin-II driven) and<br />
+  retrogradely along cilia. Kinesin-II and its cargo OSM-1 and OSM-6 all move at ~1.1 µm/s in the<br />
+  retrograde direction along cilia and dendrites <a href="https://pubmed.ncbi.nlm.nih.gov/10545497" title="OSM-1 and OSM-6, all move at   approximately 1.1 microm/s in the retrograde direction along cilia and dendrites">PMID:10545497</a>. Retrograde<br />
+  movement in cilia (but not dendrites) requires the CHE-3 (DHC1b/dynein-2) motor <a href="https://pubmed.ncbi.nlm.nih.gov/10545497" title="the class DHC1b cytoplasmic dynein, CHE-3, is specifically responsible for the retrograde transport   of the anterograde motor, kinesin-II, and its cargo within sensory cilia">PMID:10545497</a>. Ciliary entry of dynein-2<br />
+  itself depends on an intact IFT-B complex <a href="https://pubmed.ncbi.nlm.nih.gov/28479320" title="Disruption of the dynein-2 tail domain,   light intermediate chain, or intraflagellar transport (IFT)-B complex abolishes dynein-2's ciliary   localization">PMID:28479320</a>.</p>
+</li>
+<li>
+<p><strong>Required for cilium (axoneme) assembly.</strong> osm-6 mutants have normal transition zones but severely<br />
+  shortened axonemes with ectopic doublet microtubules assembling proximal to the cilium<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/2428682" title="The cilia in che-13 (e1805), osm-1 (p808), osm-5 (p813), and osm-6 (p811) mutants have   normal transition zones and severely shortened axonemes. Doublet-microtubules, attached to the   membrane by Y links, assemble ectopically proximal to the cilia in these mutants">PMID:2428682</a>. Cloning +<br />
+  transformation rescue + genetic mosaics show osm-6 acts <strong>cell-autonomously</strong> in ciliated sensory<br />
+  neurons <a href="https://pubmed.ncbi.nlm.nih.gov/9475731" title="we conclude from an analysis of genetic mosaics that osm-6 acts cell   autonomously in affecting cilium structure">PMID:9475731</a>.</p>
+</li>
+<li>
+<p><strong>Localization.</strong> OSM-6::GFP is expressed exclusively in ciliated sensory neurons; the fusion rescues<br />
+  the mutant and accumulates in cytoplasm including processes and dendritic endings where cilia sit<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/9475731" title="The OSM-6::GFP protein was localized to cytoplasm, including processes and dendritic   endings where sensory cilia are situated">PMID:9475731</a>. Expression is controlled by the RFX transcription factor<br />
+  DAF-19: "in the case of daf-19, reduced OSM-6::GFP accumulation" <a href="https://pubmed.ncbi.nlm.nih.gov/9475731">PMID:9475731</a>. Experimentally<br />
+  localized to: non-motile (sensory) cilium and transition zone <a href="https://pubmed.ncbi.nlm.nih.gov/10545497">PMID:10545497</a>, ciliary basal body<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/22922713">PMID:22922713</a>, and neuronal cell body <a href="https://pubmed.ncbi.nlm.nih.gov/9475731">PMID:9475731</a>. Used as a ciliary IFT marker in RAB-28 work<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/27930654">PMID:27930654</a>.</p>
+</li>
+</ul>
+<h2 id="what-osm-6-loss-causes-downstream-known-but-not-the-core-molecular-role">What osm-6 loss CAUSES downstream (KNOWN but not the core molecular role)</h2>
+<p>All of these are <em>sensory consequences of losing functional cilia</em>, not distinct molecular activities<br />
+of OSM-6:<br />
+- <strong>Osmotic avoidance defect</strong> — the gene is named for this ("OSMotic avoidance abnormal"); osm-6 was<br />
+  isolated among the osmotic-avoidance-defective mutants [PMID:730048 osmotic avoidance defective<br />
+  screen]. (Abstract-only; osm-6 not named in the cached abstract but this is the founding Osm screen<br />
+  and the IMP is a WormBase curator annotation.)<br />
+- <strong>Chemotaxis / chemosensation defect</strong> and dye-filling defect <a href="https://pubmed.ncbi.nlm.nih.gov/2428682">PMID:2428682</a>.<br />
+- <strong>Mechanosensation defect</strong> — nose-touch response requires intact ciliated sensory endings<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/8460126" title="Mutant animals that have defective ciliated sensory endings ... fail to respond to   touch to the nose">PMID:8460126</a> (osm-6 mutants are among such ciliary-defective animals; WB IMP).<br />
+- <strong>Dauer formation</strong> — osm-6 is one of the cilium-structure genes acting at a single step in the<br />
+  chemosensory dauer pathway <a href="https://pubmed.ncbi.nlm.nih.gov/1732156" title="Dauer-defective mutations in nine genes cause structurally   defective chemosensory cilia, thereby blocking chemosensation">PMID:1732156</a>; IGI with a daf gene.<br />
+- <strong>Salt-sensing circuit</strong> — hypomorphic osm-6 mutants lack functional sensory cilia and therefore<br />
+  have greatly reduced ASEL/AWC salt responses; cell-autonomous cilium rescue restores sensing<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/24013594" title="We analyzed hypomorphic osm-6 mutants that lack functional sensory cilia (dendritic   endings) and found them to have greatly reduced ASEL salt responses and AWCON salt and odor   responses">PMID:24013594</a>. The GO:1902075 "cellular response to salt" IMP here reflects this indirect ciliary<br />
+  requirement, not a salt-signalling activity of OSM-6.</p>
+<h2 id="what-is-not-known-knowledge-gaps">What is NOT known (knowledge gaps)</h2>
+<ul>
+<li><strong>No sub-molecular mechanism / no direct-partner map in C. elegans.</strong> OSM-6/IFT52 is treated as a<br />
+  structural IFT-B subunit, but which IFT-B partners it contacts in the worm (in mammals IFT52 bridges<br />
+  IFT88/IFT70/IFT46 and links the IFT-B core to peripheral subunits) and how its GIFT/central/CTD<br />
+  domains are used has not been experimentally dissected in <em>C. elegans</em>. GO MF for such a subunit can<br />
+  only be expressed as generic "structural molecule activity" (an ontology-shadow gap).</li>
+<li><strong>No independent biochemical/enzymatic activity</strong> is known or expected (GATase-like fold appears<br />
+  non-catalytic).</li>
+</ul>
+<h2 id="curation-plan-actions">Curation plan (actions)</h2>
+<p>Core (IFT-B structural subunit): intraciliary transport particle B (part_of), intraciliary transport,<br />
+cilium/non-motile cilium assembly, cilium/non-motile cilium localization, ciliary basal body,<br />
+transition zone — ACCEPT. centriole (IBA), cytoplasm, neuronal cell body — KEEP_AS_NON_CORE (real<br />
+but broad / not the functional site). Downstream sensory-phenotype BPs (chemotaxis, response to<br />
+osmotic stress, sensory perception of mechanical stimulus, cellular response to salt) —<br />
+KEEP_AS_NON_CORE (pleiotropic consequences of ciliary loss). GO:0003674 ND root MF — accept as<br />
+placeholder (superseded in spirit by proposed structural MF). Propose MF: structural molecule<br />
+activity (GO:0005198).</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: G5EDF6
+gene_symbol: osm-6
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:6239
+  label: Caenorhabditis elegans
+description: &gt;-
+  OSM-6 is the Caenorhabditis elegans ortholog of human IFT52 (also called NGD5;
+  Chlamydomonas IFT52/BLD1) and is a core structural subunit of the intraflagellar
+  transport complex B (IFT-B). Intraflagellar transport is the bidirectional,
+  microtubule-motor-driven movement of large multiprotein particles that build and
+  maintain cilia: kinesin-2 motors carry IFT particles and their cargo anterogradely
+  from the ciliary base to the tip, and cytoplasmic dynein-2 returns them retrogradely.
+  OSM-6/IFT52 is itself a component (and moving cargo) of the IFT-B particle rather
+  than an enzyme; its GATase-like N-terminal (GIFT) domain, central domain and
+  C-terminal domain are used to scaffold the complex. In C. elegans, osm-6 is expressed
+  exclusively in ciliated sensory neurons under control of the RFX transcription factor
+  DAF-19, and the protein localizes to the ciliary base (basal body, transition zone),
+  along the sensory (non-motile) cilium, and in the cytoplasm/cell body of these
+  neurons. OSM-6 is required for assembly of the ciliary axoneme: loss-of-function
+  mutants retain normal transition zones but have severely truncated axonemes and
+  ectopic microtubule assembly, causing dye-filling defects. Because the 60 ciliated
+  sensory neurons mediate chemosensation, osmotic avoidance, mechanosensation, and
+  dauer-pathway signaling, osm-6 mutants are broadly defective in these sensory
+  behaviors as a downstream consequence of lacking functional cilia. OSM-6/IFT52 is
+  conserved from algae to humans, and the pathway it serves is central to the biology
+  of ciliopathies.
+references:
+- id: GO_REF:0000015
+  title: Use of the ND evidence code for Gene Ontology (GO) terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: PMID:10545497
+  title: Role of a class DHC1b dynein in retrograde transport of IFT motors and IFT
+    raft particles along cilia, but not dendrites, in chemosensory neurons of living
+    Caenorhabditis elegans.
+  findings:
+  - statement: OSM-6 is a homologue of a Chlamydomonas 16S IFT raft (IFT particle)
+      polypeptide and, together with OSM-1 and kinesin-II, undergoes retrograde IFT
+      along cilia at ~1.1 um/s; retrograde ciliary transport requires the CHE-3
+      (DHC1b/dynein-2) motor.
+    supporting_text: OSM-1 and OSM-6, all move at approximately 1.1 microm/s in the
+      retrograde direction along cilia and dendrites
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified (Signor et al., J Cell Biol 1999). Directly assays
+      OSM-6::GFP movement and its dependence on dynein; supports IFT-cargo and
+      transition-zone localization annotations.
+- id: PMID:1732156
+  title: Genetic analysis of chemosensory control of dauer formation in Caenorhabditis
+    elegans.
+  findings:
+  - statement: osm-6 is one of nine cilium-structure genes whose mutation causes
+      structurally defective chemosensory cilia and blocks chemosensation, placing it
+      at a single step in the dauer-formation epistasis pathway.
+    supporting_text: Dauer-defective mutations in nine genes cause structurally
+      defective chemosensory cilia, thereby blocking chemosensation.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Vowels &amp; Thomas 1992; supports the dauer (cilium assembly) IGI as a
+      downstream sensory consequence of defective cilia.
+- id: PMID:22342749
+  title: Endocytosis genes facilitate protein and membrane transport in C. elegans
+    sensory cilia.
+  findings:
+  - statement: OSM-6 is used as an IFT/ciliary marker in C. elegans sensory cilia; the
+      study examines transport of ciliary and periciliary membrane and IFT proteins.
+    supporting_text: These pathways include cilium-based intraflagellar transport (IFT)
+      and poorly understood membrane trafficking events.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Kaplan et al. 2012; source of the non-motile cilium IDA localization.
+- id: PMID:22922713
+  title: The BBSome controls IFT assembly and turnaround in cilia.
+  findings:
+  - statement: GFP-tagged OSM-6 is the canonical IFT-B reporter (explicitly the ortholog
+      of human IFT52) used to screen for IFT assembly/turnaround mutants; OSM-6 marks
+      IFT particles at the ciliary base and along cilia.
+    supporting_text: the GFP-tagged IFT-B component OSM-6 (the ortholog of human IFT52)
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Wei et al., Nat Cell Biol 2012. Establishes OSM-6=IFT52=IFT-B component;
+      basal body IDA localization.
+- id: PMID:24013594
+  title: Neuropeptide signaling remodels chemosensory circuit composition in Caenorhabditis
+    elegans.
+  findings:
+  - statement: Hypomorphic osm-6 mutants lack functional sensory cilia and consequently
+      show greatly reduced salt (ASEL) and salt/odor (AWC) sensory responses; ciliary
+      function is restored cell-autonomously by osm-6 rescue.
+    supporting_text: We analyzed hypomorphic osm-6 mutants that lack functional sensory
+      cilia (dendritic endings) and found them to have greatly reduced ASEL salt
+      responses and AWCON salt and odor responses
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Leinwand &amp; Chalasani 2013. osm-6 used as a tool to abolish ciliary
+      sensory function; the salt-response phenotype is an indirect consequence of
+      cilium loss, not a salt-signalling activity of OSM-6.
+- id: PMID:2428682
+  title: Mutant sensory cilia in the nematode Caenorhabditis elegans.
+  findings:
+  - statement: osm-6(p811) mutants have normal ciliary transition zones but severely
+      shortened axonemes with ectopic doublet microtubules, establishing OSM-6 as
+      required for axoneme (cilium) assembly rather than transition-zone formation.
+    supporting_text: The cilia in che-13 (e1805), osm-1 (p808), osm-5 (p813), and osm-6
+      (p811) mutants have normal transition zones and severely shortened axonemes.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Perkins et al. 1986; foundational ultrastructural characterization of
+      osm-6 ciliary phenotype and dye-filling/chemosensory defects.
+- id: PMID:27930654
+  title: Whole-Organism Developmental Expression Profiling Identifies RAB-28 as a Novel
+    Ciliary GTPase Associated with the BBSome and Intraflagellar Transport.
+  findings:
+  - statement: OSM-6::GFP (explicitly the IFT52 orthologue) localizes throughout
+      normal-length sensory cilia and is used as an established IFT/ciliary marker.
+    supporting_text: Localisation of an IFT protein, OSM-6 (IFT52 orthologue), throughout
+      normal-length cilia confirms this finding
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Jensen et al. 2016; source of the cilium IDA localization (OSM-6::GFP
+      as a ciliary reference marker).
+- id: PMID:28479320
+  title: Dynein-Driven Retrograde Intraflagellar Transport Is Triphasic in C. elegans
+    Sensory Cilia.
+  findings:
+  - statement: Ciliary entry of dynein-2 requires an intact IFT-B complex (of which
+      OSM-6/IFT52 is a component); this study is the ComplexPortal source (CPX-1290)
+      for OSM-6 IFT-B/IFT particle B membership and ciliary localization.
+    supporting_text: Disruption of the dynein-2 tail domain, light intermediate chain,
+      or intraflagellar transport (IFT)-B complex abolishes dynein-2&#39;s ciliary
+      localization
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Yi et al. 2017. Underlies the ComplexPortal NAS annotations for IFT
+      particle B membership, intraciliary transport, cilium assembly and cilium.
+- id: PMID:730048
+  title: Osmotic avoidance defective mutants of the nematode Caenorhabditis elegans.
+  findings:
+  - statement: Founding screen that isolated osmotic-avoidance-defective (Osm) mutants
+      of C. elegans, the phenotypic class for which osm-6 is named; such mutants fail
+      to avoid high concentrations of salts/sugars.
+    supporting_text: mutants were selected for their inability to avoid high
+      concentrations of fructose or NaCl
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Culotti &amp; Russell 1978; abstract-only. Origin of the osm-6 osmotic
+      avoidance phenotype; the WormBase IMP is a curator judgment from the full text.
+- id: PMID:8460126
+  title: A dual mechanosensory and chemosensory neuron in Caenorhabditis elegans.
+  findings:
+  - statement: Animals with defective ciliated sensory endings fail to respond to nose
+      touch, linking intact sensory cilia (which require osm-6) to mechanosensation.
+    supporting_text: Mutant animals that have defective ciliated sensory endings as
+      well as laser-operated animals that lack ASH, FLP, and OLQ fail to respond to
+      touch to the nose.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Kaplan &amp; Horvitz 1993; abstract-only, does not name osm-6. Basis for
+      the WormBase mechanosensory-perception IMP as a downstream ciliary phenotype;
+      not overruled per curator-defers guidance.
+- id: PMID:9475731
+  title: Analysis of osm-6, a gene that affects sensory cilium structure and sensory
+    neuron function in Caenorhabditis elegans.
+  findings:
+  - statement: osm-6 was cloned and shown to encode a protein of previously unknown
+      function expressed exclusively in ciliated sensory neurons; OSM-6::GFP rescues
+      the mutant and localizes to cytoplasm/processes/dendritic endings, and osm-6 acts
+      cell-autonomously in cilium structure. DAF-19 is required for OSM-6 accumulation.
+    supporting_text: The OSM-6::GFP protein was localized to cytoplasm, including
+      processes and dendritic endings where sensory cilia are situated.
+  - statement: Genetic mosaic analysis shows osm-6 acts cell-autonomously in the
+      ciliated neuron.
+    supporting_text: we conclude from an analysis of genetic mosaics that osm-6 acts
+      cell autonomously in affecting cilium structure
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Collet et al. 1998; the defining osm-6 cloning/expression paper.
+      Source of cytoplasm and neuronal cell body IDA localizations and the
+      DAF-19-dependent, sensory-neuron-restricted expression.
+existing_annotations:
+- term:
+    id: GO:0005929
+    label: cilium
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: OSM-6/IFT52 localizes to and functions within the cilium; phylogenetic
+      (IBA) inference agrees with direct C. elegans localization data.
+    action: ACCEPT
+    reason: Cilium localization is directly supported by multiple experimental studies
+      (OSM-6::GFP is a canonical ciliary/IFT marker) and is a core aspect of osm-6
+      function.
+    supported_by:
+    - reference_id: PMID:22922713
+      supporting_text: the GFP-tagged IFT-B component OSM-6 (the ortholog of human IFT52)
+- term:
+    id: GO:0030992
+    label: intraciliary transport particle B
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: part_of
+  review:
+    summary: OSM-6 is a structural subunit of the IFT-B particle; this is the single
+      most important annotation for the gene and is supported by orthology to IFT52 and
+      by ComplexPortal (CPX-1290).
+    action: ACCEPT
+    reason: Core molecular role. OSM-6 is explicitly the IFT-B component / IFT52
+      ortholog and a member of Intraflagellar transport complex B (CPX-1290).
+    supported_by:
+    - reference_id: PMID:22922713
+      supporting_text: the GFP-tagged IFT-B component OSM-6 (the ortholog of human IFT52)
+- term:
+    id: GO:0042073
+    label: intraciliary transport
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: As an IFT-B subunit and moving IFT cargo, OSM-6 is directly involved in
+      intraciliary transport.
+    action: ACCEPT
+    reason: Core biological process. OSM-6::GFP moves bidirectionally by IFT and is part
+      of the transported IFT particle.
+    supported_by:
+    - reference_id: PMID:10545497
+      supporting_text: OSM-1 and OSM-6, all move at approximately 1.1 microm/s in the
+        retrograde direction along cilia and dendrites
+- term:
+    id: GO:0060271
+    label: cilium assembly
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: OSM-6 is required for building the ciliary axoneme; phylogenetic inference
+      is corroborated by the loss-of-function ultrastructural phenotype.
+    action: ACCEPT
+    reason: Core process. osm-6 mutants have severely truncated axonemes, establishing a
+      role in cilium assembly.
+    supported_by:
+    - reference_id: PMID:2428682
+      supporting_text: The cilia in che-13 (e1805), osm-1 (p808), osm-5 (p813), and
+        osm-6 (p811) mutants have normal transition zones and severely shortened axonemes.
+- term:
+    id: GO:0005814
+    label: centriole
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: Phylogenetically propagated centriole localization. In C. elegans the
+      directly demonstrated basal-body/transition-zone localization is the relevant
+      structure (the ciliary basal body is a docked, modified centriole).
+    action: KEEP_AS_NON_CORE
+    reason: Plausible but not the core functional site and not directly demonstrated in
+      C. elegans; the experimentally supported location is the ciliary basal body
+      (GO:0036064). Retained as a non-core, orthology-based location rather than removed.
+- term:
+    id: GO:0005929
+    label: cilium
+  evidence_type: NAS
+  original_reference_id: PMID:28479320
+  qualifier: located_in
+  review:
+    summary: ComplexPortal (CPX-1290) statement that OSM-6 localizes to the cilium,
+      consistent with direct experimental data.
+    action: ACCEPT
+    reason: Core ciliary localization; corroborated by IDA evidence from multiple studies.
+    supported_by:
+    - reference_id: PMID:28479320
+      supporting_text: Dynein-Driven Retrograde Intraflagellar Transport Is Triphasic in
+        C. elegans Sensory Cilia
+- term:
+    id: GO:0030992
+    label: intraciliary transport particle B
+  evidence_type: NAS
+  original_reference_id: PMID:28479320
+  qualifier: part_of
+  review:
+    summary: ComplexPortal assertion of OSM-6 membership in IFT particle B, the core
+      structural annotation, based on the C. elegans IFT-B complex.
+    action: ACCEPT
+    reason: Core molecular role, redundant with and reinforcing the IBA IFT-B membership
+      annotation.
+    supported_by:
+    - reference_id: PMID:28479320
+      supporting_text: Disruption of the dynein-2 tail domain, light intermediate chain,
+        or intraflagellar transport (IFT)-B complex abolishes dynein-2&#39;s ciliary
+        localization
+- term:
+    id: GO:0042073
+    label: intraciliary transport
+  evidence_type: NAS
+  original_reference_id: PMID:28479320
+  qualifier: involved_in
+  review:
+    summary: ComplexPortal statement of IFT-B involvement in intraciliary transport.
+    action: ACCEPT
+    reason: Core process consistent with OSM-6 being a transported IFT-B subunit.
+    supported_by:
+    - reference_id: PMID:28479320
+      supporting_text: Disruption of the dynein-2 tail domain, light intermediate chain,
+        or intraflagellar transport (IFT)-B complex abolishes dynein-2&#39;s ciliary
+        localization
+- term:
+    id: GO:0060271
+    label: cilium assembly
+  evidence_type: NAS
+  original_reference_id: PMID:28479320
+  qualifier: involved_in
+  review:
+    summary: ComplexPortal statement of IFT-B involvement in cilium assembly.
+    action: ACCEPT
+    reason: Core process; redundant with the IMP/IBA cilium-assembly annotations.
+    supported_by:
+    - reference_id: PMID:2428682
+      supporting_text: The cilia in che-13 (e1805), osm-1 (p808), osm-5 (p813), and
+        osm-6 (p811) mutants have normal transition zones and severely shortened axonemes.
+- term:
+    id: GO:0060271
+    label: cilium assembly
+  evidence_type: IMP
+  original_reference_id: PMID:24013594
+  qualifier: involved_in
+  review:
+    summary: osm-6 loss abolishes functional sensory cilia (dendritic endings),
+      confirming a requirement in cilium assembly.
+    action: ACCEPT
+    reason: Core process. Although this paper is about a salt circuit, it explicitly
+      uses osm-6 as a cilium-assembly loss-of-function allele.
+    supported_by:
+    - reference_id: PMID:24013594
+      supporting_text: We analyzed hypomorphic osm-6 mutants that lack functional sensory
+        cilia (dendritic endings)
+- term:
+    id: GO:1902075
+    label: cellular response to salt
+  evidence_type: IMP
+  original_reference_id: PMID:24013594
+  qualifier: involved_in
+  review:
+    summary: osm-6 mutants have reduced salt-evoked neuronal responses, but only because
+      they lack functional cilia; OSM-6 has no salt-sensing or salt-signalling activity
+      of its own.
+    action: KEEP_AS_NON_CORE
+    reason: Indirect, downstream sensory phenotype of ciliary loss rather than a core
+      molecular/biological function of OSM-6. Retained (per curator) but marked non-core
+      to avoid implying a direct salt-response role.
+    supported_by:
+    - reference_id: PMID:24013594
+      supporting_text: found them to have greatly reduced ASEL salt responses and AWCON
+        salt and odor responses
+- term:
+    id: GO:0005929
+    label: cilium
+  evidence_type: IDA
+  original_reference_id: PMID:27930654
+  qualifier: located_in
+  review:
+    summary: Direct localization of OSM-6::GFP to the cilium, used as a ciliary reference
+      marker.
+    action: ACCEPT
+    reason: Core ciliary localization directly observed; OSM-6::GFP (IFT52 orthologue)
+      is imaged throughout normal-length cilia.
+    supported_by:
+    - reference_id: PMID:27930654
+      supporting_text: Localisation of an IFT protein, OSM-6 (IFT52 orthologue),
+        throughout normal-length cilia confirms this finding
+- term:
+    id: GO:1905515
+    label: non-motile cilium assembly
+  evidence_type: IMP
+  original_reference_id: PMID:2428682
+  qualifier: involved_in
+  review:
+    summary: osm-6 mutants fail to build full sensory (non-motile) cilia; this is the
+      most precise cilium-assembly term for the worm&#39;s sensory cilia.
+    action: ACCEPT
+    reason: Core process, and appropriately specific (C. elegans sensory cilia are
+      non-motile). Directly supported by the ultrastructural phenotype.
+    supported_by:
+    - reference_id: PMID:2428682
+      supporting_text: The cilia in che-13 (e1805), osm-1 (p808), osm-5 (p813), and
+        osm-6 (p811) mutants have normal transition zones and severely shortened axonemes.
+- term:
+    id: GO:0060271
+    label: cilium assembly
+  evidence_type: IGI
+  original_reference_id: PMID:1732156
+  qualifier: involved_in
+  review:
+    summary: Genetic-interaction evidence placing osm-6 among cilium-structure genes
+      required for chemosensory cilium function in the dauer pathway.
+    action: ACCEPT
+    reason: Core process; osm-6 is one of nine genes whose mutation gives structurally
+      defective chemosensory cilia.
+    supported_by:
+    - reference_id: PMID:1732156
+      supporting_text: Dauer-defective mutations in nine genes cause structurally
+        defective chemosensory cilia, thereby blocking chemosensation.
+- term:
+    id: GO:0097730
+    label: non-motile cilium
+  evidence_type: IDA
+  original_reference_id: PMID:22342749
+  qualifier: located_in
+  review:
+    summary: Direct localization of OSM-6 to the sensory (non-motile) cilium.
+    action: ACCEPT
+    reason: Core ciliary localization; the sensory-cilium term is appropriately specific.
+    supported_by:
+    - reference_id: PMID:22342749
+      supporting_text: cilium-based intraflagellar transport (IFT)
+- term:
+    id: GO:0003674
+    label: molecular_function
+  evidence_type: ND
+  original_reference_id: GO_REF:0000015
+  qualifier: enables
+  review:
+    summary: Root-level placeholder recording that no specific molecular function had
+      been assigned at the time of annotation.
+    action: ACCEPT
+    reason: Retained as the standard ND placeholder. A subunit-specific molecular
+      function (structural molecule activity within IFT-B) is now proposed as a NEW
+      annotation and in core_functions; no catalytic activity is known or expected for
+      this GATase-fold scaffold.
+- term:
+    id: GO:0005198
+    label: structural molecule activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: OSM-6/IFT52 has no catalytic activity; as an IFT-B subunit its molecular
+      function is best captured as a subunit-specific structural molecule activity.
+    action: NEW
+    reason: Proposed new molecular-function annotation reflecting OSM-6&#39;s role as a
+      structural subunit of the IFT-B particle (the current GOA carries only the ND root
+      MF for this gene). This IBA/GO_REF:0000033 evidence pairing does NOT currently
+      exist in the GOA export; it is the expected phylogenetic evidence basis if the
+      annotation were made (IFT52 orthologues across species are IFT-B structural
+      subunits). Ideally a more specific &#39;structural constituent of intraflagellar
+      transport particle&#39; term (see proposed_new_terms) would be used.
+    supported_by:
+    - reference_id: PMID:22922713
+      supporting_text: the GFP-tagged IFT-B component OSM-6 (the ortholog of human IFT52)
+- term:
+    id: GO:0036064
+    label: ciliary basal body
+  evidence_type: IDA
+  original_reference_id: PMID:22922713
+  qualifier: located_in
+  review:
+    summary: OSM-6::GFP directly localizes to the ciliary basal body, where IFT
+      particles assemble before entering the cilium.
+    action: ACCEPT
+    reason: Core localization at the site of IFT assembly.
+    supported_by:
+    - reference_id: PMID:22922713
+      supporting_text: the GFP-tagged IFT-B component OSM-6 (the ortholog of human IFT52)
+- term:
+    id: GO:0035869
+    label: ciliary transition zone
+  evidence_type: IDA
+  original_reference_id: PMID:10545497
+  qualifier: located_in
+  review:
+    summary: OSM-6::GFP is observed at/through the ciliary transition zone as it moves
+      between the base and the axoneme.
+    action: ACCEPT
+    reason: Core localization consistent with IFT trafficking through the transition zone.
+    supported_by:
+    - reference_id: PMID:10545497
+      supporting_text: OSM-1 and OSM-6, all move at approximately 1.1 microm/s in the
+        retrograde direction along cilia and dendrites
+- term:
+    id: GO:0097730
+    label: non-motile cilium
+  evidence_type: IDA
+  original_reference_id: PMID:10545497
+  qualifier: located_in
+  review:
+    summary: OSM-6::GFP localizes along the sensory (non-motile) cilium.
+    action: ACCEPT
+    reason: Core ciliary localization, appropriately specific.
+    supported_by:
+    - reference_id: PMID:10545497
+      supporting_text: OSM-1 and OSM-6, all move at approximately 1.1 microm/s in the
+        retrograde direction along cilia and dendrites
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IDA
+  original_reference_id: PMID:9475731
+  qualifier: located_in
+  review:
+    summary: OSM-6::GFP is present in the cytoplasm (including neuronal processes) prior
+      to and outside of ciliary transport.
+    action: KEEP_AS_NON_CORE
+    reason: Directly observed but a broad, non-informative location; the functionally
+      relevant sites are the cilium and its base. Retained as non-core.
+    supported_by:
+    - reference_id: PMID:9475731
+      supporting_text: The OSM-6::GFP protein was localized to cytoplasm, including
+        processes and dendritic endings where sensory cilia are situated.
+- term:
+    id: GO:0006935
+    label: chemotaxis
+  evidence_type: IMP
+  original_reference_id: PMID:2428682
+  qualifier: involved_in
+  review:
+    summary: osm-6 mutants are chemosensory-defective (dye-filling defective) because
+      their chemosensory cilia are truncated.
+    action: KEEP_AS_NON_CORE
+    reason: Downstream sensory consequence of defective cilia rather than a direct role
+      of OSM-6 in chemotaxis signalling. Retained but non-core.
+    supported_by:
+    - reference_id: PMID:2428682
+      supporting_text: Mutations in 14 genes prevent dye uptake and disrupt chemosensory
+        behaviors.
+- term:
+    id: GO:0006970
+    label: response to osmotic stress
+  evidence_type: IMP
+  original_reference_id: PMID:730048
+  qualifier: involved_in
+  review:
+    summary: osm-6 is named for its osmotic-avoidance-defective phenotype; mutants fail
+      to avoid high osmolarity because their sensory cilia are non-functional.
+    action: KEEP_AS_NON_CORE
+    reason: Indirect, downstream behavioral phenotype of ciliary loss, not a direct
+      osmotic-stress-response activity of OSM-6. Retained (curator IMP) but non-core.
+    supported_by:
+    - reference_id: PMID:730048
+      supporting_text: mutants were selected for their inability to avoid high
+        concentrations of fructose or NaCl
+- term:
+    id: GO:0043025
+    label: neuronal cell body
+  evidence_type: IDA
+  original_reference_id: PMID:9475731
+  qualifier: located_in
+  review:
+    summary: OSM-6::GFP accumulates in the cell bodies of ciliated sensory neurons,
+      where the protein is synthesized before delivery to cilia.
+    action: KEEP_AS_NON_CORE
+    reason: Real localization but reflects the site of synthesis rather than the core
+      functional site (the cilium/basal body). Retained as non-core.
+    supported_by:
+    - reference_id: PMID:9475731
+      supporting_text: showed accumulation of GFP in ciliated sensory neurons exclusively
+- term:
+    id: GO:0050954
+    label: sensory perception of mechanical stimulus
+  evidence_type: IMP
+  original_reference_id: PMID:8460126
+  qualifier: involved_in
+  review:
+    summary: Nose-touch mechanosensation requires intact ciliated sensory endings, which
+      osm-6 is needed to build; osm-6 mutants are mechanosensory-defective.
+    action: KEEP_AS_NON_CORE
+    reason: Downstream sensory consequence of defective cilia rather than a direct
+      mechanotransduction role of OSM-6. The cached abstract does not name osm-6, but
+      the WormBase IMP reflects curator full-text evidence and is not overruled.
+    supported_by:
+    - reference_id: PMID:8460126
+      supporting_text: Mutant animals that have defective ciliated sensory endings as
+        well as laser-operated animals that lack ASH, FLP, and OLQ fail to respond to
+        touch to the nose.
+core_functions:
+- description: OSM-6/IFT52 is a structural subunit of the intraflagellar transport
+    complex B (IFT-B), the anterograde IFT particle that is itself carried as cargo by
+    kinesin-2 and returned by dynein-2. It scaffolds the IFT-B complex (it does not have
+    independent catalytic activity) and is required to build and maintain the sensory
+    ciliary axoneme in C. elegans ciliated neurons.
+  supported_by:
+  - reference_id: PMID:22922713
+    supporting_text: the GFP-tagged IFT-B component OSM-6 (the ortholog of human IFT52)
+  - reference_id: PMID:2428682
+    supporting_text: The cilia in che-13 (e1805), osm-1 (p808), osm-5 (p813), and osm-6
+      (p811) mutants have normal transition zones and severely shortened axonemes.
+  molecular_function:
+    id: GO:0005198
+    label: structural molecule activity
+  directly_involved_in:
+  - id: GO:0042073
+    label: intraciliary transport
+  - id: GO:1905515
+    label: non-motile cilium assembly
+  locations:
+  - id: GO:0097730
+    label: non-motile cilium
+  - id: GO:0036064
+    label: ciliary basal body
+  - id: GO:0035869
+    label: ciliary transition zone
+  in_complex:
+    id: GO:0030992
+    label: intraciliary transport particle B
+knowledge_gaps:
+- gap_statement: The specific intra-complex protein contacts of OSM-6/IFT52 within the
+    C. elegans IFT-B particle have not been experimentally mapped. In other organisms
+    IFT52 bridges the IFT-B1 core (contacting IFT88, IFT70 and IFT46) and links the core
+    to peripheral subunits, but which partners its GIFT, central and C-terminal domains
+    engage in the worm, and how these contacts are used during IFT-particle assembly and
+    tip turnaround, is undetermined.
+  boundary: It is firmly established that OSM-6 is an IFT-B/IFT52 structural subunit that
+    moves bidirectionally by IFT, localizes to basal body, transition zone and axoneme,
+    and is required for axoneme assembly.
+  gap_kind:
+  - BIOLOGY
+  - ONTOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: Defining OSM-6&#39;s specific IFT-B contacts would explain how the IFT-B
+    particle is built and how ciliopathy-relevant IFT52 mutations destabilize the complex.
+  resolution: In vivo proximity labeling (BioID/TurboID) or cross-linking mass
+    spectrometry of tagged OSM-6 in ciliated neurons, plus structure determination of the
+    C. elegans IFT-B subcomplex, paired with an ontology term for structural constituent
+    of the IFT particle.
+  provenance:
+  - reference_id: PMID:22922713
+    supporting_text: the GFP-tagged IFT-B component OSM-6 (the ortholog of human IFT52)
+  proposed_terms:
+  - proposed_name: structural constituent of intraflagellar transport particle
+    proposed_definition: A structural molecule activity in which a protein acts as a
+      structural subunit of an intraflagellar transport (IFT) particle (IFT-A or IFT-B),
+      contributing to assembly and integrity of the particle trafficked along the
+      ciliary axoneme.
+    justification: GO currently expresses this role only as the generic &#39;structural
+      molecule activity&#39; (GO:0005198).
+- gap_statement: No independent biochemical or enzymatic activity has been demonstrated
+    for OSM-6/IFT52, and although its N-terminal domain adopts a class-I
+    glutamine-amidotransferase-like (GIFT) fold, whether this fold has any residual
+    ligand-binding or catalytic role beyond scaffolding is unknown.
+  boundary: The GATase-like fold is annotated structurally (Pfam IFT52_GIFT / SSF52317);
+    catalytic residues appear absent, consistent with a purely structural function.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: Ruling in or out any ligand-binding role of the GIFT domain would clarify
+    whether IFT52 does more than scaffold IFT-B.
+  resolution: Structure-guided mutagenesis of the GIFT domain and in vitro binding/activity
+    assays to test for retained ligand interaction.
+  provenance:
+  - reference_id: PMID:9475731
+    supporting_text: a protein that is 40% identical in amino acid sequence to a predicted
+      mammalian protein of unknown function
+proposed_new_terms:
+- proposed_name: structural constituent of intraflagellar transport particle
+  proposed_definition: A structural molecule activity in which a protein acts as a
+    structural subunit of an intraflagellar transport (IFT) particle (IFT-A or IFT-B),
+    contributing to the assembly and integrity of the particle that is trafficked along
+    the ciliary axoneme by kinesin-2 and dynein-2 motors.
+  justification: OSM-6/IFT52 and its IFT-B/IFT-A paralogs act as structural subunits of
+    the IFT particle, a role currently expressible only as the generic GO:0005198
+    structural molecule activity. A dedicated MF term would capture the shared function
+    of IFT structural subunits.
+  supported_by:
+  - reference_id: PMID:22922713
+    supporting_text: the GFP-tagged IFT-B component OSM-6 (the ortholog of human IFT52)
+suggested_questions:
+- question: Which IFT-B subunits does OSM-6 directly contact in C. elegans, and are the
+    GIFT, central and C-terminal domains functionally separable?
+  experts:
+  - Oliver E. Blacque
+- question: Does the IFT52 GIFT domain retain any ligand-binding capacity, or is it a
+    purely structural remnant of the glutamine-amidotransferase fold?
+  experts: []
+suggested_experiments:
+- hypothesis: OSM-6/IFT52 bridges the IFT-B core to peripheral subunits via distinct
+    domains, and disrupting individual domains selectively destabilizes parts of IFT-B.
+  description: Perform in vivo proximity labeling (TurboID) with domain-truncated OSM-6
+    variants expressed in ciliated neurons, followed by mass spectrometry, to map
+    domain-specific IFT-B interaction partners.
+  experiment_type: proximity labeling / interaction mapping
+- hypothesis: The severely truncated axoneme of osm-6 mutants reflects failure to deliver
+    axonemal tubulin/cargo by IFT-B rather than a transition-zone defect.
+  description: Use live imaging of tagged tubulin and IFT trains in osm-6 partial
+    loss-of-function backgrounds to quantify anterograde cargo delivery versus
+    transition-zone integrity.
+  experiment_type: live-cell imaging
+tags:
+- caeel-ciliopathy
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

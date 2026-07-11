@@ -1,0 +1,4005 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dcar-1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>dcar-1</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/G5EDI0" target="_blank" class="term-link">
+                        G5EDI0
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Caenorhabditis elegans</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "dcar-1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="G5EDI0" data-a="DESCRIPTION: DCAR-1 (DihydroCaffeic Acid Receptor 1) is a seven..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>DCAR-1 (DihydroCaffeic Acid Receptor 1) is a seven-transmembrane, class A (rhodopsin-like) G protein-coupled receptor of Caenorhabditis elegans that acts in two distinct tissues. In the epidermis it is a plasma-membrane receptor, localized to the apical surface of the hyp7 syncytium, that senses the endogenous tyrosine-derived metabolite 4-hydroxyphenyllactic acid (HPLA), a damage-associated molecular pattern produced upon fungal infection and wounding, and triggers antimicrobial peptide (nlp-29 cluster) gene expression through a Galpha (GPA-12) / p38 MAP kinase (TIR-1, NSY-1, SEK-1, PMK-1) / STA-2 signalling cassette, conferring resistance to the natural fungal pathogen Drechmeria coniospora. In sensory neurons (ASH, ASI, PVQ) the same receptor detects the exogenous water-soluble repellent dihydrocaffeic acid (DHCA) and mediates an avoidance response, acting with the TRPV channel subunits OCR-2 and OSM-9. DCAR-1 thus couples small-molecule (catecholic/phenolic acid) ligand detection to Galpha signalling, with clearly recognizable homologs restricted to nematode genomes.</p>
+    </div>
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Proposed New Ontology Terms</h2>
+
+        <div class="proposed-term">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>4-hydroxyphenyllactate (HPLA) receptor activity</h3>
+                <span class="vote-buttons" data-g="G5EDI0" data-a="4-hydroxyphenyllactate (HPLA) receptor activity" data-r="" data-act="NEW">
+                    <button class="vote-btn" data-v="up" title="Agree this term should be created">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with creating this term">👎</button>
+                </span>
+            </div>
+
+
+            <p><strong>Definition:</strong> Combining with the tyrosine-derived metabolite 4-hydroxyphenyllactic acid (HPLA), a damage-associated molecular pattern, to initiate a change in cell activity, typically via coupling to a heterotrimeric G protein. Applies to GPCRs, such as nematode DCAR-1, that detect HPLA (and structurally related catecholic/phenolic acids) to trigger downstream signalling.</p>
+
+
+
+            <p><strong>Justification:</strong> DCAR-1&#39;s specific molecular function - detection of the small-molecule DAMP HPLA - can currently only be annotated with the generic parent G protein-coupled receptor activity (GO:0004930). No ontology term expresses the ligand-specific activity, leaving the receptor&#39;s most distinctive feature un-annotatable (an ontology gap).</p>
+
+
+
+            <p><strong>Parent term:</strong>
+                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004930" target="_blank" class="term-link">
+                    G protein-coupled receptor activity
+                </a>
+            </p>
+
+
+
+
+
+            <p><strong>Supporting Evidence:</strong></p>
+            <ul style="margin-left: 1rem;">
+
+                <li>
+
+                    <a href="https://pubmed.ncbi.nlm.nih.gov/25086774" target="_blank" class="term-link">
+                        PMID:25086774
+                    </a>
+
+
+                    : the tyrosine derivative 4-hydroxyphenyllactic acid (HPLA) as an endogenous ligand
+
+                </li>
+
+            </ul>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004930" target="_blank" class="term-link">
+                                    GO:0004930
+                                </a>
+                            </span>
+                            <span class="term-label">G protein-coupled receptor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDI0" data-a="GO:0004930" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DCAR-1 is a bona fide seven-transmembrane class A GPCR (7 predicted TM helices; PROSITE G_PROTEIN_RECEP_F1_2; PANTHER PTHR24243) that functions as a receptor for small-molecule ligands: HPLA in the epidermis and DHCA in sensory neurons, in both cases coupling to Galpha signalling.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The GPCR activity is directly supported experimentally. DCAR-1 was identified as a heterologously expressible receptor for DHCA and shown to respond to HPLA, and it signals via the Galpha protein GPA-12. This is a core molecular function of the gene.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22090488" target="_blank" class="term-link">
+                                        PMID:22090488
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">we identified a candidate dihydrocaffeic acid receptor (DCAR), DCAR-1. DCAR-1 is a novel seven-transmembrane protein that is expressed in the ASH avoidance sensory neurons of C. elegans.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25086774" target="_blank" class="term-link">
+                                        PMID:25086774
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Dihydrocaffeic acid (DHCA) has been described as a potent ligand for DCAR-1 in both in vivo and in heterologous Xenopus oocyte assays</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007186" target="_blank" class="term-link">
+                                    GO:0007186
+                                </a>
+                            </span>
+                            <span class="term-label">G protein-coupled receptor signaling pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDI0" data-a="GO:0007186" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DCAR-1 initiates GPCR signalling: in the epidermis it acts upstream of (or in parallel to) the Galpha protein GPA-12 to control downstream p38 MAPK (PMK-1) signalling.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core biological process. Genetic epistasis places DCAR-1 at the top of a Galpha (GPA-12) -&gt; p38 MAPK cascade, consistent with canonical GPCR signalling.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25086774" target="_blank" class="term-link">
+                                        PMID:25086774
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">dcar-1 alone acts upstream or in parallel to GPA-12</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007165" target="_blank" class="term-link">
+                                    GO:0007165
+                                </a>
+                            </span>
+                            <span class="term-label">signal transduction</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDI0" data-a="GO:0007165" data-r="GO_REF:0000104" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but generic. Signal transduction is a high-level parent of the more specific G protein-coupled receptor signaling pathway (GO:0007186) that is also annotated and better captures DCAR-1&#39;s activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The term is not wrong - DCAR-1 does transduce signals - but it is subsumed by the more informative GPCR signaling pathway annotation, so it is retained as non-core rather than treated as a distinct core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25086774" target="_blank" class="term-link">
+                                        PMID:25086774
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">multiple elements of the downstream signal transduction cascade</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050832" target="_blank" class="term-link">
+                                    GO:0050832
+                                </a>
+                            </span>
+                            <span class="term-label">defense response to fungus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25086774" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25086774
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Activation of a G protein-coupled receptor by its endogenous...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDI0" data-a="GO:0050832" data-r="PMID:25086774" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Loss of dcar-1 (RNAi and two null alleles, tm2484 and nj66) abolishes infection-induced antimicrobial peptide expression and markedly increases susceptibility to the fungus Drechmeria coniospora; DCAR-1 was the sole GPCR hit from a screen of 1,150 GPCR genes.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Strong IMP evidence for a core function. DCAR-1 is required in the epidermis for the innate immune response to fungal infection.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25086774" target="_blank" class="term-link">
+                                        PMID:25086774
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">dcar-1 emerged alone as an innate immune receptor gene acting upstream of (or in parallel to) gpa-12</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25086774" target="_blank" class="term-link">
+                                        PMID:25086774
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">dcar-1 mutants exhibited a markedly heightened susceptibility to D. coniospora infection</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009611" target="_blank" class="term-link">
+                                    GO:0009611
+                                </a>
+                            </span>
+                            <span class="term-label">response to wounding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25086774" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25086774
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Activation of a G protein-coupled receptor by its endogenous...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDI0" data-a="GO:0009611" data-r="PMID:25086774" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> dcar-1 mutants show an almost complete block of antimicrobial peptide (nlp-29p::gfp) induction after sterile physical injury, showing that DCAR-1 mediates the response to wounding/damage independently of a pathogen - consistent with detection of an endogenous damage signal (HPLA/DAMP).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Well-supported IMP for a core damage-sensing function; wounding and infection converge on the same DCAR-1-dependent, HPLA-driven pathway.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25086774" target="_blank" class="term-link">
+                                        PMID:25086774
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">an almost complete block of nlp-29p::gfp induction following physical injury</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25086774" target="_blank" class="term-link">
+                                        PMID:25086774
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">demonstrating that dcar-1 can be activated in the absence of a pathogen</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016324" target="_blank" class="term-link">
+                                    GO:0016324
+                                </a>
+                            </span>
+                            <span class="term-label">apical plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25086774" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25086774
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Activation of a G protein-coupled receptor by its endogenous...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDI0" data-a="GO:0016324" data-r="PMID:25086774" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A rescuing dcar-1p::dcar-1::gfp translational reporter localized DCAR-1 to the apical surface of the major epidermal syncytium hyp7, the site where it acts to drive antimicrobial peptide expression.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct IDA localization to the apical plasma membrane; a core cellular location for the receptor&#39;s immune function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25086774" target="_blank" class="term-link">
+                                        PMID:25086774
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">dcar-1 was expressed on the apical surface in the major epidermal syncytium, hyp7</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDI0" data-a="GO:0005886" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Plasma membrane localization inferred from phylogeny is consistent with DCAR-1 being a cell-surface 7-TM GPCR and with the direct (IDA) apical plasma membrane localization in the epidermis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct and corroborated by experimental data; a parent of the more specific apical plasma membrane annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25086774" target="_blank" class="term-link">
+                                        PMID:25086774
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">dcar-1 was expressed on the apical surface in the major epidermal syncytium, hyp7</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDI0" data-a="GO:0016020" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic membrane localization from InterPro/UniProt subcellular-location pipelines; correct for a multi-pass membrane protein but uninformative relative to the plasma membrane / apical plasma membrane annotations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Not wrong, but subsumed by the more specific and experimentally supported plasma membrane and apical plasma membrane terms.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097730" target="_blank" class="term-link">
+                                    GO:0097730
+                                </a>
+                            </span>
+                            <span class="term-label">non-motile cilium</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22090488" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22090488
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A seven-transmembrane receptor that mediates avoidance respo...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDI0" data-a="GO:0097730" data-r="PMID:22090488" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> WormBase IDA localization associated with DCAR-1&#39;s expression in the ciliated ASH (and ASI, PVQ) sensory neurons, where it detects the repellent DHCA. This reflects the neuronal chemosensory role, distinct from the epidermal immune role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The cached copy of PMID:22090488 is abstract-only, so the specific cilium sub-localization cannot be re-verified from the cached text; per curation policy the WormBase curator&#39;s experimental (IDA) call is trusted and not overruled. It is retained as a non-core location because it belongs to the neuronal chemosensory context rather than the flagship epidermal immune function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22090488" target="_blank" class="term-link">
+                                        PMID:22090488
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">expressed in the ASH avoidance sensory neurons of C. elegans</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008188" target="_blank" class="term-link">
+                                    GO:0008188
+                                </a>
+                            </span>
+                            <span class="term-label">neuropeptide receptor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDI0" data-a="GO:0008188" data-r="GO_REF:0000033" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This activity was propagated by phylogenetic (IBA) inference from the broad class A GPCR family (PTHR24243), some of whose members are neuropeptide receptors. However, the two experimentally characterized ligands of DCAR-1 are small-molecule catecholic/phenolic acids - HPLA (a tyrosine-derived metabolite/DAMP) in the epidermis and DHCA in neurons - not neuropeptides.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Over-propagated family-level IBA that is contradicted by the direct experimental characterization of DCAR-1&#39;s ligands. DCAR-1 is not a neuropeptide receptor; its molecular function is adequately and correctly captured by G protein-coupled receptor activity (GO:0004930). Removing this avoids an unsupported and misleading molecular-function assertion.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">PROPAGATION BAD</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">WRONG ORTHOLOG OR PARALOG</span>
+
+                                <span class="badge">FUNCTIONAL DIVERGENCE</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTN002797693</span>
+
+                                    &middot; PTHR24243 class A GPCR IBA seed node
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                    <div class="propagation-comment">Neuropeptide-receptor activity is valid for genuine peptide-receptor members of this large class A GPCR family, but DCAR-1&#39;s characterized ligands are small-molecule metabolites (HPLA, DHCA), not neuropeptides.</div>
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">WB:WBGene00019616</span>
+
+                                    &middot; C. elegans family member in the IBA with/from set
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                    <div class="propagation-comment">Co-annotated family member; it does not establish a neuropeptide ligand for DCAR-1.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25086774" target="_blank" class="term-link">
+                                        PMID:25086774
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the tyrosine derivative 4-hydroxyphenyllactic acid (HPLA) as an endogenous ligand</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25086774" target="_blank" class="term-link">
+                                        PMID:25086774
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Dihydrocaffeic acid (DHCA) has been described as a potent ligand for DCAR-1 in both in vivo and in heterologous Xenopus oocyte assays</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007218" target="_blank" class="term-link">
+                                    GO:0007218
+                                </a>
+                            </span>
+                            <span class="term-label">neuropeptide signaling pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDI0" data-a="GO:0007218" data-r="GO_REF:0000033" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Companion IBA propagation to the neuropeptide receptor activity call, inferred from the GPCR family rather than from DCAR-1&#39;s own biology. DCAR-1 signalling is driven by small-molecule ligands (HPLA, DHCA), not by neuropeptides.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Over-propagated family-level IBA not supported by any evidence specific to DCAR-1 and contradicted by its characterized small-molecule ligands. The gene&#39;s signalling role is correctly captured by G protein-coupled receptor signaling pathway (GO:0007186) and the defense/wounding process terms.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">PROPAGATION BAD</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">WRONG ORTHOLOG OR PARALOG</span>
+
+                                <span class="badge">FUNCTIONAL DIVERGENCE</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTN002797693</span>
+
+                                    &middot; PTHR24243 class A GPCR IBA seed node
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                    <div class="propagation-comment">Neuropeptide signalling is valid for genuine peptide-receptor members of this family, but DCAR-1 signals in response to small-molecule metabolites (HPLA, DHCA), not neuropeptides.</div>
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">WB:WBGene00019616</span>
+
+                                    &middot; C. elegans family member in the IBA with/from set
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                    <div class="propagation-comment">Co-annotated family member; it does not establish neuropeptide signalling for DCAR-1.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25086774" target="_blank" class="term-link">
+                                        PMID:25086774
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">HPLA can act through DCAR-1 to regulate the epidermal innate immune response</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007635" target="_blank" class="term-link">
+                                    GO:0007635
+                                </a>
+                            </span>
+                            <span class="term-label">chemosensory behavior</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22090488" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22090488
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A seven-transmembrane receptor that mediates avoidance respo...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDI0" data-a="GO:0007635" data-r="PMID:22090488" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> In ASH sensory neurons DCAR-1 is required for avoidance of the water- soluble repellent dihydrocaffeic acid (DHCA): dcar-1 null mutants are defective in DHCA avoidance and ASH-specific expression rescues the defect (Aoki et al. 2011), a role corroborated in Zugasti et al. 2014.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Not present in GOA, but the neuronal chemosensory (repellent-avoidance) function is directly established by IMP evidence and is genetically separable from the epidermal immune role. Added so that the receptor&#39;s second, well-supported evolved function is captured in the structured annotations (mirrors the neuronal core_function).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22090488" target="_blank" class="term-link">
+                                        PMID:22090488
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">dcar-1 mutant animals are defective in avoidance response to DHCA, and cell-specific expression of dcar-1 in the ASH neurons</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25086774" target="_blank" class="term-link">
+                                        PMID:25086774
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In neurons, dcar-1 mediates an avoidance response to specific repellents, acting in concert with ocr-2 and osm-9</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>DCAR-1 acts as an epidermal innate-immune GPCR: it is a plasma-membrane (apical hyp7) receptor that detects the endogenous damage-associated metabolite HPLA (and, exogenously, DHCA) generated upon fungal infection or wounding, and transduces this via Galpha (GPA-12) and the p38 MAPK cascade to induce antimicrobial peptide genes and confer resistance to Drechmeria coniospora.</h3>
+                <span class="vote-buttons" data-g="G5EDI0" data-a="FUNCTION: DCAR-1 acts as an epidermal innate-immune GPCR: it..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004930" target="_blank" class="term-link">
+                            G protein-coupled receptor activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050832" target="_blank" class="term-link">
+                                defense response to fungus
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009611" target="_blank" class="term-link">
+                                response to wounding
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007186" target="_blank" class="term-link">
+                                G protein-coupled receptor signaling pathway
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016324" target="_blank" class="term-link">
+                                apical plasma membrane
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25086774" target="_blank" class="term-link">
+                                PMID:25086774
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">DCAR-1 acted in the epidermis to regulate the expression of antimicrobial peptides via a conserved p38 mitogen-activated protein kinase pathway.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25086774" target="_blank" class="term-link">
+                                PMID:25086774
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Our findings reveal DCAR-1 and its cognate ligand HPLA to be triggers of the epidermal innate immune response</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25086774" target="_blank" class="term-link">
+                                PMID:25086774
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">dcar-1 was expressed on the apical surface in the major epidermal syncytium, hyp7</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:worm/dcar-1/dcar-1-deep-research-falcon.md
+
+                        </span>
+
+                        <div class="finding-text">DAMP-sensing GPCR that activates epidermal innate immunity in response to fungal infection and wounding</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>In ciliated ASH (and ASI, PVQ) sensory neurons DCAR-1 acts as a chemoreceptor for the exogenous water-soluble repellent dihydrocaffeic acid (DHCA), driving an avoidance response together with the TRPV channel subunits OCR-2 and OSM-9. This neuronal chemosensory role is genetically and functionally separable from the epidermal immune role (neuronal expression rescues avoidance but not antimicrobial peptide induction).</h3>
+                <span class="vote-buttons" data-g="G5EDI0" data-a="FUNCTION: In ciliated ASH (and ASI, PVQ) sensory neurons DCA..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004930" target="_blank" class="term-link">
+                            G protein-coupled receptor activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007635" target="_blank" class="term-link">
+                                chemosensory behavior
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007186" target="_blank" class="term-link">
+                                G protein-coupled receptor signaling pathway
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22090488" target="_blank" class="term-link">
+                                PMID:22090488
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">DCAR-1 as the first seven-transmembrane receptor required for avoidance of a water-soluble repellent, DHCA, in C. elegans</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25086774" target="_blank" class="term-link">
+                                PMID:25086774
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">In neurons, dcar-1 mediates an avoidance response to specific repellents, acting in concert with ocr-2 and osm-9</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22090488" target="_blank" class="term-link">
+                            PMID:22090488
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A seven-transmembrane receptor that mediates avoidance response to dihydrocaffeic acid, a water-soluble repellent in Caenorhabditis elegans.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">DCAR-1 is a novel seven-transmembrane receptor for the water-soluble repellent dihydrocaffeic acid (DHCA), expressed in the ASH avoidance sensory neurons; dcar-1 mutants are defective in DHCA avoidance and ASH-specific expression rescues the defect.</div>
+
+                        <div class="finding-text">"we identified a candidate dihydrocaffeic acid receptor (DCAR), DCAR-1. DCAR-1 is a novel seven-transmembrane protein that is expressed in the ASH avoidance sensory neurons of C. elegans."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25086774" target="_blank" class="term-link">
+                            PMID:25086774
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Activation of a G protein-coupled receptor by its endogenous ligand triggers the innate immune response of Caenorhabditis elegans.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">DCAR-1 was the sole hit from an RNAi screen of 1,150 GPCR genes required for infection- and wounding-induced antimicrobial peptide expression, acting upstream of (or in parallel to) the Galpha protein GPA-12 in the epidermal p38 MAPK pathway.</div>
+
+                        <div class="finding-text">"dcar-1 emerged alone as an innate immune receptor gene acting upstream of (or in parallel to) gpa-12"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The tyrosine-derived metabolite HPLA is an endogenous damage-associated ligand for DCAR-1 that increases upon infection and cuticle damage and drives DCAR-1-dependent antimicrobial peptide expression in the epidermis.</div>
+
+                        <div class="finding-text">"the tyrosine derivative 4-hydroxyphenyllactic acid (HPLA) as an endogenous ligand"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:worm/dcar-1/dcar-1-deep-research-falcon.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Deep research report (Edison/falcon) for C. elegans dcar-1</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does DCAR-1 bind HPLA directly, and which extracellular/transmembrane residues form the ligand-binding pocket?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Jonathan J Ewbank, Nathalie Pujol</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="G5EDI0" data-a="Q: Does DCAR-1 bind HPLA directly, and which extracel..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Do HPLA-sensing receptors functionally analogous to DCAR-1 exist outside the nematode phylum, given that HPLA is a conserved tyrosine metabolite?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Jonathan J Ewbank</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="G5EDI0" data-a="Q: Do HPLA-sensing receptors functionally analogous t..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Express DCAR-1 in a heterologous GPCR-activation system (as previously done with DHCA in Xenopus oocytes) and measure dose-dependent activation by HPLA and structurally related phenolic acids; test coupling specificity against GPA-12 versus other Galpha subunits.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: DCAR-1 is the direct receptor for HPLA and couples to GPA-12.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: heterologous receptor activation / ligand-response assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="G5EDI0" data-a="EXPERIMENT: Express DCAR-1 in a heterologous GPCR-activation s..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Use targeted metabolomics with isotope-labelled tyrosine to trace HPLA production before and after infection/wounding, combined with epidermis- specific RNAi/overexpression of candidate aminotransferases and reductases (e.g. tatn-1) to identify the biosynthetic enzymes.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: HPLA is generated in the epidermis by a defined tyrosine-catabolic route whose flux increases with damage.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: stable-isotope metabolomics + tissue-specific genetics</p>
+
+                </div>
+                <span class="vote-buttons" data-g="G5EDI0" data-a="EXPERIMENT: Use targeted metabolomics with isotope-labelled ty..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The structural and biochemical basis of ligand recognition by DCAR-1 is unknown: there is no direct binding assay, no structure, and no defined ligand-binding pocket or residues. Whether DCAR-1 is the direct receptor for HPLA (versus an upstream/indirect sensor) has not been demonstrated biochemically.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">RESIDUAL_SUBGAP</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> It is firmly established that DCAR-1 is a 7-TM class A GPCR required in the epidermis for HPLA/DHCA-triggered antimicrobial peptide induction and anti-fungal defense, and that it can respond to DHCA in a heterologous Xenopus oocyte system. The evidence that HPLA is the endogenous ligand is genetic and metabolomic (correlative), not a direct receptor-binding measurement.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> HPLA is the first described damage-associated molecular pattern (DAMP) in C. elegans; defining how DCAR-1 binds it would establish the molecular logic of DAMP sensing by a metazoan GPCR and enable rational tests of whether analogous receptors exist beyond nematodes.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Direct ligand-binding/activation assays (e.g. purified receptor or cell-based GPCR activation with HPLA titration), mutagenesis of predicted binding-pocket residues, and structural determination of the DCAR-1-HPLA complex.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"We provide strong correlative evidence that HPLA is an endogenous ligand for DCAR-1. Proving this definitively is not straightforward"</em> — PMID:25086774</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> It is unknown whether DCAR-1 has ligands or roles beyond HPLA/DHCA - including its natural neuronal ligand, whether it recognizes any microbe-associated molecular pattern, and whether it contributes to pathogen-avoidance behaviour as a second host-defense role.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> DCAR-1 is known to detect the endogenous metabolite HPLA (epidermal immunity) and the exogenous repellent DHCA (neuronal avoidance via ASH/ASI/ PVQ with OCR-2/OSM-9). Beyond these, its ligand spectrum and the physiological relevance of its neuronal signalling to host defense are not established.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> GPCRs are proposed to be an under-explored class of immunomodulatory receptors; clarifying whether DCAR-1 senses microbial patterns or only host damage signals would sharpen models of how nematodes discriminate infection from sterile injury.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Systematic ligand/deorphanization screens, tests for direct microbe-derived agonists, and behavioural/immune assays separating DCAR-1&#39;s neuronal and epidermal contributions to defense.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"It is not known whether any GPCR recognizes specific microbe-associated molecular patterns."</em> — PMID:25086774</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The biosynthetic origin of the DAMP ligand HPLA, and the mechanism by which infection and cuticle damage raise its levels, are uncharacterized - including whether the invading fungus contributes to HPLA production or the increase is entirely host-derived.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">BP_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> HPLA is a tyrosine-derived metabolite that increases upon infection and in cuticle-defective dpy-10 mutants, and epidermal overexpression of the candidate aminotransferase tatn-1 raises dcar-1-dependent antimicrobial peptide expression. The enzymes and regulatory logic of HPLA production remain undefined and were only partially probed (candidate aminotransferase knockdowns were inconclusive, likely due to redundancy).</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Understanding how HPLA is generated would reveal how damage and infection are converted into a diffusible immune-activating signal, and whether the pathway is a host stress response or a pathogen-influenced process.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Genetic and biochemical dissection of tyrosine catabolism/HPLA synthesis in the epidermis, isotope-tracing of HPLA under infection, and host-versus- pathogen source discrimination.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Although its biosynthetic pathway has not been characterized in any eukaryote, HPLA is likely derived from tyrosine"</em> — PMID:25086774</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(dcar-1-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="G5EDI0" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Comprehensive Research Report: DCAR-1 (C06H5.7) in *Caenorhabditis elegans*</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">19 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-04T16:36:23.457277</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="dcar-1-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="dcar-1-deep-research-falcon_artifacts/artifact-01.md" class="term-link">Edison artifact artifact-01</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="comprehensive-research-report-dcar-1-c06h57-in-caenorhabditis-elegans">Comprehensive Research Report: DCAR-1 (C06H5.7) in <em>Caenorhabditis elegans</em></h1>
+<h2 id="1-gene-and-protein-identity">1. Gene and Protein Identity</h2>
+<p>DCAR-1 (DihydroCaffeic Acid Receptor-1) is a G-protein coupled receptor (GPCR) encoded by the gene <em>dcar-1</em> (systematic name C06H5.7) in <em>Caenorhabditis elegans</em> (UniProt accession G5EDI0). The protein belongs to the rhodopsin-like family of seven-transmembrane receptors (domain: GPCR_Rhodpsn_7TM, InterPro IPR017452) (venkatesh2021gproteincoupledreceptors pages 2-4, taffoni2015mechanismsofinnate pages 5-6). DCAR-1 is notable as the only GPCR identified to date that functions as a damage-associated molecular pattern (DAMP) sensor in <em>C. elegans</em> (venkatesh2021gproteincoupledreceptors pages 2-4, garciasanchez2021ubiquitinrelatedprocessesand pages 9-10).</p>
+<p>The following table summarizes the key identity and functional features of DCAR-1:</p>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene Symbol</td>
+<td>dcar-1</td>
+</tr>
+<tr>
+<td>Full Name</td>
+<td>DihydroCaffeic Acid Receptor-1</td>
+</tr>
+<tr>
+<td>Systematic Name</td>
+<td>C06H5.7</td>
+</tr>
+<tr>
+<td>UniProt ID</td>
+<td>G5EDI0</td>
+</tr>
+<tr>
+<td>Organism</td>
+<td><em>Caenorhabditis elegans</em></td>
+</tr>
+<tr>
+<td>Protein Type</td>
+<td>G-protein coupled receptor (GPCR), predicted 7-transmembrane receptor; consistent with rhodopsin-like 7TM annotation in UniProt (venkatesh2021gproteincoupledreceptors pages 2-4)</td>
+</tr>
+<tr>
+<td>Domain</td>
+<td>GPCR_Rhodpsn_7TM / IPR017452; literature describes DCAR-1 as a GPCR/7TM receptor (venkatesh2021gproteincoupledreceptors pages 2-4, taffoni2015mechanismsofinnate pages 5-6)</td>
+</tr>
+<tr>
+<td>Endogenous Ligand</td>
+<td>4-hydroxyphenyllactic acid (HPLA), a tyrosine-derived damage-associated molecular pattern (DAMP) that accumulates after infection or injury (venkatesh2021gproteincoupledreceptors pages 2-4, taffoni2015mechanismsofinnate pages 5-6)</td>
+</tr>
+<tr>
+<td>Tissue Expression</td>
+<td>Epidermis/hypodermis, especially the apical epidermal syncytium; also reported in sensory neurons, although immune function is epidermis-specific (taffoni2015mechanismsofinnate pages 5-6, venkatesh2021gproteincoupledreceptors pages 2-4)</td>
+</tr>
+<tr>
+<td>Functional Localization</td>
+<td>Cell surface receptor localized to the apical part of the epidermal syncytium hyp7 (taffoni2015mechanismsofinnate pages 5-6, taffoni2015mechanismsofinnate pages 4-5)</td>
+</tr>
+<tr>
+<td>Primary Function</td>
+<td>DAMP-sensing GPCR that activates epidermal innate immunity in response to fungal infection and wounding (venkatesh2021gproteincoupledreceptors pages 2-4, garciasanchez2021ubiquitinrelatedprocessesand pages 9-10, kim2018signalinginthe pages 14-16)</td>
+</tr>
+<tr>
+<td>Key Biological Processes</td>
+<td>Antifungal defense against <em>Drechmeria coniospora</em>, wound response, and induction of antimicrobial peptide genes including <em>nlp</em> family targets such as <em>nlp-29</em> (venkatesh2021gproteincoupledreceptors pages 2-4, taffoni2015mechanismsofinnate pages 5-6)</td>
+</tr>
+<tr>
+<td>Initial Characterization</td>
+<td>Initially characterized behaviorally as a seven-transmembrane receptor mediating avoidance to dihydrocaffeic acid (Aoki et al. 2011; identified in retrieved literature but full text unavailable in tool search). Subsequently established as an innate immune receptor activated by endogenous HPLA to trigger AMP expression during epidermal damage/infection (summarized in later reviews citing the 2014 primary work) (taffoni2015mechanismsofinnate pages 5-6, kim2018signalinginthe pages 14-16)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the verified identity, ligand, localization, and core biological role of the C. elegans GPCR DCAR-1. It is useful as a quick reference to distinguish this receptor from similarly named genes and to anchor interpretation of the downstream immune signaling literature.</em></p>
+<h2 id="2-primary-function-damp-sensing-receptor-for-epidermal-innate-immunity">2. Primary Function: DAMP-Sensing Receptor for Epidermal Innate Immunity</h2>
+<p>DCAR-1 serves as a pattern recognition receptor that detects tissue damage in the <em>C. elegans</em> epidermis (hypodermis) and activates innate immune defenses. Unlike mammalian Toll-like receptors that primarily detect pathogen-associated molecular patterns (PAMPs), DCAR-1 functions by sensing a host-derived endogenous ligand that accumulates when epidermal integrity is compromised (venkatesh2021gproteincoupledreceptors pages 2-4, kim2018signalinginthe pages 14-16).</p>
+<h3 id="21-endogenous-ligand-4-hydroxyphenyllactic-acid-hpla">2.1 Endogenous Ligand: 4-Hydroxyphenyllactic Acid (HPLA)</h3>
+<p>The endogenous ligand of DCAR-1 is 4-hydroxyphenyllactic acid (HPLA), a product of tyrosine degradation in the hypodermis (taffoni2015mechanismsofinnate pages 5-6, venkatesh2021gproteincoupledreceptors pages 2-4). HPLA levels increase under conditions of epidermal damage, including physical wounding, infection by the natural fungal pathogen <em>Drechmeria coniospora</em>, and in cuticle-defective mutants such as <em>dpy-9</em> and <em>dpy-10</em> (kim2018signalinginthe pages 14-16). The accumulation of HPLA thus functions as a danger signal, providing a mechanism by which the epidermis can detect tissue disruption and mount a defensive response. This identification of HPLA as the cognate ligand was a landmark finding that established DCAR-1 as the first deorphanized GPCR in the <em>C. elegans</em> innate immune system (venkatesh2021gproteincoupledreceptors pages 2-4, zhang2021antagonisticfungalenterotoxins pages 10-12).</p>
+<p>The gene was initially named for its response to dihydrocaffeic acid, a water-soluble repellent that elicits avoidance behavior in <em>C. elegans</em> via sensory neurons (Aoki et al., 2011, as cited in multiple reviews) (venkatesh2021gproteincoupledreceptors pages 2-4). However, the immune-regulatory function of DCAR-1 is distinct from and independent of this neuronal chemosensory role.</p>
+<h3 id="22-biological-roles">2.2 Biological Roles</h3>
+<p>DCAR-1 plays critical roles in two primary contexts of epidermal defense:</p>
+<p><strong>Antifungal immunity:</strong> During infection by <em>D. coniospora</em>, a natural endoparasitic fungal pathogen of <em>C. elegans</em> that adheres to the cuticle via specialized adhesive knobs and can kill worms within 48 hours, DCAR-1 is essential for the rapid transcriptional upregulation of antimicrobial peptide (AMP) genes in the epidermis (taffoni2015mechanismsofinnate pages 5-6, taffoni2015mechanismsofinnate pages 4-5). The primary transcriptional targets include neuropeptide-like protein genes, particularly <em>nlp-29</em>, as well as caenacin (<em>cnc</em>) genes (taffoni2015mechanismsofinnate pages 5-6, dierking2016antimicrobialeffectorsin pages 4-5).</p>
+<p><strong>Wound response:</strong> Physical injury to the epidermis similarly triggers DCAR-1-dependent AMP gene induction, demonstrating that this receptor integrates signals from both pathogenic and sterile damage (taffoni2015mechanismsofinnate pages 4-5, taffoni2015mechanismsofinnate pages 5-6).</p>
+<h2 id="3-tissue-and-subcellular-localization">3. Tissue and Subcellular Localization</h2>
+<p>DCAR-1 is expressed in the epidermis (hypodermis) and in sensory neurons. However, its immune-regulatory function is epidermis-specific and cell-autonomous (taffoni2015mechanismsofinnate pages 5-6, venkatesh2021gproteincoupledreceptors pages 2-4). Within the epidermis, DCAR-1 localizes to the apical part of the epidermal syncytium hyp7, positioning it at the cell surface facing the cuticle—the barrier tissue most directly exposed to environmental pathogens and physical insults (taffoni2015mechanismsofinnate pages 5-6, taffoni2015mechanismsofinnate pages 4-5). This apical localization is functionally significant because it places the receptor at the interface where damage signals (HPLA) would first accumulate following cuticle compromise or pathogen attachment.</p>
+<h2 id="4-signaling-pathway">4. Signaling Pathway</h2>
+<p>The DCAR-1 signaling pathway in the epidermis has been extensively characterized through forward genetic screens, genome-wide RNAi screens, and epistasis analysis. The pathway proceeds as follows:</p>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Type/Function</th>
+<th>Position in Pathway</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DCAR-1</td>
+<td>GPCR; DAMP receptor activated by HPLA</td>
+<td>Receptor / pathway entry point</td>
+<td>Binds the endogenous tyrosine-metabolite ligand 4-hydroxyphenyllactic acid (HPLA) generated during epidermal damage, fungal infection, or wounding; initiates epidermal innate immune signaling to AMP genes (venkatesh2021gproteincoupledreceptors pages 2-4, taffoni2015mechanismsofinnate pages 5-6)</td>
+</tr>
+<tr>
+<td>GPA-12</td>
+<td>Gα signaling subunit</td>
+<td>Immediately downstream of DCAR-1</td>
+<td>Transduces the activated GPCR signal toward PKC-dependent immune signaling required for AMP induction after fungal infection or wounding (taffoni2015mechanismsofinnate pages 5-6, dierking2016antimicrobialeffectorsin pages 4-5, zhang2021antagonisticfungalenterotoxins pages 10-12)</td>
+</tr>
+<tr>
+<td>RACK-1</td>
+<td>Gβ-associated signaling component / scaffold</td>
+<td>Parallel to GPA-12 downstream of DCAR-1</td>
+<td>Cooperates with GPA-12 in GPCR signaling upstream of TPA-1 to promote epidermal antimicrobial gene expression (taffoni2015mechanismsofinnate pages 5-6)</td>
+</tr>
+<tr>
+<td>EGL-8/PLC-3</td>
+<td>Phospholipase C enzymes</td>
+<td>Upstream of DAG production</td>
+<td>Convert PIP2 into DAG, providing the second messenger input needed to activate TPA-1/PKC in the epidermal immune pathway (taffoni2015mechanismsofinnate pages 5-6)</td>
+</tr>
+<tr>
+<td>DAG</td>
+<td>Lipid second messenger</td>
+<td>Between PLCs and TPA-1</td>
+<td>Activates TPA-1, coupling upstream GPCR/G-protein signaling to the kinase cascade that drives AMP expression (taffoni2015mechanismsofinnate pages 5-6, kim2018signalinginthe pages 9-12)</td>
+</tr>
+<tr>
+<td>TPA-1</td>
+<td>Protein kinase C (PKC)</td>
+<td>Downstream of GPA-12/RACK-1 and DAG</td>
+<td>Central kinase transmitting the DCAR-1 signal toward TIR-1 and the p38 MAPK cascade in response to epidermal infection or injury (taffoni2015mechanismsofinnate pages 5-6, kim2018signalinginthe pages 9-12)</td>
+</tr>
+<tr>
+<td>TIR-1</td>
+<td>TIR-domain adaptor / scaffold</td>
+<td>Upstream of MAP3K NSY-1</td>
+<td>Links PKC-dependent signaling to the conserved p38 MAPK module that controls antimicrobial peptide induction (taffoni2015mechanismsofinnate pages 5-6, dierking2016antimicrobialeffectorsin pages 4-5, kim2018signalinginthe pages 14-16)</td>
+</tr>
+<tr>
+<td>NSY-1</td>
+<td>MAP kinase kinase kinase (MAP3K)</td>
+<td>First kinase in p38 MAPK cascade</td>
+<td>Receives input from TIR-1 and activates downstream SEK-1 as part of the canonical epidermal innate immune cascade (taffoni2015mechanismsofinnate pages 5-6)</td>
+</tr>
+<tr>
+<td>SEK-1</td>
+<td>MAP kinase kinase (MAP2K)</td>
+<td>Middle kinase in p38 MAPK cascade</td>
+<td>Relays the signal from NSY-1 to PMK-1 to support transcriptional activation of AMP genes (taffoni2015mechanismsofinnate pages 5-6)</td>
+</tr>
+<tr>
+<td>PMK-1</td>
+<td>p38 MAP kinase</td>
+<td>Terminal kinase in core MAPK cascade</td>
+<td>Executes the p38 MAPK immune response downstream of DCAR-1, promoting AMP induction and antifungal defense in the epidermis (venkatesh2021gproteincoupledreceptors pages 2-4, taffoni2015mechanismsofinnate pages 5-6)</td>
+</tr>
+<tr>
+<td>STA-2</td>
+<td>STAT-like transcription factor</td>
+<td>Downstream nuclear effector of PMK-1 pathway</td>
+<td>Required for transcriptional activation of nlp genes and contributes to AMP expression after fungal infection, wounding, and damage sensing (garciasanchez2021ubiquitinrelatedprocessesand pages 9-10, taffoni2015mechanismsofinnate pages 5-6, kim2018signalinginthe pages 9-12, zhu2023c.eleganshemidesmosomes pages 1-2)</td>
+</tr>
+<tr>
+<td>ELT-3</td>
+<td>GATA transcription factor</td>
+<td>Co-regulator with STA-2 downstream of signaling cascade</td>
+<td>Works with STA-2 to promote epidermal AMP gene transcription in response to DCAR-1 pathway activation (taffoni2015mechanismsofinnate pages 5-6)</td>
+</tr>
+<tr>
+<td>nlp-29/cnc (target genes)</td>
+<td>Antimicrobial peptide genes / transcriptional outputs</td>
+<td>Terminal output</td>
+<td>Encode epidermally induced antimicrobial effectors. nlp-29 is a canonical DCAR-1–p38 MAPK target; cnc genes can also be induced in related epidermal defense programs, with some regulation occurring through a non-canonical DBL-1/TGF-β branch depending on stimulus context (taffoni2015mechanismsofinnate pages 4-5, taffoni2015mechanismsofinnate pages 5-6, dierking2016antimicrobialeffectorsin pages 4-5)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the experimentally supported DCAR-1 epidermal signaling pathway in C. elegans, from HPLA sensing at the receptor to antimicrobial peptide gene induction. It is useful for tracing how damage-associated signaling is converted into antifungal and wound-response outputs.</em></p>
+<h3 id="41-detailed-pathway-description">4.1 Detailed Pathway Description</h3>
+<p>Upon activation by HPLA, DCAR-1 couples to the heterotrimeric G protein subunits GPA-12 (Gα) and RACK-1 (Gβ), which are required for downstream signal transduction to antimicrobial peptide gene expression (taffoni2015mechanismsofinnate pages 5-6, venkatesh2021gproteincoupledreceptors pages 2-4). The G-protein signaling activates phospholipase C enzymes EGL-8 and PLC-3, which hydrolyze phosphatidylinositol 4,5-bisphosphate (PIP2) to produce diacylglycerol (DAG), a lipid second messenger (taffoni2015mechanismsofinnate pages 5-6). DAG in turn activates the serine/threonine protein kinase C TPA-1 (taffoni2015mechanismsofinnate pages 5-6, kim2018signalinginthe pages 9-12).</p>
+<p>TPA-1 acts upstream of TIR-1, a TIR-domain adaptor protein homologous to mammalian SARM1, which serves as a scaffold linking PKC-dependent signaling to the core p38 MAPK cascade (taffoni2015mechanismsofinnate pages 5-6, dierking2016antimicrobialeffectorsin pages 4-5). The MAPK module consists of the MAP3K NSY-1, the MAP2K SEK-1, and the p38 MAPK PMK-1, which constitutes the terminal kinase in the cascade (taffoni2015mechanismsofinnate pages 5-6, kim2018signalinginthe pages 9-12).</p>
+<p>PMK-1 activates the STAT-like transcription factor STA-2 and the GATA transcription factor ELT-3, which together drive transcription of <em>nlp</em> antimicrobial peptide genes, including the canonical target <em>nlp-29</em> (taffoni2015mechanismsofinnate pages 5-6, kim2018signalinginthe pages 9-12, dierking2016antimicrobialeffectorsin pages 4-5). The caenacin (<em>cnc</em>) AMP gene family is also regulated through this pathway, although <em>cnc</em> gene induction shows additional complexity: after wounding, <em>cnc</em> induction is p38 MAPK-dependent, but after fungal infection, <em>cnc</em> expression is regulated through a non-canonical DBL-1/TGF-β pathway that operates independently of p38 MAPK (taffoni2015mechanismsofinnate pages 5-6, dierking2016antimicrobialeffectorsin pages 4-5).</p>
+<h3 id="42-relationship-to-broader-immune-signaling">4.2 Relationship to Broader Immune Signaling</h3>
+<p>The TIR-1/NSY-1/SEK-1/PMK-1 p38 MAPK cascade is a highly conserved signaling module that also functions in the <em>C. elegans</em> intestine to regulate resistance to bacterial pathogens (kim2018signalinginthe pages 9-12). In the epidermis, this cascade is specifically wired downstream of the DCAR-1 GPCR pathway, whereas in the intestine, different upstream activators engage the same MAPK module (kim2018signalinginthe pages 9-12). This tissue-specific utilization of a shared signaling core highlights how <em>C. elegans</em> achieves distinct immune responses in different tissues using modular signaling architecture.</p>
+<h2 id="5-recent-developments-20232025">5. Recent Developments (2023–2025)</h2>
+<h3 id="51-dcar-1-independent-damage-sensing-via-hemidesmosomes">5.1 DCAR-1-Independent Damage Sensing via Hemidesmosomes</h3>
+<p>A 2023 study by Zhu et al. revealed an important nuance in epidermal damage sensing. Through systematic analysis of collagen-encoding genes, the authors demonstrated that certain types of collagen damage (specifically damage to DPY-7 collagen) can induce <em>nlp-29</em> expression independently of DCAR-1 and PMK-1, via a hemidesmosome-based damage-sensing mechanism (zhu2023c.eleganshemidesmosomes pages 10-12). In this alternative pathway, disruption of DPY collagen substructures causes the separation of collagen BLI-1 from the hemidesmosome receptor MUP-4, leading to release of STA-2 from hemidesmosomes and direct induction of AMP gene expression (zhu2023c.eleganshemidesmosomes pages 1-2, zhu2023c.eleganshemidesmosomes pages 10-12). This finding demonstrates that while DCAR-1 is a major DAMP sensor, the epidermis employs multiple, partially overlapping damage-sensing mechanisms, and DCAR-1 only partially accounts for collagen damage-induced immune responses (zhu2023c.eleganshemidesmosomes pages 1-2).</p>
+<h3 id="52-dcar-1-pathway-and-cisplatin-resistance">5.2 DCAR-1 Pathway and Cisplatin Resistance</h3>
+<p>Raj et al. (2023) identified the p38 MAPK pathway—in which DCAR-1 functions as the upstream DAMP receptor in the epidermis—as a critical determinant of cisplatin toxicity resistance in post-mitotic <em>C. elegans</em> adults (raj2023cisplatintoxicityis pages 10-13, raj2023cisplatintoxicityis pages 13-13). The study demonstrated that cisplatin exposure activates the p38 MAPK/ATF-7 immune signaling axis, and mutations in pathway components including <em>dcar-1</em> increased sensitivity to cisplatin-induced necrotic damage (raj2023cisplatintoxicityis pages 10-13, raj2023cisplatintoxicityis pages 13-14). This work extended the functional significance of the DCAR-1 pathway beyond pathogen defense to xenobiotic stress responses.</p>
+<h3 id="53-pathogen-virulence-strategies-targeting-the-dcar-1-pathway">5.3 Pathogen Virulence Strategies Targeting the DCAR-1 Pathway</h3>
+<p>Zhang et al. (2021) demonstrated that the fungal pathogen <em>D. coniospora</em> produces enterotoxins (DcEntA and DcEntB) that can interfere with the DCAR-1-initiated immune cascade at multiple levels, including blocking STA-2 nuclear translocation and disrupting vesicle trafficking in the epidermis (zhang2021antagonisticfungalenterotoxins pages 10-12). This illustrates the co-evolutionary arms race between host damage sensing and pathogen immune evasion strategies.</p>
+<h2 id="6-evolutionary-and-comparative-significance">6. Evolutionary and Comparative Significance</h2>
+<p>DCAR-1 represents a noncanonical pattern recognition receptor in <em>C. elegans</em> innate immunity (venkatesh2021gproteincoupledreceptors pages 2-4). Unlike mammals, where TLRs, NLRs, and other canonical PRRs directly detect pathogen-derived molecules, <em>C. elegans</em> appears to primarily rely on sensing the damage caused by pathogens rather than pathogen molecules themselves (venkatesh2021gproteincoupledreceptors pages 2-4, kim2018signalinginthe pages 14-16). DCAR-1's function as a DAMP sensor—detecting an endogenous tyrosine metabolite that accumulates upon tissue damage—exemplifies this "guard" or damage-sensing strategy of immune activation (venkatesh2021gproteincoupledreceptors pages 2-4, kim2018signalinginthe pages 14-16). The unique worm TOL-1 (TLR homolog) is not essential for most pathogen defenses, making GPCR-based sensing through receptors like DCAR-1 a particularly important immune detection mechanism in this organism (venkatesh2021gproteincoupledreceptors pages 2-4).</p>
+<h2 id="7-summary">7. Summary</h2>
+<p>DCAR-1 is a rhodopsin-family GPCR that functions as the primary damage-associated molecular pattern sensor in the <em>C. elegans</em> epidermis. Localized to the apical surface of the hyp7 epidermal syncytium, it detects the endogenous ligand HPLA—a tyrosine metabolite that accumulates upon cuticle disruption, fungal infection, or wounding. Ligand binding activates a well-characterized signaling cascade through G-proteins (GPA-12/RACK-1), phospholipase C, DAG, PKC (TPA-1), the TIR-1 adaptor, and the p38 MAPK module (NSY-1/SEK-1/PMK-1), culminating in STA-2- and ELT-3-dependent transcription of antimicrobial peptide genes including <em>nlp-29</em>. Recent work has revealed additional DCAR-1-independent damage-sensing mechanisms in the epidermis and extended the functional relevance of the DCAR-1/p38 MAPK pathway to xenobiotic stress resistance. DCAR-1 remains the only well-documented GPCR functioning as an innate immune DAMP receptor in <em>C. elegans</em>, providing a paradigmatic example of how metazoans can employ GPCRs for immune surveillance at epithelial barriers.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(venkatesh2021gproteincoupledreceptors pages 2-4): Siddharth R. Venkatesh and Varsha Singh. G protein-coupled receptors: the choreographers of innate immunity in caenorhabditis elegans. PLOS Pathogens, 17:e1009151, Jan 2021. URL: https://doi.org/10.1371/journal.ppat.1009151, doi:10.1371/journal.ppat.1009151. This article has 17 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(taffoni2015mechanismsofinnate pages 5-6): Clara Taffoni and Nathalie Pujol. Mechanisms of innate immunity in c. elegans epidermis. Tissue Barriers, 3:e1078432, Oct 2015. URL: https://doi.org/10.1080/21688370.2015.1078432, doi:10.1080/21688370.2015.1078432. This article has 75 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(garciasanchez2021ubiquitinrelatedprocessesand pages 9-10): Juan A. Garcia-Sanchez, Jonathan J. Ewbank, and Orane Visvikis. Ubiquitin-related processes and innate immunity in c. elegans. Cellular and Molecular Life Sciences, 78:4305-4333, Feb 2021. URL: https://doi.org/10.1007/s00018-021-03787-w, doi:10.1007/s00018-021-03787-w. This article has 15 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(taffoni2015mechanismsofinnate pages 4-5): Clara Taffoni and Nathalie Pujol. Mechanisms of innate immunity in c. elegans epidermis. Tissue Barriers, 3:e1078432, Oct 2015. URL: https://doi.org/10.1080/21688370.2015.1078432, doi:10.1080/21688370.2015.1078432. This article has 75 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kim2018signalinginthe pages 14-16): Dennis H. Kim and J. Ewbank. Signaling in the innate immune response. WormBook, pages 1-35, Aug 2018. URL: https://doi.org/10.1895/wormbook.1.83.2, doi:10.1895/wormbook.1.83.2. This article has 181 citations.</p>
+</li>
+<li>
+<p>(zhang2021antagonisticfungalenterotoxins pages 10-12): Xing Zhang, Benjamin W. Harding, Dina Aggad, Damien Courtine, Jia-Xuan Chen, Nathalie Pujol, and Jonathan J. Ewbank. Antagonistic fungal enterotoxins intersect at multiple levels with host innate immune defences. Jun 2021. URL: https://doi.org/10.1371/journal.pgen.1009600, doi:10.1371/journal.pgen.1009600. This article has 21 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(dierking2016antimicrobialeffectorsin pages 4-5): Katja Dierking, Wentao Yang, and Hinrich Schulenburg. Antimicrobial effectors in the nematode caenorhabditis elegans: an outgroup to the arthropoda. Philosophical Transactions of the Royal Society B: Biological Sciences, 371:20150299, May 2016. URL: https://doi.org/10.1098/rstb.2015.0299, doi:10.1098/rstb.2015.0299. This article has 107 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kim2018signalinginthe pages 9-12): Dennis H. Kim and J. Ewbank. Signaling in the innate immune response. WormBook, pages 1-35, Aug 2018. URL: https://doi.org/10.1895/wormbook.1.83.2, doi:10.1895/wormbook.1.83.2. This article has 181 citations.</p>
+</li>
+<li>
+<p>(zhu2023c.eleganshemidesmosomes pages 1-2): Yi Zhu, Wenna Li, Yifang Dong, Chujie Xia, and Rong Fu. C. elegans hemidesmosomes sense collagen damage to trigger innate immune response in the epidermis. Cells, 12:2223, Sep 2023. URL: https://doi.org/10.3390/cells12182223, doi:10.3390/cells12182223. This article has 13 citations.</p>
+</li>
+<li>
+<p>(zhu2023c.eleganshemidesmosomes pages 10-12): Yi Zhu, Wenna Li, Yifang Dong, Chujie Xia, and Rong Fu. C. elegans hemidesmosomes sense collagen damage to trigger innate immune response in the epidermis. Cells, 12:2223, Sep 2023. URL: https://doi.org/10.3390/cells12182223, doi:10.3390/cells12182223. This article has 13 citations.</p>
+</li>
+<li>
+<p>(raj2023cisplatintoxicityis pages 10-13): Dorota Raj, Bashar Kraish, Jari Martikainen, Agnieszka Podraza-Farhanieh, Gautam Kao, and Peter Naredi. Cisplatin toxicity is counteracted by the activation of the p38/atf-7 signaling pathway in post-mitotic c. elegans. Nature Communications, May 2023. URL: https://doi.org/10.1038/s41467-023-38568-5, doi:10.1038/s41467-023-38568-5. This article has 13 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(raj2023cisplatintoxicityis pages 13-13): Dorota Raj, Bashar Kraish, Jari Martikainen, Agnieszka Podraza-Farhanieh, Gautam Kao, and Peter Naredi. Cisplatin toxicity is counteracted by the activation of the p38/atf-7 signaling pathway in post-mitotic c. elegans. Nature Communications, May 2023. URL: https://doi.org/10.1038/s41467-023-38568-5, doi:10.1038/s41467-023-38568-5. This article has 13 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(raj2023cisplatintoxicityis pages 13-14): Dorota Raj, Bashar Kraish, Jari Martikainen, Agnieszka Podraza-Farhanieh, Gautam Kao, and Peter Naredi. Cisplatin toxicity is counteracted by the activation of the p38/atf-7 signaling pathway in post-mitotic c. elegans. Nature Communications, May 2023. URL: https://doi.org/10.1038/s41467-023-38568-5, doi:10.1038/s41467-023-38568-5. This article has 13 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="dcar-1-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+<li><a href="dcar-1-deep-research-falcon_artifacts/artifact-01.md">Edison artifact artifact-01</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>venkatesh2021gproteincoupledreceptors pages 2-4</li>
+<li>kim2018signalinginthe pages 14-16</li>
+<li>taffoni2015mechanismsofinnate pages 5-6</li>
+<li>kim2018signalinginthe pages 9-12</li>
+<li>zhang2021antagonisticfungalenterotoxins pages 10-12</li>
+<li>garciasanchez2021ubiquitinrelatedprocessesand pages 9-10</li>
+<li>taffoni2015mechanismsofinnate pages 4-5</li>
+<li>dierking2016antimicrobialeffectorsin pages 4-5</li>
+<li>raj2023cisplatintoxicityis pages 10-13</li>
+<li>raj2023cisplatintoxicityis pages 13-13</li>
+<li>raj2023cisplatintoxicityis pages 13-14</li>
+<li>https://doi.org/10.1371/journal.ppat.1009151,</li>
+<li>https://doi.org/10.1080/21688370.2015.1078432,</li>
+<li>https://doi.org/10.1007/s00018-021-03787-w,</li>
+<li>https://doi.org/10.1895/wormbook.1.83.2,</li>
+<li>https://doi.org/10.1371/journal.pgen.1009600,</li>
+<li>https://doi.org/10.1098/rstb.2015.0299,</li>
+<li>https://doi.org/10.3390/cells12182223,</li>
+<li>https://doi.org/10.1038/s41467-023-38568-5,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(dcar-1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="G5EDI0" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="dcar-1-c-elegans-research-notes">DCAR-1 (C. elegans) — research notes</h1>
+<p>UniProt: G5EDI0 (G5EDI0_CAEEL) · WormBase: WBGene00007395 · sequence name C06H5.7 ·<br />
+Reactome: R-CEL-416476 "G alpha (q) signalling events" · 396 aa, 7-TM class A (rhodopsin-like)<br />
+GPCR (PROSITE PS50262 G_PROTEIN_RECEP_F1_2; PANTHER PTHR24243). Chromosome V.</p>
+<p>DCAR-1 = "DihydroCaffeic Acid Receptor 1". Two distinct, experimentally established<br />
+functional contexts, in two tissues:</p>
+<ol>
+<li><strong>Epidermal innate immunity</strong> (flagship function; Zugasti et al. 2014, Nat Immunol,<br />
+   PMID:25086774). DCAR-1 is a plasma-membrane GPCR on the apical surface of the hyp7<br />
+   epidermal syncytium that senses the endogenous tyrosine-derived metabolite HPLA<br />
+   (4-hydroxyphenyllactic acid, a damage-associated molecular pattern, DAMP) produced upon<br />
+   fungal infection/wounding, and triggers antimicrobial-peptide (nlp-29 cluster) gene<br />
+   expression via the GPA-12 (Gα) → TIR-1 → NSY-1/SEK-1/PMK-1 (p38 MAPK) → STA-2 cascade in<br />
+   the epidermis. Required for resistance to the fungus <em>Drechmeria coniospora</em>.</li>
+<li><strong>Neuronal chemosensory avoidance</strong> (Aoki et al. 2011, J Neurosci, PMID:22090488).<br />
+   DCAR-1 was originally identified in a Xenopus oocyte expression screen as a receptor<br />
+   for the water-soluble repellent dihydrocaffeic acid (DHCA); expressed in the ASH (and<br />
+   ASI, PVQ) sensory neurons, where it mediates avoidance of DHCA acting with ocr-2/osm-9.</li>
+</ol>
+<h2 id="known-well-supported">KNOWN (well supported)</h2>
+<ul>
+<li><strong>7-TM class A GPCR.</strong> UniProt/InterPro: 7 predicted TM helices, GPCR family 1 profile<br />
+  domain (PS50262), CDD 7tm_classA_rhodopsin-like, PANTHER PTHR24243. FunFam name<br />
+  "DihydroCaffeic Acid Receptor". Reactome links it to "G alpha (q) signalling events".</li>
+<li><strong>Innate immune receptor.</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/25086774" title="we identified the G protein-coupled receptor   (GPCR) DCAR-1 as being required for the response to fungal infection and wounding.">PMID:25086774</a> Sole<br />
+  hit from an RNAi screen of 1,150 GPCR genes for reduced nlp-29p::gfp AMP induction; two<br />
+  null alleles (tm2484, nj66) confirm. dcar-1 mutants are markedly more susceptible to<br />
+<em>D. coniospora</em> while having normal development/longevity and normal resistance to<br />
+<em>P. aeruginosa</em>.</li>
+<li><strong>Acts via p38 MAPK / GPA-12 in epidermis.</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/25086774" title="DCAR-1 acted in the   epidermis to regulate the expression of antimicrobial peptides via a conserved p38   mitogen-activated protein kinase pathway.">PMID:25086774</a> <a href="https://pubmed.ncbi.nlm.nih.gov/25086774" title="dcar-1 alone acts upstream   or in parallel to GPA-12">PMID:25086774</a>. Methods list gpa-12(pk322), tir-1(tm3036), pmk-1(km25),<br />
+  tpa-1(fr1) epistasis strains — this is the GPA-12→TIR-1→p38/PMK-1 cassette. Links to the<br />
+  already-reviewed <strong>gpa-12</strong> (Gα12/13 ortholog).</li>
+<li><strong>Endogenous ligand = HPLA (a DAMP).</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/25086774" title="the tyrosine derivative   4-hydroxyphenyllactic acid (HPLA) as an endogenous ligand">PMID:25086774</a>. Identified by comparative<br />
+  metabolomics: HPLA present at low level in controls, increased upon infection and in<br />
+  cuticle-defective dpy-10 mutants. <a href="https://pubmed.ncbi.nlm.nih.gov/25086774" title="HPLA can act through DCAR-1 to regulate   the epidermal innate immune response">PMID:25086774</a>. <a href="https://pubmed.ncbi.nlm.nih.gov/25086774" title="HPLA appears to act as a DAMP, to   the best of our knowledge, the first described for C. elegans.">PMID:25086774</a></li>
+<li><strong>Exogenous ligand = DHCA.</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/25086774" title="Dihydrocaffeic acid (DHCA) has been described   as a potent ligand for DCAR-1 in both in vivo and in heterologous Xenopus oocyte assays">PMID:25086774</a>.<br />
+  Original identification: <a href="https://pubmed.ncbi.nlm.nih.gov/22090488" title="we identified a candidate dihydrocaffeic acid   receptor (DCAR), DCAR-1. DCAR-1 is a novel seven-transmembrane protein that is expressed   in the ASH avoidance sensory neurons of C. elegans.">PMID:22090488</a></li>
+<li><strong>Localization.</strong> Apical plasma membrane in hyp7 epidermis:<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/25086774" title="dcar-1 was expressed on the apical surface in the major epidermal   syncytium, hyp7">PMID:25086774</a> (IDA, GO:0016324). Neuronal expression in ASH/ASI/PVQ (ciliated sensory<br />
+  neurons); WormBase IDA GO:0097730 non-motile cilium from PMID:22090488 (abstract-only in<br />
+  cache; the cilium sub-localization is not stated in the abstract but was curated by<br />
+  WormBase from the full text — trust the curator).</li>
+<li><strong>Response to wounding.</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/25086774">PMID:25086774</a> dcar-1 mutants show "an almost complete block of<br />
+  nlp-29p::gfp induction following physical injury", i.e. activation is damage/wound-dependent<br />
+  even without a pathogen (GO:0009611 response to wounding, IMP).</li>
+<li><strong>Cell-autonomous, tissue-separable.</strong> Epidermal (col-12p) but not neuronal (sra-6p)<br />
+  expression rescues AMP induction/immunity; conversely neuronal expression rescues the<br />
+  avoidance phenotype. <a href="https://pubmed.ncbi.nlm.nih.gov/25086774" title="dcar-1 acts in an epidermis-specific and   cell-autonomous manner to regulate AMP gene expression and defense against infection">PMID:25086774</a>.</li>
+<li><strong>Phylogenetically nematode-restricted.</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/25086774" title="Clear homologs of DCAR-1 can be   found in nematode genomes, but not in other animals'">PMID:25086774</a>.</li>
+</ul>
+<h2 id="not-known-open-for-knowledge_gaps">NOT known / open (for knowledge_gaps)</h2>
+<ul>
+<li><strong>Structural basis of HPLA/DHCA sensing is unknown.</strong> No direct binding data, no structure,<br />
+  and the ligand-binding pocket / residues are undefined. HPLA binding is inferred from<br />
+  correlative genetics + metabolomics, not a direct receptor-binding assay:<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/25086774" title="We provide strong correlative evidence that HPLA is an endogenous ligand   for DCAR-1. Proving this definitively is not straightforward">PMID:25086774</a>. Whether DCAR-1 is even the<br />
+  direct HPLA receptor (vs an upstream sensor) is not biochemically proven.</li>
+<li><strong>Whether DCAR-1 has other (neuropeptide or microbial) ligands / roles is unknown.</strong> Its<br />
+  natural neuronal ligand and whether it detects any microbe-associated molecular pattern are<br />
+  undetermined: <a href="https://pubmed.ncbi.nlm.nih.gov/25086774" title="It is not known whether any GPCR recognizes specific   microbe-associated molecular patterns.">PMID:25086774</a> A speculated second role in pathogen-avoidance<br />
+  behavior is unproven.</li>
+<li><strong>HPLA biosynthesis / how infection raises HPLA is uncharacterized.</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/25086774" title="Although its biosynthetic pathway has not been characterized in any eukaryote, HPLA is   likely derived from tyrosine">PMID:25086774</a>; whether the fungus contributes to HPLA or it is purely host<br />
+  damage-derived is an open question.</li>
+<li><strong>Nematode-restricted receptor with a conserved-metabolite ligand</strong> — whether an<br />
+  HPLA/DAMP-sensing receptor exists outside nematodes is unknown: <a href="https://pubmed.ncbi.nlm.nih.gov/25086774" title="It could be   that receptor(s) for HPLA exist outside the nematode phylum, but are not recognizable from   their primary sequence.">PMID:25086774</a></li>
+</ul>
+<h2 id="annotation-review-plan-existing_annotations">Annotation review plan (existing_annotations)</h2>
+<table>
+<thead>
+<tr>
+<th>term</th>
+<th>ev</th>
+<th>ref</th>
+<th>action</th>
+<th>rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GO:0004930 G protein-coupled receptor activity</td>
+<td>IEA</td>
+<td>GO_REF:0000104</td>
+<td>ACCEPT (core MF)</td>
+<td>7-TM class A GPCR; receptor for HPLA/DHCA</td>
+</tr>
+<tr>
+<td>GO:0007186 GPCR signaling pathway</td>
+<td>IEA</td>
+<td>GO_REF:0000104</td>
+<td>ACCEPT (core BP)</td>
+<td>signals via GPA-12 Gα</td>
+</tr>
+<tr>
+<td>GO:0007165 signal transduction</td>
+<td>IEA</td>
+<td>GO_REF:0000104</td>
+<td>KEEP_AS_NON_CORE</td>
+<td>correct but generic parent of GPCR signaling</td>
+</tr>
+<tr>
+<td>GO:0050832 defense response to fungus</td>
+<td>IMP</td>
+<td>PMID:25086774</td>
+<td>ACCEPT (core BP)</td>
+<td>required for anti-D. coniospora defense</td>
+</tr>
+<tr>
+<td>GO:0009611 response to wounding</td>
+<td>IMP</td>
+<td>PMID:25086774</td>
+<td>ACCEPT (core BP)</td>
+<td>wound/damage-activated AMP induction</td>
+</tr>
+<tr>
+<td>GO:0016324 apical plasma membrane</td>
+<td>IDA</td>
+<td>PMID:25086774</td>
+<td>ACCEPT (core CC)</td>
+<td>apical hyp7 surface</td>
+</tr>
+<tr>
+<td>GO:0005886 plasma membrane</td>
+<td>IBA</td>
+<td>GO_REF:0000033</td>
+<td>ACCEPT</td>
+<td>correct (parent of apical PM)</td>
+</tr>
+<tr>
+<td>GO:0016020 membrane</td>
+<td>IEA</td>
+<td>GO_REF:0000120</td>
+<td>KEEP_AS_NON_CORE</td>
+<td>generic; subsumed by apical PM</td>
+</tr>
+<tr>
+<td>GO:0097730 non-motile cilium</td>
+<td>IDA</td>
+<td>PMID:22090488</td>
+<td>KEEP_AS_NON_CORE</td>
+<td>neuronal (ASH) chemosensory localization; abstract-only cache, defer to WB curator</td>
+</tr>
+<tr>
+<td>GO:0008188 neuropeptide receptor activity</td>
+<td>IBA</td>
+<td>GO_REF:0000033</td>
+<td>REMOVE</td>
+<td>over-propagated family IBA; DCAR-1 ligands are small-molecule metabolites (HPLA/DHCA), not neuropeptides</td>
+</tr>
+<tr>
+<td>GO:0007218 neuropeptide signaling pathway</td>
+<td>IBA</td>
+<td>GO_REF:0000033</td>
+<td>REMOVE</td>
+<td>same; not a neuropeptide receptor</td>
+</tr>
+</tbody>
+</table>
+<p>Proposed new term candidate: a specific MF for "dihydroxyphenyl/hydroxyphenyllactic acid<br />
+(DAMP) receptor activity" — currently only GO:0004930 available. Note as ontology gap.</p>
+<h2 id="deep-research-provenance">Deep research provenance</h2>
+<p>The <code>just deep-research-falcon</code> recipe reported a 600s timeout on both the initial run and<br />
+the retry (and the perplexity-lite fallback returned HTTP 401, quota exhausted). However the<br />
+underlying Edison/falcon client kept running and, on the retry, DID write a genuine report<br />
+(<code>dcar-1-deep-research-falcon.md</code>, ~1005s runtime, 19 citations, 2 artifacts) after the<br />
+recipe's wrapper had already exited. That file was inspected and is authentic Edison output:<br />
+it correctly identifies DCAR-1, HPLA as the DAMP ligand, apical hyp7 epidermal localization,<br />
+and the full GPA-12 -&gt; PLC/DAG -&gt; TPA-1(PKC) -&gt; TIR-1 -&gt; NSY-1/SEK-1/PMK-1(p38) -&gt; STA-2/ELT-3<br />
+-&gt; nlp-29 pathway, plus the neuronal DHCA-avoidance origin. It is included in the commit and<br />
+referenced. No <code>-deep-research-*.md</code> file was fabricated.</p>
+<p>All annotation/core-function <code>supporting_text</code> quotes are PMID-anchored (verified as verbatim<br />
+whitespace-normalized substrings of PMID:25086774 full text and PMID:22090488 abstract). The<br />
+single <code>file:</code> deep-research quote used was grep-verified against the falcon report (the<br />
+reference validator skips <code>file:</code> prefixes).</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: G5EDI0
+gene_symbol: dcar-1
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:6239
+  label: Caenorhabditis elegans
+description: &gt;-
+  DCAR-1 (DihydroCaffeic Acid Receptor 1) is a seven-transmembrane, class A
+  (rhodopsin-like) G protein-coupled receptor of Caenorhabditis elegans that acts
+  in two distinct tissues. In the epidermis it is a plasma-membrane receptor,
+  localized to the apical surface of the hyp7 syncytium, that senses the
+  endogenous tyrosine-derived metabolite 4-hydroxyphenyllactic acid (HPLA), a
+  damage-associated molecular pattern produced upon fungal infection and
+  wounding, and triggers antimicrobial peptide (nlp-29 cluster) gene expression
+  through a Galpha (GPA-12) / p38 MAP kinase (TIR-1, NSY-1, SEK-1, PMK-1) /
+  STA-2 signalling cassette, conferring resistance to the natural fungal pathogen
+  Drechmeria coniospora. In sensory neurons (ASH, ASI, PVQ) the same receptor
+  detects the exogenous water-soluble repellent dihydrocaffeic acid (DHCA) and
+  mediates an avoidance response, acting with the TRPV channel subunits OCR-2 and
+  OSM-9. DCAR-1 thus couples small-molecule (catecholic/phenolic acid) ligand
+  detection to Galpha signalling, with clearly recognizable homologs restricted to
+  nematode genomes.
+existing_annotations:
+  - term:
+      id: GO:0004930
+      label: G protein-coupled receptor activity
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000104
+    qualifier: enables
+    review:
+      summary: &gt;-
+        DCAR-1 is a bona fide seven-transmembrane class A GPCR (7 predicted TM
+        helices; PROSITE G_PROTEIN_RECEP_F1_2; PANTHER PTHR24243) that functions
+        as a receptor for small-molecule ligands: HPLA in the epidermis and DHCA
+        in sensory neurons, in both cases coupling to Galpha signalling.
+      action: ACCEPT
+      reason: &gt;-
+        The GPCR activity is directly supported experimentally. DCAR-1 was
+        identified as a heterologously expressible receptor for DHCA and shown to
+        respond to HPLA, and it signals via the Galpha protein GPA-12. This is a
+        core molecular function of the gene.
+      supported_by:
+        - reference_id: PMID:22090488
+          supporting_text: &gt;-
+            we identified a candidate dihydrocaffeic acid receptor (DCAR),
+            DCAR-1. DCAR-1 is a novel seven-transmembrane protein that is
+            expressed in the ASH avoidance sensory neurons of C. elegans.
+        - reference_id: PMID:25086774
+          supporting_text: &gt;-
+            Dihydrocaffeic acid (DHCA) has been described as a potent ligand for
+            DCAR-1 in both in vivo and in heterologous Xenopus oocyte assays
+  - term:
+      id: GO:0007186
+      label: G protein-coupled receptor signaling pathway
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000104
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        DCAR-1 initiates GPCR signalling: in the epidermis it acts upstream of
+        (or in parallel to) the Galpha protein GPA-12 to control downstream p38
+        MAPK (PMK-1) signalling.
+      action: ACCEPT
+      reason: &gt;-
+        Core biological process. Genetic epistasis places DCAR-1 at the top of a
+        Galpha (GPA-12) -&gt; p38 MAPK cascade, consistent with canonical GPCR
+        signalling.
+      supported_by:
+        - reference_id: PMID:25086774
+          supporting_text: dcar-1 alone acts upstream or in parallel to GPA-12
+  - term:
+      id: GO:0007165
+      label: signal transduction
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000104
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        Correct but generic. Signal transduction is a high-level parent of the
+        more specific G protein-coupled receptor signaling pathway (GO:0007186)
+        that is also annotated and better captures DCAR-1&#39;s activity.
+      action: KEEP_AS_NON_CORE
+      reason: &gt;-
+        The term is not wrong - DCAR-1 does transduce signals - but it is
+        subsumed by the more informative GPCR signaling pathway annotation, so it
+        is retained as non-core rather than treated as a distinct core function.
+      supported_by:
+        - reference_id: PMID:25086774
+          supporting_text: multiple elements of the downstream signal transduction cascade
+  - term:
+      id: GO:0050832
+      label: defense response to fungus
+    evidence_type: IMP
+    original_reference_id: PMID:25086774
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        Loss of dcar-1 (RNAi and two null alleles, tm2484 and nj66) abolishes
+        infection-induced antimicrobial peptide expression and markedly increases
+        susceptibility to the fungus Drechmeria coniospora; DCAR-1 was the sole
+        GPCR hit from a screen of 1,150 GPCR genes.
+      action: ACCEPT
+      reason: &gt;-
+        Strong IMP evidence for a core function. DCAR-1 is required in the
+        epidermis for the innate immune response to fungal infection.
+      supported_by:
+        - reference_id: PMID:25086774
+          supporting_text: &gt;-
+            dcar-1 emerged alone as an innate immune receptor gene acting
+            upstream of (or in parallel to) gpa-12
+        - reference_id: PMID:25086774
+          supporting_text: &gt;-
+            dcar-1 mutants exhibited a markedly heightened susceptibility to D.
+            coniospora infection
+  - term:
+      id: GO:0009611
+      label: response to wounding
+    evidence_type: IMP
+    original_reference_id: PMID:25086774
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        dcar-1 mutants show an almost complete block of antimicrobial peptide
+        (nlp-29p::gfp) induction after sterile physical injury, showing that
+        DCAR-1 mediates the response to wounding/damage independently of a
+        pathogen - consistent with detection of an endogenous damage signal
+        (HPLA/DAMP).
+      action: ACCEPT
+      reason: &gt;-
+        Well-supported IMP for a core damage-sensing function; wounding and
+        infection converge on the same DCAR-1-dependent, HPLA-driven pathway.
+      supported_by:
+        - reference_id: PMID:25086774
+          supporting_text: &gt;-
+            an almost complete block of nlp-29p::gfp induction following physical
+            injury
+        - reference_id: PMID:25086774
+          supporting_text: demonstrating that dcar-1 can be activated in the absence of a pathogen
+  - term:
+      id: GO:0016324
+      label: apical plasma membrane
+    evidence_type: IDA
+    original_reference_id: PMID:25086774
+    qualifier: located_in
+    review:
+      summary: &gt;-
+        A rescuing dcar-1p::dcar-1::gfp translational reporter localized DCAR-1
+        to the apical surface of the major epidermal syncytium hyp7, the site
+        where it acts to drive antimicrobial peptide expression.
+      action: ACCEPT
+      reason: &gt;-
+        Direct IDA localization to the apical plasma membrane; a core cellular
+        location for the receptor&#39;s immune function.
+      supported_by:
+        - reference_id: PMID:25086774
+          supporting_text: &gt;-
+            dcar-1 was expressed on the apical surface in the major epidermal
+            syncytium, hyp7
+  - term:
+      id: GO:0005886
+      label: plasma membrane
+    evidence_type: IBA
+    original_reference_id: GO_REF:0000033
+    qualifier: is_active_in
+    review:
+      summary: &gt;-
+        Plasma membrane localization inferred from phylogeny is consistent with
+        DCAR-1 being a cell-surface 7-TM GPCR and with the direct (IDA) apical
+        plasma membrane localization in the epidermis.
+      action: ACCEPT
+      reason: &gt;-
+        Correct and corroborated by experimental data; a parent of the more
+        specific apical plasma membrane annotation.
+      supported_by:
+        - reference_id: PMID:25086774
+          supporting_text: &gt;-
+            dcar-1 was expressed on the apical surface in the major epidermal
+            syncytium, hyp7
+  - term:
+      id: GO:0016020
+      label: membrane
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: located_in
+    review:
+      summary: &gt;-
+        Generic membrane localization from InterPro/UniProt subcellular-location
+        pipelines; correct for a multi-pass membrane protein but uninformative
+        relative to the plasma membrane / apical plasma membrane annotations.
+      action: KEEP_AS_NON_CORE
+      reason: &gt;-
+        Not wrong, but subsumed by the more specific and experimentally supported
+        plasma membrane and apical plasma membrane terms.
+  - term:
+      id: GO:0097730
+      label: non-motile cilium
+    evidence_type: IDA
+    original_reference_id: PMID:22090488
+    qualifier: located_in
+    review:
+      summary: &gt;-
+        WormBase IDA localization associated with DCAR-1&#39;s expression in the
+        ciliated ASH (and ASI, PVQ) sensory neurons, where it detects the
+        repellent DHCA. This reflects the neuronal chemosensory role, distinct
+        from the epidermal immune role.
+      action: KEEP_AS_NON_CORE
+      reason: &gt;-
+        The cached copy of PMID:22090488 is abstract-only, so the specific cilium
+        sub-localization cannot be re-verified from the cached text; per curation
+        policy the WormBase curator&#39;s experimental (IDA) call is trusted and not
+        overruled. It is retained as a non-core location because it belongs to the
+        neuronal chemosensory context rather than the flagship epidermal immune
+        function.
+      supported_by:
+        - reference_id: PMID:22090488
+          supporting_text: expressed in the ASH avoidance sensory neurons of C. elegans
+  - term:
+      id: GO:0008188
+      label: neuropeptide receptor activity
+    evidence_type: IBA
+    original_reference_id: GO_REF:0000033
+    qualifier: enables
+    review:
+      summary: &gt;-
+        This activity was propagated by phylogenetic (IBA) inference from the
+        broad class A GPCR family (PTHR24243), some of whose members are
+        neuropeptide receptors. However, the two experimentally characterized
+        ligands of DCAR-1 are small-molecule catecholic/phenolic acids - HPLA
+        (a tyrosine-derived metabolite/DAMP) in the epidermis and DHCA in
+        neurons - not neuropeptides.
+      action: REMOVE
+      reason: &gt;-
+        Over-propagated family-level IBA that is contradicted by the direct
+        experimental characterization of DCAR-1&#39;s ligands. DCAR-1 is not a
+        neuropeptide receptor; its molecular function is adequately and correctly
+        captured by G protein-coupled receptor activity (GO:0004930). Removing
+        this avoids an unsupported and misleading molecular-function assertion.
+      supported_by:
+        - reference_id: PMID:25086774
+          supporting_text: &gt;-
+            the tyrosine derivative 4-hydroxyphenyllactic acid (HPLA) as an
+            endogenous ligand
+        - reference_id: PMID:25086774
+          supporting_text: &gt;-
+            Dihydrocaffeic acid (DHCA) has been described as a potent ligand for
+            DCAR-1 in both in vivo and in heterologous Xenopus oocyte assays
+      propagation_review:
+        root_cause: PROPAGATION_BAD
+        failure_modes:
+          - WRONG_ORTHOLOG_OR_PARALOG
+          - FUNCTIONAL_DIVERGENCE
+        source_entities:
+          - source_id: PANTHER:PTN002797693
+            source_label: PTHR24243 class A GPCR IBA seed node
+            source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+            comment: &gt;-
+              Neuropeptide-receptor activity is valid for genuine peptide-receptor
+              members of this large class A GPCR family, but DCAR-1&#39;s characterized
+              ligands are small-molecule metabolites (HPLA, DHCA), not neuropeptides.
+          - source_id: WB:WBGene00019616
+            source_label: C. elegans family member in the IBA with/from set
+            source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+            comment: &gt;-
+              Co-annotated family member; it does not establish a neuropeptide ligand
+              for DCAR-1.
+  - term:
+      id: GO:0007218
+      label: neuropeptide signaling pathway
+    evidence_type: IBA
+    original_reference_id: GO_REF:0000033
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        Companion IBA propagation to the neuropeptide receptor activity call,
+        inferred from the GPCR family rather than from DCAR-1&#39;s own biology.
+        DCAR-1 signalling is driven by small-molecule ligands (HPLA, DHCA), not
+        by neuropeptides.
+      action: REMOVE
+      reason: &gt;-
+        Over-propagated family-level IBA not supported by any evidence specific
+        to DCAR-1 and contradicted by its characterized small-molecule ligands.
+        The gene&#39;s signalling role is correctly captured by G protein-coupled
+        receptor signaling pathway (GO:0007186) and the defense/wounding process
+        terms.
+      supported_by:
+        - reference_id: PMID:25086774
+          supporting_text: &gt;-
+            HPLA can act through DCAR-1 to regulate the epidermal innate immune
+            response
+      propagation_review:
+        root_cause: PROPAGATION_BAD
+        failure_modes:
+          - WRONG_ORTHOLOG_OR_PARALOG
+          - FUNCTIONAL_DIVERGENCE
+        source_entities:
+          - source_id: PANTHER:PTN002797693
+            source_label: PTHR24243 class A GPCR IBA seed node
+            source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+            comment: &gt;-
+              Neuropeptide signalling is valid for genuine peptide-receptor members
+              of this family, but DCAR-1 signals in response to small-molecule
+              metabolites (HPLA, DHCA), not neuropeptides.
+          - source_id: WB:WBGene00019616
+            source_label: C. elegans family member in the IBA with/from set
+            source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+            comment: &gt;-
+              Co-annotated family member; it does not establish neuropeptide
+              signalling for DCAR-1.
+  - term:
+      id: GO:0007635
+      label: chemosensory behavior
+    evidence_type: IMP
+    original_reference_id: PMID:22090488
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        In ASH sensory neurons DCAR-1 is required for avoidance of the water-
+        soluble repellent dihydrocaffeic acid (DHCA): dcar-1 null mutants are
+        defective in DHCA avoidance and ASH-specific expression rescues the
+        defect (Aoki et al. 2011), a role corroborated in Zugasti et al. 2014.
+      action: NEW
+      reason: &gt;-
+        Not present in GOA, but the neuronal chemosensory (repellent-avoidance)
+        function is directly established by IMP evidence and is genetically
+        separable from the epidermal immune role. Added so that the receptor&#39;s
+        second, well-supported evolved function is captured in the structured
+        annotations (mirrors the neuronal core_function).
+      supported_by:
+        - reference_id: PMID:22090488
+          supporting_text: &gt;-
+            dcar-1 mutant animals are defective in avoidance response to DHCA, and
+            cell-specific expression of dcar-1 in the ASH neurons
+        - reference_id: PMID:25086774
+          supporting_text: &gt;-
+            In neurons, dcar-1 mediates an avoidance response to specific
+            repellents, acting in concert with ocr-2 and osm-9
+core_functions:
+  - description: &gt;-
+      DCAR-1 acts as an epidermal innate-immune GPCR: it is a plasma-membrane
+      (apical hyp7) receptor that detects the endogenous damage-associated
+      metabolite HPLA (and, exogenously, DHCA) generated upon fungal infection or
+      wounding, and transduces this via Galpha (GPA-12) and the p38 MAPK cascade
+      to induce antimicrobial peptide genes and confer resistance to Drechmeria
+      coniospora.
+    molecular_function:
+      id: GO:0004930
+      label: G protein-coupled receptor activity
+    directly_involved_in:
+      - id: GO:0050832
+        label: defense response to fungus
+      - id: GO:0009611
+        label: response to wounding
+      - id: GO:0007186
+        label: G protein-coupled receptor signaling pathway
+    locations:
+      - id: GO:0016324
+        label: apical plasma membrane
+      - id: GO:0005886
+        label: plasma membrane
+    supported_by:
+      - reference_id: PMID:25086774
+        supporting_text: &gt;-
+          DCAR-1 acted in the epidermis to regulate the expression of
+          antimicrobial peptides via a conserved p38 mitogen-activated protein
+          kinase pathway.
+      - reference_id: PMID:25086774
+        supporting_text: &gt;-
+          Our findings reveal DCAR-1 and its cognate ligand HPLA to be triggers
+          of the epidermal innate immune response
+      - reference_id: PMID:25086774
+        supporting_text: &gt;-
+          dcar-1 was expressed on the apical surface in the major epidermal
+          syncytium, hyp7
+      - reference_id: file:worm/dcar-1/dcar-1-deep-research-falcon.md
+        supporting_text: &gt;-
+          DAMP-sensing GPCR that activates epidermal innate immunity in response
+          to fungal infection and wounding
+  - description: &gt;-
+      In ciliated ASH (and ASI, PVQ) sensory neurons DCAR-1 acts as a
+      chemoreceptor for the exogenous water-soluble repellent dihydrocaffeic acid
+      (DHCA), driving an avoidance response together with the TRPV channel
+      subunits OCR-2 and OSM-9. This neuronal chemosensory role is genetically and
+      functionally separable from the epidermal immune role (neuronal expression
+      rescues avoidance but not antimicrobial peptide induction).
+    molecular_function:
+      id: GO:0004930
+      label: G protein-coupled receptor activity
+    directly_involved_in:
+      - id: GO:0007635
+        label: chemosensory behavior
+      - id: GO:0007186
+        label: G protein-coupled receptor signaling pathway
+    locations:
+      - id: GO:0005886
+        label: plasma membrane
+    supported_by:
+      - reference_id: PMID:22090488
+        supporting_text: &gt;-
+          DCAR-1 as the first seven-transmembrane receptor required for avoidance
+          of a water-soluble repellent, DHCA, in C. elegans
+      - reference_id: PMID:25086774
+        supporting_text: &gt;-
+          In neurons, dcar-1 mediates an avoidance response to specific
+          repellents, acting in concert with ocr-2 and osm-9
+proposed_new_terms:
+  - proposed_name: 4-hydroxyphenyllactate (HPLA) receptor activity
+    proposed_definition: &gt;-
+      Combining with the tyrosine-derived metabolite 4-hydroxyphenyllactic acid
+      (HPLA), a damage-associated molecular pattern, to initiate a change in cell
+      activity, typically via coupling to a heterotrimeric G protein. Applies to
+      GPCRs, such as nematode DCAR-1, that detect HPLA (and structurally related
+      catecholic/phenolic acids) to trigger downstream signalling.
+    justification: &gt;-
+      DCAR-1&#39;s specific molecular function - detection of the small-molecule DAMP
+      HPLA - can currently only be annotated with the generic parent
+      G protein-coupled receptor activity (GO:0004930). No ontology term expresses
+      the ligand-specific activity, leaving the receptor&#39;s most distinctive
+      feature un-annotatable (an ontology gap).
+    proposed_parent:
+      id: GO:0004930
+      label: G protein-coupled receptor activity
+    supported_by:
+      - reference_id: PMID:25086774
+        supporting_text: &gt;-
+          the tyrosine derivative 4-hydroxyphenyllactic acid (HPLA) as an
+          endogenous ligand
+knowledge_gaps:
+  - gap_statement: &gt;-
+      The structural and biochemical basis of ligand recognition by DCAR-1 is
+      unknown: there is no direct binding assay, no structure, and no defined
+      ligand-binding pocket or residues. Whether DCAR-1 is the direct receptor for
+      HPLA (versus an upstream/indirect sensor) has not been demonstrated
+      biochemically.
+    boundary: &gt;-
+      It is firmly established that DCAR-1 is a 7-TM class A GPCR required in the
+      epidermis for HPLA/DHCA-triggered antimicrobial peptide induction and
+      anti-fungal defense, and that it can respond to DHCA in a heterologous
+      Xenopus oocyte system. The evidence that HPLA is the endogenous ligand is
+      genetic and metabolomic (correlative), not a direct receptor-binding
+      measurement.
+    gap_kind:
+      - BIOLOGY
+    dark_aspect: RESIDUAL_SUBGAP
+    status: OPEN
+    significance: &gt;-
+      HPLA is the first described damage-associated molecular pattern (DAMP) in
+      C. elegans; defining how DCAR-1 binds it would establish the molecular logic
+      of DAMP sensing by a metazoan GPCR and enable rational tests of whether
+      analogous receptors exist beyond nematodes.
+    resolution: &gt;-
+      Direct ligand-binding/activation assays (e.g. purified receptor or
+      cell-based GPCR activation with HPLA titration), mutagenesis of predicted
+      binding-pocket residues, and structural determination of the DCAR-1-HPLA
+      complex.
+    provenance:
+      - reference_id: PMID:25086774
+        supporting_text: &gt;-
+          We provide strong correlative evidence that HPLA is an endogenous
+          ligand for DCAR-1. Proving this definitively is not straightforward
+  - gap_statement: &gt;-
+      It is unknown whether DCAR-1 has ligands or roles beyond HPLA/DHCA -
+      including its natural neuronal ligand, whether it recognizes any
+      microbe-associated molecular pattern, and whether it contributes to
+      pathogen-avoidance behaviour as a second host-defense role.
+    boundary: &gt;-
+      DCAR-1 is known to detect the endogenous metabolite HPLA (epidermal
+      immunity) and the exogenous repellent DHCA (neuronal avoidance via ASH/ASI/
+      PVQ with OCR-2/OSM-9). Beyond these, its ligand spectrum and the physiological
+      relevance of its neuronal signalling to host defense are not established.
+    gap_kind:
+      - BIOLOGY
+    dark_aspect: MF_DARK
+    status: OPEN
+    significance: &gt;-
+      GPCRs are proposed to be an under-explored class of immunomodulatory
+      receptors; clarifying whether DCAR-1 senses microbial patterns or only host
+      damage signals would sharpen models of how nematodes discriminate infection
+      from sterile injury.
+    resolution: &gt;-
+      Systematic ligand/deorphanization screens, tests for direct microbe-derived
+      agonists, and behavioural/immune assays separating DCAR-1&#39;s neuronal and
+      epidermal contributions to defense.
+    provenance:
+      - reference_id: PMID:25086774
+        supporting_text: &gt;-
+          It is not known whether any GPCR recognizes specific
+          microbe-associated molecular patterns.
+  - gap_statement: &gt;-
+      The biosynthetic origin of the DAMP ligand HPLA, and the mechanism by which
+      infection and cuticle damage raise its levels, are uncharacterized -
+      including whether the invading fungus contributes to HPLA production or the
+      increase is entirely host-derived.
+    boundary: &gt;-
+      HPLA is a tyrosine-derived metabolite that increases upon infection and in
+      cuticle-defective dpy-10 mutants, and epidermal overexpression of the
+      candidate aminotransferase tatn-1 raises dcar-1-dependent antimicrobial
+      peptide expression. The enzymes and regulatory logic of HPLA production
+      remain undefined and were only partially probed (candidate aminotransferase
+      knockdowns were inconclusive, likely due to redundancy).
+    gap_kind:
+      - BIOLOGY
+    dark_aspect: BP_DARK
+    status: OPEN
+    significance: &gt;-
+      Understanding how HPLA is generated would reveal how damage and infection
+      are converted into a diffusible immune-activating signal, and whether the
+      pathway is a host stress response or a pathogen-influenced process.
+    resolution: &gt;-
+      Genetic and biochemical dissection of tyrosine catabolism/HPLA synthesis in
+      the epidermis, isotope-tracing of HPLA under infection, and host-versus-
+      pathogen source discrimination.
+    provenance:
+      - reference_id: PMID:25086774
+        supporting_text: &gt;-
+          Although its biosynthetic pathway has not been characterized in any
+          eukaryote, HPLA is likely derived from tyrosine
+suggested_questions:
+  - question: &gt;-
+      Does DCAR-1 bind HPLA directly, and which extracellular/transmembrane
+      residues form the ligand-binding pocket?
+    experts:
+      - Jonathan J Ewbank
+      - Nathalie Pujol
+  - question: &gt;-
+      Do HPLA-sensing receptors functionally analogous to DCAR-1 exist outside
+      the nematode phylum, given that HPLA is a conserved tyrosine metabolite?
+    experts:
+      - Jonathan J Ewbank
+suggested_experiments:
+  - hypothesis: &gt;-
+      DCAR-1 is the direct receptor for HPLA and couples to GPA-12.
+    description: &gt;-
+      Express DCAR-1 in a heterologous GPCR-activation system (as previously done
+      with DHCA in Xenopus oocytes) and measure dose-dependent activation by HPLA
+      and structurally related phenolic acids; test coupling specificity against
+      GPA-12 versus other Galpha subunits.
+    experiment_type: heterologous receptor activation / ligand-response assay
+  - hypothesis: &gt;-
+      HPLA is generated in the epidermis by a defined tyrosine-catabolic route
+      whose flux increases with damage.
+    description: &gt;-
+      Use targeted metabolomics with isotope-labelled tyrosine to trace HPLA
+      production before and after infection/wounding, combined with epidermis-
+      specific RNAi/overexpression of candidate aminotransferases and reductases
+      (e.g. tatn-1) to identify the biosynthetic enzymes.
+    experiment_type: stable-isotope metabolomics + tissue-specific genetics
+references:
+  - id: GO_REF:0000033
+    title: Annotation inferences using phylogenetic trees
+    findings: []
+  - id: GO_REF:0000104
+    title: &gt;-
+      Electronic Gene Ontology annotations created by transferring manual GO
+      annotations between related proteins based on shared sequence features
+    findings: []
+  - id: GO_REF:0000120
+    title: Combined Automated Annotation using Multiple IEA Methods
+    findings: []
+  - id: PMID:22090488
+    title: &gt;-
+      A seven-transmembrane receptor that mediates avoidance response to
+      dihydrocaffeic acid, a water-soluble repellent in Caenorhabditis elegans.
+    findings:
+      - statement: &gt;-
+          DCAR-1 is a novel seven-transmembrane receptor for the water-soluble
+          repellent dihydrocaffeic acid (DHCA), expressed in the ASH avoidance
+          sensory neurons; dcar-1 mutants are defective in DHCA avoidance and
+          ASH-specific expression rescues the defect.
+        supporting_text: &gt;-
+          we identified a candidate dihydrocaffeic acid receptor (DCAR), DCAR-1.
+          DCAR-1 is a novel seven-transmembrane protein that is expressed in the
+          ASH avoidance sensory neurons of C. elegans.
+        reference_section_type: ABSTRACT
+        full_text_unavailable: true
+    reference_review:
+      relevance: HIGH
+      correctness: VERIFIED
+      review_notes: &gt;-
+        PubMed-verified (Aoki et al., J Neurosci 2011). Original identification of
+        DCAR-1 as a 7-TM receptor for the repellent DHCA expressed in ASH sensory
+        neurons; establishes the neuronal chemosensory role and the receptor&#39;s
+        small-molecule ligand. Cached copy is abstract-only (full text
+        unavailable), so the non-motile cilium localization it supports cannot be
+        re-verified from the cache and is deferred to the WormBase curator.
+  - id: PMID:25086774
+    title: &gt;-
+      Activation of a G protein-coupled receptor by its endogenous ligand triggers
+      the innate immune response of Caenorhabditis elegans.
+    findings:
+      - statement: &gt;-
+          DCAR-1 was the sole hit from an RNAi screen of 1,150 GPCR genes required
+          for infection- and wounding-induced antimicrobial peptide expression,
+          acting upstream of (or in parallel to) the Galpha protein GPA-12 in the
+          epidermal p38 MAPK pathway.
+        supporting_text: &gt;-
+          dcar-1 emerged alone as an innate immune receptor gene acting upstream
+          of (or in parallel to) gpa-12
+        reference_section_type: RESULTS
+      - statement: &gt;-
+          The tyrosine-derived metabolite HPLA is an endogenous damage-associated
+          ligand for DCAR-1 that increases upon infection and cuticle damage and
+          drives DCAR-1-dependent antimicrobial peptide expression in the epidermis.
+        supporting_text: &gt;-
+          the tyrosine derivative 4-hydroxyphenyllactic acid (HPLA) as an
+          endogenous ligand
+        reference_section_type: ABSTRACT
+    reference_review:
+      relevance: HIGH
+      correctness: VERIFIED
+      review_notes: &gt;-
+        PubMed-verified (Zugasti et al., Nat Immunol 2014); full text available in
+        cache. Flagship paper establishing DCAR-1 as the epidermal innate-immune
+        GPCR, identifying HPLA as its endogenous DAMP ligand, the apical hyp7
+        localization, and the GPA-12/p38-MAPK signalling context. Directly
+        supports the defense-response, wounding, GPCR-signalling and apical
+        plasma membrane annotations.
+  - id: file:worm/dcar-1/dcar-1-deep-research-falcon.md
+    title: Deep research report (Edison/falcon) for C. elegans dcar-1
+    findings: []
+    reference_review:
+      relevance: MEDIUM
+      correctness: VERIFIED
+      review_notes: &gt;-
+        Automated Edison/falcon deep-research report (19 citations). Content was
+        inspected and corroborates the primary literature: DCAR-1 as an apical
+        epidermal HPLA/DAMP-sensing GPCR driving the GPA-12 -&gt; PLC/DAG -&gt; TPA-1 -&gt;
+        TIR-1 -&gt; p38/PMK-1 -&gt; STA-2 antimicrobial-peptide pathway, and the
+        neuronal DHCA-avoidance origin. Used only for corroboration; all primary
+        evidence in this review is PMID-anchored, and the single file quote used
+        was grep-verified (the reference validator skips file: prefixes).
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

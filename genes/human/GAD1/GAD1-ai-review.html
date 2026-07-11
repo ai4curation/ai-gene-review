@@ -1,0 +1,5053 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GAD1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>GAD1</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q99259" target="_blank" class="term-link">
+                        Q99259
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "GAD1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q99259" data-a="DESCRIPTION: Glutamate decarboxylase 1 (GAD67; 67 kDa glutamic ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Glutamate decarboxylase 1 (GAD67; 67 kDa glutamic acid decarboxylase) is a pyridoxal-5&#39;-phosphate (PLP)-dependent decarboxylase (EC 4.1.1.15) that catalyzes the conversion of L-glutamate to gamma-aminobutyric acid (GABA) plus CO2, thereby producing the major inhibitory neurotransmitter of the central nervous system. It is the principal constitutively active GABA-synthesizing enzyme responsible for basal GABA production, whereas the paralog GAD2 (GAD65) is the synaptic-vesicle-associated isoform that is transiently activated on demand. The enzyme is a homodimer that covalently binds PLP at an active-site lysine and belongs to the group II decarboxylase family. GAD67 is a soluble cytosolic protein expressed predominantly in GABAergic neurons of the brain, with additional expression in some non-neural tissues. Bi-allelic loss-of-function variants cause an autosomal recessive developmental and epileptic encephalopathy, and hypomorphic missense variation has been associated with spastic cerebral palsy / spastic paraplegia phenotypes, consistent with its essential role in inhibitory neurotransmission.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009449" target="_blank" class="term-link">
+                                    GO:0009449
+                                </a>
+                            </span>
+                            <span class="term-label">GABA biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q99259" data-a="GO:0009449" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) annotation to GABA biosynthetic process. This is the core biological process of GAD1/GAD67 - synthesis of the inhibitory neurotransmitter GABA by decarboxylation of L-glutamate.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GAD67 is the principal constitutive GABA-synthesizing enzyme; this process annotation is directly supported by structural/biochemical work and by the UniProt FUNCTION statement, and is consistent across orthologs used for the IBA inference.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17384644" target="_blank" class="term-link">
+                                        PMID:17384644
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">GAD67 is constitutively active and is responsible for basal GABA production.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GAD1/GAD1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Catalyzes the synthesis of the inhibitory neurotransmitter</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q99259" data-a="GO:0005737" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) annotation placing GAD1 activity in the cytoplasm. GAD67 is a soluble cytosolic enzyme, so this localization is correct, though the more specific term cytosol (GO:0005829) better captures the compartment.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GAD67 lacks the N-terminal membrane-targeting modifications of GAD65 and acts as a soluble cytosolic enzyme; cytoplasm is a correct (if general) location. Cytosol is used as the specific location in core_functions.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GAD1/GAD1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Belongs to the group II decarboxylase family</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004351" target="_blank" class="term-link">
+                                    GO:0004351
+                                </a>
+                            </span>
+                            <span class="term-label">glutamate decarboxylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q99259" data-a="GO:0004351" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) annotation to glutamate decarboxylase activity (EC 4.1.1.15), the core molecular function of GAD1/GAD67.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the defining catalytic activity of GAD67 and is independently supported by experimental (IDA) annotations from crystallographic and biochemical studies.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GAD1/GAD1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">L-glutamate + H(+) = 4-aminobutanoate + CO2</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0048786" target="_blank" class="term-link">
+                                    GO:0048786
+                                </a>
+                            </span>
+                            <span class="term-label">presynaptic active zone</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q99259" data-a="GO:0048786" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) annotation localizing GAD to the presynaptic active zone. This localization applies chiefly to synaptic GABA synthesis and is more characteristic of the vesicle-associated paralog GAD65; GAD67 is predominantly a soluble cytosolic enzyme responsible for basal GABA production.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GAD67 can be present at synaptic terminals in GABAergic neurons and contribute to the presynaptic GABA pool, but its core activity is cytosolic basal GABA production rather than active-zone-restricted synthesis; retained as a non-core localization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17384644" target="_blank" class="term-link">
+                                        PMID:17384644
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">GAD67 is constitutively active and is responsible for basal GABA production.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004351" target="_blank" class="term-link">
+                                    GO:0004351
+                                </a>
+                            </span>
+                            <span class="term-label">glutamate decarboxylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q99259" data-a="GO:0004351" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (ARBA) annotation to glutamate decarboxylase activity mapped via EC 4.1.1.15 / RHEA:17785. Redundant with the experimental and IBA annotations to the same term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core molecular function; the EC/RHEA-based electronic mapping agrees with the experimentally established activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GAD1/GAD1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">L-glutamate + H(+) = 4-aminobutanoate + CO2</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016830" target="_blank" class="term-link">
+                                    GO:0016830
+                                </a>
+                            </span>
+                            <span class="term-label">carbon-carbon lyase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q99259" data-a="GO:0016830" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro-derived (IEA) annotation to carbon-carbon lyase activity, a broad parent of the specific glutamate decarboxylase activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Not incorrect - glutamate decarboxylase activity IS a carbon-carbon lyase activity - but this parent term is far less informative than the specific EC 4.1.1.15 activity, which is captured by the more specific glutamate decarboxylase activity annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GAD1/GAD1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">L-glutamate + H(+) = 4-aminobutanoate + CO2</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016831" target="_blank" class="term-link">
+                                    GO:0016831
+                                </a>
+                            </span>
+                            <span class="term-label">carboxy-lyase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q99259" data-a="GO:0016831" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro-derived (IEA) annotation to carboxy-lyase activity, the immediate lyase parent of glutamate decarboxylase activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct as a parent (decarboxylases are carboxy-lyases) but uninformative relative to the specific glutamate decarboxylase activity term already annotated.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GAD1/GAD1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">L-glutamate + H(+) = 4-aminobutanoate + CO2</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030170" target="_blank" class="term-link">
+                                    GO:0030170
+                                </a>
+                            </span>
+                            <span class="term-label">pyridoxal phosphate binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q99259" data-a="GO:0030170" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro-derived (IEA) annotation to pyridoxal phosphate binding. PLP is the essential catalytic cofactor of GAD67, covalently bound as a Schiff base at the active-site lysine (Lys405).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PLP binding is a genuine, core cofactor-binding function required for glutamate decarboxylase catalysis; independently supported by the crystal structure and UniProt COFACTOR/MOD_RES annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GAD1/GAD1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Name=pyridoxal 5</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17384644" target="_blank" class="term-link">
+                                        PMID:17384644
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">glutamic acid decarboxylase (GAD65 and</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16189514" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16189514
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Towards a proteome-scale map of the human protein-protein in...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q99259" data-a="GO:0005515" data-r="PMID:16189514" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare protein binding (IPI) from a proteome-scale yeast two-hybrid interactome screen (CCSB-HI1). Uninformative as to GAD1&#39;s molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The generic protein binding term conveys no specific functional information and derives from a high-throughput binary interactome screen rather than a curated functional interaction; per curation guidelines the bare term is over-annotated. Retained (not removed) as it records a real experimental interaction.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16189514" target="_blank" class="term-link">
+                                        PMID:16189514
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">an initial version of a proteome-scale map of</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17474147" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17474147
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Systematic identification of SH3 domain-mediated human prote...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q99259" data-a="GO:0005515" data-r="PMID:17474147" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare protein binding (IPI) from an SH3-domain peptide-array (PATS) systematic interaction screen.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Uninformative generic protein binding derived from a high-throughput SH3 domain-ligand screen; no specific functional MF is conveyed. Retained as a recorded interaction rather than removed.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17474147" target="_blank" class="term-link">
+                                        PMID:17474147
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Systematic identification of SH3 domain-mediated human protein-protein</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21516116" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21516116
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Next-generation sequencing to generate interactome datasets.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q99259" data-a="GO:0005515" data-r="PMID:21516116" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare protein binding (IPI) from a next-generation-sequencing-based (Stitch-seq) high-throughput Y2H interactome dataset.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Generic, uninformative protein binding from a proteome-scale interactome-mapping method; provides no specific molecular function. Kept as a recorded interaction.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21516116" target="_blank" class="term-link">
+                                        PMID:21516116
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">massively parallel interactome-mapping pipeline, Stitch-seq</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25416956
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A proteome-scale map of the human interactome network.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q99259" data-a="GO:0005515" data-r="PMID:25416956" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare protein binding (IPI) from a proteome-scale human binary interactome map (HI-II-14).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Uninformative generic protein binding from a systematic binary interactome screen; no specific MF conveyed. Retained rather than removed as it records genuine high-throughput interaction data.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link">
+                                        PMID:25416956
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">a systematic map of ?14,000 high-quality human</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26871637" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26871637
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Widespread Expansion of Protein Interaction Capabilities by ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q99259" data-a="GO:0005515" data-r="PMID:26871637" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare protein binding (IPI) from an isoform-resolved interactome study of alternatively spliced ORFs.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Generic protein binding from a high-throughput isoform interaction-profiling study; not an informative molecular function term. Kept as recorded interaction evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26871637" target="_blank" class="term-link">
+                                        PMID:26871637
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Widespread Expansion of Protein Interaction Capabilities by Alternative</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31515488" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31515488
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Extensive disruption of protein interactions by genetic vari...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q99259" data-a="GO:0005515" data-r="PMID:31515488" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare protein binding (IPI) from a large-scale study of interaction disruption by human genetic variants (Y2H/PCA).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Uninformative generic protein binding from a high-throughput variant-interactome screen; conveys no specific molecular function. Retained as a recorded interaction.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31515488" target="_blank" class="term-link">
+                                        PMID:31515488
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Extensive disruption of protein interactions by genetic variants</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q99259" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare protein binding (IPI) from the HuRI human reference binary interactome map.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Generic, uninformative protein binding from an all-by-all proteome-wide binary interactome screen; no specific MF is conveyed. Kept as a recorded interaction rather than removed.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                                        PMID:32296183
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">reference interactome map of human binary protein interactions, or &#39;HuRI&#39;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006540" target="_blank" class="term-link">
+                                    GO:0006540
+                                </a>
+                            </span>
+                            <span class="term-label">GABA shunt</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q99259" data-a="GO:0006540" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (Ensembl ortholog-transfer) annotation to the GABA shunt, the metabolic bypass in which glutamate is decarboxylated to GABA and GABA is subsequently transaminated and oxidized back into the TCA cycle. GAD1 catalyzes the entry (decarboxylation) step.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GAD1 genuinely participates in the GABA shunt as the glutamate-decarboxylation step, but the shunt as a whole is a multi-enzyme metabolic process; the gene&#39;s core process is more precisely GABA biosynthesis. Retained as a non-core metabolic-context process.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GAD1/GAD1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">L-glutamate + H(+) = 4-aminobutanoate + CO2</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009449" target="_blank" class="term-link">
+                                    GO:0009449
+                                </a>
+                            </span>
+                            <span class="term-label">GABA biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q99259" data-a="GO:0009449" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (ARBA) annotation to GABA biosynthetic process, duplicating the IBA annotation to the same core biological process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core process; the ARBA electronic mapping agrees with the phylogenetic and experimental evidence for GABA synthesis.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17384644" target="_blank" class="term-link">
+                                        PMID:17384644
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">GAD67 is constitutively active and is responsible for basal GABA production.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006540" target="_blank" class="term-link">
+                                    GO:0006540
+                                </a>
+                            </span>
+                            <span class="term-label">GABA shunt</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17384644" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17384644
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    GABA production by glutamic acid decarboxylase is regulated ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q99259" data-a="GO:0006540" data-r="PMID:17384644" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IDA) annotation to the GABA shunt based on the structural/biochemical characterization of GAD67 catalyzing L-glutamate decarboxylation to GABA, the committed entry step of the shunt.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly supported by experimental characterization of the decarboxylation step, but the shunt is a multi-enzyme metabolic process; GAD1&#39;s own core process is GABA biosynthesis. Deferring to the curator&#39;s experimental annotation, kept as non-core metabolic context.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17384644" target="_blank" class="term-link">
+                                        PMID:17384644
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">GAD67 shows a tethered loop covering the active site, providing a catalytic</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004351" target="_blank" class="term-link">
+                                    GO:0004351
+                                </a>
+                            </span>
+                            <span class="term-label">glutamate decarboxylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17384644" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17384644
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    GABA production by glutamic acid decarboxylase is regulated ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q99259" data-a="GO:0004351" data-r="PMID:17384644" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IDA) annotation to glutamate decarboxylase activity from crystallographic and kinetic characterization of human GAD67, the definitive molecular function of the gene.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the gold-standard experimental support for the core catalytic function; the structure shows a tethered catalytic loop sustaining constitutive GABA production.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17384644" target="_blank" class="term-link">
+                                        PMID:17384644
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">GAD67 is constitutively active and is responsible for basal GABA production.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link">
+                                    GO:0042802
+                                </a>
+                            </span>
+                            <span class="term-label">identical protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17384644" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17384644
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    GABA production by glutamic acid decarboxylase is regulated ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q99259" data-a="GO:0042802" data-r="PMID:17384644" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IDA) annotation to identical protein binding, reflecting the fact that catalytically active GAD67 is a homodimer, as established by the crystal structure.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Homodimerization is a structurally verified, functionally relevant property of GAD67 (the active enzyme is a homodimer); identical protein binding is the appropriate specific MF term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GAD1/GAD1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Homodimer.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-888589
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q99259" data-a="GO:0005886" data-r="Reactome:R-HSA-888589" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) localization to the plasma membrane, derived from a GABA-release-at-the-synapse pathway context. GAD67 is a soluble cytosolic enzyme and does not itself reside in the plasma membrane.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This localization reflects the pathway/reaction context (synaptic GABA release) rather than the intrinsic subcellular location of GAD67, which is cytosolic. Unlike the palmitoylated paralog GAD65, GAD67 has no membrane-targeting features.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GAD1/GAD1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Belongs to the group II decarboxylase family</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061202" target="_blank" class="term-link">
+                                    GO:0061202
+                                </a>
+                            </span>
+                            <span class="term-label">clathrin-sculpted gamma-aminobutyric acid transport vesicle membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-888572
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q99259" data-a="GO:0061202" data-r="Reactome:R-HSA-888572" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) localization to the clathrin-sculpted GABA transport vesicle membrane, a GABA-synthesis/vesicle-loading pathway context. GAD67 is a soluble cytosolic enzyme rather than an integral/peripheral vesicle-membrane protein.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Pathway-context localization; the membrane association is characteristic of the palmitoylated GAD65 isoform, whereas GAD67 acts in the cytosol. Overstates GAD67&#39;s own subcellular location.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GAD1/GAD1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Belongs to the group II decarboxylase family</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061202" target="_blank" class="term-link">
+                                    GO:0061202
+                                </a>
+                            </span>
+                            <span class="term-label">clathrin-sculpted gamma-aminobutyric acid transport vesicle membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-888577
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q99259" data-a="GO:0061202" data-r="Reactome:R-HSA-888577" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) localization to the clathrin-sculpted GABA transport vesicle membrane (duplicate pathway-context annotation, from the GAD2 GABA-synthesis reaction). GAD67 is cytosolic.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Same pathway-context over-localization as the other GO:0061202 annotations; this reaction is actually the GAD2 (GAD65) synthesis step. GAD67 itself is soluble cytosolic.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GAD1/GAD1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Belongs to the group II decarboxylase family</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061202" target="_blank" class="term-link">
+                                    GO:0061202
+                                </a>
+                            </span>
+                            <span class="term-label">clathrin-sculpted gamma-aminobutyric acid transport vesicle membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-888589
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q99259" data-a="GO:0061202" data-r="Reactome:R-HSA-888589" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) localization to the clathrin-sculpted GABA transport vesicle membrane (duplicate pathway-context annotation, from the GABA-release reaction). GAD67 is cytosolic.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Duplicate pathway-context over-localization; GAD67 does not itself reside in the vesicle membrane.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GAD1/GAD1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Belongs to the group II decarboxylase family</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061202" target="_blank" class="term-link">
+                                    GO:0061202
+                                </a>
+                            </span>
+                            <span class="term-label">clathrin-sculpted gamma-aminobutyric acid transport vesicle membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-917744
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q99259" data-a="GO:0061202" data-r="Reactome:R-HSA-917744" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) localization to the clathrin-sculpted GABA transport vesicle membrane (duplicate pathway-context annotation, from the vesicle docking/priming reaction). GAD67 is cytosolic.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Duplicate pathway-context over-localization; not an intrinsic location of soluble cytosolic GAD67.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GAD1/GAD1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Belongs to the group II decarboxylase family</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004351" target="_blank" class="term-link">
+                                    GO:0004351
+                                </a>
+                            </span>
+                            <span class="term-label">glutamate decarboxylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10671565" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10671565
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Alternative splicing of GAD67 results in the synthesis of a ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q99259" data-a="GO:0004351" data-r="PMID:10671565" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IDA) annotation to glutamate decarboxylase activity. This study establishes GAD67 enzymatic activity while characterizing a non-neural splice variant (GAD25/isoform 3) that lacks decarboxylase activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Supports the core catalytic activity of full-length GAD67; the paper explicitly contrasts active GAD67 with the enzymatically inactive GAD25 isoform.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10671565" target="_blank" class="term-link">
+                                        PMID:10671565
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">This transcript directs the synthesis of a protein without GAD</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10671565" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10671565
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Alternative splicing of GAD67 results in the synthesis of a ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q99259" data-a="GO:0005515" data-r="PMID:10671565" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare protein binding (IPI) associated with the GAD25/GAD67 splice-variant study (interactant UniProtKB:Q05329). Uninformative generic MF term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The generic protein binding term conveys no specific molecular function; per curation guidelines it is over-annotated. Retained as a recorded interaction rather than removed, deferring to the curator&#39;s IPI.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10671565" target="_blank" class="term-link">
+                                        PMID:10671565
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">a third form of</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006538" target="_blank" class="term-link">
+                                    GO:0006538
+                                </a>
+                            </span>
+                            <span class="term-label">L-glutamate catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10671565" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10671565
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Alternative splicing of GAD67 results in the synthesis of a ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q99259" data-a="GO:0006538" data-r="PMID:10671565" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author-statement (TAS) annotation to L-glutamate catabolic process. GAD67 consumes L-glutamate as substrate in the decarboxylation to GABA, so glutamate is catabolized in this reaction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct broader biological process - decarboxylation of L-glutamate is a glutamate catabolic step; complements the GABA biosynthetic process annotation by describing the fate of the substrate.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GAD1/GAD1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">L-glutamate + H(+) = 4-aminobutanoate + CO2</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0012506" target="_blank" class="term-link">
+                                    GO:0012506
+                                </a>
+                            </span>
+                            <span class="term-label">vesicle membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10671565" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10671565
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Alternative splicing of GAD67 results in the synthesis of a ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q99259" data-a="GO:0012506" data-r="PMID:10671565" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Non-traceable author statement (NAS) localizing GAD to the vesicle membrane. GAD67 is a soluble cytosolic enzyme; membrane/vesicle association is a property of the palmitoylated GAD65 isoform rather than GAD67.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> NAS localization that overstates GAD67&#39;s subcellular location; GAD67 has no membrane-anchoring modifications and acts in the cytosol. Kept (not removed) but flagged as an over-annotation of the intrinsic location.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GAD1/GAD1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Belongs to the group II decarboxylase family</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006540" target="_blank" class="term-link">
+                                    GO:0006540
+                                </a>
+                            </span>
+                            <span class="term-label">GABA shunt</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/1549570" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:1549570
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Two human glutamate decarboxylases, 65-kDa GAD and 67-kDa GA...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q99259" data-a="GO:0006540" data-r="PMID:1549570" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author-statement (TAS) annotation to the GABA shunt from the cDNA-cloning paper that established the two human GAD genes and their enzymatic activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GAD1 catalyzes the entry step of the GABA shunt; retained as a non-core metabolic-context process (core process is GABA biosynthesis). The cited paper confirms both GADs encode enzymatically active decarboxylases.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1549570" target="_blank" class="term-link">
+                                        PMID:1549570
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Both cDNAs direct the synthesis of enzymatically active GADs in</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007268" target="_blank" class="term-link">
+                                    GO:0007268
+                                </a>
+                            </span>
+                            <span class="term-label">chemical synaptic transmission</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8954991" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8954991
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mice lacking the 65 kDa isoform of glutamic acid decarboxyla...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q99259" data-a="GO:0007268" data-r="PMID:8954991" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author-statement (TAS) annotation to chemical synaptic transmission. GAD67 contributes to inhibitory neurotransmission indirectly by supplying GABA; the cited GAD65-knockout study shows GAD67 maintains brain GABA levels and its loss relates to seizure susceptibility.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Synaptic transmission is a downstream physiological consequence of GAD1&#39;s GABA-synthesizing activity rather than its own molecular action; kept as a non-core process annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8954991" target="_blank" class="term-link">
+                                        PMID:8954991
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">levels of mRNA and protein were largely unchanged by the GAD65 mutation.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q99259" data-a="GO:0005829" data-r="GO_REF:0000033" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed specific cytosolic localization for GAD67. GAD67 is a soluble cytosolic enzyme lacking the membrane-targeting modifications of GAD65; cytosol is the compartment where its constitutive GABA synthesis occurs, refining the existing cytoplasm (GO:0005737) IBA annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Added to record the specific cytosolic location used in core_functions; it refines the existing cytoplasm IBA annotation to the compartment in which soluble GAD67 acts.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GAD1/GAD1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Belongs to the group II decarboxylase family</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Pyridoxal-5&#39;-phosphate-dependent decarboxylation of L-glutamate to gamma-aminobutyric acid (GABA) plus CO2 in the cytosol, providing constitutive (basal) synthesis of the major inhibitory neurotransmitter GABA. GAD67 uses PLP covalently bound at an active-site lysine and functions as a homodimer.</h3>
+                <span class="vote-buttons" data-g="Q99259" data-a="FUNCTION: Pyridoxal-5&#39;-phosphate-dependent decarboxylation o..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004351" target="_blank" class="term-link">
+                            glutamate decarboxylase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009449" target="_blank" class="term-link">
+                                GABA biosynthetic process
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006538" target="_blank" class="term-link">
+                                L-glutamate catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17384644" target="_blank" class="term-link">
+                                PMID:17384644
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">GAD67 is constitutively active and is responsible for basal GABA production.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/GAD1/GAD1-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">L-glutamate + H(+) = 4-aminobutanoate + CO2</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Binding of the cofactor pyridoxal 5&#39;-phosphate (PLP), which is essential for the decarboxylase catalytic mechanism; PLP forms a Schiff base with the active-site lysine (Lys405) of GAD67.</h3>
+                <span class="vote-buttons" data-g="Q99259" data-a="FUNCTION: Binding of the cofactor pyridoxal 5&#39;-phosphate (PL..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030170" target="_blank" class="term-link">
+                            pyridoxal phosphate binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/GAD1/GAD1-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Name=pyridoxal 5</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10671565" target="_blank" class="term-link">
+                            PMID:10671565
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Alternative splicing of GAD67 results in the synthesis of a third form of glutamic-acid decarboxylase in human islets and other non-neural tissues.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/1549570" target="_blank" class="term-link">
+                            PMID:1549570
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Two human glutamate decarboxylases, 65-kDa GAD and 67-kDa GAD, are each encoded by a single gene.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16189514" target="_blank" class="term-link">
+                            PMID:16189514
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Towards a proteome-scale map of the human protein-protein interaction network.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17384644" target="_blank" class="term-link">
+                            PMID:17384644
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">GABA production by glutamic acid decarboxylase is regulated by a dynamic catalytic loop.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17474147" target="_blank" class="term-link">
+                            PMID:17474147
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Systematic identification of SH3 domain-mediated human protein-protein interactions by peptide array target screening.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21516116" target="_blank" class="term-link">
+                            PMID:21516116
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Next-generation sequencing to generate interactome datasets.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link">
+                            PMID:25416956
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A proteome-scale map of the human interactome network.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26871637" target="_blank" class="term-link">
+                            PMID:26871637
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Widespread Expansion of Protein Interaction Capabilities by Alternative Splicing.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31515488" target="_blank" class="term-link">
+                            PMID:31515488
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Extensive disruption of protein interactions by genetic variants across the allele frequency spectrum in human populations.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8954991" target="_blank" class="term-link">
+                            PMID:8954991
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Mice lacking the 65 kDa isoform of glutamic acid decarboxylase (GAD65) maintain normal levels of GAD67 and GABA in their brains but are susceptible to seizures.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-888572
+
+                    </span>
+                </div>
+
+                <div class="reference-title">PXLP-K405-GAD1 decarboxylates L-Glu to form GABA</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-888577
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Synthesis of GABA by GAD2</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-888589
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Release of GABA at the synapse</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-917744
+
+                    </span>
+                </div>
+
+                <div class="reference-title">GABA loaded synaptic vesicle Docking and Priming</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/GAD1/GAD1-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProt entry Q99259 (DCE1_HUMAN), Glutamate decarboxylase 1</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> To what extent is GAD67 (versus GAD65) responsible for the pool of GABA that supports phasic synaptic inhibition rather than only tonic/basal GABA, and does GAD67 have a physiologically meaningful presence at the presynaptic active zone in human neurons?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q99259" data-a="Q: To what extent is GAD67 (versus GAD65) responsible..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which of the reported GAD1 disease phenotypes (developmental and epileptic encephalopathy vs spastic cerebral palsy / spastic paraplegia) are robustly attributable to GAD1 loss of function, given that one cerebral-palsy pedigree was later reattributed to HPDL?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q99259" data-a="Q: Which of the reported GAD1 disease phenotypes (dev..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Fractionation and imaging of endogenous GAD67 in human GABAergic neurons to quantify the cytosolic versus membrane/vesicle-associated pools and directly test the Reactome-derived vesicle-membrane localization annotations.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q99259" data-a="EXPERIMENT: Fractionation and imaging of endogenous GAD67 in h..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Enzyme kinetics and thermal/holo-apo stability comparison of recombinant wild-type GAD67 versus disease-associated variants (e.g. DEE89 alleles) to link specific mutations to loss of decarboxylase activity and PLP cofactor binding.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q99259" data-a="EXPERIMENT: Enzyme kinetics and thermal/holo-apo stability com..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(GAD1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q99259" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="gad1-q99259-review-notes">GAD1 (Q99259) review notes</h1>
+<p>Deep research: falcon provider was OUT OF CREDITS (HTTP 402) at review time, so no<br />
+<code>GAD1-deep-research-falcon.md</code> was generated. This review is grounded in the UniProt<br />
+record (<code>GAD1-uniprot.txt</code>), the seeded GOA (<code>GAD1-goa.tsv</code>), and cached<br />
+<code>publications/PMID_*.md</code>.</p>
+<h2 id="identity-core-biology">Identity / core biology</h2>
+<ul>
+<li>GAD1 = glutamate decarboxylase 1, a.k.a. GAD67 / 67 kDa glutamic acid decarboxylase<br />
+  (UniProt DCE1_HUMAN, Q99259; HGNC:4092; chromosome 2q31).</li>
+<li>Pyridoxal-5'-phosphate (PLP)-dependent enzyme; EC 4.1.1.15; group II decarboxylase<br />
+  family. PLP is covalently bound at Lys405 (N6-(pyridoxal phosphate)lysine)<br />
+  [GAD1-uniprot.txt FT MOD_RES 405].</li>
+<li>Catalyzes L-glutamate -&gt; 4-aminobutanoate (GABA) + CO2 (RHEA:17785)<br />
+  [GAD1-uniprot.txt CATALYTIC ACTIVITY].</li>
+<li>GAD67 is the <strong>constitutively active</strong> isoform responsible for basal GABA production;<br />
+  the paralog GAD2/GAD65 is the synaptic-vesicle-associated form that is transiently<br />
+  activated on demand [PMID:17384644 abstract: "GAD67 is constitutively active and is<br />
+  responsible for basal GABA production. In contrast, GAD65 ... is transiently<br />
+  activated"].</li>
+<li>Homodimer [GAD1-uniprot.txt SUBUNIT; PMID:17384644].</li>
+<li>Localization: cytosolic (neuronal). Note GOA cytoplasm (IBA) and Reactome CC terms<br />
+  (plasma membrane, clathrin-sculpted GABA transport vesicle membrane, vesicle<br />
+  membrane) describe pathway/vesicle-context localization rather than the enzyme's own<br />
+  soluble cytosolic activity; GAD67 lacks the N-terminal palmitoylation-based membrane<br />
+  anchoring that targets GAD65 to vesicles.</li>
+</ul>
+<h2 id="structure-mechanism-references-cited-in-uniprot">Structure / mechanism references (cited in UniProt)</h2>
+<ul>
+<li>PMID:17384644 (Fenalti 2007, Nat Struct Mol Biol): crystal structures of GAD67 &amp;<br />
+  GAD65; GAD67 has a tethered catalytic loop covering the active site sustaining GABA<br />
+  production. Provides CATALYTIC ACTIVITY, COFACTOR (PLP), SUBUNIT (homodimer), FUNCTION.<br />
+  Source of IDA for glutamate decarboxylase activity, GABA shunt, identical protein binding.</li>
+<li>PMID:23126365 (Langendorf 2013): GAD auto-activation structure. Not in GOA/references<br />
+  list; not cited.</li>
+<li>PMID:10671565 (Chessler &amp; Lernmark 2000): describes GAD25 (isoform 3), a<br />
+  catalytically <strong>inactive</strong> splice variant in non-neural tissue; establishes GAD67<br />
+  enzymatic activity and L-glutamate catabolic role. Note isoform 3 = enzymatically<br />
+  inactive; the IDA glutamate decarboxylase / L-glutamate catabolic annotations refer<br />
+  to full-length GAD67 (isoform 1).</li>
+</ul>
+<h2 id="disease">Disease</h2>
+<ul>
+<li>Bi-allelic GAD1 variants -&gt; developmental and epileptic encephalopathy 89 (DEE89,<br />
+  MIM:619124), autosomal recessive [PMID:32282878, cited in UniProt; not cached].</li>
+<li>Homozygous missense S12C associated with autosomal recessive spastic cerebral palsy<br />
+  [PMID:15571623, cited in UniProt; not cached]; note PMID:33634263 later attributes<br />
+  CPSQ1 to HPDL, so the cerebral-palsy attribution is caveated. Consistent with GAD1's<br />
+  role in supplying the major inhibitory neurotransmitter GABA.</li>
+</ul>
+<h2 id="goa-annotation-assessment-summary">GOA annotation assessment summary</h2>
+<ul>
+<li>MF glutamate decarboxylase activity (GO:0004351): CORE. Supported by IDA (PMID:17384644,<br />
+  PMID:10671565), IBA, and IEA(ARBA EC 4.1.1.15 / RHEA:17785). ACCEPT.</li>
+<li>MF pyridoxal phosphate binding (GO:0030170) IEA(InterPro): CORE cofactor. ACCEPT<br />
+  (PLP is the essential cofactor, Lys405 Schiff base).</li>
+<li>MF carbon-carbon lyase / carboxy-lyase (GO:0016830 / GO:0016831) IEA(InterPro):<br />
+  correct parents of glutamate decarboxylase activity but less informative; MARK_AS_OVER_ANNOTATED.</li>
+<li>BP GABA biosynthetic process (GO:0009449) IBA + IEA: CORE. ACCEPT.</li>
+<li>BP GABA shunt (GO:0006540) IDA/TAS/IEA: KEEP (metabolic-context process); the IDA<br />
+  (PMID:17384644) reflects the decarboxylation step feeding the shunt.</li>
+<li>BP L-glutamate catabolic process (GO:0006538) TAS(PMID:10671565): ACCEPT as broader<br />
+  correct process (glutamate is consumed).</li>
+<li>BP chemical synaptic transmission (GO:0007268) TAS: KEEP_AS_NON_CORE — downstream<br />
+  physiological role via GABA, not GAD1's own molecular action.</li>
+<li>CC cytoplasm (GO:0005737) IBA: ACCEPT (soluble/cytosolic enzyme).</li>
+<li>CC presynaptic active zone (GO:0048786) IBA: KEEP_AS_NON_CORE (mostly GAD65-context;<br />
+  GAD67 basal cytosolic, only partly synaptically localized).</li>
+<li>CC plasma membrane (GO:0005886) TAS Reactome, vesicle membrane (GO:0012506) NAS,<br />
+  clathrin-sculpted GABA transport vesicle membrane (GO:0061202) TAS: these are Reactome<br />
+  pathway-context / vesicle-membrane placements; GAD67 (unlike palmitoylated GAD65) is<br />
+  soluble cytosolic, so these overstate GAD67's own localization. MARK_AS_OVER_ANNOTATED.</li>
+<li>MF protein binding (GO:0005515) IPI x11: all from large-scale interactome / SH3-array /<br />
+  variant-interactome screens (PMID:16189514, 17474147, 21516116, 25416956, 26871637,<br />
+  31515488, 32296183) and one small-scale (PMID:10671565). Uninformative bare<br />
+<code>protein binding</code>; per policy MARK_AS_OVER_ANNOTATED (not REMOVE).</li>
+<li>MF identical protein binding (GO:0042802) IDA (PMID:17384644): supports the homodimer;<br />
+  ACCEPT (structurally verified homodimer).<br />
+</content></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q99259
+gene_symbol: GAD1
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: Glutamate decarboxylase 1 (GAD67; 67 kDa glutamic acid decarboxylase)
+  is a pyridoxal-5&#39;-phosphate (PLP)-dependent decarboxylase (EC 4.1.1.15) that catalyzes
+  the conversion of L-glutamate to gamma-aminobutyric acid (GABA) plus CO2, thereby
+  producing the major inhibitory neurotransmitter of the central nervous system. It
+  is the principal constitutively active GABA-synthesizing enzyme responsible for
+  basal GABA production, whereas the paralog GAD2 (GAD65) is the synaptic-vesicle-associated
+  isoform that is transiently activated on demand. The enzyme is a homodimer that
+  covalently binds PLP at an active-site lysine and belongs to the group II decarboxylase
+  family. GAD67 is a soluble cytosolic protein expressed predominantly in GABAergic
+  neurons of the brain, with additional expression in some non-neural tissues. Bi-allelic
+  loss-of-function variants cause an autosomal recessive developmental and epileptic
+  encephalopathy, and hypomorphic missense variation has been associated with spastic
+  cerebral palsy / spastic paraplegia phenotypes, consistent with its essential role
+  in inhibitory neurotransmission.
+alternative_products:
+- name: 1 (GAD67)
+  id: Q99259-1
+- name: &#39;2&#39;
+  id: Q99259-2
+  sequence_note: Not described
+- name: 3 (GAD25 {ECO:0000303|PubMed:10671565})
+  id: Q99259-3
+  sequence_note: VSP_009123, VSP_009124
+- name: &#39;4&#39;
+  id: Q99259-4
+  sequence_note: VSP_054473, VSP_054474
+existing_annotations:
+- term:
+    id: GO:0009449
+    label: GABA biosynthetic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: Phylogenetic (IBA) annotation to GABA biosynthetic process. This is the
+      core biological process of GAD1/GAD67 - synthesis of the inhibitory neurotransmitter
+      GABA by decarboxylation of L-glutamate.
+    action: ACCEPT
+    reason: GAD67 is the principal constitutive GABA-synthesizing enzyme; this process
+      annotation is directly supported by structural/biochemical work and by the UniProt
+      FUNCTION statement, and is consistent across orthologs used for the IBA inference.
+    supported_by:
+    - reference_id: PMID:17384644
+      supporting_text: GAD67 is constitutively active and is responsible for basal
+        GABA production.
+    - reference_id: file:human/GAD1/GAD1-uniprot.txt
+      supporting_text: &#39;Catalyzes the synthesis of the inhibitory neurotransmitter&#39;
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: Phylogenetic (IBA) annotation placing GAD1 activity in the cytoplasm.
+      GAD67 is a soluble cytosolic enzyme, so this localization is correct, though
+      the more specific term cytosol (GO:0005829) better captures the compartment.
+    action: ACCEPT
+    reason: GAD67 lacks the N-terminal membrane-targeting modifications of GAD65 and
+      acts as a soluble cytosolic enzyme; cytoplasm is a correct (if general) location.
+      Cytosol is used as the specific location in core_functions.
+    supported_by:
+    - reference_id: file:human/GAD1/GAD1-uniprot.txt
+      supporting_text: &#39;Belongs to the group II decarboxylase family&#39;
+- term:
+    id: GO:0004351
+    label: glutamate decarboxylase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: Phylogenetic (IBA) annotation to glutamate decarboxylase activity (EC
+      4.1.1.15), the core molecular function of GAD1/GAD67.
+    action: ACCEPT
+    reason: This is the defining catalytic activity of GAD67 and is independently supported
+      by experimental (IDA) annotations from crystallographic and biochemical studies.
+    supported_by:
+    - reference_id: file:human/GAD1/GAD1-uniprot.txt
+      supporting_text: &#39;L-glutamate + H(+) = 4-aminobutanoate + CO2&#39;
+- term:
+    id: GO:0048786
+    label: presynaptic active zone
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: Phylogenetic (IBA) annotation localizing GAD to the presynaptic active
+      zone. This localization applies chiefly to synaptic GABA synthesis and is more
+      characteristic of the vesicle-associated paralog GAD65; GAD67 is predominantly
+      a soluble cytosolic enzyme responsible for basal GABA production.
+    action: KEEP_AS_NON_CORE
+    reason: GAD67 can be present at synaptic terminals in GABAergic neurons and contribute
+      to the presynaptic GABA pool, but its core activity is cytosolic basal GABA production
+      rather than active-zone-restricted synthesis; retained as a non-core localization.
+    supported_by:
+    - reference_id: PMID:17384644
+      supporting_text: GAD67 is constitutively active and is responsible for basal
+        GABA production.
+- term:
+    id: GO:0004351
+    label: glutamate decarboxylase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Electronic (ARBA) annotation to glutamate decarboxylase activity mapped
+      via EC 4.1.1.15 / RHEA:17785. Redundant with the experimental and IBA annotations
+      to the same term.
+    action: ACCEPT
+    reason: Correct core molecular function; the EC/RHEA-based electronic mapping agrees
+      with the experimentally established activity.
+    supported_by:
+    - reference_id: file:human/GAD1/GAD1-uniprot.txt
+      supporting_text: &#39;L-glutamate + H(+) = 4-aminobutanoate + CO2&#39;
+- term:
+    id: GO:0016830
+    label: carbon-carbon lyase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: InterPro-derived (IEA) annotation to carbon-carbon lyase activity, a broad
+      parent of the specific glutamate decarboxylase activity.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Not incorrect - glutamate decarboxylase activity IS a carbon-carbon lyase
+      activity - but this parent term is far less informative than the specific EC
+      4.1.1.15 activity, which is captured by the more specific glutamate decarboxylase
+      activity annotation.
+    supported_by:
+    - reference_id: file:human/GAD1/GAD1-uniprot.txt
+      supporting_text: &#39;L-glutamate + H(+) = 4-aminobutanoate + CO2&#39;
+- term:
+    id: GO:0016831
+    label: carboxy-lyase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: InterPro-derived (IEA) annotation to carboxy-lyase activity, the immediate
+      lyase parent of glutamate decarboxylase activity.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Correct as a parent (decarboxylases are carboxy-lyases) but uninformative
+      relative to the specific glutamate decarboxylase activity term already annotated.
+    supported_by:
+    - reference_id: file:human/GAD1/GAD1-uniprot.txt
+      supporting_text: &#39;L-glutamate + H(+) = 4-aminobutanoate + CO2&#39;
+- term:
+    id: GO:0030170
+    label: pyridoxal phosphate binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: InterPro-derived (IEA) annotation to pyridoxal phosphate binding. PLP
+      is the essential catalytic cofactor of GAD67, covalently bound as a Schiff base
+      at the active-site lysine (Lys405).
+    action: ACCEPT
+    reason: PLP binding is a genuine, core cofactor-binding function required for glutamate
+      decarboxylase catalysis; independently supported by the crystal structure and
+      UniProt COFACTOR/MOD_RES annotations.
+    supported_by:
+    - reference_id: file:human/GAD1/GAD1-uniprot.txt
+      supporting_text: &#39;Name=pyridoxal 5&#39;
+    - reference_id: PMID:17384644
+      supporting_text: glutamic acid decarboxylase (GAD65 and
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:16189514
+  qualifier: enables
+  review:
+    summary: Bare protein binding (IPI) from a proteome-scale yeast two-hybrid interactome
+      screen (CCSB-HI1). Uninformative as to GAD1&#39;s molecular function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The generic protein binding term conveys no specific functional information
+      and derives from a high-throughput binary interactome screen rather than a curated
+      functional interaction; per curation guidelines the bare term is over-annotated.
+      Retained (not removed) as it records a real experimental interaction.
+    supported_by:
+    - reference_id: PMID:16189514
+      supporting_text: an initial version of a proteome-scale map of
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:17474147
+  qualifier: enables
+  review:
+    summary: Bare protein binding (IPI) from an SH3-domain peptide-array (PATS) systematic
+      interaction screen.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Uninformative generic protein binding derived from a high-throughput SH3
+      domain-ligand screen; no specific functional MF is conveyed. Retained as a recorded
+      interaction rather than removed.
+    supported_by:
+    - reference_id: PMID:17474147
+      supporting_text: Systematic identification of SH3 domain-mediated human protein-protein
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:21516116
+  qualifier: enables
+  review:
+    summary: Bare protein binding (IPI) from a next-generation-sequencing-based (Stitch-seq)
+      high-throughput Y2H interactome dataset.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Generic, uninformative protein binding from a proteome-scale interactome-mapping
+      method; provides no specific molecular function. Kept as a recorded interaction.
+    supported_by:
+    - reference_id: PMID:21516116
+      supporting_text: massively parallel interactome-mapping pipeline, Stitch-seq
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25416956
+  qualifier: enables
+  review:
+    summary: Bare protein binding (IPI) from a proteome-scale human binary interactome
+      map (HI-II-14).
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Uninformative generic protein binding from a systematic binary interactome
+      screen; no specific MF conveyed. Retained rather than removed as it records genuine
+      high-throughput interaction data.
+    supported_by:
+    - reference_id: PMID:25416956
+      supporting_text: a systematic map of ?14,000 high-quality human
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:26871637
+  qualifier: enables
+  review:
+    summary: Bare protein binding (IPI) from an isoform-resolved interactome study of
+      alternatively spliced ORFs.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Generic protein binding from a high-throughput isoform interaction-profiling
+      study; not an informative molecular function term. Kept as recorded interaction
+      evidence.
+    supported_by:
+    - reference_id: PMID:26871637
+      supporting_text: Widespread Expansion of Protein Interaction Capabilities by
+        Alternative
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:31515488
+  qualifier: enables
+  review:
+    summary: Bare protein binding (IPI) from a large-scale study of interaction disruption
+      by human genetic variants (Y2H/PCA).
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Uninformative generic protein binding from a high-throughput variant-interactome
+      screen; conveys no specific molecular function. Retained as a recorded interaction.
+    supported_by:
+    - reference_id: PMID:31515488
+      supporting_text: Extensive disruption of protein interactions by genetic variants
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: Bare protein binding (IPI) from the HuRI human reference binary interactome
+      map.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Generic, uninformative protein binding from an all-by-all proteome-wide binary
+      interactome screen; no specific MF is conveyed. Kept as a recorded interaction
+      rather than removed.
+    supported_by:
+    - reference_id: PMID:32296183
+      supporting_text: reference interactome map of human binary protein interactions,
+        or &#39;HuRI&#39;
+- term:
+    id: GO:0006540
+    label: GABA shunt
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: Electronic (Ensembl ortholog-transfer) annotation to the GABA shunt, the
+      metabolic bypass in which glutamate is decarboxylated to GABA and GABA is subsequently
+      transaminated and oxidized back into the TCA cycle. GAD1 catalyzes the entry
+      (decarboxylation) step.
+    action: KEEP_AS_NON_CORE
+    reason: GAD1 genuinely participates in the GABA shunt as the glutamate-decarboxylation
+      step, but the shunt as a whole is a multi-enzyme metabolic process; the gene&#39;s
+      core process is more precisely GABA biosynthesis. Retained as a non-core metabolic-context
+      process.
+    supported_by:
+    - reference_id: file:human/GAD1/GAD1-uniprot.txt
+      supporting_text: &#39;L-glutamate + H(+) = 4-aminobutanoate + CO2&#39;
+- term:
+    id: GO:0009449
+    label: GABA biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Electronic (ARBA) annotation to GABA biosynthetic process, duplicating
+      the IBA annotation to the same core biological process.
+    action: ACCEPT
+    reason: Correct core process; the ARBA electronic mapping agrees with the phylogenetic
+      and experimental evidence for GABA synthesis.
+    supported_by:
+    - reference_id: PMID:17384644
+      supporting_text: GAD67 is constitutively active and is responsible for basal
+        GABA production.
+- term:
+    id: GO:0006540
+    label: GABA shunt
+  evidence_type: IDA
+  original_reference_id: PMID:17384644
+  qualifier: involved_in
+  review:
+    summary: Experimental (IDA) annotation to the GABA shunt based on the structural/biochemical
+      characterization of GAD67 catalyzing L-glutamate decarboxylation to GABA, the
+      committed entry step of the shunt.
+    action: KEEP_AS_NON_CORE
+    reason: Directly supported by experimental characterization of the decarboxylation
+      step, but the shunt is a multi-enzyme metabolic process; GAD1&#39;s own core process
+      is GABA biosynthesis. Deferring to the curator&#39;s experimental annotation, kept
+      as non-core metabolic context.
+    supported_by:
+    - reference_id: PMID:17384644
+      supporting_text: GAD67 shows a tethered loop covering the active site, providing
+        a catalytic
+- term:
+    id: GO:0004351
+    label: glutamate decarboxylase activity
+  evidence_type: IDA
+  original_reference_id: PMID:17384644
+  qualifier: enables
+  review:
+    summary: Experimental (IDA) annotation to glutamate decarboxylase activity from
+      crystallographic and kinetic characterization of human GAD67, the definitive
+      molecular function of the gene.
+    action: ACCEPT
+    reason: This is the gold-standard experimental support for the core catalytic function;
+      the structure shows a tethered catalytic loop sustaining constitutive GABA production.
+    supported_by:
+    - reference_id: PMID:17384644
+      supporting_text: GAD67 is constitutively active and is responsible for basal
+        GABA production.
+- term:
+    id: GO:0042802
+    label: identical protein binding
+  evidence_type: IDA
+  original_reference_id: PMID:17384644
+  qualifier: enables
+  review:
+    summary: Experimental (IDA) annotation to identical protein binding, reflecting
+      the fact that catalytically active GAD67 is a homodimer, as established by the
+      crystal structure.
+    action: ACCEPT
+    reason: Homodimerization is a structurally verified, functionally relevant property
+      of GAD67 (the active enzyme is a homodimer); identical protein binding is the
+      appropriate specific MF term.
+    supported_by:
+    - reference_id: file:human/GAD1/GAD1-uniprot.txt
+      supporting_text: &#39;Homodimer.&#39;
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-888589
+  qualifier: located_in
+  review:
+    summary: Reactome (TAS) localization to the plasma membrane, derived from a GABA-release-at-the-synapse
+      pathway context. GAD67 is a soluble cytosolic enzyme and does not itself reside
+      in the plasma membrane.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: This localization reflects the pathway/reaction context (synaptic GABA release)
+      rather than the intrinsic subcellular location of GAD67, which is cytosolic.
+      Unlike the palmitoylated paralog GAD65, GAD67 has no membrane-targeting features.
+    supported_by:
+    - reference_id: file:human/GAD1/GAD1-uniprot.txt
+      supporting_text: &#39;Belongs to the group II decarboxylase family&#39;
+- term:
+    id: GO:0061202
+    label: clathrin-sculpted gamma-aminobutyric acid transport vesicle membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-888572
+  qualifier: located_in
+  review:
+    summary: Reactome (TAS) localization to the clathrin-sculpted GABA transport vesicle
+      membrane, a GABA-synthesis/vesicle-loading pathway context. GAD67 is a soluble
+      cytosolic enzyme rather than an integral/peripheral vesicle-membrane protein.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Pathway-context localization; the membrane association is characteristic
+      of the palmitoylated GAD65 isoform, whereas GAD67 acts in the cytosol. Overstates
+      GAD67&#39;s own subcellular location.
+    supported_by:
+    - reference_id: file:human/GAD1/GAD1-uniprot.txt
+      supporting_text: &#39;Belongs to the group II decarboxylase family&#39;
+- term:
+    id: GO:0061202
+    label: clathrin-sculpted gamma-aminobutyric acid transport vesicle membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-888577
+  qualifier: located_in
+  review:
+    summary: Reactome (TAS) localization to the clathrin-sculpted GABA transport vesicle
+      membrane (duplicate pathway-context annotation, from the GAD2 GABA-synthesis
+      reaction). GAD67 is cytosolic.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Same pathway-context over-localization as the other GO:0061202 annotations;
+      this reaction is actually the GAD2 (GAD65) synthesis step. GAD67 itself is soluble
+      cytosolic.
+    supported_by:
+    - reference_id: file:human/GAD1/GAD1-uniprot.txt
+      supporting_text: &#39;Belongs to the group II decarboxylase family&#39;
+- term:
+    id: GO:0061202
+    label: clathrin-sculpted gamma-aminobutyric acid transport vesicle membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-888589
+  qualifier: located_in
+  review:
+    summary: Reactome (TAS) localization to the clathrin-sculpted GABA transport vesicle
+      membrane (duplicate pathway-context annotation, from the GABA-release reaction).
+      GAD67 is cytosolic.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Duplicate pathway-context over-localization; GAD67 does not itself reside
+      in the vesicle membrane.
+    supported_by:
+    - reference_id: file:human/GAD1/GAD1-uniprot.txt
+      supporting_text: &#39;Belongs to the group II decarboxylase family&#39;
+- term:
+    id: GO:0061202
+    label: clathrin-sculpted gamma-aminobutyric acid transport vesicle membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-917744
+  qualifier: located_in
+  review:
+    summary: Reactome (TAS) localization to the clathrin-sculpted GABA transport vesicle
+      membrane (duplicate pathway-context annotation, from the vesicle docking/priming
+      reaction). GAD67 is cytosolic.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Duplicate pathway-context over-localization; not an intrinsic location of
+      soluble cytosolic GAD67.
+    supported_by:
+    - reference_id: file:human/GAD1/GAD1-uniprot.txt
+      supporting_text: &#39;Belongs to the group II decarboxylase family&#39;
+- term:
+    id: GO:0004351
+    label: glutamate decarboxylase activity
+  evidence_type: IDA
+  original_reference_id: PMID:10671565
+  qualifier: enables
+  review:
+    summary: Experimental (IDA) annotation to glutamate decarboxylase activity. This
+      study establishes GAD67 enzymatic activity while characterizing a non-neural
+      splice variant (GAD25/isoform 3) that lacks decarboxylase activity.
+    action: ACCEPT
+    reason: Supports the core catalytic activity of full-length GAD67; the paper explicitly
+      contrasts active GAD67 with the enzymatically inactive GAD25 isoform.
+    supported_by:
+    - reference_id: PMID:10671565
+      supporting_text: This transcript directs the synthesis of a protein without GAD
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:10671565
+  qualifier: enables
+  review:
+    summary: Bare protein binding (IPI) associated with the GAD25/GAD67 splice-variant
+      study (interactant UniProtKB:Q05329). Uninformative generic MF term.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The generic protein binding term conveys no specific molecular function;
+      per curation guidelines it is over-annotated. Retained as a recorded interaction
+      rather than removed, deferring to the curator&#39;s IPI.
+    supported_by:
+    - reference_id: PMID:10671565
+      supporting_text: a third form of
+- term:
+    id: GO:0006538
+    label: L-glutamate catabolic process
+  evidence_type: TAS
+  original_reference_id: PMID:10671565
+  qualifier: involved_in
+  review:
+    summary: Author-statement (TAS) annotation to L-glutamate catabolic process. GAD67
+      consumes L-glutamate as substrate in the decarboxylation to GABA, so glutamate
+      is catabolized in this reaction.
+    action: ACCEPT
+    reason: Correct broader biological process - decarboxylation of L-glutamate is a
+      glutamate catabolic step; complements the GABA biosynthetic process annotation
+      by describing the fate of the substrate.
+    supported_by:
+    - reference_id: file:human/GAD1/GAD1-uniprot.txt
+      supporting_text: &#39;L-glutamate + H(+) = 4-aminobutanoate + CO2&#39;
+- term:
+    id: GO:0012506
+    label: vesicle membrane
+  evidence_type: NAS
+  original_reference_id: PMID:10671565
+  qualifier: located_in
+  review:
+    summary: Non-traceable author statement (NAS) localizing GAD to the vesicle membrane.
+      GAD67 is a soluble cytosolic enzyme; membrane/vesicle association is a property
+      of the palmitoylated GAD65 isoform rather than GAD67.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: NAS localization that overstates GAD67&#39;s subcellular location; GAD67 has
+      no membrane-anchoring modifications and acts in the cytosol. Kept (not removed)
+      but flagged as an over-annotation of the intrinsic location.
+    supported_by:
+    - reference_id: file:human/GAD1/GAD1-uniprot.txt
+      supporting_text: &#39;Belongs to the group II decarboxylase family&#39;
+- term:
+    id: GO:0006540
+    label: GABA shunt
+  evidence_type: TAS
+  original_reference_id: PMID:1549570
+  qualifier: involved_in
+  review:
+    summary: Author-statement (TAS) annotation to the GABA shunt from the cDNA-cloning
+      paper that established the two human GAD genes and their enzymatic activity.
+    action: KEEP_AS_NON_CORE
+    reason: GAD1 catalyzes the entry step of the GABA shunt; retained as a non-core
+      metabolic-context process (core process is GABA biosynthesis). The cited paper
+      confirms both GADs encode enzymatically active decarboxylases.
+    supported_by:
+    - reference_id: PMID:1549570
+      supporting_text: Both cDNAs direct the synthesis of enzymatically active GADs
+        in
+- term:
+    id: GO:0007268
+    label: chemical synaptic transmission
+  evidence_type: TAS
+  original_reference_id: PMID:8954991
+  qualifier: involved_in
+  review:
+    summary: Author-statement (TAS) annotation to chemical synaptic transmission. GAD67
+      contributes to inhibitory neurotransmission indirectly by supplying GABA; the
+      cited GAD65-knockout study shows GAD67 maintains brain GABA levels and its loss
+      relates to seizure susceptibility.
+    action: KEEP_AS_NON_CORE
+    reason: Synaptic transmission is a downstream physiological consequence of GAD1&#39;s
+      GABA-synthesizing activity rather than its own molecular action; kept as a non-core
+      process annotation.
+    supported_by:
+    - reference_id: PMID:8954991
+      supporting_text: levels of mRNA and protein were largely unchanged by the GAD65
+        mutation.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: Proposed specific cytosolic localization for GAD67. GAD67 is a soluble
+      cytosolic enzyme lacking the membrane-targeting modifications of GAD65; cytosol
+      is the compartment where its constitutive GABA synthesis occurs, refining the
+      existing cytoplasm (GO:0005737) IBA annotation.
+    action: NEW
+    reason: Added to record the specific cytosolic location used in core_functions;
+      it refines the existing cytoplasm IBA annotation to the compartment in which
+      soluble GAD67 acts.
+    supported_by:
+    - reference_id: file:human/GAD1/GAD1-uniprot.txt
+      supporting_text: &#39;Belongs to the group II decarboxylase family&#39;
+core_functions:
+- description: Pyridoxal-5&#39;-phosphate-dependent decarboxylation of L-glutamate to gamma-aminobutyric
+    acid (GABA) plus CO2 in the cytosol, providing constitutive (basal) synthesis of
+    the major inhibitory neurotransmitter GABA. GAD67 uses PLP covalently bound at
+    an active-site lysine and functions as a homodimer.
+  molecular_function:
+    id: GO:0004351
+    label: glutamate decarboxylase activity
+  directly_involved_in:
+  - id: GO:0009449
+    label: GABA biosynthetic process
+  - id: GO:0006538
+    label: L-glutamate catabolic process
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: PMID:17384644
+    supporting_text: GAD67 is constitutively active and is responsible for basal GABA
+      production.
+  - reference_id: file:human/GAD1/GAD1-uniprot.txt
+    supporting_text: &#39;L-glutamate + H(+) = 4-aminobutanoate + CO2&#39;
+- description: Binding of the cofactor pyridoxal 5&#39;-phosphate (PLP), which is essential
+    for the decarboxylase catalytic mechanism; PLP forms a Schiff base with the active-site
+    lysine (Lys405) of GAD67.
+  molecular_function:
+    id: GO:0030170
+    label: pyridoxal phosphate binding
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: file:human/GAD1/GAD1-uniprot.txt
+    supporting_text: &#39;Name=pyridoxal 5&#39;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:10671565
+  title: Alternative splicing of GAD67 results in the synthesis of a third form of
+    glutamic-acid decarboxylase in human islets and other non-neural tissues.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified. Establishes GAD67 enzymatic activity and describes
+      the enzymatically inactive GAD25 splice variant (isoform 3) in non-neural tissues.
+      Source of IDA for glutamate decarboxylase activity and TAS for L-glutamate catabolic
+      process. Abstract-only cache.
+- id: PMID:1549570
+  title: Two human glutamate decarboxylases, 65-kDa GAD and 67-kDa GAD, are each encoded
+    by a single gene.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified. Cloning of human GAD65 and GAD67 cDNAs; shows both
+      encode enzymatically active decarboxylases (EC 4.1.1.15) and maps GAD67 to 2q31.
+- id: PMID:16189514
+  title: Towards a proteome-scale map of the human protein-protein interaction network.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: PubMed-verified. Proteome-scale Y2H interactome (CCSB-HI1); source
+      of a bare protein-binding IPI. Not informative about GAD1&#39;s specific function.
+- id: PMID:17384644
+  title: GABA production by glutamic acid decarboxylase is regulated by a dynamic
+    catalytic loop.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified. Crystal structures of GAD67 and GAD65; establishes
+      catalytic activity, PLP cofactor, homodimer, and that GAD67 is constitutively
+      active for basal GABA production. Primary experimental support (IDA) for the
+      core functions. Abstract-only cache.
+- id: PMID:17474147
+  title: Systematic identification of SH3 domain-mediated human protein-protein interactions
+    by peptide array target screening.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: PubMed-verified. SH3-domain peptide-array (PATS) systematic screen;
+      source of a bare protein-binding IPI. Not informative about GAD1&#39;s specific function.
+- id: PMID:21516116
+  title: Next-generation sequencing to generate interactome datasets.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: PubMed-verified. Stitch-seq NGS-based high-throughput Y2H interactome;
+      source of a bare protein-binding IPI. Not informative about GAD1&#39;s specific function.
+- id: PMID:25416956
+  title: A proteome-scale map of the human interactome network.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: PubMed-verified. Systematic binary interactome map (HI-II-14); source
+      of a bare protein-binding IPI. Not informative about GAD1&#39;s specific function.
+- id: PMID:26871637
+  title: Widespread Expansion of Protein Interaction Capabilities by Alternative Splicing.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: PubMed-verified. Isoform-resolved interactome profiling; source of
+      bare protein-binding IPIs. Not informative about GAD1&#39;s specific function.
+- id: PMID:31515488
+  title: Extensive disruption of protein interactions by genetic variants across the
+    allele frequency spectrum in human populations.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: PubMed-verified. Variant-interactome disruption study (Y2H/PCA);
+      source of a bare protein-binding IPI. Not informative about GAD1&#39;s specific function.
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: PubMed-verified. HuRI all-by-all human binary interactome reference
+      map; source of bare protein-binding IPIs. Not informative about GAD1&#39;s specific
+      function.
+- id: PMID:8954991
+  title: Mice lacking the 65 kDa isoform of glutamic acid decarboxylase (GAD65) maintain
+    normal levels of GAD67 and GABA in their brains but are susceptible to seizures.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: PubMed-verified. GAD65-knockout mice retain normal GAD67 and brain
+      GABA levels but are seizure-prone, supporting GAD67&#39;s role as the constitutive
+      GABA-synthesizing enzyme and its link to synaptic (inhibitory) transmission.
+- id: Reactome:R-HSA-888572
+  title: PXLP-K405-GAD1 decarboxylates L-Glu to form GABA
+  findings: []
+- id: Reactome:R-HSA-888577
+  title: Synthesis of GABA by GAD2
+  findings: []
+- id: Reactome:R-HSA-888589
+  title: Release of GABA at the synapse
+  findings: []
+- id: Reactome:R-HSA-917744
+  title: GABA loaded synaptic vesicle Docking and Priming
+  findings: []
+- id: file:human/GAD1/GAD1-uniprot.txt
+  title: UniProt entry Q99259 (DCE1_HUMAN), Glutamate decarboxylase 1
+  findings: []
+suggested_questions:
+- question: To what extent is GAD67 (versus GAD65) responsible for the pool of GABA
+    that supports phasic synaptic inhibition rather than only tonic/basal GABA, and
+    does GAD67 have a physiologically meaningful presence at the presynaptic active
+    zone in human neurons?
+- question: Which of the reported GAD1 disease phenotypes (developmental and epileptic
+    encephalopathy vs spastic cerebral palsy / spastic paraplegia) are robustly attributable
+    to GAD1 loss of function, given that one cerebral-palsy pedigree was later reattributed
+    to HPDL?
+suggested_experiments:
+- description: Fractionation and imaging of endogenous GAD67 in human GABAergic neurons
+    to quantify the cytosolic versus membrane/vesicle-associated pools and directly
+    test the Reactome-derived vesicle-membrane localization annotations.
+- description: Enzyme kinetics and thermal/holo-apo stability comparison of recombinant
+    wild-type GAD67 versus disease-associated variants (e.g. DEE89 alleles) to link
+    specific mutations to loss of decarboxylase activity and PLP cofactor binding.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

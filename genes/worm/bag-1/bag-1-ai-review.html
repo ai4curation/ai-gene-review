@@ -1,0 +1,3138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>bag-1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>bag-1</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O44739" target="_blank" class="term-link">
+                        O44739
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Caenorhabditis elegans</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "bag-1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O44739" data-a="DESCRIPTION: bag-1 encodes the Caenorhabditis elegans member of..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>bag-1 encodes the Caenorhabditis elegans member of the BAG (Bcl-2-associated athanogene) family of Hsp70/Hsc70 co-chaperones. The 210-residue protein has an N-terminal ubiquitin-like domain and a C-terminal BAG domain; the BAG domain binds the nucleotide-binding (ATPase) domain of Hsp70-family chaperones and acts as a nucleotide-exchange factor, promoting ADP release and ATP-dependent discharge of client substrates from the chaperone. By accelerating the Hsp70/Hsc70 nucleotide cycle, BAG-1 modulates chaperone-assisted protein folding, and at high co-chaperone levels this activity can antagonize productive folding. In the worm, BAG-1 stimulates the ATPase activity of the constitutive Hsc70 (HSP-1) and, together with the J-domain protein DNJ-13 (Hsp40) and the paralogous BAG-domain protein UNC-23 (BAG2 ortholog), belongs to the cofactor network that tunes the Hsc70 chaperone cycle. The BAG domain adopts a helical bundle fold, and the worm protein can oligomerize into dimers and tetramers. It is a soluble, predominantly cytosolic protein.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O44739" data-a="GO:0005737" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> BAG-1 is a soluble co-chaperone that acts on cytoplasmic Hsp70/Hsc70; cytoplasmic localization is expected and consistent with the absence of any transmembrane or signal-peptide features.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O44739" data-a="GO:0005634" data-r="GO_REF:0000033" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Nuclear localization in the BAG family is a property of the mammalian BAG-1L isoform, which carries an N-terminal extension bearing a nuclear-localization region. The single 210-residue worm protein lacks that extension and there is no experimental evidence for nuclear BAG-1 in C. elegans, so this phylogenetically propagated term likely over-annotates an isoform-specific mammalian feature.
+                        </div>
+
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">PROPAGATION BAD</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">COMPARTMENT OR COMPLEX MISMATCH</span>
+
+                                <span class="badge">FUNCTIONAL DIVERGENCE</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTN000269156</span>
+
+                                    &middot; BAG family node (nucleus IBA source)
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                    <div class="propagation-comment">Nuclear localization derives from the N-terminally extended mammalian BAG-1L isoform; the single short worm protein lacks that nuclear-targeting extension, so the source annotation is sound but does not transfer.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O44739" data-a="GO:0005829" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosol is a more precise and appropriate location for a soluble BAG-domain nucleotide-exchange factor acting on cytosolic Hsc70; consistent with the lack of membrane or organelle-targeting features.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O44739" data-a="GO:0016020" data-r="GO_REF:0000033" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Worm BAG-1 has no transmembrane segment, no signal peptide, and no lipid-anchor features; it is a soluble cytosolic co-chaperone. The membrane term is a weak phylogenetic propagation (partly from a BAG3-type ortholog) and is not expected to apply to this protein.
+                        </div>
+
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">PROPAGATION BAD</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">COMPARTMENT OR COMPLEX MISMATCH</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTN000269156</span>
+
+                                    &middot; BAG family node (membrane IBA source)
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                    <div class="propagation-comment">Membrane association is not expected for a soluble BAG-domain NEF with no transmembrane segment or lipid anchor; the term is partly propagated from a BAG3-type ortholog and does not transfer to this protein.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000774" target="_blank" class="term-link">
+                                    GO:0000774
+                                </a>
+                            </span>
+                            <span class="term-label">adenyl-nucleotide exchange factor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O44739" data-a="GO:0000774" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the defining molecular function of the BAG family: the BAG domain binds the Hsp70/Hsc70 ATPase domain and promotes ADP release / ATP-dependent substrate discharge, i.e. nucleotide exchange. Well supported by family biology and the worm structure, and consistent with the experimental Hsc70 ATPase stimulation measured for worm BAG-1.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15333932" target="_blank" class="term-link">
+                                        PMID:15333932
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Binding of the BAG domain to the eukaryotic chaperone heat-shock protein (Hsp70) promotes ATP-dependent release of the protein substrate from Hsp70.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050821" target="_blank" class="term-link">
+                                    GO:0050821
+                                </a>
+                            </span>
+                            <span class="term-label">protein stabilization</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O44739" data-a="GO:0050821" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Plausible downstream consequence of BAG-1&#39;s modulation of the Hsp70/Hsc70 cycle, propagated from mammalian orthologs. No worm-specific evidence that BAG-1 stabilizes particular clients, so retained as a non-core biological process.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051087" target="_blank" class="term-link">
+                                    GO:0051087
+                                </a>
+                            </span>
+                            <span class="term-label">protein-folding chaperone binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O44739" data-a="GO:0051087" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Binding to the Hsp70/Hsc70 chaperone via the BAG domain is central to BAG-1 function and is the enabling interaction underlying its nucleotide-exchange activity. Well supported for a BAG-domain protein.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9873016" target="_blank" class="term-link">
+                                        PMID:9873016
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">BAG-1 binds the ATPase domains of Hsp70 and Hsc70, modulating their chaperone activity and functioning as a competitive antagonist of the co-chaperone Hip</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051087" target="_blank" class="term-link">
+                                    GO:0051087
+                                </a>
+                            </span>
+                            <span class="term-label">protein-folding chaperone binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O44739" data-a="GO:0051087" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO electronic annotation from the BAG-domain signatures. Correctly captures Hsp70/Hsc70 chaperone binding and corroborates the phylogenetic and experimental support for this interaction (an independent evidence line for the same accepted chaperone-binding function).
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14704431" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14704431
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A map of the interactome network of the metazoan C. elegans.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O44739" data-a="GO:0005515" data-r="PMID:14704431" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput yeast-two-hybrid interaction with the DUF727 protein Y43F8B.2 (Q9XWX7), a partner of unknown function that is not an Hsp70. The generic &#34;protein binding&#34; term is uninformative about BAG-1&#39;s molecular function; retained as a real but non-core experimental interaction.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14704431" target="_blank" class="term-link">
+                                        PMID:14704431
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">more than 4000 interactions were identified from high-throughput, yeast two-hybrid (HT=Y2H) screens</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19123269" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19123269
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Empirically controlled mapping of the Caenorhabditis elegans...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O44739" data-a="GO:0005515" data-r="PMID:19123269" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Second high-throughput yeast-two-hybrid report of the same Y43F8B.2 (Q9XWX7) interaction. As above, the generic &#34;protein binding&#34; term is uninformative about function; retained as a non-core experimental interaction rather than a core molecular function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19123269" target="_blank" class="term-link">
+                                        PMID:19123269
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We present an expanded C. elegans protein-protein interaction network, or &#39;interactome&#39; map, derived from testing a matrix of approximately 10,000 x approximately 10,000 proteins using a highly specific, high-throughput yeast two-hybrid system.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001671" target="_blank" class="term-link">
+                                    GO:0001671
+                                </a>
+                            </span>
+                            <span class="term-label">ATPase activator activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25053410" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25053410
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The balanced regulation of Hsc70 by DNJ-13 and UNC-23 is req...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O44739" data-a="GO:0001671" data-r="PMID:25053410" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimentally supported for worm BAG-1: as a nucleotide-exchange factor it accelerates the Hsc70 ATPase cycle. Papsdorf et al. measured ATPase stimulation and folding regulation for the BAG cofactors and report that BAG-1 acts with higher affinity than the paralog UNC-23. This mechanistically complements the nucleotide-exchange-factor annotation and is a core function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25053410" target="_blank" class="term-link">
+                                        PMID:25053410
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">C-terminal fragments of UNC-23 instead perform all Hsc70-related functions, like ATPase stimulation and regulation of folding activity, albeit with lower affinity than BAG-1</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006457" target="_blank" class="term-link">
+                                    GO:0006457
+                                </a>
+                            </span>
+                            <span class="term-label">protein folding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9873016" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9873016
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    An evolutionarily conserved family of Hsp70/Hsc70 molecular ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O44739" data-a="GO:0006457" data-r="PMID:9873016" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> As an Hsp70/Hsc70 co-chaperone that regulates the ATP-driven folding cycle, BAG-1 is legitimately involved in the protein-folding process; the involved_in qualifier does not imply it is itself a foldase (indeed excess BAG can inhibit chaperone activity). The specific regulatory mechanism is captured by the nucleotide-exchange-factor and ATPase-activator annotations.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9873016" target="_blank" class="term-link">
+                                        PMID:9873016
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The human BAG-1, BAG-2, and BAG-3 proteins bind with high affinity (KD congruent with 1-10 nM) to the ATPase domain of Hsc70 and inhibit its chaperone activity in a Hip-repressible manner</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051087" target="_blank" class="term-link">
+                                    GO:0051087
+                                </a>
+                            </span>
+                            <span class="term-label">protein-folding chaperone binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15333932" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15333932
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structural genomics of Caenorhabditis elegans: structure of ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O44739" data-a="GO:0051087" data-r="PMID:15333932" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sequence/structure-based inference of Hsp70 chaperone binding, supported by the crystal structure of the worm BAG domain and its documented role in Hsp70-dependent substrate release. An independent evidence line for the same accepted chaperone-binding function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15333932" target="_blank" class="term-link">
+                                        PMID:15333932
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Binding of the BAG domain to the eukaryotic chaperone heat-shock protein (Hsp70) promotes ATP-dependent release of the protein substrate from Hsp70.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>BAG-1 is a BAG-domain co-chaperone that acts as a nucleotide-exchange factor (NEF) for cytosolic Hsp70/Hsc70 (worm HSP-1). Its C-terminal BAG domain binds the chaperone&#39;s nucleotide-binding (ATPase) domain and promotes ADP release, accelerating the ATP-driven cycle and ATP-dependent discharge of client substrates. Experimentally, worm BAG-1 stimulates the Hsc70 ATPase (with higher affinity than the paralog UNC-23), and thereby tunes chaperone-assisted folding; the same activity can antagonize the chaperone when the cofactor is in excess.</h3>
+                <span class="vote-buttons" data-g="O44739" data-a="FUNCTION: BAG-1 is a BAG-domain co-chaperone that acts as a ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000774" target="_blank" class="term-link">
+                            adenyl-nucleotide exchange factor activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006457" target="_blank" class="term-link">
+                                protein folding
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15333932" target="_blank" class="term-link">
+                                PMID:15333932
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Binding of the BAG domain to the eukaryotic chaperone heat-shock protein (Hsp70) promotes ATP-dependent release of the protein substrate from Hsp70.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9873016" target="_blank" class="term-link">
+                                PMID:9873016
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">BAG-1 binds the ATPase domains of Hsp70 and Hsc70, modulating their chaperone activity and functioning as a competitive antagonist of the co-chaperone Hip</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25053410" target="_blank" class="term-link">
+                                PMID:25053410
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">C-terminal fragments of UNC-23 instead perform all Hsc70-related functions, like ATPase stimulation and regulation of folding activity, albeit with lower affinity than BAG-1</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9873016" target="_blank" class="term-link">
+                            PMID:9873016
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">An evolutionarily conserved family of Hsp70/Hsc70 molecular chaperone regulators.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15333932" target="_blank" class="term-link">
+                            PMID:15333932
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Structural genomics of Caenorhabditis elegans: structure of the BAG domain.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19123269" target="_blank" class="term-link">
+                            PMID:19123269
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Empirically controlled mapping of the Caenorhabditis elegans protein-protein interactome network.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25053410" target="_blank" class="term-link">
+                            PMID:25053410
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The balanced regulation of Hsc70 by DNJ-13 and UNC-23 is required for muscle functionality.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/14704431" target="_blank" class="term-link">
+                            PMID:14704431
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A map of the interactome network of the metazoan C. elegans.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:worm/bag-1/bag-1-notes.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Reviewer notes for C. elegans bag-1</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does C. elegans BAG-1 form a physiological complex with the constitutive Hsc70 HSP-1, and is this interaction functionally distinct from that of the paralog UNC-23?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O44739" data-a="Q: Does C. elegans BAG-1 form a physiological complex..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does BAG-1 direct Hsc70 clients toward refolding or toward proteasomal degradation, and does its ubiquitin-like domain mediate a proteasome link as in mammalian BAG-1?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O44739" data-a="Q: Does BAG-1 direct Hsc70 clients toward refolding o..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Generate and phenotype a bag-1 loss-of-function allele (CRISPR deletion or RNAi), alone and combined with unc-23 loss, assaying viability, motility, thermotolerance, and aggregation/proteostasis reporters to test whether bag-1 has an independent role or is redundant with unc-23.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="O44739" data-a="EXPERIMENT: Generate and phenotype a bag-1 loss-of-function al..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Affinity-purify tagged BAG-1 from worm lysates followed by mass spectrometry to define the native BAG-1 interactome (HSP-1/Hsc70 and clients), and combine with in-vitro Hsc70 ATPase and luciferase refolding assays to quantify BAG-1&#39;s effect on the chaperone cycle.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="O44739" data-a="EXPERIMENT: Affinity-purify tagged BAG-1 from worm lysates fol..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> No in-vivo client or substrate of C. elegans BAG-1 has been identified, and it is untested whether worm BAG-1 biases Hsc70-bound clients toward productive refolding or, via its ubiquitin-like domain, toward proteasomal degradation (the folding-versus-degradation decision that mammalian BAG-1 helps make).</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">BP_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> It is firmly established that BAG-1 is a BAG-domain nucleotide-exchange factor that binds the Hsp70/Hsc70 ATPase domain, stimulates the Hsc70 ATPase, and promotes ATP-dependent substrate release, and that it carries an N-terminal ubiquitin-like domain. What clients pass through this activity in the worm, and what fate BAG-1 directs them to, are unknown.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> The functional output of an Hsp70 NEF depends entirely on which clients it engages and whether it promotes their folding or clearance; without this, the worm-specific biological role of BAG-1 cannot be assigned, and its relationship to proteostasis-network aging phenotypes remains inferential.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Affinity-proteomics / co-immunoprecipitation of BAG-1 (and BAG-1-vs-UNC-23) from C. elegans to define native clients, combined with degradation/refolding reporter assays and tests of the ubiquitin-like-domain proteasome link, would close the gap.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"The mechanisms by which Hsp70 family chaperones are regulated, however, are only partly understood."</em> — PMID:9873016</li>
+
+                <li><em>"No in-vivo client or substrate has been identified for C. elegans BAG-1, and it is untested whether worm BAG-1 channels Hsc70 clients toward productive refolding or toward proteasomal degradation."</em> — file:worm/bag-1/bag-1-notes.md</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> No loss-of-function phenotype has been reported for the bag-1 gene itself in C. elegans, so it is unknown whether bag-1 is essential, is functionally redundant with its paralog unc-23, or has a distinct tissue-restricted role.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">BP_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> In this cofactor system the characterized in-vivo phenotype (severe motility dysfunction, muscle-attachment-site localization) belongs to the paralog UNC-23/BAG2, whereas BAG-1 has only been characterized biochemically (higher Hsc70 affinity than UNC-23). A bag-1 mutant or RNAi phenotype is not described in the cached literature.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Whether bag-1 is dispensable, buffered by unc-23, or independently required in a particular tissue determines its true biological role and its weight in the worm proteostasis network.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Characterization of a bag-1 deletion/RNAi (alone and in a unc-23 background) for viability, motility, stress resistance, and proteostasis reporters would define the biological role and test redundancy with unc-23.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"one of them being UNC-23, whose mutation induces severe motility dysfunctions"</em> — PMID:25053410</li>
+
+                <li><em>"No loss-of-function phenotype has been reported for the bag-1 gene itself in C. elegans, so it is unknown whether bag-1 is essential, redundant with the paralog unc-23, or has a tissue-restricted role."</em> — file:worm/bag-1/bag-1-notes.md</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> A direct physical BAG-1-to-HSP-1/Hsc70 complex in C. elegans has not been demonstrated, and the subcellular site of BAG-1 action in the worm is untested; the only experimentally reported worm partner is the DUF727 protein Y43F8B.2, whose functional relationship to BAG-1 is unexplained.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span><span class="badge">CURATION</span>
+                <span class="badge">CC_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Family biology and the worm BAG-domain crystal structure predict binding to the Hsp70/Hsc70 ATPase domain, and biochemistry shows worm BAG-1 stimulates Hsc70; but the demonstrated worm two-hybrid partner is Y43F8B.2, not HSP-1, and no localization data exist for endogenous BAG-1.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Establishing the physiological BAG-1/Hsc70 complex and where it forms would convert the inferred co-chaperone role into a directly evidenced one and clarify the meaning (if any) of the Y43F8B.2 interaction.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Co-immunoprecipitation or proximity labeling of endogenous BAG-1 with HSP-1, plus a tagged-BAG-1 expression/localization reporter, would confirm the complex and its site of action.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"The structure may represent a new folding type of the BAG domain."</em> — PMID:15333932</li>
+
+                <li><em>"The only experimentally demonstrated physical partner of worm BAG-1 is the DUF727 protein Y43F8B.2, and a direct BAG-1 to HSP-1/Hsc70 complex in C. elegans has not been shown; the subcellular site of BAG-1 action in the worm is untested."</em> — file:worm/bag-1/bag-1-notes.md</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(bag-1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O44739" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="bag-1-c-elegans-research-notes">bag-1 (C. elegans) research notes</h1>
+<p>UniProt: <strong>O44739</strong> (BAG1_CAEEL), "BAG family molecular chaperone regulator 1".<br />
+Gene: <code>bag-1</code>; ORF <code>F57B10.11</code>; WormBase <code>WBGene00000236</code>; Chromosome I. 210 aa, 24 kDa.<br />
+NCBITaxon:6239.</p>
+<h2 id="identity-check">Identity check</h2>
+<p>Confirmed the record is the BAG-domain Hsp70/Hsc70 co-chaperone (nucleotide-exchange<br />
+factor), not a mis-named gene. UniProt DE = "BAG family molecular chaperone regulator 1";<br />
+domains: a <strong>ubiquitin-like domain (8–85)</strong> and a <strong>BAG domain (108–194)</strong>; PDB <strong>1T7S</strong><br />
+(BAG domain, residues 74–210). Family founder for the C. elegans BAG proteins together<br />
+with UNC-23 (BAG2 ortholog).</p>
+<h2 id="domain-architecture-structure">Domain architecture / structure</h2>
+<ul>
+<li>Ubiquitin-like (UBL) domain FT 8–85 (PROSITE PRU00214); BAG domain FT 108–194<br />
+  (PROSITE PRU00369). Pfam PF02179 (BAG) + PF00240 (ubiquitin). InterPro IPR017093<br />
+  (BAG-1), IPR003103/IPR036533 (BAG domain + superfamily), IPR000626 (ubiquitin-like).</li>
+<li>Crystal structure of the worm BAG domain solved by structural genomics<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/15333932" title="Binding of the BAG domain to the eukaryotic chaperone heat-shock protein (Hsp70) promotes ATP-dependent release of the protein substrate from Hsp70">PMID:15333932</a>.<br />
+  Notably the worm BAG domain adopts an unusual fold: "the Caenorhabditis elegans BAG<br />
+  domain is formed by two antiparallel helices, while the third helix is extended away"<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/15333932" title="the Caenorhabditis elegans BAG domain is formed by two antiparallel helices, while the third helix is extended away and stabilized by crystal-packing interactions">PMID:15333932</a>.<br />
+  The paper infers oligomerization: "stable functional dimers and tetramers can be formed<br />
+  in solution" <a href="https://pubmed.ncbi.nlm.nih.gov/15333932" title="intermolecular three-helix bundles are observed throughout the crystal packing and suggest that stable functional dimers and tetramers can be formed in solution">PMID:15333932</a>.<br />
+  UniProt SUBUNIT: "Homodimer or homotetramer" (ECO:0000269|PubMed:15333932).</li>
+</ul>
+<h2 id="known-well-supported-function">KNOWN (well-supported) function</h2>
+<ol>
+<li>
+<p><strong>BAG-domain co-chaperone / Hsp70(Hsc70) nucleotide-exchange factor (NEF).</strong> The<br />
+   defining activity of the BAG family. Founding paper describing the family (incl. worm<br />
+   BAG-1/BAG-2) <a href="https://pubmed.ncbi.nlm.nih.gov/9873016" title="BAG-1 binds the ATPase domains of Hsp70 and Hsc70, modulating their chaperone activity and functioning as a competitive antagonist of the co-chaperone Hip">PMID:9873016</a>.<br />
+   The BAG domain binds the Hsp70 ATPase (nucleotide-binding) domain and drives<br />
+   ATP-dependent substrate release <a href="https://pubmed.ncbi.nlm.nih.gov/15333932" title="Binding of the BAG domain to the eukaryotic chaperone heat-shock protein (Hsp70) promotes ATP-dependent release of the protein substrate from Hsp70">PMID:15333932</a>.<br />
+   → supports GO:0000774 adenyl-nucleotide exchange factor activity, GO:0051087<br />
+   protein-folding chaperone binding.</p>
+</li>
+<li>
+<p><strong>Stimulation of Hsc70 ATPase (experimental, worm).</strong> Papsdorf, Sacherl &amp; Richter 2014<br />
+   measured worm BAG proteins as Hsc70 cofactors; C-terminal fragments of UNC-23 perform<br />
+   "all Hsc70-related functions, like ATPase stimulation and regulation of folding<br />
+   activity, albeit with lower affinity than BAG-1"<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/25053410" title="C-terminal fragments of UNC-23 instead perform all Hsc70-related functions, like ATPase stimulation and regulation of folding activity, albeit with lower affinity than BAG-1">PMID:25053410</a>.<br />
+   This directly establishes that worm BAG-1 stimulates the Hsc70 ATPase and regulates its<br />
+   folding activity, with higher affinity than the muscle paralog UNC-23. WormBase used<br />
+   this paper for the experimental IDA to GO:0001671 ATPase activator activity.<br />
+   Context: worm Hsc70 (HSP-1) is regulated by two antagonistic cofactor classes — the<br />
+   J-domain protein DNJ-13 (Hsp40) and the BAG-domain protein UNC-23/BAG-1<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/25053410" title="The molecular chaperone Hsc70 assists in the folding of non-native proteins together with its J domain- and BAG domain-containing cofactors">PMID:25053410</a>.</p>
+</li>
+<li>
+<p><strong>Regulation of the Hsp70 folding/refolding cycle (mechanism, from family biology).</strong><br />
+   BAG proteins act as NEFs that accelerate ADP→ATP exchange, thereby tuning (and, at<br />
+   excess, antagonizing) the Hsp70 chaperone cycle<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/9873016" title="The human BAG-1, BAG-2, and BAG-3 proteins bind with high affinity (KD congruent with 1-10 nM) to the ATPase domain of Hsc70 and inhibit its chaperone activity in a Hip-repressible manner">PMID:9873016</a>.<br />
+   UniProt FUNCTION (by similarity): "May inhibit the chaperone activity of HSP70/HSC70 by<br />
+   promoting substrate release in an ATP-dependent manner."</p>
+</li>
+</ol>
+<h2 id="localization">Localization</h2>
+<ul>
+<li>No experimental localization for worm BAG-1 in the cached literature. No transmembrane<br />
+  segment, no signal peptide (KW: Chaperone; 3D-structure; Reference proteome only).</li>
+<li>IBA propagates cytoplasm/cytosol (defensible for a soluble co-chaperone), plus <strong>nucleus</strong><br />
+  and <strong>membrane</strong> from mammalian/fungal orthologs. Human nuclear localization is a property<br />
+  of the BAG-1L isoform (an N-terminally extended isoform with a nuclear-localization<br />
+  region); the single short (210 aa) worm protein lacks that N-terminal extension, so the<br />
+  nucleus IBA is a weak, isoform-driven inference. Membrane is not expected for a soluble<br />
+  cytosolic NEF with no TM domain.</li>
+</ul>
+<h2 id="interactions-interactome-ipi">Interactions (interactome / IPI)</h2>
+<ul>
+<li>Two HT-Y2H "protein binding" (GO:0005515) IPI annotations both report the <strong>same</strong> partner<br />
+<strong>Q9XWX7 = Y43F8B.2</strong>, a DUF727-domain protein of largely unknown function<br />
+  [PMID:14704431 worm interactome WI5; PMID:19123269 WI-2007/WI8]. These are systematic<br />
+  yeast-two-hybrid maps, not BAG-1-focused studies; UniProt records the interaction<br />
+  (IntAct EBI-323218/EBI-323231, NbExp=3). GO:0005515 "protein binding" is uninformative<br />
+  per curation guidelines; the partner is not an Hsp70 and its biological meaning is unclear.</li>
+</ul>
+<h2 id="not-known-knowledge-gaps-see-review-knowledge_gaps">NOT known / knowledge gaps (see review knowledge_gaps)</h2>
+<ul>
+<li><strong>No in-vivo client/substrate repertoire</strong> for worm BAG-1. Whether it channels Hsc70<br />
+  clients toward refolding vs. proteasomal degradation (as mammalian BAG-1 does via its UBL<br />
+  domain engaging the 26S proteasome) has not been tested in the worm, despite BAG-1<br />
+  carrying a UBL domain (FT 8–85).</li>
+<li><strong>No loss-of-function phenotype</strong> described for <code>bag-1</code> itself. The muscle-attachment<br />
+  phenotype in this cofactor system belongs to the paralog <strong>unc-23</strong> (BAG2 ortholog), not<br />
+  bag-1 <a href="https://pubmed.ncbi.nlm.nih.gov/25053410" title="one of them being UNC-23, whose mutation induces severe motility dysfunctions">PMID:25053410</a>.<br />
+  Whether bag-1 is essential, redundant with unc-23, or has a tissue-restricted role is open.</li>
+<li><strong>Direct partner of worm BAG-1 in vivo</strong> unconfirmed: family biology predicts HSP-1/Hsc70<br />
+  binding via the BAG domain, but a physical worm BAG-1–HSP-1 complex has not been<br />
+  demonstrated in the cached literature (the demonstrated worm Y2H partner is the DUF727<br />
+  protein Y43F8B.2, biologically unexplained).</li>
+</ul>
+<h2 id="annotation-by-annotation-reasoning-summary-see-yaml-for-detail">Annotation-by-annotation reasoning (summary; see YAML for detail)</h2>
+<ul>
+<li>GO:0000774 adenyl-nucleotide exchange factor activity (IBA) — ACCEPT, core.</li>
+<li>GO:0051087 protein-folding chaperone binding (IBA/IEA/ISS ×3) — ACCEPT (BAG domain binds Hsp70); one kept as core, redundant copies non-core.</li>
+<li>GO:0001671 ATPase activator activity (IDA, PMID:25053410) — ACCEPT, core (experimental, worm).</li>
+<li>GO:0006457 protein folding (ISS) — KEEP_AS_NON_CORE (co-chaperone regulates the folding cycle; does not itself fold).</li>
+<li>GO:0050821 protein stabilization (IBA) — KEEP_AS_NON_CORE (plausible, unverified in worm).</li>
+<li>GO:0005737 cytoplasm / GO:0005829 cytosol (IBA) — ACCEPT/KEEP_AS_NON_CORE (soluble co-chaperone).</li>
+<li>GO:0005634 nucleus (IBA) — MARK_AS_OVER_ANNOTATED (isoform-specific mammalian property; worm lacks BAG-1L-type N-terminal extension).</li>
+<li>GO:0016020 membrane (IBA) — MARK_AS_OVER_ANNOTATED (no TM domain; soluble protein).</li>
+<li>GO:0005515 protein binding (IPI ×2, Q9XWX7) — KEEP_AS_NON_CORE (uninformative HT-Y2H interaction).</li>
+</ul>
+<h2 id="cached-literature-status">Cached literature status</h2>
+<p>All five cited PMIDs are cached; four are abstract-only (9873016, 15333932, 25053410,<br />
+14704431), 19123269 has full text (methods/discussion only, no BAG-1 specifics). The single<br />
+experimental worm annotation (GO:0001671, PMID:25053410) is supported by the abstract text.</p>
+<h2 id="knowledge-gap-statements-plain-text-for-provenance-quoting">Knowledge-gap statements (plain text, for provenance quoting)</h2>
+<p>No in-vivo client or substrate has been identified for C. elegans BAG-1, and it is untested whether worm BAG-1 channels Hsc70 clients toward productive refolding or toward proteasomal degradation.<br />
+No loss-of-function phenotype has been reported for the bag-1 gene itself in C. elegans, so it is unknown whether bag-1 is essential, redundant with the paralog unc-23, or has a tissue-restricted role.<br />
+The only experimentally demonstrated physical partner of worm BAG-1 is the DUF727 protein Y43F8B.2, and a direct BAG-1 to HSP-1/Hsc70 complex in C. elegans has not been shown; the subcellular site of BAG-1 action in the worm is untested.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O44739
+gene_symbol: bag-1
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:6239
+  label: Caenorhabditis elegans
+description: &gt;-
+  bag-1 encodes the Caenorhabditis elegans member of the BAG (Bcl-2-associated
+  athanogene) family of Hsp70/Hsc70 co-chaperones. The 210-residue protein has an
+  N-terminal ubiquitin-like domain and a C-terminal BAG domain; the BAG domain
+  binds the nucleotide-binding (ATPase) domain of Hsp70-family chaperones and acts
+  as a nucleotide-exchange factor, promoting ADP release and ATP-dependent
+  discharge of client substrates from the chaperone. By accelerating the
+  Hsp70/Hsc70 nucleotide cycle, BAG-1 modulates chaperone-assisted protein
+  folding, and at high co-chaperone levels this activity can antagonize productive
+  folding. In the worm, BAG-1 stimulates the ATPase activity of the constitutive
+  Hsc70 (HSP-1) and, together with the J-domain protein DNJ-13 (Hsp40) and the
+  paralogous BAG-domain protein UNC-23 (BAG2 ortholog), belongs to the cofactor
+  network that tunes the Hsc70 chaperone cycle. The BAG domain adopts a helical
+  bundle fold, and the worm protein can oligomerize into dimers and tetramers. It
+  is a soluble, predominantly cytosolic protein.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      InterPro2GO electronic pipeline. The BAG-domain InterPro signatures
+      (IPR003103, IPR017093, IPR036533) legitimately map to protein-folding
+      chaperone binding, consistent with the experimental and phylogenetic
+      evidence.
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      GO_Central IBA pipeline. Core molecular-function inferences (nucleotide
+      exchange factor activity, chaperone binding) are well founded for a BAG
+      protein; some cellular-component propagations (nucleus, membrane) reflect
+      mammalian isoform-specific properties not applicable to the single short
+      worm protein.
+- id: PMID:9873016
+  title: An evolutionarily conserved family of Hsp70/Hsc70 molecular chaperone regulators.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Founding paper of the BAG family; explicitly identifies C. elegans BAG-1
+      and BAG-2 and establishes that BAG proteins bind the Hsp70/Hsc70 ATPase
+      domain and modulate chaperone activity. PubMed-verified; abstract-only in
+      cache.
+- id: PMID:15333932
+  title: &#39;Structural genomics of Caenorhabditis elegans: structure of the BAG domain.&#39;
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Crystal structure (PDB 1T7S) of the C. elegans BAG-1 BAG domain; states the
+      BAG-domain/Hsp70 interaction promotes ATP-dependent substrate release and
+      reports an unusual worm BAG fold with dimer/tetramer packing.
+      PubMed-verified; abstract-only in cache.
+- id: PMID:19123269
+  title: Empirically controlled mapping of the Caenorhabditis elegans protein-protein
+    interactome network.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Genome-scale HT-Y2H interactome (WI-2007/WI8). Source of an IPI protein
+      binding annotation to the DUF727 protein Y43F8B.2 (Q9XWX7); systematic
+      screen, not a BAG-1-focused study, and the interaction is biologically
+      uninterpreted.
+- id: PMID:25053410
+  title: The balanced regulation of Hsc70 by DNJ-13 and UNC-23 is required for muscle
+    functionality.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Primary C. elegans biochemistry of the Hsc70 cofactor network; the abstract
+      states worm BAG-1 has higher affinity than UNC-23 for Hsc70 and that BAG
+      C-terminal fragments provide ATPase stimulation and folding regulation.
+      Basis for the experimental IDA to ATPase activator activity.
+      PubMed-verified; abstract-only in cache.
+- id: PMID:14704431
+  title: A map of the interactome network of the metazoan C. elegans.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Genome-scale HT-Y2H interactome (WI5). Source of an IPI protein binding
+      annotation to Y43F8B.2 (Q9XWX7); systematic screen, not BAG-1-specific, and
+      the interaction is biologically uninterpreted.
+- id: file:worm/bag-1/bag-1-notes.md
+  title: Reviewer notes for C. elegans bag-1
+  findings: []
+existing_annotations:
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      BAG-1 is a soluble co-chaperone that acts on cytoplasmic Hsp70/Hsc70;
+      cytoplasmic localization is expected and consistent with the absence of any
+      transmembrane or signal-peptide features.
+    action: ACCEPT
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Nuclear localization in the BAG family is a property of the mammalian
+      BAG-1L isoform, which carries an N-terminal extension bearing a
+      nuclear-localization region. The single 210-residue worm protein lacks that
+      extension and there is no experimental evidence for nuclear BAG-1 in C.
+      elegans, so this phylogenetically propagated term likely over-annotates an
+      isoform-specific mammalian feature.
+    action: MARK_AS_OVER_ANNOTATED
+    propagation_review:
+      root_cause: PROPAGATION_BAD
+      failure_modes:
+        - COMPARTMENT_OR_COMPLEX_MISMATCH
+        - FUNCTIONAL_DIVERGENCE
+      source_entities:
+        - source_id: PANTHER:PTN000269156
+          source_label: BAG family node (nucleus IBA source)
+          source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+          comment: &gt;-
+            Nuclear localization derives from the N-terminally extended mammalian
+            BAG-1L isoform; the single short worm protein lacks that
+            nuclear-targeting extension, so the source annotation is sound but does
+            not transfer.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Cytosol is a more precise and appropriate location for a soluble BAG-domain
+      nucleotide-exchange factor acting on cytosolic Hsc70; consistent with the
+      lack of membrane or organelle-targeting features.
+    action: ACCEPT
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Worm BAG-1 has no transmembrane segment, no signal peptide, and no
+      lipid-anchor features; it is a soluble cytosolic co-chaperone. The membrane
+      term is a weak phylogenetic propagation (partly from a BAG3-type ortholog)
+      and is not expected to apply to this protein.
+    action: MARK_AS_OVER_ANNOTATED
+    propagation_review:
+      root_cause: PROPAGATION_BAD
+      failure_modes:
+        - COMPARTMENT_OR_COMPLEX_MISMATCH
+      source_entities:
+        - source_id: PANTHER:PTN000269156
+          source_label: BAG family node (membrane IBA source)
+          source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+          comment: &gt;-
+            Membrane association is not expected for a soluble BAG-domain NEF with
+            no transmembrane segment or lipid anchor; the term is partly propagated
+            from a BAG3-type ortholog and does not transfer to this protein.
+- term:
+    id: GO:0000774
+    label: adenyl-nucleotide exchange factor activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      This is the defining molecular function of the BAG family: the BAG domain
+      binds the Hsp70/Hsc70 ATPase domain and promotes ADP release / ATP-dependent
+      substrate discharge, i.e. nucleotide exchange. Well supported by family
+      biology and the worm structure, and consistent with the experimental Hsc70
+      ATPase stimulation measured for worm BAG-1.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:15333932
+      supporting_text: &gt;-
+        Binding of the BAG domain to the eukaryotic chaperone heat-shock protein
+        (Hsp70) promotes ATP-dependent release of the protein substrate from
+        Hsp70.
+- term:
+    id: GO:0050821
+    label: protein stabilization
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Plausible downstream consequence of BAG-1&#39;s modulation of the Hsp70/Hsc70
+      cycle, propagated from mammalian orthologs. No worm-specific evidence that
+      BAG-1 stabilizes particular clients, so retained as a non-core biological
+      process.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0051087
+    label: protein-folding chaperone binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Binding to the Hsp70/Hsc70 chaperone via the BAG domain is central to BAG-1
+      function and is the enabling interaction underlying its nucleotide-exchange
+      activity. Well supported for a BAG-domain protein.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:9873016
+      supporting_text: &gt;-
+        BAG-1 binds the ATPase domains of Hsp70 and Hsc70, modulating their
+        chaperone activity and functioning as a competitive antagonist of the
+        co-chaperone Hip
+- term:
+    id: GO:0051087
+    label: protein-folding chaperone binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      InterPro2GO electronic annotation from the BAG-domain signatures.
+      Correctly captures Hsp70/Hsc70 chaperone binding and corroborates the
+      phylogenetic and experimental support for this interaction (an independent
+      evidence line for the same accepted chaperone-binding function).
+    action: ACCEPT
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:14704431
+  qualifier: enables
+  review:
+    summary: &gt;-
+      High-throughput yeast-two-hybrid interaction with the DUF727 protein
+      Y43F8B.2 (Q9XWX7), a partner of unknown function that is not an Hsp70. The
+      generic &#34;protein binding&#34; term is uninformative about BAG-1&#39;s molecular
+      function; retained as a real but non-core experimental interaction.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:14704431
+      supporting_text: &gt;-
+        more than 4000 interactions were identified from high-throughput, yeast
+        two-hybrid (HT=Y2H) screens
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:19123269
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Second high-throughput yeast-two-hybrid report of the same Y43F8B.2
+      (Q9XWX7) interaction. As above, the generic &#34;protein binding&#34; term is
+      uninformative about function; retained as a non-core experimental
+      interaction rather than a core molecular function.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:19123269
+      supporting_text: &gt;-
+        We present an expanded C. elegans protein-protein interaction network, or
+        &#39;interactome&#39; map, derived from testing a matrix of approximately 10,000 x
+        approximately 10,000 proteins using a highly specific, high-throughput
+        yeast two-hybrid system.
+- term:
+    id: GO:0001671
+    label: ATPase activator activity
+  evidence_type: IDA
+  original_reference_id: PMID:25053410
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimentally supported for worm BAG-1: as a nucleotide-exchange factor it
+      accelerates the Hsc70 ATPase cycle. Papsdorf et al. measured ATPase
+      stimulation and folding regulation for the BAG cofactors and report that
+      BAG-1 acts with higher affinity than the paralog UNC-23. This mechanistically
+      complements the nucleotide-exchange-factor annotation and is a core function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:25053410
+      supporting_text: &gt;-
+        C-terminal fragments of UNC-23 instead perform all Hsc70-related
+        functions, like ATPase stimulation and regulation of folding activity,
+        albeit with lower affinity than BAG-1
+- term:
+    id: GO:0006457
+    label: protein folding
+  evidence_type: ISS
+  original_reference_id: PMID:9873016
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      As an Hsp70/Hsc70 co-chaperone that regulates the ATP-driven folding cycle,
+      BAG-1 is legitimately involved in the protein-folding process; the
+      involved_in qualifier does not imply it is itself a foldase (indeed excess
+      BAG can inhibit chaperone activity). The specific regulatory mechanism is
+      captured by the nucleotide-exchange-factor and ATPase-activator annotations.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:9873016
+      supporting_text: &gt;-
+        The human BAG-1, BAG-2, and BAG-3 proteins bind with high affinity (KD
+        congruent with 1-10 nM) to the ATPase domain of Hsc70 and inhibit its
+        chaperone activity in a Hip-repressible manner
+- term:
+    id: GO:0051087
+    label: protein-folding chaperone binding
+  evidence_type: ISS
+  original_reference_id: PMID:15333932
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Sequence/structure-based inference of Hsp70 chaperone binding, supported by
+      the crystal structure of the worm BAG domain and its documented role in
+      Hsp70-dependent substrate release. An independent evidence line for the same
+      accepted chaperone-binding function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:15333932
+      supporting_text: &gt;-
+        Binding of the BAG domain to the eukaryotic chaperone heat-shock protein
+        (Hsp70) promotes ATP-dependent release of the protein substrate from
+        Hsp70.
+core_functions:
+- description: &gt;-
+    BAG-1 is a BAG-domain co-chaperone that acts as a nucleotide-exchange factor
+    (NEF) for cytosolic Hsp70/Hsc70 (worm HSP-1). Its C-terminal BAG domain binds
+    the chaperone&#39;s nucleotide-binding (ATPase) domain and promotes ADP release,
+    accelerating the ATP-driven cycle and ATP-dependent discharge of client
+    substrates. Experimentally, worm BAG-1 stimulates the Hsc70 ATPase (with
+    higher affinity than the paralog UNC-23), and thereby tunes chaperone-assisted
+    folding; the same activity can antagonize the chaperone when the cofactor is in
+    excess.
+  molecular_function:
+    id: GO:0000774
+    label: adenyl-nucleotide exchange factor activity
+  directly_involved_in:
+  - id: GO:0006457
+    label: protein folding
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: PMID:15333932
+    supporting_text: &gt;-
+      Binding of the BAG domain to the eukaryotic chaperone heat-shock protein
+      (Hsp70) promotes ATP-dependent release of the protein substrate from Hsp70.
+  - reference_id: PMID:9873016
+    supporting_text: &gt;-
+      BAG-1 binds the ATPase domains of Hsp70 and Hsc70, modulating their
+      chaperone activity and functioning as a competitive antagonist of the
+      co-chaperone Hip
+  - reference_id: PMID:25053410
+    supporting_text: &gt;-
+      C-terminal fragments of UNC-23 instead perform all Hsc70-related functions,
+      like ATPase stimulation and regulation of folding activity, albeit with
+      lower affinity than BAG-1
+knowledge_gaps:
+- gap_statement: &gt;-
+    No in-vivo client or substrate of C. elegans BAG-1 has been identified, and it
+    is untested whether worm BAG-1 biases Hsc70-bound clients toward productive
+    refolding or, via its ubiquitin-like domain, toward proteasomal degradation
+    (the folding-versus-degradation decision that mammalian BAG-1 helps make).
+  boundary: &gt;-
+    It is firmly established that BAG-1 is a BAG-domain nucleotide-exchange factor
+    that binds the Hsp70/Hsc70 ATPase domain, stimulates the Hsc70 ATPase, and
+    promotes ATP-dependent substrate release, and that it carries an N-terminal
+    ubiquitin-like domain. What clients pass through this activity in the worm, and
+    what fate BAG-1 directs them to, are unknown.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: BP_DARK
+  status: OPEN
+  significance: &gt;-
+    The functional output of an Hsp70 NEF depends entirely on which clients it
+    engages and whether it promotes their folding or clearance; without this, the
+    worm-specific biological role of BAG-1 cannot be assigned, and its relationship
+    to proteostasis-network aging phenotypes remains inferential.
+  resolution: &gt;-
+    Affinity-proteomics / co-immunoprecipitation of BAG-1 (and BAG-1-vs-UNC-23) from
+    C. elegans to define native clients, combined with degradation/refolding
+    reporter assays and tests of the ubiquitin-like-domain proteasome link, would
+    close the gap.
+  provenance:
+  - reference_id: PMID:9873016
+    supporting_text: &gt;-
+      The mechanisms by which Hsp70 family chaperones are regulated, however, are
+      only partly understood.
+  - reference_id: file:worm/bag-1/bag-1-notes.md
+    supporting_text: &gt;-
+      No in-vivo client or substrate has been identified for C. elegans BAG-1, and
+      it is untested whether worm BAG-1 channels Hsc70 clients toward productive
+      refolding or toward proteasomal degradation.
+- gap_statement: &gt;-
+    No loss-of-function phenotype has been reported for the bag-1 gene itself in C.
+    elegans, so it is unknown whether bag-1 is essential, is functionally redundant
+    with its paralog unc-23, or has a distinct tissue-restricted role.
+  boundary: &gt;-
+    In this cofactor system the characterized in-vivo phenotype (severe motility
+    dysfunction, muscle-attachment-site localization) belongs to the paralog
+    UNC-23/BAG2, whereas BAG-1 has only been characterized biochemically (higher
+    Hsc70 affinity than UNC-23). A bag-1 mutant or RNAi phenotype is not described in
+    the cached literature.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: BP_DARK
+  status: OPEN
+  significance: &gt;-
+    Whether bag-1 is dispensable, buffered by unc-23, or independently required in a
+    particular tissue determines its true biological role and its weight in the worm
+    proteostasis network.
+  resolution: &gt;-
+    Characterization of a bag-1 deletion/RNAi (alone and in a unc-23 background) for
+    viability, motility, stress resistance, and proteostasis reporters would define
+    the biological role and test redundancy with unc-23.
+  provenance:
+  - reference_id: PMID:25053410
+    supporting_text: &gt;-
+      one of them being UNC-23, whose mutation induces severe motility dysfunctions
+  - reference_id: file:worm/bag-1/bag-1-notes.md
+    supporting_text: &gt;-
+      No loss-of-function phenotype has been reported for the bag-1 gene itself in
+      C. elegans, so it is unknown whether bag-1 is essential, redundant with the
+      paralog unc-23, or has a tissue-restricted role.
+- gap_statement: &gt;-
+    A direct physical BAG-1-to-HSP-1/Hsc70 complex in C. elegans has not been
+    demonstrated, and the subcellular site of BAG-1 action in the worm is untested;
+    the only experimentally reported worm partner is the DUF727 protein Y43F8B.2,
+    whose functional relationship to BAG-1 is unexplained.
+  boundary: &gt;-
+    Family biology and the worm BAG-domain crystal structure predict binding to the
+    Hsp70/Hsc70 ATPase domain, and biochemistry shows worm BAG-1 stimulates Hsc70;
+    but the demonstrated worm two-hybrid partner is Y43F8B.2, not HSP-1, and no
+    localization data exist for endogenous BAG-1.
+  gap_kind:
+  - BIOLOGY
+  - CURATION
+  dark_aspect: CC_DARK
+  status: OPEN
+  significance: &gt;-
+    Establishing the physiological BAG-1/Hsc70 complex and where it forms would
+    convert the inferred co-chaperone role into a directly evidenced one and clarify
+    the meaning (if any) of the Y43F8B.2 interaction.
+  resolution: &gt;-
+    Co-immunoprecipitation or proximity labeling of endogenous BAG-1 with HSP-1, plus
+    a tagged-BAG-1 expression/localization reporter, would confirm the complex and its
+    site of action.
+  provenance:
+  - reference_id: PMID:15333932
+    supporting_text: &gt;-
+      The structure may represent a new folding type of the BAG domain.
+  - reference_id: file:worm/bag-1/bag-1-notes.md
+    supporting_text: &gt;-
+      The only experimentally demonstrated physical partner of worm BAG-1 is the
+      DUF727 protein Y43F8B.2, and a direct BAG-1 to HSP-1/Hsc70 complex in C.
+      elegans has not been shown; the subcellular site of BAG-1 action in the worm
+      is untested.
+suggested_questions:
+- question: &gt;-
+    Does C. elegans BAG-1 form a physiological complex with the constitutive Hsc70
+    HSP-1, and is this interaction functionally distinct from that of the paralog
+    UNC-23?
+- question: &gt;-
+    Does BAG-1 direct Hsc70 clients toward refolding or toward proteasomal
+    degradation, and does its ubiquitin-like domain mediate a proteasome link as in
+    mammalian BAG-1?
+suggested_experiments:
+- description: &gt;-
+    Generate and phenotype a bag-1 loss-of-function allele (CRISPR deletion or RNAi),
+    alone and combined with unc-23 loss, assaying viability, motility,
+    thermotolerance, and aggregation/proteostasis reporters to test whether bag-1 has
+    an independent role or is redundant with unc-23.
+- description: &gt;-
+    Affinity-purify tagged BAG-1 from worm lysates followed by mass spectrometry to
+    define the native BAG-1 interactome (HSP-1/Hsc70 and clients), and combine with
+    in-vitro Hsc70 ATPase and luciferase refolding assays to quantify BAG-1&#39;s effect
+    on the chaperone cycle.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

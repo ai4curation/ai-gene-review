@@ -1,0 +1,3053 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GAT2 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>GAT2</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P40209" target="_blank" class="term-link">
+                        P40209
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Saccharomyces cerevisiae</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "GAT2";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P40209" data-a="DESCRIPTION: GAT2 (systematic name YMR136W) is a 560-residue Sa..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>GAT2 (systematic name YMR136W) is a 560-residue Saccharomyces cerevisiae protein belonging to the GATA family of Cys4 (type-IV) zinc-finger transcription factors. It has a single, canonical C-terminal GATA-type zinc finger (residues 472-497) with the hallmark C-X2-C ... C-X2-C spacing, preceded by an extensive intrinsically disordered, low-complexity region that spans most of the protein. On domain grounds the zinc finger is expected to coordinate zinc and to bind GATA-type (5&#39;-GATA-3&#39;/5&#39;-GAT-3&#39;) DNA sequence motifs, consistent with a role as a sequence-specific DNA-binding transcription factor acting in the nucleus. GAT2 is one of several yeast GATA-family proteins; the best-characterized members are the nitrogen-catabolite-repression regulators Gln3, Gat1 (activators), Dal80 and Gzf3 (repressors), together with the smaller Gat3 and Gat4. GAT2 itself is poorly characterized: its direct DNA targets, the physiological condition in which it operates, and its specific biological role have not been experimentally established. GAT2 transcription is condition-responsive (repressed by leucine), and large-scale deletion studies report mild, pleiotropic phenotypes including decreased invasive growth and abnormal bud and vacuolar morphology.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000976" target="_blank" class="term-link">
+                                    GO:0000976
+                                </a>
+                            </span>
+                            <span class="term-label">transcription cis-regulatory region binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P40209" data-a="GO:0000976" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference that GAT2, as a GATA-family zinc-finger protein, binds cis-regulatory DNA regions. GAT2 does carry a complete GATA zinc finger, so binding a GATA-type cis-regulatory sequence is domain-plausible.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The GATA zinc finger is present and canonical (confirmed at 472-497), and DNA binding via this finger is a well-established property of the family. Accepting the generic cis-regulatory-region-binding term is defensible on domain grounds. Note the IBA propagates from PTHR45658 (plant/Dictyostelium GATA cluster), not from the yeast NCR factors, so it supports a generic DNA-binding capacity rather than a specific target set. This term is retained alongside GO:0043565 (sequence-specific DNA binding): the two are complementary rather than redundant — GO:0043565 asserts the finger recognizes a specific sequence, while this term places that binding at a cis-regulatory (promoter/UAS) region.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:yeast/GAT2/GAT2-bioinformatics/RESULTS.md
+
+                                </span>
+
+                                <div class="support-text">GAT2 carries a bona fide GATA-type Cys4 zinc finger at residues 472 to 497 matching the UniProt ZN_FING GATA-type feature.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P40209" data-a="GO:0005634" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference of nuclear localization, expected for a DNA-binding transcription factor. There is no experimental localization for GAT2 (SGD lists cellular component as unknown), but a nuclear site of action is the parsimonious expectation for a GATA zinc-finger TF.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with GAT2&#39;s DNA-binding zinc finger and TF classification. Retained as a reasonable, if inferred, location. The absence of a direct localization assay is recorded as a knowledge gap rather than a reason to reject the term.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006357" target="_blank" class="term-link">
+                                    GO:0006357
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of transcription by RNA polymerase II</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P40209" data-a="GO:0006357" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference that GAT2 participates in regulation of RNA Pol II transcription, the generic process for GATA-family TFs.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The generic process term is domain-appropriate for a GATA zinc-finger TF, but no GAT2-specific target gene or regulatory event has been demonstrated (all evidence is homology/phylogeny). Keeping it as a non-core, generic capability rather than a demonstrated core function is the honest interpretation for this dark gene.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006355" target="_blank" class="term-link">
+                                    GO:0006355
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of DNA-templated transcription</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P40209" data-a="GO:0006355" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO electronic transfer of a generic transcription-regulation process from the GATA/zinc-finger domains (IPR000679, IPR013088).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Domain-based and broadly correct, but it is the DNA-templated-transcription parent of the more specific RNA-Pol-II term already present via IBA. Redundant and generic; retained as non-core. Not a GAT2-specific demonstrated function.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                                    GO:0008270
+                                </a>
+                            </span>
+                            <span class="term-label">zinc ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P40209" data-a="GO:0008270" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO electronic transfer of zinc ion binding from the GATA zinc-finger domain (IPR013088).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GAT2 has a complete Cys4 GATA zinc finger whose four cysteines coordinate a structural zinc ion; zinc binding is a robust, well-supported domain-level property.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:yeast/GAT2/GAT2-bioinformatics/RESULTS.md
+
+                                </span>
+
+                                <div class="support-text">The four coordinating cysteines with C-X3-C ... C-X3-C spacing are the hallmark of the DNA-binding GATA finger.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043565" target="_blank" class="term-link">
+                                    GO:0043565
+                                </a>
+                            </span>
+                            <span class="term-label">sequence-specific DNA binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P40209" data-a="GO:0043565" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO electronic transfer of sequence-specific DNA binding from the GATA zinc-finger domain (IPR000679).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Sequence-specific (GATA-motif) DNA binding is the defining activity of the GATA zinc finger, which GAT2 carries intact. Accepted on domain grounds; the specific target sequences bound by GAT2 in vivo remain undetermined (recorded as a knowledge gap).
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                                    GO:0008270
+                                </a>
+                            </span>
+                            <span class="term-label">zinc ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">RCA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30358795" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:30358795
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The cellular economy of the Saccharomyces cerevisiae zinc pr...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P40209" data-a="GO:0008270" data-r="PMID:30358795" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reviewed-computational-analysis (RCA) inclusion of GAT2 in the yeast zinc proteome (Wang et al. 2018), based on combined domain and motif searches for zinc-binding proteins.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Independent computational support for zinc binding, consistent with the GATA zinc-finger domain. Concordant with the IEA zinc-binding annotation. Not a direct GAT2 metal-binding measurement, but a reasonable inference.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30358795" target="_blank" class="term-link">
+                                        PMID:30358795
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">yeast zinc proteome of 582 known or potential zinc-binding proteins was</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005575" target="_blank" class="term-link">
+                                    GO:0005575
+                                </a>
+                            </span>
+                            <span class="term-label">cellular_component</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="P40209" data-a="GO:0005575" data-r="GO_REF:0000015" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root cellular_component placeholder with ND (no data) evidence, reflecting that GAT2&#39;s subcellular localization has not been experimentally determined.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> An IBA nucleus annotation (GO:0005634) is already present and is the more informative, domain-consistent cellular-component call. The uninformative root placeholder is superseded and can be removed. (The genuine absence of an experimental localization is captured as a knowledge gap.)
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000981" target="_blank" class="term-link">
+                                    GO:0000981
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-binding transcription factor activity, RNA polymerase II-specific</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10392447" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10392447
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Genome-wide transcriptional analysis in S. cerevisiae by min...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P40209" data-a="GO:0000981" data-r="PMID:10392447" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SGD ISA (inferred from sequence alignment) annotation classifying GAT2 as an RNA Pol II DNA-binding transcription factor, anchored to PMID:10392447 with with_from pointing to other GATA-factor genes.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The molecular activity — a GATA-type, RNA-Pol-II DNA-binding transcription factor — is well supported by the intact GATA zinc finger and the family classification. This is the most defensible molecular-function statement for GAT2. It rests on sequence similarity (ISA), not a direct GAT2 assay; the reference is a methods paper about the GATA network rather than a GAT2-specific functional study, which is why the target genes and regulatory role remain a knowledge gap.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:yeast/GAT2/GAT2-bioinformatics/RESULTS.md
+
+                                </span>
+
+                                <div class="support-text">GAT2 carries a bona fide GATA-type Cys4 zinc finger at residues 472 to 497 matching the UniProt ZN_FING GATA-type feature.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006357" target="_blank" class="term-link">
+                                    GO:0006357
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of transcription by RNA polymerase II</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10392447" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10392447
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Genome-wide transcriptional analysis in S. cerevisiae by min...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P40209" data-a="GO:0006357" data-r="PMID:10392447" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SGD ISA annotation that GAT2 is involved in regulation of RNA Pol II transcription, inferred by sequence alignment to other GATA factors (with_from lists several GATA-factor SGD ids).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Domain- and family-appropriate as a generic capability, but the specific genes GAT2 regulates and the condition under which it does so are unknown. As with the IBA process term, this is retained as a non-core, inferred process rather than a demonstrated GAT2 function.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Sequence-specific DNA-binding transcription factor of the GATA family. GAT2&#39;s single, canonical C-terminal GATA-type Cys4 zinc finger (472-497) is expected to coordinate a structural zinc ion and to bind GATA-type DNA sequence motifs, giving GAT2 the molecular capacity to act as an RNA polymerase II DNA-binding transcription factor in the nucleus. This is a domain- and homology-supported capability; the specific target genes, DNA sites, and regulatory outcome for GAT2 have not been experimentally determined.</h3>
+                <span class="vote-buttons" data-g="P40209" data-a="FUNCTION: Sequence-specific DNA-binding transcription factor..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000981" target="_blank" class="term-link">
+                            DNA-binding transcription factor activity, RNA polymerase II-specific
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006357" target="_blank" class="term-link">
+                                regulation of transcription by RNA polymerase II
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:yeast/GAT2/GAT2-bioinformatics/RESULTS.md
+
+                        </span>
+
+                        <div class="finding-text">GAT2 carries a bona fide GATA-type Cys4 zinc finger at residues 472 to 497 matching the UniProt ZN_FING GATA-type feature.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                        <div class="finding-text">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000015.md" target="_blank" class="term-link">
+                            GO_REF:0000015
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Use of the ND evidence code for Gene Ontology (GO) terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10392447" target="_blank" class="term-link">
+                            PMID:10392447
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Genome-wide transcriptional analysis in S. cerevisiae by mini-array membrane hybridization.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/30358795" target="_blank" class="term-link">
+                            PMID:30358795
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The cellular economy of the Saccharomyces cerevisiae zinc proteome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:yeast/GAT2/GAT2-bioinformatics/RESULTS.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">GAT2 bioinformatics — GATA zinc-finger confirmation and paralog relationships</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">GAT2 carries a complete, canonical GATA-type Cys4 zinc finger at residues 472-497 (C-X3-C-X19-C-X3-C spacing), matching the UniProt ZN_FING feature; a non-GATA negative control (actin ACT1) yields no hit.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">By DNA-binding-domain identity GAT2 is the most divergent yeast GATA factor (37-52% to any single paralog) and does not cluster with the four tightly related nitrogen-catabolite-repression factors (Gln3/Gat1/Dal80/Gzf3, 58-68% among themselves), corroborating the independent PANTHER assignment of GAT2 to family PTHR45658 (versus PTHR10071 for the NCR factors).</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does Gat2 bind GATA DNA sites in vivo, and which genes does it directly regulate?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P40209" data-a="Q: Does Gat2 bind GATA DNA sites in vivo, and which g..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Under what physiological condition (nitrogen source, stress, growth phase) is Gat2 functionally active, and is it an activator or a repressor?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P40209" data-a="Q: Under what physiological condition (nitrogen sourc..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is Gat2 redundant with or distinct from the canonical NCR GATA factors (Gln3/Gat1/Dal80/Gzf3), and does its divergent DNA-binding domain read a different sequence?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P40209" data-a="Q: Is Gat2 redundant with or distinct from the canoni..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> ChIP-seq/ChIP-exo of epitope-tagged Gat2 across nitrogen sources, stress and growth phases to identify direct binding sites and target genes.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="P40209" data-a="EXPERIMENT: ChIP-seq/ChIP-exo of epitope-tagged Gat2 across ni..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> RNA-seq of gat2-delta and GAT2-overexpression strains, alone and in combination with gln3/gat1/dal80/gzf3 mutants, to define Gat2&#39;s regulatory role and test redundancy with the NCR factors.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="P40209" data-a="EXPERIMENT: RNA-seq of gat2-delta and GAT2-overexpression stra..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Live-cell imaging of a functional Gat2-GFP fusion under varying nitrogen and TORC1 (rapamycin) conditions to determine localization and whether nuclear entry is conditionally regulated as for Gln3/Gat1.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="P40209" data-a="EXPERIMENT: Live-cell imaging of a functional Gat2-GFP fusion ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> In vitro DNA-binding-specificity profiling (protein-binding microarray or SELEX) of the Gat2 zinc finger to compare its recognized sequence with those of the other yeast GATA factors.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="P40209" data-a="EXPERIMENT: In vitro DNA-binding-specificity profiling (protei..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The direct DNA target genes of Gat2, the specific GATA DNA sites it occupies in vivo, and the physiological condition under which it acts are undetermined. It is also unresolved whether Gat2 functions as a transcriptional activator or repressor.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">BP_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Gat2 is a bona fide GATA-family protein with a complete, canonical Cys4 zinc finger (472-497) that supports zinc binding and sequence-specific (GATA-motif) DNA binding on domain grounds; it is classified as an RNA Pol II DNA-binding transcription factor. Its own transcription is condition-responsive (repressed by leucine; regulated by Sut2/Rgr1/Ume6/Fkh1). All molecular- and biological-process annotations are inferred from sequence similarity (ISA), domain (IEA), phylogeny (IBA) or computation (RCA); none derives from a direct Gat2 functional assay, and SGD lists no characterized target genes.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Gat2 is one of the few S. cerevisiae GATA factors with no assigned biological role, in a family (Gln3/Gat1/Dal80/Gzf3) that is central to nitrogen-responsive gene regulation. Defining Gat2&#39;s targets and condition would establish whether the yeast GATA network has an unrecognized fifth regulatory node or whether Gat2 acts in an unrelated process.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> ChIP-seq / ChIP-exo of tagged Gat2 across nitrogen sources and stress conditions to map direct sites and targets; RNA-seq of gat2-delta and GAT2-overexpression strains (singly and in combination with gln3/gat1/dal80/gzf3 mutants) to test activator vs repressor role and redundancy.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"identify genes not previously reported to be associated with this nitrogen"</em> — PMID:10392447</li>
+
+                <li><em>"The specific DNA target sites, condition, and biological process of GAT2 remain undetermined by this analysis and by the literature."</em> — file:yeast/GAT2/GAT2-bioinformatics/RESULTS.md</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> Whether Gat2 is functionally redundant with, antagonistic to, or independent of the canonical nitrogen-catabolite-repression GATA factors (Gln3, Gat1, Dal80, Gzf3) is unknown, and its DNA-binding specificity relative to theirs has not been measured.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">RESIDUAL_SUBGAP</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> The four NCR GATA factors form a tightly related group both phylogenetically (PANTHER family PTHR10071) and by DNA-binding-domain identity (58-68% among themselves). Gat2 is the most divergent yeast GATA factor at the DBD level (37-52% to any single paralog) and is assigned to a separate PANTHER family (PTHR45658); SGD nonetheless notes it is &#34;similar to Gln3p and Dal80p.&#34; No genetic-interaction or biochemical study has directly tested Gat2&#39;s relationship to the NCR quartet.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Resolving this would show whether Gat2 has been overlooked because it is redundant with the NCR factors (buffered, hence phenotype-poor) or because it operates in a distinct regulatory context, guiding where to look for its function.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> In vitro DNA-binding-specificity assays (e.g. protein-binding microarray / SELEX) to compare Gat2&#39;s site preference with the NCR factors; combinatorial deletion/epistasis analysis (gat2 in gln3/gat1/dal80/gzf3 backgrounds) under nitrogen limitation and other stresses.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"GAT2 does not join either tight cluster"</em> — file:yeast/GAT2/GAT2-bioinformatics/RESULTS.md</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> Gat2&#39;s subcellular localization and its regulation (e.g. nuclear/cytoplasmic partitioning in response to nitrogen or TORC1 signaling, as seen for Gln3 and Gat1) have not been experimentally determined.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span><span class="badge">CURATION</span>
+                <span class="badge">CC_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Nuclear action is inferred (IBA) from GAT2&#39;s DNA-binding TF classification, but SGD records cellular component as unknown and no GFP-localization compartment call is represented in GOA. The NCR activators Gln3 and Gat1 are known to shuttle between cytoplasm and nucleus under nitrogen/TORC1 control; whether Gat2 is similarly regulated is untested.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Localization and its conditional control are the entry point to Gat2&#39;s regulation: demonstrating regulated nuclear entry would connect Gat2 to a signaling pathway and a condition, both currently unknown.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> GFP/mNeonGreen tagging of Gat2 with live-cell imaging across nitrogen sources and rapamycin treatment; nuclear-fractionation immunoblots to test regulated nucleocytoplasmic partitioning.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"GAT2 has no experimentally determined subcellular localization in the accessible resources."</em> — file:yeast/GAT2/GAT2-bioinformatics/RESULTS.md</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(GAT2-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P40209" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="gat2-ymr136w-research-notes">GAT2 (YMR136W) — research notes</h1>
+<p>UniProt: P40209 (GAT2_YEAST). SGD: S000004744. Systematic name YMR136W.<br />
+Length 560 aa. PE level <strong>4: Predicted</strong> (no protein-level or transcript-level<br />
+experimental evidence recorded by UniProt for the protein product beyond<br />
+genome/EST inference). Chromosome XIII.</p>
+<p>This is an <strong>understudied ("dark") yeast GATA-family zinc-finger protein</strong>. The<br />
+deliverable is a rigorous statement of what is and is not known, careful<br />
+attribution of GAT2-specific evidence versus evidence for the better-studied<br />
+GATA paralogs, and a defensible <code>knowledge_gaps</code> section.</p>
+<h2 id="domain-sequence-architecture-known-from-uniprot-p40209">Domain / sequence architecture (KNOWN, from UniProt P40209)</h2>
+<ul>
+<li>Single <strong>GATA-type (Cys4 / type-IV) zinc finger</strong> at residues <strong>472–497</strong><br />
+  (<code>ZN_FING ... /note="GATA-type"</code>, PROSITE-ProRule PRU00094). Zinc-coordinating<br />
+  Cys residues visible in the sequence: <code>...CFHCGETET PEWRKGPYGT RTLCNACGLF...</code><br />
+  (C-x2-C ... C-x2-C GATA finger signature).</li>
+<li>InterPro: IPR000679 (Znf_GATA), IPR013088 (Znf_NHR/GATA), IPR051140 (GATA_TF).<br />
+  Pfam PF00320 (GATA). SMART SM00401. PROSITE PS00344 + PS50114. CDD cd00202<br />
+  (ZnF_GATA). SUPFAM SSF57716 (glucocorticoid-receptor-like DBD).</li>
+<li>Keywords: DNA-binding; Metal-binding; Zinc; Zinc-finger.</li>
+<li>Large <strong>disordered / low-complexity N-terminal and central region</strong>: MobiDB-lite<br />
+  disordered regions 274–297, 345–383, 412–461; low-complexity 347–361; basic/acidic<br />
+  bias 369–378; basic 414–425; polar 428–456. The DBD sits near the C-terminus and<br />
+  most of the protein is intrinsically disordered — typical of a transcription<br />
+  factor with a single C-terminal DBD and long regulatory/activation region.</li>
+</ul>
+<p>Interpretation: the domain content robustly supports <strong>zinc ion binding</strong> and<br />
+<strong>sequence-specific DNA binding by a GATA-type finger</strong>, hence a plausible<br />
+<strong>DNA-binding transcription factor</strong>. This is a structural/domain inference, not<br />
+a demonstrated activity for GAT2 itself.</p>
+<h2 id="phylogeny-paralogy-known-important-nuance">Phylogeny / paralogy (KNOWN; important nuance)</h2>
+<p>The canonical <em>S. cerevisiae</em> nitrogen-catabolite-repression (NCR) GATA network<br />
+has <strong>four</strong> DNA-binding GATA factors: activators <strong>Gln3</strong> and <strong>Gat1</strong>, and<br />
+repressors <strong>Dal80</strong> and <strong>Gzf3/Deh1/Nil2</strong><br />
+(reviewed in the NCR literature; e.g. PMC2698774, PMC4382002 — searched via web).</p>
+<p>Key phylogenetic finding from PANTHER (via UniProt DR lines):<br />
+- <strong>GAT2 (P40209) → PANTHER family PTHR45658</strong>, subfamily <strong>PTHR45658:SF18<br />
+  "PROTEIN GAT2"</strong>. PTHR45658 is labelled <em>"Plant GATA Transcription Factor"</em> and<br />
+  its SF18 members are a mixture of <strong>fungal white-collar-2 / circadian<br />
+  (WC2) orthologs, Dictyostelium GATA proteins, and plant GATA factors</strong><br />
+  (see <code>interpro/panther/PTHR45658/PTHR45658-entries.csv</code>; e.g. Fusarium WC2<br />
+  A0A0J9U922, Beauveria WC2 J5JYA0, Dictyostelium gtaP B0G188, Arabidopsis<br />
+  GATA12 P69781 — all SF18).<br />
+- <strong>GLN3 (P18494), GAT1 (P43574), DAL80 (P26343) → PANTHER family PTHR10071</strong><br />
+  (subfamily PTHR10071:SF281 "BOX A-BINDING FACTOR-RELATED"; verified from<br />
+  UniProt DR lines). This is a <strong>different PANTHER family</strong> from GAT2.</p>
+<p>So although GAT2 is a <em>S. cerevisiae</em> GATA factor superficially similar to the NCR<br />
+factors (SGD: "similar to Gln3p and Dal80p"), <strong>PANTHER does not group GAT2 with<br />
+the four NCR factors</strong> — GAT2 sits in the separate GATA subfamily that includes<br />
+plant/fungal-clock/Dictyostelium GATA proteins. This directly affects how the<br />
+IBA annotations should be read (see below): the IBA propagation is from that<br />
+plant/Dictyostelium GATA cluster, not from the NCR factors.</p>
+<p>GAT2's closest <em>S. cerevisiae</em> GATA relatives by simple similarity are the NCR<br />
+factors, but the yeast genome also has the smaller GATA proteins GAT3 (Q07928)<br />
+and GAT4 (P40569); those two are in yet another subfamily (SF149 "PROTEIN<br />
+GAT3-RELATED"), not with GAT2.</p>
+<h2 id="gat2-specific-functional-evidence-what-is-actually-known-about-gat2">GAT2-specific functional evidence (what is actually KNOWN about GAT2)</h2>
+<ul>
+<li>SGD description (yeastgenome.org, S000004744): <em>"protein containing GATA family<br />
+  zinc finger motifs; similar to Gln3p and Dal80p; expression repressed by<br />
+  leucine."</em></li>
+<li>SGD molecular-function/process annotations are <strong>ISA (inferred from sequence<br />
+  alignment)</strong> for DNA-binding TF activity and regulation of transcription by<br />
+  RNA pol II — i.e. inferred from homology, <strong>not</strong> from a direct GAT2 assay.<br />
+  The zinc-binding annotation is <strong>RCA</strong> (computational, from the zinc-proteome<br />
+  study PMID:30358795).</li>
+<li>SGD lists <strong>cellular component = unknown</strong> (localization not experimentally<br />
+  determined). No GFP-localization compartment call is represented in GOA.</li>
+<li>SGD reports <strong>zero characterized target genes</strong> for GAT2 (BioGRID/SGD; web).</li>
+<li>Reported null-mutant/large-scale phenotypes (SGD summary, web): decreased<br />
+  invasive growth; abnormal bud and vacuolar morphology; decreased vegetative<br />
+  growth; decreased chemical resistance; increased protein/peptide modification.<br />
+  These are unfocused high-throughput phenotypes, none of which pins a specific<br />
+  molecular target or condition.</li>
+<li>Regulation of <em>GAT2</em> transcription (SGD, web): negatively regulated by Sut2p<br />
+  during filamentous growth; regulated by Rgr1p/Ume6p; by Fkh1p in stationary<br />
+  phase; expression repressed by leucine. These describe how <em>GAT2</em> is<br />
+  controlled, not what Gat2 protein does.</li>
+</ul>
+<h3 id="the-two-pmids-cited-in-goa">The two PMIDs cited in GOA</h3>
+<ul>
+<li><strong>PMID:10392447</strong> (Cox, Pinchak, Cooper 1999, <em>Yeast</em>, "Genome-wide<br />
+  transcriptional analysis in S. cerevisiae by mini-array membrane<br />
+  hybridization") — abstract only in cache (<code>full_text_available: false</code>). This<br />
+  is a <strong>methods paper</strong> validating mini-array membrane hybridization; the<br />
+  abstract states the method <em>"can correctly identify genes whose expression is<br />
+  known to be controlled by the GATA-factor regulatory network in S. cerevisiae"</em><br />
+  and <em>"can reliably identify genes not previously reported to be associated with<br />
+  this nitrogen control system."</em> It is a study of the GATA regulatory network as<br />
+  a test case, not a demonstration of GAT2's specific function. SGD used it as the<br />
+<strong>ISA</strong> reference (with_from pointing to <em>other</em> GATA-factor SGD ids<br />
+  S000001742 = ?, S000000842, S000001873, S000003646). I.e. the ISA annotation<br />
+  is a similarity transfer keyed to this paper's discussion of the GATA network.</li>
+<li><strong>PMID:30358795</strong> (Wang et al. 2018, <em>Metallomics</em>, "The cellular economy of<br />
+  the S. cerevisiae zinc proteome") — abstract only. Bioinformatic + MS survey<br />
+  identifying <em>"582 known or potential zinc-binding proteins"</em> via <em>"a<br />
+  bioinformatics analysis that combined global domain searches with local motif<br />
+  searches."</em> GAT2 is a GATA zinc-finger protein, so its inclusion in the zinc<br />
+  proteome is a reasonable <strong>RCA/computational</strong> inference — consistent with the<br />
+  domain, but not a direct GAT2 metal-binding measurement.</li>
+</ul>
+<h2 id="known-vs-not-known-summary">KNOWN vs NOT-KNOWN summary</h2>
+<p><strong>KNOWN (well supported):</strong><br />
+- GAT2 has a single C-terminal GATA-type (Cys4) zinc finger → binds zinc and, by<br />
+  strong domain homology, sequence-specific DNA (5'-GATA-3'-type sites).<br />
+- It is a member of the GATA transcription-factor superfamily.<br />
+- <em>GAT2</em> transcription is condition-responsive (repressed by leucine; regulated by<br />
+  Sut2/Rgr1/Ume6/Fkh1).</p>
+<p><strong>NOT KNOWN (genuine gaps):</strong><br />
+- No direct experimental demonstration that Gat2 protein binds DNA, binds zinc,<br />
+  or activates/represses transcription (all functional annotations are ISA/RCA/IBA).<br />
+- No identified direct target genes.<br />
+- No experimentally determined subcellular localization (nucleus is IBA-inferred;<br />
+  SGD lists CC unknown).<br />
+- The condition/biological process in which Gat2 acts is undefined — whether it<br />
+  participates in the NCR nitrogen network like Gln3/Gat1/Dal80/Gzf3, or in a<br />
+  distinct process, is unresolved. Notably PANTHER places GAT2 <strong>outside</strong> the<br />
+  four-factor NCR family (PTHR10071), so simple assimilation to NCR is not<br />
+  automatically warranted.<br />
+- Whether Gat2 is functionally redundant with, antagonistic to, or independent of<br />
+  the other GATA factors is unknown.</p>
+<h2 id="attribution-caution">Attribution caution</h2>
+<p>Most "GATA factor in nitrogen catabolite repression" statements in the literature<br />
+concern <strong>Gln3/Gat1/Dal80/Gzf3</strong>, NOT GAT2. Do not transfer their demonstrated NCR<br />
+functions to GAT2. GAT2 remains an understudied paralog whose specific role is not<br />
+established.</p>
+<h2 id="deep-research-status-documented-not-fabricated">Deep-research status (documented, not fabricated)</h2>
+<p>Automated deep research did <strong>not</strong> succeed for GAT2. <code>just deep-research-falcon yeast
+GAT2 --fallback perplexity-lite</code> was run and then <strong>retried once</strong>; on both runs the<br />
+falcon provider timed out at its 600s limit, and the perplexity-lite fallback failed<br />
+with an HTTP 401 quota error ("You exceeded your current quota"). No genuine<br />
+<code>GAT2-deep-research-*.md</code> file was produced. Per repo policy, <strong>no deep-research file<br />
+was fabricated</strong>. This review is instead grounded in: the UniProt record (P40209),<br />
+the GOA table, the PANTHER family data (PTHR45658 vs PTHR10071), the two cached GOA<br />
+publications (PMID:10392447, PMID:30358795), the SGD locus summary (S000004744), and<br />
+the reproducible in-repo bioinformatics analysis (<code>GAT2-bioinformatics/RESULTS.md</code>).</p>
+<h2 id="review-outcome-pr-1770">Review outcome (PR #1770)</h2>
+<p>Submitted as PR #1770. CI: check-mention SUCCESS, test (3.12) SUCCESS, claude-review<br />
+SUCCESS; ai4c-agent formal review = APPROVED (substantive, verified PMIDs/quotes/GO<br />
+terms; no CRITICAL/IMPORTANT issues, 3 non-blocking suggestions). Two of the<br />
+non-blocking suggestions were addressed (tightened description; clarified why<br />
+GO:0000976 and GO:0043565 are complementary MF terms).</p>
+<h2 id="provenance-index">Provenance index</h2>
+<ul>
+<li>Domain/sequence: <code>genes/yeast/GAT2/GAT2-uniprot.txt</code> (UniProt P40209).</li>
+<li>PANTHER family: <code>interpro/panther/PTHR45658/PTHR45658-metadata.yaml</code> and<br />
+<code>-entries.csv</code>; GLN3/GAT1/DAL80 PANTHER assignments verified from UniProt REST<br />
+  (P18494, P43574, P26343 DR lines).</li>
+<li>PMID:10392447, PMID:30358795 cached in <code>publications/</code>.</li>
+<li>SGD summary and phenotypes: yeastgenome.org S000004744 (web fetch, 2026-07).</li>
+</ul>
+            </div>
+        </details>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Bioinformatics Results</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(RESULTS.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P40209" data-a="DOC: Bioinformatics Results" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="gat2-bioinformatics-gata-zinc-finger-confirmation-and-paralog-relationships">GAT2 bioinformatics: GATA zinc-finger confirmation and paralog relationships</h1>
+<p><strong>Gene:</strong> GAT2 / YMR136W, <em>Saccharomyces cerevisiae</em> (UniProt P40209, 560 aa).</p>
+<p><strong>Question:</strong> (1) Confirm the GATA-type Cys4 zinc-finger domain in GAT2 and its<br />
+Cys spacing; (2) place GAT2 relative to the other yeast GATA factors<br />
+(GLN3, GAT1, DAL80, GZF3, GAT3, GAT4) by DNA-binding-domain (DBD) identity.</p>
+<h2 id="methods">Methods</h2>
+<ul>
+<li>Sequences downloaded programmatically from UniProt REST (<code>data/yeast_gata_factors.fasta</code>):<br />
+  GAT2 P40209, GLN3 P18494, GAT1 P43574, DAL80 P26343, GZF3 P42944, GAT3 Q07928,<br />
+  GAT4 P40569. (GZF3 accession P42944 obtained by UniProt gene+organism query.)</li>
+<li><code>scripts/find_gata_zinc_finger.py</code>: regex scan for the canonical GATA / type-IV<br />
+  Cys4 finger <code>C-X2-C-X{17,20}-C-X2-C</code>; reports match position and Cys spacing.</li>
+<li><code>scripts/pairwise_dbd_identity.py</code>: extracts each factor's zinc-finger window<br />
+  (+8 aa flank), aligns the windows with MAFFT (<code>--auto</code>), and computes all<br />
+  pairwise percent identities over aligned columns where both sequences have a<br />
+  residue.</li>
+<li>Reproduce with <code>just all</code> (see <code>justfile</code>), or run the two scripts directly with <code>uv run</code>.</li>
+</ul>
+<h2 id="result-1-gata-cys4-zinc-finger-confirmed-in-gat2">Result 1 — GATA Cys4 zinc finger confirmed in GAT2</h2>
+<p><code>results/zinc_finger_motifs.json</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Factor</th>
+<th>ZF match (1-based)</th>
+<th>motif</th>
+<th>Cys spacings</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>GAT2</strong></td>
+<td><strong>472–497</strong></td>
+<td><code>CFHCGETETPEWRKGPYGTRTLCNAC</code></td>
+<td>3, 19, 3</td>
+</tr>
+<tr>
+<td>GLN3</td>
+<td>306–330</td>
+<td><code>CFNCKTFKTPLWRRSPEGNTLCNAC</code></td>
+<td>3, 18, 3</td>
+</tr>
+<tr>
+<td>GAT1</td>
+<td>310–334</td>
+<td><code>CSNCTTSTTPLWRKDPKGLPLCNAC</code></td>
+<td>3, 18, 3</td>
+</tr>
+<tr>
+<td>DAL80</td>
+<td>31–55</td>
+<td><code>CQNCFTVKTPLWRRDEHGTVLCNAC</code></td>
+<td>3, 18, 3</td>
+</tr>
+<tr>
+<td>GZF3</td>
+<td>131–155</td>
+<td><code>CKNCLTSTTPLWRRDEHGAMLCNAC</code></td>
+<td>3, 18, 3</td>
+</tr>
+<tr>
+<td>GAT3</td>
+<td>72–98</td>
+<td><code>CPQCAVIKTSPQWREGPDGEVTLCNAC</code></td>
+<td>3, 20, 3</td>
+</tr>
+<tr>
+<td>GAT4</td>
+<td>53–79</td>
+<td><code>CGQCGEIKTSLQWREGPNGAACLCNAC</code></td>
+<td>3, 18(2,3)*</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>GAT2 carries a bona fide GATA-type Cys4 finger at <strong>472–497</strong>, exactly matching<br />
+  the UniProt <code>ZN_FING 472..497 /note="GATA-type"</code> feature. The four cysteines<br />
+  (C472, C475, C495, C498 in the motif frame) with C-X3-C...C-X3-C spacing are the<br />
+  hallmark of the DNA-binding GATA finger.</li>
+<li>All seven yeast GATA factors share the finger; the invariant <code>C...CNAC</code> C-terminal<br />
+  half is present in every case. (*GAT4 contains an extra internal Cys, hence a<br />
+  5-Cys count for the greedy regex; the canonical four-Cys frame is intact.)</li>
+<li><strong>Negative control:</strong> yeast actin ACT1 (P60010) yields <em>no</em> GATA finger, confirming<br />
+  the pattern is not spuriously general.</li>
+</ul>
+<h2 id="result-2-gat2-is-a-divergent-gata-factor-not-tightly-clustered-with-the-ncr-four">Result 2 — GAT2 is a divergent GATA factor, not tightly clustered with the NCR four</h2>
+<p>Pairwise DBD identity (<code>results/gata_dbd_identity_matrix.tsv</code>; ~41–43 aligned columns):</p>
+<p>GAT2 ranked neighbours (closest first):</p>
+<table>
+<thead>
+<tr>
+<th>vs</th>
+<th>% identity</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GAT3</td>
+<td>52.4</td>
+</tr>
+<tr>
+<td>GAT4</td>
+<td>50.0</td>
+</tr>
+<tr>
+<td>GLN3</td>
+<td>48.8</td>
+</tr>
+<tr>
+<td>GAT1</td>
+<td>41.5</td>
+</tr>
+<tr>
+<td>DAL80</td>
+<td>39.0</td>
+</tr>
+<tr>
+<td>GZF3</td>
+<td>36.6</td>
+</tr>
+</tbody>
+</table>
+<p>The four <strong>canonical nitrogen-catabolite-repression (NCR) factors form a tight<br />
+cluster</strong> by DBD identity: DAL80–GZF3 68.3%, GLN3–GAT1 61.0%, GAT1–GZF3 63.4%,<br />
+GLN3–DAL80 / GLN3–GZF3 / GAT1–DAL80 all 58.5%. GAT3–GAT4 are a second tight pair<br />
+(65.1%).</p>
+<p><strong>GAT2 does not join either tight cluster:</strong> its DBD is only 37–52% identical to any<br />
+single yeast GATA factor, and — perhaps counter-intuitively given the SGD note<br />
+"similar to Gln3p and Dal80p" — its DBD is marginally closer to GAT3/GAT4 than to<br />
+the NCR factors, and it is <em>least</em> similar to the NCR repressor GZF3.</p>
+<p>This DBD-level result is consistent with the PANTHER classification (independent<br />
+evidence): GAT2 is assigned to family <strong>PTHR45658</strong> (subfamily SF18 "PROTEIN GAT2",<br />
+a plant/fungal-clock/Dictyostelium GATA cluster), whereas GLN3, GAT1 and DAL80 are<br />
+in the separate family <strong>PTHR10071</strong> (the NCR GATA family). Two orthogonal methods<br />
+(regex-extracted DBD identity here; PANTHER tree membership) agree that GAT2 is a<br />
+<em>divergent</em> yeast GATA factor rather than a fifth member of the tight NCR quartet.</p>
+<h2 id="interpretation-for-the-go-review">Interpretation (for the GO review)</h2>
+<ul>
+<li><strong>Supports</strong> the GO annotations <code>zinc ion binding</code> (GO:0008270),<br />
+<code>sequence-specific DNA binding</code> (GO:0043565), and a GATA-type<br />
+  DNA-binding transcription-factor activity on <strong>domain grounds</strong>: the finger is<br />
+  present, complete, and canonical.</li>
+<li><strong>Cautions against</strong> simply transferring the demonstrated NCR functions of<br />
+  Gln3/Gat1/Dal80/Gzf3 to GAT2: at the DBD level GAT2 is the most divergent of the<br />
+  yeast GATA factors and is not the NCR quartet's nearest neighbour. Its specific<br />
+  target sites, condition, and biological process remain undetermined by this<br />
+  analysis (and by the literature).</li>
+</ul>
+<h2 id="citable-statements-plain-text">Citable statements (plain text)</h2>
+<p>These single-line statements summarise the findings above for citation in the review:</p>
+<p>GAT2 carries a bona fide GATA-type Cys4 zinc finger at residues 472 to 497 matching the UniProt ZN_FING GATA-type feature.<br />
+The four coordinating cysteines with C-X3-C ... C-X3-C spacing are the hallmark of the DNA-binding GATA finger.<br />
+By DNA-binding-domain identity GAT2 is the most divergent yeast GATA factor and does not cluster with the four NCR factors Gln3 Gat1 Dal80 Gzf3.<br />
+GAT2 has no experimentally determined subcellular localization in the accessible resources.<br />
+The specific DNA target sites, condition, and biological process of GAT2 remain undetermined by this analysis and by the literature.</p>
+<h2 id="caveats">Caveats</h2>
+<ul>
+<li>Percent-identity values are computed over a <strong>short DBD window</strong> (~41–43 columns).<br />
+  Short-window identities are approximate and should be read as <em>relative</em> rankings,<br />
+  not precise evolutionary distances. A full-length or curated-domain phylogeny would<br />
+  refine but is not expected to overturn the qualitative conclusion (GAT2 divergent;<br />
+  NCR four tightly clustered), which is corroborated by the independent PANTHER<br />
+  assignment.</li>
+<li>The zinc-finger detector is a regex, not an HMM; it confirms presence/spacing of<br />
+  the canonical motif but does not by itself prove functional DNA binding.</li>
+</ul>
+<h2 id="reproducibility-checklist">Reproducibility checklist</h2>
+<ul>
+<li>[x] Scripts use no hardcoded inputs/outputs — all results derive from the input FASTA.</li>
+<li>[x] <code>find_gata_zinc_finger.py</code> tested on an unrelated protein (ACT1) → correctly no hit.</li>
+<li>[x] <code>pairwise_dbd_identity.py</code> runs on the 7-factor FASTA and emits matrix + alignment.</li>
+<li>[x] Direct script outputs are in <code>results/</code> (JSON, TSV, DBD FASTA, MAFFT alignment).</li>
+<li>[x] Conclusions live only in this RESULTS.md, not in code.</li>
+<li>[x] Two orthogonal lines of evidence (DBD identity + PANTHER) agree.</li>
+<li>Conclusions are <strong>supported</strong> (all checklist items satisfied), with the stated<br />
+  short-window caveat.</li>
+</ul>
+<h2 id="tools-provenance">Tools / provenance</h2>
+<ul>
+<li>UniProt REST (sequences), MAFFT v7 (<code>--auto</code>), Biopython 1.87, Python 3.12 via <code>uv</code>.</li>
+<li>Analysis date: 2026-07.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P40209
+gene_symbol: GAT2
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:559292
+  label: Saccharomyces cerevisiae
+description: &gt;-
+  GAT2 (systematic name YMR136W) is a 560-residue Saccharomyces cerevisiae protein
+  belonging to the GATA family of Cys4 (type-IV) zinc-finger transcription factors.
+  It has a single, canonical C-terminal GATA-type zinc finger (residues 472-497)
+  with the hallmark C-X2-C ... C-X2-C spacing, preceded by an extensive intrinsically
+  disordered, low-complexity region that spans most of the protein. On domain grounds
+  the zinc finger is expected to coordinate zinc and to bind GATA-type
+  (5&#39;-GATA-3&#39;/5&#39;-GAT-3&#39;) DNA sequence motifs, consistent with a role as a
+  sequence-specific DNA-binding transcription factor acting in the nucleus. GAT2 is
+  one of several yeast GATA-family proteins; the best-characterized members are the
+  nitrogen-catabolite-repression regulators Gln3, Gat1 (activators), Dal80 and Gzf3
+  (repressors), together with the smaller Gat3 and Gat4. GAT2 itself is poorly
+  characterized: its direct DNA targets, the physiological condition in which it
+  operates, and its specific biological role have not been experimentally established.
+  GAT2 transcription is condition-responsive (repressed by leucine), and large-scale
+  deletion studies report mild, pleiotropic phenotypes including decreased invasive
+  growth and abnormal bud and vacuolar morphology.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      InterPro2GO electronic pipeline. Correctly transfers GATA/zinc-finger domain
+      terms (zinc ion binding, sequence-specific DNA binding, regulation of
+      transcription) from IPR000679/IPR013088, which GAT2 genuinely carries. Domain-
+      level, not GAT2-specific functional evidence.
+- id: GO_REF:0000015
+  title: Use of the ND evidence code for Gene Ontology (GO) terms
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Standard GO_REF documenting the ND (no biological data) evidence code, used
+      here for the root cellular_component placeholder.
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PAINT/IBA phylogenetic pipeline. The IBA terms on GAT2 propagate from PANTHER
+      family PTHR45658 (with_from lists Arabidopsis AGI codes and Dictyostelium
+      genes), i.e. from the plant/Dictyostelium GATA cluster, NOT from the yeast NCR
+      GATA factors (which are in the separate family PTHR10071). Appropriate for
+      generic GATA-TF terms; does not establish GAT2&#39;s specific process.
+- id: PMID:10392447
+  title: Genome-wide transcriptional analysis in S. cerevisiae by mini-array membrane hybridization.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Methods paper (Cox, Pinchak &amp; Cooper 1999) validating mini-array membrane
+      hybridization using the GATA-factor/nitrogen-control network as a test case.
+      Abstract-only in cache. It does not demonstrate GAT2-specific function; SGD used
+      it as the anchor for ISA (inferred from sequence alignment) annotations whose
+      with_from fields point to OTHER GATA-factor genes. Correctly cited but only
+      weakly relevant to GAT2&#39;s own function.
+- id: PMID:30358795
+  title: The cellular economy of the Saccharomyces cerevisiae zinc proteome.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Wang et al. 2018 (Metallomics). Bioinformatic + mass-spec survey defining the
+      yeast zinc proteome via combined domain and motif searches. GAT2&#39;s inclusion as
+      a zinc-binding protein is a reasonable computational (RCA) inference from its
+      GATA zinc finger; not a direct GAT2 metal-binding measurement.
+- id: file:yeast/GAT2/GAT2-bioinformatics/RESULTS.md
+  title: &gt;-
+    GAT2 bioinformatics — GATA zinc-finger confirmation and paralog relationships
+  findings:
+    - statement: &gt;-
+        GAT2 carries a complete, canonical GATA-type Cys4 zinc finger at residues
+        472-497 (C-X3-C-X19-C-X3-C spacing), matching the UniProt ZN_FING feature; a
+        non-GATA negative control (actin ACT1) yields no hit.
+    - statement: &gt;-
+        By DNA-binding-domain identity GAT2 is the most divergent yeast GATA factor
+        (37-52% to any single paralog) and does not cluster with the four tightly
+        related nitrogen-catabolite-repression factors (Gln3/Gat1/Dal80/Gzf3, 58-68%
+        among themselves), corroborating the independent PANTHER assignment of GAT2 to
+        family PTHR45658 (versus PTHR10071 for the NCR factors).
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      In-repo reproducible analysis (this review). Confirms domain presence and
+      quantifies paralog divergence; supports the MF domain terms while cautioning
+      against transferring NCR-factor process functions to GAT2. file: reference — not
+      auto quote-checked; quotes verified by hand against RESULTS.md.
+existing_annotations:
+- term:
+    id: GO:0000976
+    label: transcription cis-regulatory region binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) inference that GAT2, as a GATA-family zinc-finger protein,
+      binds cis-regulatory DNA regions. GAT2 does carry a complete GATA zinc finger,
+      so binding a GATA-type cis-regulatory sequence is domain-plausible.
+    action: ACCEPT
+    reason: &gt;-
+      The GATA zinc finger is present and canonical (confirmed at 472-497), and DNA
+      binding via this finger is a well-established property of the family. Accepting
+      the generic cis-regulatory-region-binding term is defensible on domain grounds.
+      Note the IBA propagates from PTHR45658 (plant/Dictyostelium GATA cluster), not
+      from the yeast NCR factors, so it supports a generic DNA-binding capacity rather
+      than a specific target set. This term is retained alongside GO:0043565
+      (sequence-specific DNA binding): the two are complementary rather than redundant —
+      GO:0043565 asserts the finger recognizes a specific sequence, while this term
+      places that binding at a cis-regulatory (promoter/UAS) region.
+    supported_by:
+    - reference_id: file:yeast/GAT2/GAT2-bioinformatics/RESULTS.md
+      supporting_text: &gt;-
+        GAT2 carries a bona fide GATA-type Cys4 zinc finger at residues 472 to 497
+        matching the UniProt ZN_FING GATA-type feature.
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) inference of nuclear localization, expected for a DNA-binding
+      transcription factor. There is no experimental localization for GAT2 (SGD lists
+      cellular component as unknown), but a nuclear site of action is the parsimonious
+      expectation for a GATA zinc-finger TF.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with GAT2&#39;s DNA-binding zinc finger and TF classification. Retained as
+      a reasonable, if inferred, location. The absence of a direct localization assay is
+      recorded as a knowledge gap rather than a reason to reject the term.
+- term:
+    id: GO:0006357
+    label: regulation of transcription by RNA polymerase II
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) inference that GAT2 participates in regulation of RNA Pol II
+      transcription, the generic process for GATA-family TFs.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The generic process term is domain-appropriate for a GATA zinc-finger TF, but no
+      GAT2-specific target gene or regulatory event has been demonstrated (all evidence
+      is homology/phylogeny). Keeping it as a non-core, generic capability rather than a
+      demonstrated core function is the honest interpretation for this dark gene.
+- term:
+    id: GO:0006355
+    label: regulation of DNA-templated transcription
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      InterPro2GO electronic transfer of a generic transcription-regulation process
+      from the GATA/zinc-finger domains (IPR000679, IPR013088).
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Domain-based and broadly correct, but it is the DNA-templated-transcription parent
+      of the more specific RNA-Pol-II term already present via IBA. Redundant and generic;
+      retained as non-core. Not a GAT2-specific demonstrated function.
+- term:
+    id: GO:0008270
+    label: zinc ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      InterPro2GO electronic transfer of zinc ion binding from the GATA zinc-finger
+      domain (IPR013088).
+    action: ACCEPT
+    reason: &gt;-
+      GAT2 has a complete Cys4 GATA zinc finger whose four cysteines coordinate a
+      structural zinc ion; zinc binding is a robust, well-supported domain-level
+      property.
+    supported_by:
+    - reference_id: file:yeast/GAT2/GAT2-bioinformatics/RESULTS.md
+      supporting_text: &gt;-
+        The four coordinating cysteines with C-X3-C ... C-X3-C spacing are the hallmark
+        of the DNA-binding GATA finger.
+- term:
+    id: GO:0043565
+    label: sequence-specific DNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      InterPro2GO electronic transfer of sequence-specific DNA binding from the GATA
+      zinc-finger domain (IPR000679).
+    action: ACCEPT
+    reason: &gt;-
+      Sequence-specific (GATA-motif) DNA binding is the defining activity of the GATA
+      zinc finger, which GAT2 carries intact. Accepted on domain grounds; the specific
+      target sequences bound by GAT2 in vivo remain undetermined (recorded as a
+      knowledge gap).
+- term:
+    id: GO:0008270
+    label: zinc ion binding
+  evidence_type: RCA
+  original_reference_id: PMID:30358795
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Reviewed-computational-analysis (RCA) inclusion of GAT2 in the yeast zinc
+      proteome (Wang et al. 2018), based on combined domain and motif searches for
+      zinc-binding proteins.
+    action: ACCEPT
+    reason: &gt;-
+      Independent computational support for zinc binding, consistent with the GATA
+      zinc-finger domain. Concordant with the IEA zinc-binding annotation. Not a direct
+      GAT2 metal-binding measurement, but a reasonable inference.
+    supported_by:
+    - reference_id: PMID:30358795
+      supporting_text: &gt;-
+        yeast zinc proteome of 582 known or potential zinc-binding proteins was
+- term:
+    id: GO:0005575
+    label: cellular_component
+  evidence_type: ND
+  original_reference_id: GO_REF:0000015
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Root cellular_component placeholder with ND (no data) evidence, reflecting that
+      GAT2&#39;s subcellular localization has not been experimentally determined.
+    action: REMOVE
+    reason: &gt;-
+      An IBA nucleus annotation (GO:0005634) is already present and is the more
+      informative, domain-consistent cellular-component call. The uninformative root
+      placeholder is superseded and can be removed. (The genuine absence of an
+      experimental localization is captured as a knowledge gap.)
+- term:
+    id: GO:0000981
+    label: DNA-binding transcription factor activity, RNA polymerase II-specific
+  evidence_type: ISA
+  original_reference_id: PMID:10392447
+  qualifier: enables
+  review:
+    summary: &gt;-
+      SGD ISA (inferred from sequence alignment) annotation classifying GAT2 as an RNA
+      Pol II DNA-binding transcription factor, anchored to PMID:10392447 with with_from
+      pointing to other GATA-factor genes.
+    action: ACCEPT
+    reason: &gt;-
+      The molecular activity — a GATA-type, RNA-Pol-II DNA-binding transcription factor —
+      is well supported by the intact GATA zinc finger and the family classification.
+      This is the most defensible molecular-function statement for GAT2. It rests on
+      sequence similarity (ISA), not a direct GAT2 assay; the reference is a methods
+      paper about the GATA network rather than a GAT2-specific functional study, which
+      is why the target genes and regulatory role remain a knowledge gap.
+    supported_by:
+    - reference_id: file:yeast/GAT2/GAT2-bioinformatics/RESULTS.md
+      supporting_text: &gt;-
+        GAT2 carries a bona fide GATA-type Cys4 zinc finger at residues 472 to 497
+        matching the UniProt ZN_FING GATA-type feature.
+- term:
+    id: GO:0006357
+    label: regulation of transcription by RNA polymerase II
+  evidence_type: ISA
+  original_reference_id: PMID:10392447
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      SGD ISA annotation that GAT2 is involved in regulation of RNA Pol II
+      transcription, inferred by sequence alignment to other GATA factors (with_from
+      lists several GATA-factor SGD ids).
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Domain- and family-appropriate as a generic capability, but the specific genes
+      GAT2 regulates and the condition under which it does so are unknown. As with the
+      IBA process term, this is retained as a non-core, inferred process rather than a
+      demonstrated GAT2 function.
+core_functions:
+- description: &gt;-
+    Sequence-specific DNA-binding transcription factor of the GATA family. GAT2&#39;s
+    single, canonical C-terminal GATA-type Cys4 zinc finger (472-497) is expected to
+    coordinate a structural zinc ion and to bind GATA-type DNA sequence motifs, giving
+    GAT2 the molecular capacity to act as an RNA polymerase II DNA-binding
+    transcription factor in the nucleus. This is a domain- and homology-supported
+    capability; the specific target genes, DNA sites, and regulatory outcome for GAT2
+    have not been experimentally determined.
+  molecular_function:
+    id: GO:0000981
+    label: DNA-binding transcription factor activity, RNA polymerase II-specific
+  directly_involved_in:
+  - id: GO:0006357
+    label: regulation of transcription by RNA polymerase II
+  locations:
+  - id: GO:0005634
+    label: nucleus
+  supported_by:
+  - reference_id: file:yeast/GAT2/GAT2-bioinformatics/RESULTS.md
+    supporting_text: &gt;-
+      GAT2 carries a bona fide GATA-type Cys4 zinc finger at residues 472 to 497
+      matching the UniProt ZN_FING GATA-type feature.
+  - reference_id: GO_REF:0000002
+    supporting_text: &gt;-
+      Gene Ontology annotation through association of InterPro records with GO terms
+knowledge_gaps:
+- gap_statement: &gt;-
+    The direct DNA target genes of Gat2, the specific GATA DNA sites it occupies in
+    vivo, and the physiological condition under which it acts are undetermined. It is
+    also unresolved whether Gat2 functions as a transcriptional activator or repressor.
+  boundary: &gt;-
+    Gat2 is a bona fide GATA-family protein with a complete, canonical Cys4 zinc finger
+    (472-497) that supports zinc binding and sequence-specific (GATA-motif) DNA binding
+    on domain grounds; it is classified as an RNA Pol II DNA-binding transcription
+    factor. Its own transcription is condition-responsive (repressed by leucine;
+    regulated by Sut2/Rgr1/Ume6/Fkh1). All molecular- and biological-process
+    annotations are inferred from sequence similarity (ISA), domain (IEA), phylogeny
+    (IBA) or computation (RCA); none derives from a direct Gat2 functional assay, and
+    SGD lists no characterized target genes.
+  gap_kind:
+    - BIOLOGY
+  dark_aspect: BP_DARK
+  status: OPEN
+  significance: &gt;-
+    Gat2 is one of the few S. cerevisiae GATA factors with no assigned biological role,
+    in a family (Gln3/Gat1/Dal80/Gzf3) that is central to nitrogen-responsive gene
+    regulation. Defining Gat2&#39;s targets and condition would establish whether the yeast
+    GATA network has an unrecognized fifth regulatory node or whether Gat2 acts in an
+    unrelated process.
+  provenance:
+    - reference_id: PMID:10392447
+      supporting_text: &gt;-
+        identify genes not previously reported to be associated with this nitrogen
+      reference_section_type: ABSTRACT
+    - reference_id: file:yeast/GAT2/GAT2-bioinformatics/RESULTS.md
+      supporting_text: &gt;-
+        The specific DNA target sites, condition, and biological process of GAT2 remain
+        undetermined by this analysis and by the literature.
+  resolution: &gt;-
+    ChIP-seq / ChIP-exo of tagged Gat2 across nitrogen sources and stress conditions to
+    map direct sites and targets; RNA-seq of gat2-delta and GAT2-overexpression strains
+    (singly and in combination with gln3/gat1/dal80/gzf3 mutants) to test activator vs
+    repressor role and redundancy.
+- gap_statement: &gt;-
+    Whether Gat2 is functionally redundant with, antagonistic to, or independent of the
+    canonical nitrogen-catabolite-repression GATA factors (Gln3, Gat1, Dal80, Gzf3) is
+    unknown, and its DNA-binding specificity relative to theirs has not been measured.
+  boundary: &gt;-
+    The four NCR GATA factors form a tightly related group both phylogenetically
+    (PANTHER family PTHR10071) and by DNA-binding-domain identity (58-68% among
+    themselves). Gat2 is the most divergent yeast GATA factor at the DBD level (37-52%
+    to any single paralog) and is assigned to a separate PANTHER family (PTHR45658);
+    SGD nonetheless notes it is &#34;similar to Gln3p and Dal80p.&#34; No genetic-interaction or
+    biochemical study has directly tested Gat2&#39;s relationship to the NCR quartet.
+  gap_kind:
+    - BIOLOGY
+  dark_aspect: RESIDUAL_SUBGAP
+  status: OPEN
+  significance: &gt;-
+    Resolving this would show whether Gat2 has been overlooked because it is redundant
+    with the NCR factors (buffered, hence phenotype-poor) or because it operates in a
+    distinct regulatory context, guiding where to look for its function.
+  provenance:
+    - reference_id: file:yeast/GAT2/GAT2-bioinformatics/RESULTS.md
+      supporting_text: &gt;-
+        GAT2 does not join either tight cluster
+  resolution: &gt;-
+    In vitro DNA-binding-specificity assays (e.g. protein-binding microarray / SELEX) to
+    compare Gat2&#39;s site preference with the NCR factors; combinatorial deletion/epistasis
+    analysis (gat2 in gln3/gat1/dal80/gzf3 backgrounds) under nitrogen limitation and
+    other stresses.
+- gap_statement: &gt;-
+    Gat2&#39;s subcellular localization and its regulation (e.g. nuclear/cytoplasmic
+    partitioning in response to nitrogen or TORC1 signaling, as seen for Gln3 and Gat1)
+    have not been experimentally determined.
+  boundary: &gt;-
+    Nuclear action is inferred (IBA) from GAT2&#39;s DNA-binding TF classification, but SGD
+    records cellular component as unknown and no GFP-localization compartment call is
+    represented in GOA. The NCR activators Gln3 and Gat1 are known to shuttle between
+    cytoplasm and nucleus under nitrogen/TORC1 control; whether Gat2 is similarly
+    regulated is untested.
+  gap_kind:
+    - BIOLOGY
+    - CURATION
+  dark_aspect: CC_DARK
+  status: OPEN
+  significance: &gt;-
+    Localization and its conditional control are the entry point to Gat2&#39;s regulation:
+    demonstrating regulated nuclear entry would connect Gat2 to a signaling pathway and
+    a condition, both currently unknown.
+  provenance:
+    - reference_id: file:yeast/GAT2/GAT2-bioinformatics/RESULTS.md
+      supporting_text: &gt;-
+        GAT2 has no experimentally determined subcellular localization in the accessible
+        resources.
+  resolution: &gt;-
+    GFP/mNeonGreen tagging of Gat2 with live-cell imaging across nitrogen sources and
+    rapamycin treatment; nuclear-fractionation immunoblots to test regulated
+    nucleocytoplasmic partitioning.
+suggested_questions:
+- question: &gt;-
+    Does Gat2 bind GATA DNA sites in vivo, and which genes does it directly regulate?
+- question: &gt;-
+    Under what physiological condition (nitrogen source, stress, growth phase) is Gat2
+    functionally active, and is it an activator or a repressor?
+- question: &gt;-
+    Is Gat2 redundant with or distinct from the canonical NCR GATA factors
+    (Gln3/Gat1/Dal80/Gzf3), and does its divergent DNA-binding domain read a different
+    sequence?
+suggested_experiments:
+- description: &gt;-
+    ChIP-seq/ChIP-exo of epitope-tagged Gat2 across nitrogen sources, stress and growth
+    phases to identify direct binding sites and target genes.
+- description: &gt;-
+    RNA-seq of gat2-delta and GAT2-overexpression strains, alone and in combination with
+    gln3/gat1/dal80/gzf3 mutants, to define Gat2&#39;s regulatory role and test redundancy
+    with the NCR factors.
+- description: &gt;-
+    Live-cell imaging of a functional Gat2-GFP fusion under varying nitrogen and TORC1
+    (rapamycin) conditions to determine localization and whether nuclear entry is
+    conditionally regulated as for Gln3/Gat1.
+- description: &gt;-
+    In vitro DNA-binding-specificity profiling (protein-binding microarray or SELEX) of
+    the Gat2 zinc finger to compare its recognized sequence with those of the other yeast
+    GATA factors.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

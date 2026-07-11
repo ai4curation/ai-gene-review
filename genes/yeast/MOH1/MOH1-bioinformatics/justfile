@@ -1,0 +1,37 @@
+# MOH1 (YBL049W / P38191) bioinformatics analysis
+# Reproducible pipeline. Run `just all` to regenerate everything.
+
+# Human YPEL orthologs (reviewed UniProt accessions)
+ypel := "O60688 Q96QA6 P61236 Q96NS1 P62699"
+
+# Zinc-binding cysteine positions per UniProt P38191 feature table
+zn_cys := "45,48,101,104"
+
+setup:
+    uv sync
+
+# Download human YPEL1-5 ortholog sequences
+fetch-orthologs:
+    uv run python scripts/fetch_orthologs.py data/ypel_human.fasta {{ypel}}
+
+# Fetch a negative-control protein (non-Yippee) to test scripts are generic
+fetch-control:
+    uv run python scripts/fetch_orthologs.py data/control.fasta P00549
+
+# Yippee domain / zinc-ligand analysis of MOH1
+analyze:
+    uv run python scripts/analyze_yippee.py data/MOH1.fasta > results/moh1_yippee.txt
+    cat results/moh1_yippee.txt
+
+# Same analysis on the control protein (should NOT report a Yippee Zn site pattern)
+analyze-control: fetch-control
+    uv run python scripts/analyze_yippee.py data/control.fasta > results/control_yippee.txt
+    cat results/control_yippee.txt
+
+# Conservation of MOH1 vs human YPEL orthologs, probing the 4 Zn-Cys
+conservation: fetch-orthologs
+    uv run python scripts/conservation.py data/MOH1.fasta data/ypel_human.fasta {{zn_cys}} > results/conservation.tsv
+    cat results/conservation.tsv
+
+all: setup fetch-orthologs analyze conservation analyze-control
+    @echo "Analysis complete. See results/ and RESULTS.md"

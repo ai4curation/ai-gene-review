@@ -1,0 +1,4332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>klp-11 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>klp-11</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q19633" target="_blank" class="term-link">
+                        Q19633
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Caenorhabditis elegans</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "klp-11";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q19633" data-a="DESCRIPTION: KLP-11 is one of the two motor (heavy-chain) subun..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>KLP-11 is one of the two motor (heavy-chain) subunits of Caenorhabditis elegans heterotrimeric kinesin-II, a plus-end-directed microtubule motor of the kinesin-2 family. The holoenzyme is a heterotrimer of the two distinct motor subunits KLP-11 and KLP-20 together with the non-motor accessory subunit KAP-1 (kinesin-associated protein), and is the nematode orthologue of vertebrate KIF3A/KIF3B/KAP3 kinesin-II. KLP-11 is unprocessive as a homodimer; processive movement requires heterodimerization with its partner KLP-20, and heterodimerization is also required to bind the KAP-1 cargo-adaptor subunit. Within the assembled motor, KLP-11 contributes microtubule plus-end motor and ATPase activity. Functionally, kinesin-II is one of two anterograde intraflagellar transport (IFT) motors in worm sensory cilia; together with the faster homodimeric OSM-3 (KIF17) motor it drives IFT particles along the doublet microtubules of the ciliary middle (initial) segment, with the two motors acting partly redundantly to build the cilium foundation. Kinesin-II moves comparatively slowly (~0.5 um/s) and, through mechanical competition with OSM-3, contributes to the tension across IFT particles that is regulated by BBS proteins. KLP-11 localizes to sensory cilia of ciliated neurons.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003777" target="_blank" class="term-link">
+                                    GO:0003777
+                                </a>
+                            </span>
+                            <span class="term-label">microtubule motor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q19633" data-a="GO:0003777" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> KLP-11 is a kinesin-2 motor subunit that, as part of the KLP-11/KLP-20/KAP-1 heterotrimer, is an active plus-end-directed microtubule motor. The phylogenetic (IBA) annotation is well supported and corroborated by direct C. elegans data.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core molecular function. Kinesin-II motor activity is directly demonstrated for the purified holoenzyme containing KLP-11 (PMID:17000880). A more specific term (plus-end-directed microtubule motor activity) is captured in core_functions.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17000880" target="_blank" class="term-link">
+                                        PMID:17000880
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">kinesin-II alone moved MTs at a maximal rate of 0.3 μm/s, and OSM-3 alone moved them at 0.7 μm/s</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q19633" data-a="GO:0005737" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic cytoplasmic localization inferred phylogenetically. KLP-11 is present in the cytoplasm of ciliated neurons (cell bodies/dendrites) before and while operating in cilia, consistent with kinesin motors generally.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct but low-specificity parent. The informative localization for KLP-11 is the cilium and the axonemal kinesin-II complex; retained as accurate context.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008017" target="_blank" class="term-link">
+                                    GO:0008017
+                                </a>
+                            </span>
+                            <span class="term-label">microtubule binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q19633" data-a="GO:0008017" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Microtubule binding is an intrinsic property of the kinesin motor domain (FT 13..343) and is required for the motor activity of KLP-11-containing kinesin-II on axonemal microtubules.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Well-supported; microtubule binding is a defining feature of kinesin motors and underpins the demonstrated MT gliding activity of kinesin-II (PMID:17000880).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17000880" target="_blank" class="term-link">
+                                        PMID:17000880
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the IFT particles assembling these sensory cilia are moved by the coordinate action of two anterograde IFT motors called kinesin-II and OSM-3, which are both members of the kinesin-2 family</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030705" target="_blank" class="term-link">
+                                    GO:0030705
+                                </a>
+                            </span>
+                            <span class="term-label">cytoskeleton-dependent intracellular transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q19633" data-a="GO:0030705" data-r="GO_REF:0000033" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> KLP-11 mediates microtubule-based (cytoskeleton-dependent) transport as part of kinesin-II. In the worm this is realized specifically as anterograde IFT within cilia.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct but too general. The specific, experimentally supported process for KLP-11 is intraciliary anterograde transport; generalize the annotation to that term.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">TERM SCOPING PROBLEM</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">GRANULARITY MISMATCH</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTN009082057</span>
+
+                                    &middot; kinesin-2 / kinesin-II motor node
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035720" target="_blank" class="term-link">
+                                    intraciliary anterograde transport
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17000880" target="_blank" class="term-link">
+                                        PMID:17000880
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the IFT particles assembling these sensory cilia are moved by the coordinate action of two anterograde IFT motors called kinesin-II and OSM-3, which are both members of the kinesin-2 family</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060271" target="_blank" class="term-link">
+                                    GO:0060271
+                                </a>
+                            </span>
+                            <span class="term-label">cilium assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q19633" data-a="GO:0060271" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Kinesin-II contributes to sensory cilium assembly by delivering IFT cargo along the middle segment. However, klp-11 single mutants have near-full-length cilia because OSM-3 acts redundantly in the middle segment and builds the distal segment, so KLP-11 is individually dispensable for ciliogenesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The annotation is correct at the pathway level, but because of OSM-3 redundancy KLP-11 loss does not abolish cilium assembly; the sharpest core process is anterograde IFT. Retained as a real, non-core contribution.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17000880" target="_blank" class="term-link">
+                                        PMID:17000880
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">These motors function redundantly to move the same IFT particles along the initial segment and build the cilium foundation, with either motor but not both being dispensable for this function</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17000880" target="_blank" class="term-link">
+                                        PMID:17000880
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">OSM-6∷GFP moves at OSM-3&#39;s fast rate in klp-11 mutants</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005871" target="_blank" class="term-link">
+                                    GO:0005871
+                                </a>
+                            </span>
+                            <span class="term-label">kinesin complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q19633" data-a="GO:0005871" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> KLP-11 is a subunit of a kinesin complex, specifically the heterotrimeric kinesin-II (KLP-11/KLP-20/KAP-1). The generic kinesin complex annotation is correct.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct parent-level complex membership; the specific complex (kinesin II / axonemal heterotrimeric kinesin-II) is captured by the NAS/IPI annotations and core_functions.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17000880" target="_blank" class="term-link">
+                                        PMID:17000880
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">consisting of 1 mol each of its subunits KLP-11, KLP-20, and KAP-1 with a native molecular mass of 287 kD</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005874" target="_blank" class="term-link">
+                                    GO:0005874
+                                </a>
+                            </span>
+                            <span class="term-label">microtubule</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q19633" data-a="GO:0005874" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> KLP-11 is active on microtubules; as part of kinesin-II it translocates along the axonemal (doublet) microtubules of the ciliary middle segment.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct localization/site-of-action for a microtubule motor, consistent with the demonstrated MT gliding activity of the holoenzyme.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17000880" target="_blank" class="term-link">
+                                        PMID:17000880
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">kinesin-II alone moved MTs at a maximal rate of 0.3 μm/s, and OSM-3 alone moved them at 0.7 μm/s</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007018" target="_blank" class="term-link">
+                                    GO:0007018
+                                </a>
+                            </span>
+                            <span class="term-label">microtubule-based movement</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q19633" data-a="GO:0007018" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> As a kinesin motor, KLP-11 drives microtubule-based movement. In the worm this is the anterograde movement of IFT particles within cilia.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct general process; the specific term (intraciliary anterograde transport) is also annotated (NAS) and captured in core_functions.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17000880" target="_blank" class="term-link">
+                                        PMID:17000880
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the IFT particles assembling these sensory cilia are moved by the coordinate action of two anterograde IFT motors called kinesin-II and OSM-3, which are both members of the kinesin-2 family</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016887" target="_blank" class="term-link">
+                                    GO:0016887
+                                </a>
+                            </span>
+                            <span class="term-label">ATP hydrolysis activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q19633" data-a="GO:0016887" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> KLP-11 contains a P-loop kinesin motor domain (ATP-binding site residues 99..106) and, as part of kinesin-II, hydrolyzes ATP to power motility; the holoenzyme uses Mg-ATP with Michaelis-Menten kinetics.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ATP hydrolysis is essential for kinesin motor function and is directly evidenced by the ATP-dependent MT gliding kinetics of purified kinesin-II (PMID:17000880).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17000880" target="_blank" class="term-link">
+                                        PMID:17000880
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">indicating that Mg-ATP is the preferred substrate for kinesin-2 motors</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000166" target="_blank" class="term-link">
+                                    GO:0000166
+                                </a>
+                            </span>
+                            <span class="term-label">nucleotide binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q19633" data-a="GO:0000166" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Broad nucleotide-binding parent inferred from the kinesin P-loop motif. KLP-11 binds ATP/ADP during its mechanochemical cycle.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct but non-specific; the informative child (ATP binding) is separately annotated.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003774" target="_blank" class="term-link">
+                                    GO:0003774
+                                </a>
+                            </span>
+                            <span class="term-label">cytoskeletal motor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q19633" data-a="GO:0003774" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Parent of microtubule motor activity; correct for KLP-11 as a cytoskeletal (kinesin) motor.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct but less specific than microtubule motor activity, which is separately annotated and refined in core_functions.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003777" target="_blank" class="term-link">
+                                    GO:0003777
+                                </a>
+                            </span>
+                            <span class="term-label">microtubule motor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q19633" data-a="GO:0003777" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro/ARBA electronic assignment of microtubule motor activity based on the kinesin motor domain. Consistent with the IBA and IDA annotations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct; duplicates the well-supported microtubule motor activity from an electronic pipeline.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q19633" data-a="GO:0005524" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ATP binding at the kinesin motor domain P-loop (BINDING 99..106) is required for the ATPase-driven motor cycle of KLP-11.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct and specific; supported by the conserved P-loop and the Mg-ATP kinetics of the holoenzyme (PMID:17000880).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17000880" target="_blank" class="term-link">
+                                        PMID:17000880
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">indicating that Mg-ATP is the preferred substrate for kinesin-2 motors</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005856" target="_blank" class="term-link">
+                                    GO:0005856
+                                </a>
+                            </span>
+                            <span class="term-label">cytoskeleton</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q19633" data-a="GO:0005856" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> KLP-11 localizes to the microtubule cytoskeleton (the ciliary axoneme). Broad but accurate.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct low-specificity localization for a microtubule motor; the informative site is the cilium/axoneme.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005929" target="_blank" class="term-link">
+                                    GO:0005929
+                                </a>
+                            </span>
+                            <span class="term-label">cilium</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q19633" data-a="GO:0005929" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> KLP-11 localizes to sensory cilia, where kinesin-II performs anterograde IFT along the middle segment.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core localization, consistent with UniProt subcellular location and the cilia IFT role of kinesin-II (PMID:17000880).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17000880" target="_blank" class="term-link">
+                                        PMID:17000880
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the IFT particles assembling these sensory cilia are moved by the coordinate action of two anterograde IFT motors called kinesin-II and OSM-3, which are both members of the kinesin-2 family</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007018" target="_blank" class="term-link">
+                                    GO:0007018
+                                </a>
+                            </span>
+                            <span class="term-label">microtubule-based movement</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q19633" data-a="GO:0007018" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic assignment of microtubule-based movement, duplicating the IBA/IDA process annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct; the more specific process (intraciliary anterograde transport) is also annotated.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008017" target="_blank" class="term-link">
+                                    GO:0008017
+                                </a>
+                            </span>
+                            <span class="term-label">microtubule binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q19633" data-a="GO:0008017" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro electronic assignment of microtubule binding via the kinesin motor domain; duplicates the IBA annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct; microtubule binding is intrinsic to the kinesin motor domain.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032991" target="_blank" class="term-link">
+                                    GO:0032991
+                                </a>
+                            </span>
+                            <span class="term-label">protein-containing complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q19633" data-a="GO:0032991" data-r="GO_REF:0000117" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic complex-membership assignment. KLP-11 is specifically a subunit of the heterotrimeric kinesin-II complex.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Too general. Replace with the specific kinesin II complex to convey the actual assembly KLP-11 belongs to.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016939" target="_blank" class="term-link">
+                                    kinesin II complex
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17000880" target="_blank" class="term-link">
+                                        PMID:17000880
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">consisting of 1 mol each of its subunits KLP-11, KLP-20, and KAP-1 with a native molecular mass of 287 kD</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007018" target="_blank" class="term-link">
+                                    GO:0007018
+                                </a>
+                            </span>
+                            <span class="term-label">microtubule-based movement</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20498083" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20498083
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Regulation of a heterodimeric kinesin-2 through an unprocess...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q19633" data-a="GO:0007018" data-r="PMID:20498083" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ComplexPortal NAS annotation. KLP-11 (as the KLP-11/KLP-20 heterodimer, and within the kinesin-II holoenzyme) drives microtubule-based movement; heterodimerization confers the processivity needed for transport.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Author-stated (NAS) and consistent with the biochemistry: KLP-11 becomes a processive MT motor upon heterodimerization with KLP-20 (PMID:20498083).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20498083" target="_blank" class="term-link">
+                                        PMID:20498083
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">KLP11/KLP20 of Caenorhabditis elegans cilia</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016939" target="_blank" class="term-link">
+                                    GO:0016939
+                                </a>
+                            </span>
+                            <span class="term-label">kinesin II complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20498083" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20498083
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Regulation of a heterodimeric kinesin-2 through an unprocess...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q19633" data-a="GO:0016939" data-r="PMID:20498083" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> KLP-11 is a subunit of kinesin II. The heterodimer of the two motor subunits (KLP-11/KLP-20) plus KAP-1 constitutes the kinesin-II complex; heterodimerization is required for KAP-1 binding.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core complex membership. Supported by both the ComplexPortal NAS record and the biochemistry of the KLP-11/KLP-20/KAP-1 assembly (PMID:20498083, PMID:17000880).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20498083" target="_blank" class="term-link">
+                                        PMID:20498083
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">heterodimerization is necessary to bind KAP1, the in vivo link between</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17000880" target="_blank" class="term-link">
+                                        PMID:17000880
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">consisting of 1 mol each of its subunits KLP-11, KLP-20, and KAP-1 with a native molecular mass of 287 kD</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035720" target="_blank" class="term-link">
+                                    GO:0035720
+                                </a>
+                            </span>
+                            <span class="term-label">intraciliary anterograde transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20498083" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20498083
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Regulation of a heterodimeric kinesin-2 through an unprocess...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q19633" data-a="GO:0035720" data-r="PMID:20498083" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> KLP-11-containing kinesin-II is an anterograde IFT motor of C. elegans cilia; the heterodimeric motor drives anterograde transport of IFT particles.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core biological process for KLP-11. Author-stated (NAS) and corroborated by the cooperative anterograde IFT role of kinesin-II with OSM-3 (PMID:17000880).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17000880" target="_blank" class="term-link">
+                                        PMID:17000880
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the IFT particles assembling these sensory cilia are moved by the coordinate action of two anterograde IFT motors called kinesin-II and OSM-3, which are both members of the kinesin-2 family</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003777" target="_blank" class="term-link">
+                                    GO:0003777
+                                </a>
+                            </span>
+                            <span class="term-label">microtubule motor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17000880" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17000880
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mechanism of transport of IFT particles in C. elegans cilia ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q19633" data-a="GO:0003777" data-r="PMID:17000880" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay: purified recombinant C. elegans kinesin-II containing KLP-11 is an active microtubule motor in gliding assays, moving MTs at ~0.5 um/s.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct experimental evidence (IDA) for KLP-11&#39;s core molecular function as a component of the kinesin-II motor holoenzyme.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17000880" target="_blank" class="term-link">
+                                        PMID:17000880
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">kinesin-II alone moved MTs at a maximal rate of 0.3 μm/s, and OSM-3 alone moved them at 0.7 μm/s</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007018" target="_blank" class="term-link">
+                                    GO:0007018
+                                </a>
+                            </span>
+                            <span class="term-label">microtubule-based movement</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17000880" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17000880
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mechanism of transport of IFT particles in C. elegans cilia ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q19633" data-a="GO:0007018" data-r="PMID:17000880" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct in vitro demonstration that KLP-11-containing kinesin-II generates microtubule-based movement (MT gliding), the biochemical basis of its IFT role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct experimental evidence (IDA). The specific process (intraciliary anterograde transport) is also annotated (NAS) and captured in core_functions.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17000880" target="_blank" class="term-link">
+                                        PMID:17000880
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">kinesin-II alone moved MTs at a maximal rate of 0.3 μm/s, and OSM-3 alone moved them at 0.7 μm/s</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030993" target="_blank" class="term-link">
+                                    GO:0030993
+                                </a>
+                            </span>
+                            <span class="term-label">axonemal heterotrimeric kinesin-II complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17000880" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17000880
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mechanism of transport of IFT particles in C. elegans cilia ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q19633" data-a="GO:0030993" data-r="PMID:17000880" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> KLP-11 physically assembles into the axonemal heterotrimeric kinesin-II complex with KLP-20 (WBGene00002230) and KAP-1 (WBGene00002182), demonstrated as a monodisperse 1:1:1 (~287 kD) heterotrimer by sucrose gradients and gel filtration.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct physical-interaction evidence (IPI) for the most specific, experimentally grounded cellular-component annotation for KLP-11. This is a core annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17000880" target="_blank" class="term-link">
+                                        PMID:17000880
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">consisting of 1 mol each of its subunits KLP-11, KLP-20, and KAP-1 with a native molecular mass of 287 kD</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>As a motor subunit of the heterotrimeric kinesin-II holoenzyme (KLP-11/KLP-20/KAP-1), KLP-11 contributes plus-end-directed microtubule motor and ATPase activity. KLP-11 is unprocessive on its own (as a homodimer); processive plus-end movement is generated only by heterodimerization with the partner motor subunit KLP-20. The assembled motor drives relatively slow (~0.5 um/s) plus-end transport along axonemal microtubules.</h3>
+                <span class="vote-buttons" data-g="Q19633" data-a="FUNCTION: As a motor subunit of the heterotrimeric kinesin-I..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003777" target="_blank" class="term-link">
+                            microtubule motor activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035720" target="_blank" class="term-link">
+                                intraciliary anterograde transport
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005929" target="_blank" class="term-link">
+                                cilium
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005874" target="_blank" class="term-link">
+                                microtubule
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030993" target="_blank" class="term-link">
+                            axonemal heterotrimeric kinesin-II complex
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17000880" target="_blank" class="term-link">
+                                PMID:17000880
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">consisting of 1 mol each of its subunits KLP-11, KLP-20, and KAP-1 with a native molecular mass of 287 kD</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20498083" target="_blank" class="term-link">
+                                PMID:20498083
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">KLP11/KLP20 of Caenorhabditis elegans cilia</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>KLP-11-containing kinesin-II hydrolyzes ATP to power its motor cycle; the purified holoenzyme uses Mg-ATP as its preferred substrate with Michaelis-Menten kinetics, coupling ATP hydrolysis to microtubule-based movement.</h3>
+                <span class="vote-buttons" data-g="Q19633" data-a="FUNCTION: KLP-11-containing kinesin-II hydrolyzes ATP to pow..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016887" target="_blank" class="term-link">
+                            ATP hydrolysis activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007018" target="_blank" class="term-link">
+                                microtubule-based movement
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030993" target="_blank" class="term-link">
+                            axonemal heterotrimeric kinesin-II complex
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17000880" target="_blank" class="term-link">
+                                PMID:17000880
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">indicating that Mg-ATP is the preferred substrate for kinesin-2 motors</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Kinesin-II (with KLP-11) is one of two anterograde IFT motors that, together with the homodimeric OSM-3 motor, move IFT particles along the doublet microtubules of the ciliary middle segment. The two motors act partly redundantly to build the cilium foundation, and their mechanical competition contributes to IFT-particle tension regulated by BBS proteins.</h3>
+                <span class="vote-buttons" data-g="Q19633" data-a="FUNCTION: Kinesin-II (with KLP-11) is one of two anterograde..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003777" target="_blank" class="term-link">
+                            microtubule motor activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035720" target="_blank" class="term-link">
+                                intraciliary anterograde transport
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005929" target="_blank" class="term-link">
+                                cilium
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030993" target="_blank" class="term-link">
+                            axonemal heterotrimeric kinesin-II complex
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17000880" target="_blank" class="term-link">
+                                PMID:17000880
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">These motors function redundantly to move the same IFT particles along the initial segment and build the cilium foundation, with either motor but not both being dispensable for this function</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17000880" target="_blank" class="term-link">
+                            PMID:17000880
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Mechanism of transport of IFT particles in C. elegans cilia by the concerted action of kinesin-II and OSM-3 motors.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Purified C. elegans kinesin-II is a heterotrimer of KLP-11, KLP-20 and KAP-1 (1:1:1, ~287 kD).</div>
+
+                        <div class="finding-text">"consisting of 1 mol each of its subunits KLP-11, KLP-20, and KAP-1 with a native molecular mass of 287 kD"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Kinesin-II is one of two anterograde IFT motors that move IFT particles along ciliary microtubules.</div>
+
+                        <div class="finding-text">"the IFT particles assembling these sensory cilia are moved by the coordinate action of two anterograde IFT motors called kinesin-II and OSM-3, which are both members of the kinesin-2 family"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Kinesin-II and OSM-3 act redundantly along the initial (middle) segment to build the cilium foundation.</div>
+
+                        <div class="finding-text">"These motors function redundantly to move the same IFT particles along the initial segment and build the cilium foundation, with either motor but not both being dispensable for this function"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Kinesin-II is a slow plus-end MT motor (~0.5 um/s) relative to OSM-3.</div>
+
+                        <div class="finding-text">"kinesin-II alone moved MTs at a maximal rate of 0.3 μm/s, and OSM-3 alone moved them at 0.7 μm/s"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20498083" target="_blank" class="term-link">
+                            PMID:20498083
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Regulation of a heterodimeric kinesin-2 through an unprocessive motor domain that is turned processive by its partner.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">KLP11/KLP20 is the C. elegans heterodimeric kinesin-2 studied here.</div>
+
+                        <div class="finding-text">"KLP11/KLP20 of Caenorhabditis elegans cilia"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Heterodimerization is required to bind KAP1, the motor-cargo link.</div>
+
+                        <div class="finding-text">"heterodimerization is necessary to bind KAP1, the in vivo link between"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the distinct mechanochemical role of the KLP-11 motor head versus the KLP-20 head within the heterodimer, and why is an unprocessive subunit retained?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q19633" data-a="Q: What is the distinct mechanochemical role of the K..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which IFT-particle cargoes are engaged by kinesin-II via KAP-1 in C. elegans cilia, and how is the kinesin-II-to-OSM-3 handoff regulated along the middle segment?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q19633" data-a="Q: Which IFT-particle cargoes are engaged by kinesin-..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Reconstitute KLP-11/KLP-20 heterodimers and KLP-11 or KLP-20 homodimers and chimeras, and compare single-molecule processivity, velocity, and ATPase to dissect each head&#39;s contribution.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: KLP-11&#39;s head contributes asymmetric autoregulation but little autonomous processivity to kinesin-II.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: single-molecule motility / biochemistry</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q19633" data-a="EXPERIMENT: Reconstitute KLP-11/KLP-20 heterodimers and KLP-11..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Determine the cryo-EM structure of the intact KLP-11/KLP-20/KAP-1 heterotrimer in different nucleotide states and on microtubules.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Full-length assembled kinesin-II adopts nucleotide-dependent conformations that impose asymmetric autoregulation.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: structural biology (cryo-EM)</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q19633" data-a="EXPERIMENT: Determine the cryo-EM structure of the intact KLP-..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> No KLP-11 subunit-resolved in vivo molecular function is established independently of its partners: all motility, IFT and localization data are for the intact KLP-11/KLP-20/KAP-1 heterotrimer (or the KLP-11/KLP-20 heterodimer), and KLP-11 is unprocessive as a homodimer, so it has no demonstrated autonomous processive motor activity.</p>
+            <p style="margin-top: 0.4rem;">
+
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> It is firmly established that KLP-11 is a subunit of the purified heterotrimeric kinesin-II holoenzyme, that the holoenzyme is an active plus-end MT motor, and that heterodimerization with KLP-20 is what confers processivity and enables KAP-1 binding.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Distinguishing the specific mechanochemical contribution of the KLP-11 head from that of KLP-20 is needed to understand why kinesin-II uses two distinct, asymmetric motor subunits.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Single-molecule and structural analysis of engineered KLP-11 vs KLP-20 heads and chimeras, building on the finding that KLP-11 mediates asymmetric autoregulation of the heterodimer.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"heterodimerization is necessary to bind KAP1, the in vivo link between"</em> — PMID:20498083</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The identity of the IFT cargo(es) directly engaged by KLP-11-containing kinesin-II via KAP-1 in C. elegans, and how cargo loading/unloading is regulated along the middle segment, are not resolved by the primary literature reviewed here.</p>
+            <p style="margin-top: 0.4rem;">
+
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">BP_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Kinesin-II is established as an anterograde IFT motor that moves IFT particles (IFT-A/IFT-B subcomplexes) along the middle segment, and heterodimerization is required for KAP-1 (the motor-cargo link) binding.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Defining the kinesin-II-specific cargo interface would clarify the division of labor between kinesin-II and OSM-3 and the handoff of IFT trains between motors.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Proximity-labeling / cross-linking mass spectrometry of KAP-1 and KLP-11 in cilia, and cargo-selective transport assays.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"the IFT particles assembling these sensory cilia are moved by the coordinate action of two anterograde IFT motors called kinesin-II and OSM-3, which are both members of the kinesin-2 family"</em> — PMID:17000880</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The atomic structure of the fully assembled C. elegans kinesin-II heterotrimer and the structural basis of KLP-11-mediated asymmetric autoregulation of motor activity are unsolved.</p>
+            <p style="margin-top: 0.4rem;">
+
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Only a partial X-ray structure of the stalk/tail region (residues 537-782, PDB 9IKB, 3.54 A) of heterotrimeric kinesin-2 is available; the motor-domain interface and regulatory conformations are not resolved.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> A full structure would explain how an unprocessive subunit is converted to a processive heterodimer and how autoregulation is imposed asymmetrically.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Cryo-EM / higher-resolution crystallography of the intact KLP-11/KLP-20/KAP-1 holoenzyme in defined nucleotide states.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"KLP11/KLP20 of Caenorhabditis elegans cilia"</em> — PMID:20498083</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Tags</h2>
+        <div class="aliases">
+
+            <span class="badge">caeel-ciliopathy</span>
+
+        </div>
+    </div>
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(klp-11-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q19633" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="klp-11-c-elegans-gene-review-notes">klp-11 (C. elegans) — Gene Review Notes</h1>
+<h2 id="identity-verified-from-uniprot-q19633">Identity (verified from UniProt Q19633)</h2>
+<ul>
+<li>UniProt: Q19633 (Q19633_CAEEL), 782 aa, TrEMBL/unreviewed.</li>
+<li>Gene: klp-11; ORF F20C5.2; WormBase WBGene00002222; RefSeq NP_001369897.1.</li>
+<li>Chromosome IV. Taxon: C. elegans, NCBITaxon:6239.</li>
+<li>Family: TRAFAC class myosin-kinesin ATPase superfamily, kinesin family (PROSITE<br />
+  PRU00283; RuleBase RU000394). Kinesin motor domain FT 13..343; ATP-binding P-loop 99..106.</li>
+<li>ComplexPortal CPX-1208 "Kinesin II motor complex"; GO:0030993 axonemal heterotrimeric<br />
+  kinesin-II complex (IPI:WormBase).</li>
+<li>PDB 9IKB (X-ray 3.54 Å of residues 537-782): "Crystal structure of heterotrimeric Kinesin-2"<br />
+  (stalk/tail region), consistent with klp-11 being a subunit of a heterotrimer.</li>
+</ul>
+<p>klp-11 encodes one of the two motor (heavy-chain) subunits of C. elegans heterotrimeric<br />
+kinesin-II. The holoenzyme is a heterotrimer: KLP-11 + KLP-20 (the two distinct motor<br />
+subunits) + KAP-1 (the non-motor kinesin-associated protein / accessory subunit). This is the<br />
+orthologue of the vertebrate KIF3A/KIF3B/KAP3 kinesin-II. Kinesin-II is one of two<br />
+anterograde IFT motors in the worm; the other is homodimeric OSM-3 (KIF17 orthologue).</p>
+<h2 id="known-well-supported">KNOWN (well-supported)</h2>
+<h3 id="molecular-function-microtubule-plus-end-motor-atpase-as-part-of-the-heterotrimer">Molecular function: microtubule plus-end motor / ATPase, as part of the heterotrimer</h3>
+<ul>
+<li>Purified recombinant C. elegans kinesin-II (KLP-11/KLP-20/KAP-1) is an active<br />
+  plus-end-directed MT motor in gliding assays; it obeys Michaelis-Menten kinetics with<br />
+  Mg-ATP as preferred substrate.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/17000880" title="In MT gliding assays, kinesin-II–driven motility conformed to Michaelis-Menten kinetics with a nucleotide profile very similar to that of kinesin-1 (Cohn et al., 1989), indicating that Mg-ATP is the preferred substrate for kinesin-2 motors">PMID:17000880</a></li>
+<li>Kinesin-II moves relatively slowly (~0.5 µm/s in vivo, ~0.3–0.5 µm/s in vitro), vs OSM-3 ~1.3 µm/s.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/17000880" title="kinesin-II alone moved MTs at a maximal rate of 0.3 μm/s, and OSM-3 alone moved them at 0.7 μm/s">PMID:17000880</a><br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/17000880" title="kinesin-II alone moved at ∼0.5 μm/s, whereas OSM-3 alone (wild type or the G444E mutant) moved at ∼1.1 μm/s ... very close to the rates of transport driven by kinesin-II (0.5 μm/s) and OSM-3 (1.3 μm/s) in vivo">PMID:17000880</a></li>
+<li>The purified holoenzyme is a monodisperse heterotrimer of KLP-11, KLP-20 and KAP-1<br />
+  (1:1:1 stoichiometry; ~287 kD), matching native kinesin-II.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/17000880" title="Purified kinesin-II behaved as a monodisperse, heterotrimeric complex on sucrose gradients (Fig. 1 F) and gel filtration columns (Fig. 1 G) consisting of 1 mol each of its subunits KLP-11, KLP-20, and KAP-1 with a native molecular mass of 287 kD">PMID:17000880</a></li>
+<li>WormBase makes an IDA microtubule motor activity annotation (GO:0003777) and an IDA<br />
+  microtubule-based movement annotation to klp-11 from PMID:17000880 (in vitro motility of the<br />
+  purified holoenzyme containing KLP-11).</li>
+</ul>
+<h3 id="heterodimerization-mechanism-why-two-distinct-motor-subunits">Heterodimerization mechanism (why two distinct motor subunits)</h3>
+<ul>
+<li>The KLP-11 motor domain is UNPROCESSIVE as a homodimer; heterodimerization with the<br />
+  processive KLP-20 partner generates processivity. The "unprocessive" KLP-11 subunit is<br />
+  retained because it mediates asymmetric autoregulation of motor activity, and<br />
+  heterodimerization is required to bind KAP-1 (the motor-cargo link).<br />
+  [PMID:20498083 "One motor domain is unprocessive as a homodimer, but heterodimerization with a processive partner generates processivity. The \"unprocessive\" subunit is kept in this partnership as it mediates an asymmetric autoregulation of the motor activity. Finally, heterodimerization is necessary to bind KAP1, the in vivo link between motor and cargo."]<br />
+  (Note: PMID:20498083 is abstract-only in cache; full_text_available: false. The abstract<br />
+  explicitly names KLP11/KLP20 of C. elegans, so the identity is certain.)</li>
+</ul>
+<h3 id="cellular-component-complex">Cellular component / complex</h3>
+<ul>
+<li>Subunit of the axonemal heterotrimeric kinesin-II complex (GO:0030993); IPI annotation by<br />
+  WormBase from PMID:17000880 with KLP-20 (WBGene00002230) and KAP-1 (WBGene00002182) as the<br />
+  with/from partners.</li>
+<li>Localizes to sensory cilia (UniProt: Cell projection, cilium; ARBA). C. elegans kinesin-II<br />
+  operates on axonemal microtubule doublets of the middle (initial) segment of amphid channel<br />
+  cilia.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/17000880" title="C. elegans amphid channel ciliary axonemes are made up of two domains: an initial segment (called the middle segment) containing 4-μm–long MT doublets ... and a distal segment comprising 2.5-μm–long MT singlets">PMID:17000880</a></li>
+</ul>
+<h3 id="biological-process-anterograde-ift-of-the-ciliary-middle-segment-redundant-with-osm-3">Biological process: anterograde IFT of the ciliary middle segment (redundant with OSM-3)</h3>
+<ul>
+<li>Kinesin-II (with KLP-11) and OSM-3 are the two anterograde IFT motors; they act<br />
+  cooperatively/redundantly to move IFT particles along the middle segment and build the<br />
+  cilium foundation; either motor alone suffices for the middle segment (redundant), while<br />
+  OSM-3 alone extends the distal singlet segment.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/17000880" title="These motors function redundantly to move the same IFT particles along the initial segment and build the cilium foundation, with either motor but not both being dispensable for this function">PMID:17000880</a><br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/17000880" title="the IFT particles assembling these sensory cilia are moved by the coordinate action of two anterograde IFT motors called kinesin-II and OSM-3, which are both members of the kinesin-2 family">PMID:17000880</a></li>
+<li>klp-11 single mutants have near full-length cilia (because OSM-3 compensates in the middle<br />
+  segment and builds the distal segment), unlike osm-3 mutants which lack distal segments.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/17000880" title="the bbs-7/-8;klp-11 double mutants have almost full-length cilia, which is similar to the klp-11 mutants, and the bbs-7/-8;osm-3 double mutants have truncated cilia similar to the osm-3 mutants">PMID:17000880</a><br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/17000880" title="OSM-6∷GFP moves at OSM-3's fast rate in klp-11 mutants">PMID:17000880</a></li>
+<li>Motors coordinate by "mechanical competition": slow kinesin-II drags fast OSM-3 and vice<br />
+  versa; this tension, antagonized by BBS proteins, is what dissociates IFT-A/IFT-B in bbs<br />
+  mutants. This is a kinesin-II holoenzyme (KLP-11-containing) property.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/17000880" title="the slower moving kinesin-II exerting drag on the faster moving OSM-3, whereas the faster moving OSM-3 tends to pull the slower moving kinesin-II along">PMID:17000880</a></li>
+</ul>
+<h2 id="not-known-gaps">NOT known / gaps</h2>
+<ul>
+<li>No klp-11-SPECIFIC (subunit-resolved) in vivo function beyond the holoenzyme: the motility,<br />
+  IFT, and localization data are for the intact KLP-11/KLP-20/KAP-1 heterotrimer or the<br />
+  KLP-11/KLP-20 heterodimer, not for a KLP-11 activity independent of its partners. Because<br />
+  KLP-11 is unprocessive as a homodimer (PMID:20498083), it does NOT have an autonomous<br />
+  processive motor activity — its motor role is realized only in the heterodimer/heterotrimer.</li>
+<li>The IFT cargo(es) directly linked to kinesin-II via KAP-1 in the worm, and how loading is<br />
+  regulated, are not resolved by the cached primary literature.</li>
+<li>Structure of the full assembled worm heterotrimer / the KLP-11 head–partner interface at<br />
+  atomic resolution: only a 3.54 Å partial (residues 537-782, stalk/tail) structure (PDB<br />
+  9IKB) is available; the mechanistic basis of asymmetric autoregulation is not solved.</li>
+<li>No evidence klp-11 acts outside cilia/IFT in the worm (no non-ciliary transport role<br />
+  established); vertebrate KIF3 paralogues have additional roles (melanosome transport,<br />
+  Hedgehog, left-right asymmetry) not demonstrated for C. elegans klp-11.</li>
+</ul>
+<h2 id="annotation-review-reasoning">Annotation review reasoning</h2>
+<ul>
+<li>Core (retain as core function): microtubule motor / plus-end motor activity and ATP<br />
+  hydrolysis contributed as part of the kinesin-II heterotrimer; membership of the axonemal<br />
+  heterotrimeric kinesin-II complex (GO:0030993) / kinesin II complex (GO:0016939); microtubule<br />
+  binding; anterograde IFT (GO:0035720) / microtubule-based movement; cilium localization.</li>
+<li>IBA/IEA generic parents (cytoplasm, cytoskeleton, microtubule, nucleotide binding,<br />
+  cytoskeletal motor activity, protein-containing complex) — ACCEPT as correct-but-general, or<br />
+  MODIFY where a more specific curated term is warranted; protein-containing complex → MODIFY to<br />
+  kinesin II complex.</li>
+<li>cilium assembly (GO:0060271, IBA): klp-11 single mutants have near-full-length cilia (OSM-3<br />
+  redundancy), so klp-11 contributes to but is individually dispensable for ciliogenesis; keep<br />
+  as involved (assembly is redundant), not the sharpest term — the sharpest is anterograde IFT.</li>
+<li>No REMOVE of the experimental IDA/IPI/NAS annotations — all are consistent with the<br />
+  holoenzyme evidence.</li>
+</ul>
+<h2 id="provenance-discipline">Provenance discipline</h2>
+<ul>
+<li>All supporting_text above are verbatim substrings of the cached publications<br />
+  (publications/PMID_17000880.md full text; publications/PMID_20498083.md abstract).</li>
+<li>PMID:20498083 is abstract-only in cache; NAS annotations from it (ComplexPortal) are<br />
+  supported by the abstract's explicit statements about KLP11/KLP20/KAP1.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q19633
+gene_symbol: klp-11
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:6239
+  label: Caenorhabditis elegans
+description: &gt;-
+  KLP-11 is one of the two motor (heavy-chain) subunits of Caenorhabditis elegans
+  heterotrimeric kinesin-II, a plus-end-directed microtubule motor of the kinesin-2
+  family. The holoenzyme is a heterotrimer of the two distinct motor subunits KLP-11
+  and KLP-20 together with the non-motor accessory subunit KAP-1 (kinesin-associated
+  protein), and is the nematode orthologue of vertebrate KIF3A/KIF3B/KAP3 kinesin-II.
+  KLP-11 is unprocessive as a homodimer; processive movement requires heterodimerization
+  with its partner KLP-20, and heterodimerization is also required to bind the KAP-1
+  cargo-adaptor subunit. Within the assembled motor, KLP-11 contributes microtubule
+  plus-end motor and ATPase activity. Functionally, kinesin-II is one of two anterograde
+  intraflagellar transport (IFT) motors in worm sensory cilia; together with the faster
+  homodimeric OSM-3 (KIF17) motor it drives IFT particles along the doublet microtubules
+  of the ciliary middle (initial) segment, with the two motors acting partly redundantly
+  to build the cilium foundation. Kinesin-II moves comparatively slowly (~0.5 um/s) and,
+  through mechanical competition with OSM-3, contributes to the tension across IFT
+  particles that is regulated by BBS proteins. KLP-11 localizes to sensory cilia of
+  ciliated neurons.
+references:
+  - id: GO_REF:0000002
+    title: Gene Ontology annotation through association of InterPro records with GO terms
+    findings: []
+  - id: GO_REF:0000033
+    title: Annotation inferences using phylogenetic trees
+    findings: []
+  - id: GO_REF:0000104
+    title: Electronic Gene Ontology annotations created by transferring manual GO annotations
+      between related proteins based on shared sequence features
+    findings: []
+  - id: GO_REF:0000117
+    title: Electronic Gene Ontology annotations created by ARBA machine learning models
+    findings: []
+  - id: GO_REF:0000120
+    title: Combined Automated Annotation using Multiple IEA Methods
+    findings: []
+  - id: PMID:17000880
+    title: Mechanism of transport of IFT particles in C. elegans cilia by the concerted
+      action of kinesin-II and OSM-3 motors.
+    findings:
+      - statement: Purified C. elegans kinesin-II is a heterotrimer of KLP-11, KLP-20 and KAP-1 (1:1:1, ~287 kD).
+        supporting_text: consisting of 1 mol each of its subunits KLP-11, KLP-20, and KAP-1 with a native molecular mass of 287 kD
+      - statement: Kinesin-II is one of two anterograde IFT motors that move IFT particles along ciliary microtubules.
+        supporting_text: the IFT particles assembling these sensory cilia are moved by the coordinate action of two anterograde IFT motors called kinesin-II and OSM-3, which are both members of the kinesin-2 family
+      - statement: Kinesin-II and OSM-3 act redundantly along the initial (middle) segment to build the cilium foundation.
+        supporting_text: These motors function redundantly to move the same IFT particles along the initial segment and build the cilium foundation, with either motor but not both being dispensable for this function
+      - statement: Kinesin-II is a slow plus-end MT motor (~0.5 um/s) relative to OSM-3.
+        supporting_text: kinesin-II alone moved MTs at a maximal rate of 0.3 μm/s, and OSM-3 alone moved them at 0.7 μm/s
+    reference_review:
+      relevance: HIGH
+      correctness: VERIFIED
+      review_notes: &gt;-
+        Full text cached and PubMed-verified. Directly establishes KLP-11 as a subunit
+        of the purified heterotrimeric kinesin-II holoenzyme and its plus-end MT motility,
+        the source of the WormBase IDA (GO:0003777, GO:0007018) and IPI (GO:0030993)
+        annotations to klp-11.
+  - id: PMID:20498083
+    title: Regulation of a heterodimeric kinesin-2 through an unprocessive motor domain
+      that is turned processive by its partner.
+    findings:
+      - statement: KLP11/KLP20 is the C. elegans heterodimeric kinesin-2 studied here.
+        supporting_text: KLP11/KLP20 of Caenorhabditis elegans cilia
+      - statement: Heterodimerization is required to bind KAP1, the motor-cargo link.
+        supporting_text: heterodimerization is necessary to bind KAP1, the in vivo link between
+    reference_review:
+      relevance: HIGH
+      correctness: VERIFIED
+      review_notes: &gt;-
+        Abstract-only in cache (full_text_available: false), but the abstract explicitly
+        names KLP11/KLP20 of C. elegans and establishes that KLP-11 is unprocessive as a
+        homodimer, is turned processive by heterodimerization with KLP-20, and that
+        heterodimerization is required for KAP-1 binding. Supports the ComplexPortal NAS
+        annotations for kinesin II complex membership and anterograde IFT.
+existing_annotations:
+  - term:
+      id: GO:0003777
+      label: microtubule motor activity
+    evidence_type: IBA
+    original_reference_id: GO_REF:0000033
+    qualifier: enables
+    review:
+      summary: &gt;-
+        KLP-11 is a kinesin-2 motor subunit that, as part of the KLP-11/KLP-20/KAP-1
+        heterotrimer, is an active plus-end-directed microtubule motor. The phylogenetic
+        (IBA) annotation is well supported and corroborated by direct C. elegans data.
+      action: ACCEPT
+      reason: &gt;-
+        Core molecular function. Kinesin-II motor activity is directly demonstrated for the
+        purified holoenzyme containing KLP-11 (PMID:17000880). A more specific term
+        (plus-end-directed microtubule motor activity) is captured in core_functions.
+      supported_by:
+        - reference_id: PMID:17000880
+          supporting_text: kinesin-II alone moved MTs at a maximal rate of 0.3 μm/s, and OSM-3 alone moved them at 0.7 μm/s
+  - term:
+      id: GO:0005737
+      label: cytoplasm
+    evidence_type: IBA
+    original_reference_id: GO_REF:0000033
+    qualifier: is_active_in
+    review:
+      summary: &gt;-
+        Generic cytoplasmic localization inferred phylogenetically. KLP-11 is present in the
+        cytoplasm of ciliated neurons (cell bodies/dendrites) before and while operating in
+        cilia, consistent with kinesin motors generally.
+      action: ACCEPT
+      reason: &gt;-
+        Correct but low-specificity parent. The informative localization for KLP-11 is the
+        cilium and the axonemal kinesin-II complex; retained as accurate context.
+  - term:
+      id: GO:0008017
+      label: microtubule binding
+    evidence_type: IBA
+    original_reference_id: GO_REF:0000033
+    qualifier: enables
+    review:
+      summary: &gt;-
+        Microtubule binding is an intrinsic property of the kinesin motor domain (FT 13..343)
+        and is required for the motor activity of KLP-11-containing kinesin-II on axonemal
+        microtubules.
+      action: ACCEPT
+      reason: &gt;-
+        Well-supported; microtubule binding is a defining feature of kinesin motors and
+        underpins the demonstrated MT gliding activity of kinesin-II (PMID:17000880).
+      supported_by:
+        - reference_id: PMID:17000880
+          supporting_text: the IFT particles assembling these sensory cilia are moved by the coordinate action of two anterograde IFT motors called kinesin-II and OSM-3, which are both members of the kinesin-2 family
+  - term:
+      id: GO:0030705
+      label: cytoskeleton-dependent intracellular transport
+    evidence_type: IBA
+    original_reference_id: GO_REF:0000033
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        KLP-11 mediates microtubule-based (cytoskeleton-dependent) transport as part of
+        kinesin-II. In the worm this is realized specifically as anterograde IFT within cilia.
+      action: MODIFY
+      reason: &gt;-
+        Correct but too general. The specific, experimentally supported process for KLP-11 is
+        intraciliary anterograde transport; generalize the annotation to that term.
+      proposed_replacement_terms:
+        - id: GO:0035720
+          label: intraciliary anterograde transport
+      propagation_review:
+        root_cause: TERM_SCOPING_PROBLEM
+        failure_modes:
+          - GRANULARITY_MISMATCH
+        source_entities:
+          - source_id: PANTHER:PTN009082057
+            source_label: kinesin-2 / kinesin-II motor node
+            source_status: SUPPORTS_TRANSFER
+      supported_by:
+        - reference_id: PMID:17000880
+          supporting_text: the IFT particles assembling these sensory cilia are moved by the coordinate action of two anterograde IFT motors called kinesin-II and OSM-3, which are both members of the kinesin-2 family
+  - term:
+      id: GO:0060271
+      label: cilium assembly
+    evidence_type: IBA
+    original_reference_id: GO_REF:0000033
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        Kinesin-II contributes to sensory cilium assembly by delivering IFT cargo along the
+        middle segment. However, klp-11 single mutants have near-full-length cilia because
+        OSM-3 acts redundantly in the middle segment and builds the distal segment, so KLP-11
+        is individually dispensable for ciliogenesis.
+      action: KEEP_AS_NON_CORE
+      reason: &gt;-
+        The annotation is correct at the pathway level, but because of OSM-3 redundancy KLP-11
+        loss does not abolish cilium assembly; the sharpest core process is anterograde IFT.
+        Retained as a real, non-core contribution.
+      supported_by:
+        - reference_id: PMID:17000880
+          supporting_text: These motors function redundantly to move the same IFT particles along the initial segment and build the cilium foundation, with either motor but not both being dispensable for this function
+        - reference_id: PMID:17000880
+          supporting_text: OSM-6∷GFP moves at OSM-3&#39;s fast rate in klp-11 mutants
+  - term:
+      id: GO:0005871
+      label: kinesin complex
+    evidence_type: IBA
+    original_reference_id: GO_REF:0000033
+    qualifier: part_of
+    review:
+      summary: &gt;-
+        KLP-11 is a subunit of a kinesin complex, specifically the heterotrimeric kinesin-II
+        (KLP-11/KLP-20/KAP-1). The generic kinesin complex annotation is correct.
+      action: ACCEPT
+      reason: &gt;-
+        Correct parent-level complex membership; the specific complex (kinesin II /
+        axonemal heterotrimeric kinesin-II) is captured by the NAS/IPI annotations and
+        core_functions.
+      supported_by:
+        - reference_id: PMID:17000880
+          supporting_text: consisting of 1 mol each of its subunits KLP-11, KLP-20, and KAP-1 with a native molecular mass of 287 kD
+  - term:
+      id: GO:0005874
+      label: microtubule
+    evidence_type: IBA
+    original_reference_id: GO_REF:0000033
+    qualifier: is_active_in
+    review:
+      summary: &gt;-
+        KLP-11 is active on microtubules; as part of kinesin-II it translocates along the
+        axonemal (doublet) microtubules of the ciliary middle segment.
+      action: ACCEPT
+      reason: &gt;-
+        Correct localization/site-of-action for a microtubule motor, consistent with the
+        demonstrated MT gliding activity of the holoenzyme.
+      supported_by:
+        - reference_id: PMID:17000880
+          supporting_text: kinesin-II alone moved MTs at a maximal rate of 0.3 μm/s, and OSM-3 alone moved them at 0.7 μm/s
+  - term:
+      id: GO:0007018
+      label: microtubule-based movement
+    evidence_type: IBA
+    original_reference_id: GO_REF:0000033
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        As a kinesin motor, KLP-11 drives microtubule-based movement. In the worm this is the
+        anterograde movement of IFT particles within cilia.
+      action: ACCEPT
+      reason: &gt;-
+        Correct general process; the specific term (intraciliary anterograde transport) is
+        also annotated (NAS) and captured in core_functions.
+      supported_by:
+        - reference_id: PMID:17000880
+          supporting_text: the IFT particles assembling these sensory cilia are moved by the coordinate action of two anterograde IFT motors called kinesin-II and OSM-3, which are both members of the kinesin-2 family
+  - term:
+      id: GO:0016887
+      label: ATP hydrolysis activity
+    evidence_type: IBA
+    original_reference_id: GO_REF:0000033
+    qualifier: enables
+    review:
+      summary: &gt;-
+        KLP-11 contains a P-loop kinesin motor domain (ATP-binding site residues 99..106) and,
+        as part of kinesin-II, hydrolyzes ATP to power motility; the holoenzyme uses Mg-ATP
+        with Michaelis-Menten kinetics.
+      action: ACCEPT
+      reason: &gt;-
+        ATP hydrolysis is essential for kinesin motor function and is directly evidenced by
+        the ATP-dependent MT gliding kinetics of purified kinesin-II (PMID:17000880).
+      supported_by:
+        - reference_id: PMID:17000880
+          supporting_text: indicating that Mg-ATP is the preferred substrate for kinesin-2 motors
+  - term:
+      id: GO:0000166
+      label: nucleotide binding
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000104
+    qualifier: enables
+    review:
+      summary: &gt;-
+        Broad nucleotide-binding parent inferred from the kinesin P-loop motif. KLP-11 binds
+        ATP/ADP during its mechanochemical cycle.
+      action: ACCEPT
+      reason: &gt;-
+        Correct but non-specific; the informative child (ATP binding) is separately annotated.
+  - term:
+      id: GO:0003774
+      label: cytoskeletal motor activity
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000104
+    qualifier: enables
+    review:
+      summary: &gt;-
+        Parent of microtubule motor activity; correct for KLP-11 as a cytoskeletal (kinesin)
+        motor.
+      action: ACCEPT
+      reason: &gt;-
+        Correct but less specific than microtubule motor activity, which is separately
+        annotated and refined in core_functions.
+  - term:
+      id: GO:0003777
+      label: microtubule motor activity
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: enables
+    review:
+      summary: &gt;-
+        InterPro/ARBA electronic assignment of microtubule motor activity based on the kinesin
+        motor domain. Consistent with the IBA and IDA annotations.
+      action: ACCEPT
+      reason: &gt;-
+        Correct; duplicates the well-supported microtubule motor activity from an electronic
+        pipeline.
+  - term:
+      id: GO:0005524
+      label: ATP binding
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: enables
+    review:
+      summary: &gt;-
+        ATP binding at the kinesin motor domain P-loop (BINDING 99..106) is required for the
+        ATPase-driven motor cycle of KLP-11.
+      action: ACCEPT
+      reason: &gt;-
+        Correct and specific; supported by the conserved P-loop and the Mg-ATP kinetics of the
+        holoenzyme (PMID:17000880).
+      supported_by:
+        - reference_id: PMID:17000880
+          supporting_text: indicating that Mg-ATP is the preferred substrate for kinesin-2 motors
+  - term:
+      id: GO:0005856
+      label: cytoskeleton
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: located_in
+    review:
+      summary: &gt;-
+        KLP-11 localizes to the microtubule cytoskeleton (the ciliary axoneme). Broad but
+        accurate.
+      action: ACCEPT
+      reason: &gt;-
+        Correct low-specificity localization for a microtubule motor; the informative site is
+        the cilium/axoneme.
+  - term:
+      id: GO:0005929
+      label: cilium
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: located_in
+    review:
+      summary: &gt;-
+        KLP-11 localizes to sensory cilia, where kinesin-II performs anterograde IFT along the
+        middle segment.
+      action: ACCEPT
+      reason: &gt;-
+        Core localization, consistent with UniProt subcellular location and the cilia IFT role
+        of kinesin-II (PMID:17000880).
+      supported_by:
+        - reference_id: PMID:17000880
+          supporting_text: the IFT particles assembling these sensory cilia are moved by the coordinate action of two anterograde IFT motors called kinesin-II and OSM-3, which are both members of the kinesin-2 family
+  - term:
+      id: GO:0007018
+      label: microtubule-based movement
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        Electronic assignment of microtubule-based movement, duplicating the IBA/IDA process
+        annotation.
+      action: ACCEPT
+      reason: &gt;-
+        Correct; the more specific process (intraciliary anterograde transport) is also
+        annotated.
+  - term:
+      id: GO:0008017
+      label: microtubule binding
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: enables
+    review:
+      summary: &gt;-
+        InterPro electronic assignment of microtubule binding via the kinesin motor domain;
+        duplicates the IBA annotation.
+      action: ACCEPT
+      reason: &gt;-
+        Correct; microtubule binding is intrinsic to the kinesin motor domain.
+  - term:
+      id: GO:0032991
+      label: protein-containing complex
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000117
+    qualifier: part_of
+    review:
+      summary: &gt;-
+        Generic complex-membership assignment. KLP-11 is specifically a subunit of the
+        heterotrimeric kinesin-II complex.
+      action: MODIFY
+      reason: &gt;-
+        Too general. Replace with the specific kinesin II complex to convey the actual
+        assembly KLP-11 belongs to.
+      proposed_replacement_terms:
+        - id: GO:0016939
+          label: kinesin II complex
+      supported_by:
+        - reference_id: PMID:17000880
+          supporting_text: consisting of 1 mol each of its subunits KLP-11, KLP-20, and KAP-1 with a native molecular mass of 287 kD
+  - term:
+      id: GO:0007018
+      label: microtubule-based movement
+    evidence_type: NAS
+    original_reference_id: PMID:20498083
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        ComplexPortal NAS annotation. KLP-11 (as the KLP-11/KLP-20 heterodimer, and within the
+        kinesin-II holoenzyme) drives microtubule-based movement; heterodimerization confers
+        the processivity needed for transport.
+      action: ACCEPT
+      reason: &gt;-
+        Author-stated (NAS) and consistent with the biochemistry: KLP-11 becomes a processive
+        MT motor upon heterodimerization with KLP-20 (PMID:20498083).
+      supported_by:
+        - reference_id: PMID:20498083
+          supporting_text: KLP11/KLP20 of Caenorhabditis elegans cilia
+  - term:
+      id: GO:0016939
+      label: kinesin II complex
+    evidence_type: NAS
+    original_reference_id: PMID:20498083
+    qualifier: part_of
+    review:
+      summary: &gt;-
+        KLP-11 is a subunit of kinesin II. The heterodimer of the two motor subunits
+        (KLP-11/KLP-20) plus KAP-1 constitutes the kinesin-II complex; heterodimerization is
+        required for KAP-1 binding.
+      action: ACCEPT
+      reason: &gt;-
+        Core complex membership. Supported by both the ComplexPortal NAS record and the
+        biochemistry of the KLP-11/KLP-20/KAP-1 assembly (PMID:20498083, PMID:17000880).
+      supported_by:
+        - reference_id: PMID:20498083
+          supporting_text: heterodimerization is necessary to bind KAP1, the in vivo link between
+        - reference_id: PMID:17000880
+          supporting_text: consisting of 1 mol each of its subunits KLP-11, KLP-20, and KAP-1 with a native molecular mass of 287 kD
+  - term:
+      id: GO:0035720
+      label: intraciliary anterograde transport
+    evidence_type: NAS
+    original_reference_id: PMID:20498083
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        KLP-11-containing kinesin-II is an anterograde IFT motor of C. elegans cilia; the
+        heterodimeric motor drives anterograde transport of IFT particles.
+      action: ACCEPT
+      reason: &gt;-
+        Core biological process for KLP-11. Author-stated (NAS) and corroborated by the
+        cooperative anterograde IFT role of kinesin-II with OSM-3 (PMID:17000880).
+      supported_by:
+        - reference_id: PMID:17000880
+          supporting_text: the IFT particles assembling these sensory cilia are moved by the coordinate action of two anterograde IFT motors called kinesin-II and OSM-3, which are both members of the kinesin-2 family
+  - term:
+      id: GO:0003777
+      label: microtubule motor activity
+    evidence_type: IDA
+    original_reference_id: PMID:17000880
+    qualifier: enables
+    review:
+      summary: &gt;-
+        Direct assay: purified recombinant C. elegans kinesin-II containing KLP-11 is an active
+        microtubule motor in gliding assays, moving MTs at ~0.5 um/s.
+      action: ACCEPT
+      reason: &gt;-
+        Direct experimental evidence (IDA) for KLP-11&#39;s core molecular function as a component
+        of the kinesin-II motor holoenzyme.
+      supported_by:
+        - reference_id: PMID:17000880
+          supporting_text: kinesin-II alone moved MTs at a maximal rate of 0.3 μm/s, and OSM-3 alone moved them at 0.7 μm/s
+  - term:
+      id: GO:0007018
+      label: microtubule-based movement
+    evidence_type: IDA
+    original_reference_id: PMID:17000880
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        Direct in vitro demonstration that KLP-11-containing kinesin-II generates
+        microtubule-based movement (MT gliding), the biochemical basis of its IFT role.
+      action: ACCEPT
+      reason: &gt;-
+        Direct experimental evidence (IDA). The specific process (intraciliary anterograde
+        transport) is also annotated (NAS) and captured in core_functions.
+      supported_by:
+        - reference_id: PMID:17000880
+          supporting_text: kinesin-II alone moved MTs at a maximal rate of 0.3 μm/s, and OSM-3 alone moved them at 0.7 μm/s
+  - term:
+      id: GO:0030993
+      label: axonemal heterotrimeric kinesin-II complex
+    evidence_type: IPI
+    original_reference_id: PMID:17000880
+    qualifier: part_of
+    review:
+      summary: &gt;-
+        KLP-11 physically assembles into the axonemal heterotrimeric kinesin-II complex with
+        KLP-20 (WBGene00002230) and KAP-1 (WBGene00002182), demonstrated as a monodisperse
+        1:1:1 (~287 kD) heterotrimer by sucrose gradients and gel filtration.
+      action: ACCEPT
+      reason: &gt;-
+        Direct physical-interaction evidence (IPI) for the most specific, experimentally
+        grounded cellular-component annotation for KLP-11. This is a core annotation.
+      supported_by:
+        - reference_id: PMID:17000880
+          supporting_text: consisting of 1 mol each of its subunits KLP-11, KLP-20, and KAP-1 with a native molecular mass of 287 kD
+core_functions:
+  - description: &gt;-
+      As a motor subunit of the heterotrimeric kinesin-II holoenzyme (KLP-11/KLP-20/KAP-1),
+      KLP-11 contributes plus-end-directed microtubule motor and ATPase activity. KLP-11 is
+      unprocessive on its own (as a homodimer); processive plus-end movement is generated only
+      by heterodimerization with the partner motor subunit KLP-20. The assembled motor drives
+      relatively slow (~0.5 um/s) plus-end transport along axonemal microtubules.
+    molecular_function:
+      id: GO:0003777
+      label: microtubule motor activity
+    contributes_to_molecular_function:
+      id: GO:0008574
+      label: plus-end-directed microtubule motor activity
+    directly_involved_in:
+      - id: GO:0035720
+        label: intraciliary anterograde transport
+    locations:
+      - id: GO:0005929
+        label: cilium
+      - id: GO:0005874
+        label: microtubule
+    in_complex:
+      id: GO:0030993
+      label: axonemal heterotrimeric kinesin-II complex
+    supported_by:
+      - reference_id: PMID:17000880
+        supporting_text: consisting of 1 mol each of its subunits KLP-11, KLP-20, and KAP-1 with a native molecular mass of 287 kD
+      - reference_id: PMID:20498083
+        supporting_text: KLP11/KLP20 of Caenorhabditis elegans cilia
+  - description: &gt;-
+      KLP-11-containing kinesin-II hydrolyzes ATP to power its motor cycle; the purified
+      holoenzyme uses Mg-ATP as its preferred substrate with Michaelis-Menten kinetics,
+      coupling ATP hydrolysis to microtubule-based movement.
+    molecular_function:
+      id: GO:0016887
+      label: ATP hydrolysis activity
+    directly_involved_in:
+      - id: GO:0007018
+        label: microtubule-based movement
+    in_complex:
+      id: GO:0030993
+      label: axonemal heterotrimeric kinesin-II complex
+    supported_by:
+      - reference_id: PMID:17000880
+        supporting_text: indicating that Mg-ATP is the preferred substrate for kinesin-2 motors
+  - description: &gt;-
+      Kinesin-II (with KLP-11) is one of two anterograde IFT motors that, together with the
+      homodimeric OSM-3 motor, move IFT particles along the doublet microtubules of the ciliary
+      middle segment. The two motors act partly redundantly to build the cilium foundation, and
+      their mechanical competition contributes to IFT-particle tension regulated by BBS proteins.
+    molecular_function:
+      id: GO:0003777
+      label: microtubule motor activity
+    directly_involved_in:
+      - id: GO:0035720
+        label: intraciliary anterograde transport
+    locations:
+      - id: GO:0005929
+        label: cilium
+    in_complex:
+      id: GO:0030993
+      label: axonemal heterotrimeric kinesin-II complex
+    supported_by:
+      - reference_id: PMID:17000880
+        supporting_text: These motors function redundantly to move the same IFT particles along the initial segment and build the cilium foundation, with either motor but not both being dispensable for this function
+knowledge_gaps:
+  - gap_statement: &gt;-
+      No KLP-11 subunit-resolved in vivo molecular function is established independently of its
+      partners: all motility, IFT and localization data are for the intact KLP-11/KLP-20/KAP-1
+      heterotrimer (or the KLP-11/KLP-20 heterodimer), and KLP-11 is unprocessive as a homodimer,
+      so it has no demonstrated autonomous processive motor activity.
+    boundary: &gt;-
+      It is firmly established that KLP-11 is a subunit of the purified heterotrimeric kinesin-II
+      holoenzyme, that the holoenzyme is an active plus-end MT motor, and that heterodimerization
+      with KLP-20 is what confers processivity and enables KAP-1 binding.
+    gap_kind:
+      - BIOLOGY
+    dark_aspect: MF_DARK
+    significance: &gt;-
+      Distinguishing the specific mechanochemical contribution of the KLP-11 head from that of
+      KLP-20 is needed to understand why kinesin-II uses two distinct, asymmetric motor subunits.
+    resolution: &gt;-
+      Single-molecule and structural analysis of engineered KLP-11 vs KLP-20 heads and chimeras,
+      building on the finding that KLP-11 mediates asymmetric autoregulation of the heterodimer.
+    provenance:
+      - reference_id: PMID:20498083
+        supporting_text: heterodimerization is necessary to bind KAP1, the in vivo link between
+  - gap_statement: &gt;-
+      The identity of the IFT cargo(es) directly engaged by KLP-11-containing kinesin-II via
+      KAP-1 in C. elegans, and how cargo loading/unloading is regulated along the middle segment,
+      are not resolved by the primary literature reviewed here.
+    boundary: &gt;-
+      Kinesin-II is established as an anterograde IFT motor that moves IFT particles (IFT-A/IFT-B
+      subcomplexes) along the middle segment, and heterodimerization is required for KAP-1 (the
+      motor-cargo link) binding.
+    gap_kind:
+      - BIOLOGY
+    dark_aspect: BP_DARK
+    significance: &gt;-
+      Defining the kinesin-II-specific cargo interface would clarify the division of labor
+      between kinesin-II and OSM-3 and the handoff of IFT trains between motors.
+    resolution: &gt;-
+      Proximity-labeling / cross-linking mass spectrometry of KAP-1 and KLP-11 in cilia, and
+      cargo-selective transport assays.
+    provenance:
+      - reference_id: PMID:17000880
+        supporting_text: the IFT particles assembling these sensory cilia are moved by the coordinate action of two anterograde IFT motors called kinesin-II and OSM-3, which are both members of the kinesin-2 family
+  - gap_statement: &gt;-
+      The atomic structure of the fully assembled C. elegans kinesin-II heterotrimer and the
+      structural basis of KLP-11-mediated asymmetric autoregulation of motor activity are unsolved.
+    boundary: &gt;-
+      Only a partial X-ray structure of the stalk/tail region (residues 537-782, PDB 9IKB, 3.54 A)
+      of heterotrimeric kinesin-2 is available; the motor-domain interface and regulatory
+      conformations are not resolved.
+    gap_kind:
+      - BIOLOGY
+    dark_aspect: MF_DARK
+    significance: &gt;-
+      A full structure would explain how an unprocessive subunit is converted to a processive
+      heterodimer and how autoregulation is imposed asymmetrically.
+    resolution: &gt;-
+      Cryo-EM / higher-resolution crystallography of the intact KLP-11/KLP-20/KAP-1 holoenzyme in
+      defined nucleotide states.
+    provenance:
+      - reference_id: PMID:20498083
+        supporting_text: KLP11/KLP20 of Caenorhabditis elegans cilia
+suggested_questions:
+  - question: &gt;-
+      What is the distinct mechanochemical role of the KLP-11 motor head versus the KLP-20 head
+      within the heterodimer, and why is an unprocessive subunit retained?
+    experts: []
+  - question: &gt;-
+      Which IFT-particle cargoes are engaged by kinesin-II via KAP-1 in C. elegans cilia, and how
+      is the kinesin-II-to-OSM-3 handoff regulated along the middle segment?
+    experts: []
+suggested_experiments:
+  - hypothesis: &gt;-
+      KLP-11&#39;s head contributes asymmetric autoregulation but little autonomous processivity to
+      kinesin-II.
+    description: &gt;-
+      Reconstitute KLP-11/KLP-20 heterodimers and KLP-11 or KLP-20 homodimers and chimeras, and
+      compare single-molecule processivity, velocity, and ATPase to dissect each head&#39;s contribution.
+    experiment_type: single-molecule motility / biochemistry
+  - hypothesis: &gt;-
+      Full-length assembled kinesin-II adopts nucleotide-dependent conformations that impose
+      asymmetric autoregulation.
+    description: &gt;-
+      Determine the cryo-EM structure of the intact KLP-11/KLP-20/KAP-1 heterotrimer in different
+      nucleotide states and on microtubules.
+    experiment_type: structural biology (cryo-EM)
+tags:
+  - caeel-ciliopathy
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

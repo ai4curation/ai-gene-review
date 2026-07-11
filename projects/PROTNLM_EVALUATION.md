@@ -11,9 +11,19 @@ Evaluation of Google's ProtNLM2 GO term predictions against expert-curated AIGR 
 
 **[Interactive prediction evaluation table](PROTNLM_EVALUATION/protnlm-eval.html)** — filterable/sortable HTML view of all 50 proteins and 77 prediction assessments.
 
+**Independent adjudication, both directions.** Predictions were re-tested as blinded, independent
+[OpenScientist](https://www.openscientist.io) gene-function hypotheses in two rounds. (1) The
+borderline `UNC` calls: **ProtNLM2's localization calls held up (3/3 correct — one even caught a
+mis-localized *curated* annotation), while its specific function/process refinements over-reached
+(9/14 → `NPI`)**; two were undecidable and kept as leads. (2) Our own **disputed** (`NPI`/`PLI`)
+calls: **9 of 10 independently confirmed as misassignments, and 1 caught as over-harsh** —
+autophagosome for tbc1d14, which has a direct experimental IDA in the human ortholog, so it was
+overturned `NPI → CNN`. See the [OpenScientist adjudication report](PROTNLM_EVALUATION/openscientist-adjudication.md)
+for per-gene verdicts and curation leads.
+
 ## Key findings
 
-1. **ProtNLM2 is strongest for uncharacterized proteins**: 12/23 (52%) of NOT_IN_GOA predictions were correct and novel — identifying genuine functions like DNA binding for a KilA-N domain protein (A2FPI7), ECM organization for OLFML2A (A0A8C9H4D2), and nuclear localization for MCM-4 (A0A061AL94).
+1. **ProtNLM2 is strongest for uncharacterized proteins, but its "novel" hits are mostly InterPro2GO coverage gaps, not new biology**: 12/23 (52%) of NOT_IN_GOA predictions were **likely correct** (domain/orthology-based — no experimental support) and absent from GOA — e.g. DNA binding for a KilA-N domain protein (A2FPI7), ECM organization for OLFML2A (A0A8C9H4D2), nuclear localization for MCM-4 (A0A061AL94). These functions follow directly from the proteins' domains; the standard InterPro2GO pipeline (`GO_REF:0000002`) simply does not emit them, because the relevant domain has no InterPro2GO mapping (olfactomedin, KilA-N), the mapping sits only on a superfamily entry the protein was not assigned (KilA-N → the APSES superfamily IPR036887), or the protein matched only an unintegrated Pfam and never the InterPro entry that carries the mapping (MCM-4 → PF21128, with the rich IPR008047 mapping unassigned). See [InterPro2GO coverage gaps](PROTNLM_EVALUATION/interpro2go-coverage-gaps.md).
 
 2. **"Exact" matches are mostly less precise, not novel**: 13/19 (68%) are parent terms of more specific existing annotations (e.g., predicting "cytoplasm" when "clathrin-coated vesicle" is already annotated). ProtNLM2 captures broad functional categories but lacks resolution.
 
@@ -119,4 +129,6 @@ Only 8 of 1,334 previously reviewed genes appear in the ProtNLM2 dataset (all Tr
 | [`protnlm_bench50_eval.ipynb`](PROTNLM_EVALUATION/protnlm_bench50_eval.ipynb) | ARGO-ProtNLM-50 benchmark evaluation |
 | [`fetch_protnlm_api.py`](PROTNLM_EVALUATION/fetch_protnlm_api.py) | REST API fetch pipeline |
 | [`protnlm_evaluation_slides.md`](PROTNLM_EVALUATION/protnlm_evaluation_slides.md) | Slide deck (Marp) |
+| [OpenScientist adjudication](PROTNLM_EVALUATION/openscientist-adjudication.md) | Per-gene verdicts on the borderline (UNC) predictions + curation leads |
+| [InterPro2GO coverage gaps](PROTNLM_EVALUATION/interpro2go-coverage-gaps.md) | Why the "correct novel" hits are missed by standard domain pipelines |
 | [Data history](PROTNLM_EVALUATION/data_history.md) | XML vs API data source history |

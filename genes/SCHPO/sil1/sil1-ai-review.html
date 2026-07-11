@@ -1,0 +1,2530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>sil1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>sil1</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9UTR0" target="_blank" class="term-link">
+                        Q9UTR0
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Schizosaccharomyces pombe (strain 972 / ATCC 24843)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "sil1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9UTR0" data-a="DESCRIPTION: sil1 (systematic name SPAC1071.03c; UniProt Q9UTR0..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>sil1 (systematic name SPAC1071.03c; UniProt Q9UTR0) is the Schizosaccharomyces pombe member of the SIL1/HspBP1 family of nucleotide-exchange factors (NEFs) for Hsp70 chaperones. It is the one-to-one ortholog of human SIL1 (the gene mutated in Marinesco-Sjogren syndrome) and of Saccharomyces cerevisiae Sil1p/YOL031C. The 338-residue protein is built around an armadillo-repeat (ARM-type) alpha-helical fold, the structural hallmark of this NEF class, and carries an N-terminal hydrophobic segment (residues ~20-42) that is most consistent with an endoplasmic-reticulum signal/anchor sequence. By orthology, Sil1-family proteins act in the endoplasmic reticulum, where they bind the ATPase (nucleotide-binding) domain of the ER Hsp70 chaperone BiP (Kar2p in budding yeast) and accelerate ADP release, thereby driving the BiP chaperone cycle that folds and translocates nascent secretory proteins. In budding yeast BiP is served by two functionally distinct NEFs, Sil1p and the Hsp110/Grp170-type Lhs1p; either single deletion is viable but the double deletion is lethal, indicating that BiP nucleotide exchange is essential and partly redundant. In fission yeast sil1 is non-essential (deletion viable) and has not been characterized biochemically; the molecular NEF activity, ER localization, and biological roles above are inferred from conserved domain architecture and orthology rather than from direct experiments in this species.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UTR0" data-a="GO:0005783" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Endoplasmic reticulum is the expected site of action for a SIL1-family BiP nucleotide-exchange factor. The IBA (phylogenetic) inference is consistent with the ER-lumenal localization of the S. cerevisiae and human orthologs and with the N-terminal ER signal/anchor sequence of the pombe protein. This is the meaningful, informative compartment for the gene and is retained as the core localization. Direct localization data in fission yeast are not available.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000774" target="_blank" class="term-link">
+                                    GO:0000774
+                                </a>
+                            </span>
+                            <span class="term-label">adenyl-nucleotide exchange factor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UTR0" data-a="GO:0000774" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the defining molecular function of the SIL1/HspBP1 family: binding the ATPase (nucleotide-binding) domain of an ER Hsp70 (BiP/Kar2p) and stimulating ADP release (nucleotide exchange). It is well supported by orthology to experimentally characterized S. cerevisiae Sil1p and human SIL1, and by the diagnostic armadillo-repeat fold. This is a specific, informative MF term (preferable to generic protein binding) and is retained as the core function. The activity has not been demonstrated biochemically in S. pombe itself.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20430899" target="_blank" class="term-link">
+                                        PMID:20430899
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">These studies identified a role for the IIB domain of Kar2p in Sil1p binding and Sil1p-stimulated nucleotide exchange</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UTR0" data-a="GO:0016020" data-r="GO_REF:0000044" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IEA annotation is an automatic mapping from the UniProt Subcellular Location keyword (SL-0162 Membrane), which itself derives from a single predicted N-terminal transmembrane/hydrophobic segment (residues ~20-42). For a SIL1-family protein this hydrophobic stretch is more consistent with an ER signal/anchor than with a genuine multi-compartment membrane residence, and generic membrane is uninformative relative to the endoplasmic reticulum term already annotated. Retained as a non-core, low-information electronic annotation.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006616" target="_blank" class="term-link">
+                                    GO:0006616
+                                </a>
+                            </span>
+                            <span class="term-label">SRP-dependent cotranslational protein targeting to membrane, translocation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISO</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UTR0" data-a="GO:0006616" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This ISO annotation was transferred from a S. cerevisiae ortholog (SGD:S000005391) and reflects the participation of the BiP/Kar2p chaperone system in translocation of nascent secretory polypeptides into the ER. It is a downstream, process-level attribution of the Sil1 NEF role (Sil1 assists BiP, which acts in ER protein import) rather than sil1&#39;s core molecular function, and it is not directly demonstrated in fission yeast. The essence of ER-protein-biogenesis involvement is defensible, so it is kept as non-core rather than removed; the precise process term is broader than what is established for sil1 specifically in pombe.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Nucleotide-exchange factor (NEF) for the endoplasmic-reticulum Hsp70 chaperone BiP. sil1 is a SIL1/HspBP1-family, armadillo-repeat protein that binds the ATPase (nucleotide-binding) domain of ER-lumenal BiP and accelerates ADP release, resetting BiP for the next ATP-bound, substrate-engaging cycle. Through this activity it supports BiP-dependent folding and translocation of nascent secretory proteins in the ER. This molecular role is inferred from the diagnostic ARM fold and from orthology to experimentally characterized S. cerevisiae Sil1p and human SIL1; the activity, the BiP partner, and the in-vivo requirement have not been demonstrated in S. pombe.</h3>
+                <span class="vote-buttons" data-g="Q9UTR0" data-a="FUNCTION: Nucleotide-exchange factor (NEF) for the endoplasm..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000774" target="_blank" class="term-link">
+                            adenyl-nucleotide exchange factor activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                endoplasmic reticulum
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20430899" target="_blank" class="term-link">
+                                PMID:20430899
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Two NEFs have been identified for Kar2p in the ER lumen of Saccharomyces cerevisiae, namely Lhs1p and Sil1p</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20430899" target="_blank" class="term-link">
+                            PMID:20430899
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Interactions between Kar2p and its nucleotide exchange factors Sil1p and Lhs1p are mechanistically distinct.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The ER Hsp70 Kar2p (BiP) is regulated by two nucleotide-exchange factors, Sil1p and Lhs1p; NEFs promote ADP release to drive the next round of ATP binding in the chaperone cycle.</div>
+
+                        <div class="finding-text">"Two NEFs have been identified for Kar2p in the ER lumen of Saccharomyces cerevisiae, namely Lhs1p and Sil1p"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Sil1p binds the IIB subdomain of the Kar2p ATPase domain to stimulate nucleotide exchange, mechanistically distinct from Lhs1p.</div>
+
+                        <div class="finding-text">"These studies identified a role for the IIB domain of Kar2p in Sil1p binding and Sil1p-stimulated nucleotide exchange"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Single deletions of SIL1 or LHS1 are viable but the double deletion is lethal, showing BiP nucleotide exchange is essential and the two NEFs are partly redundant.</div>
+
+                        <div class="finding-text">"Individual deletions of LHS1 (Δlhs1) and SIL1 (Δsil1) in yeast cells are viable (13, 14), but the double deletion (Δlhs1Δsil1) is lethal suggesting that nucleotide exchange is essential for Kar2p activity and cell viability"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/37787768" target="_blank" class="term-link">
+                            PMID:37787768
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Broad functional profiling of fission yeast proteins using phenomics and machine learning.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Genome-wide phenomics/machine-learning profiling of S. pombe deletion mutants; the study explicitly targets poorly characterized proteins, and sil1 phenotypes in PomBase derive from this class of broad screen rather than a dedicated study.</div>
+
+                        <div class="finding-text">"Many proteins remain poorly characterized even in well-studied organisms"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28410370" target="_blank" class="term-link">
+                            PMID:28410370
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A systematic screen for morphological abnormalities during fission yeast sexual reproduction identifies a mechanism of actin aster formation for cell fusion.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Systematic mating-morphology deletion screen in S. pombe; the cell-fusion phenotype recorded for sil1 in PomBase (incomplete cell wall disassembly at the fusion site) originates from this genome-wide screen.</div>
+
+                        <div class="finding-text">"morphological abnormalities of the mating process in fission yeast"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does S. pombe Sil1 bind fission-yeast BiP and stimulate its nucleotide exchange, as its orthologs do for Kar2p and mammalian BiP?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: ER chaperone / Hsp70 co-chaperone biochemists, Fission-yeast secretory-pathway biologists</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9UTR0" data-a="Q: Does S. pombe Sil1 bind fission-yeast BiP and stim..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is sil1 functionally redundant with the pombe Hsp110/Grp170-type BiP NEF, such that the double deletion is synthetically lethal as in budding yeast?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Yeast ER-proteostasis geneticists</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9UTR0" data-a="Q: Is sil1 functionally redundant with the pombe Hsp1..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Reconstitute recombinant pombe Sil1 with pombe BiP and measure Sil1-stimulated nucleotide exchange and ATPase activity to test the inferred NEF function directly.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: In-vitro biochemistry</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9UTR0" data-a="EXPERIMENT: Reconstitute recombinant pombe Sil1 with pombe BiP..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Build sil1 single and sil1 plus Lhs1/Grp170-ortholog double deletions and test for synthetic lethality and ER-stress (tunicamycin, DTT) hypersensitivity to define redundancy among pombe BiP NEFs.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: Genetic interaction analysis</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9UTR0" data-a="EXPERIMENT: Build sil1 single and sil1 plus Lhs1/Grp170-orthol..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Determine the subcellular localization and membrane topology of tagged pombe Sil1 (ER lumen vs membrane; protease protection) to resolve the single-pass-membrane vs lumenal ambiguity.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: Localization / topology</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9UTR0" data-a="EXPERIMENT: Determine the subcellular localization and membran..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> Whether Sil1 nucleotide-exchange activity is individually required in S. pombe, or is functionally redundant with the fission-yeast Hsp110/Grp170-type NEF (the Lhs1/Grp170 class), is undetermined; the phenotypic consequence of losing sil1 versus losing both BiP NEFs has not been tested in pombe.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">RESIDUAL_SUBGAP</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> In S. cerevisiae, single sil1 or lhs1 deletions are viable but the sil1 lhs1 double deletion is lethal, showing the two NEFs are partly redundant and that BiP nucleotide exchange is essential. In S. pombe, sil1 deletion is viable, but no analogous single/double NEF-deletion analysis has been reported.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Determines whether sil1 is a dispensable, redundant NEF in pombe or contributes a non-redundant function, and whether the conserved &#34;BiP has two NEFs, together essential&#34; logic holds in fission yeast.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Construct and phenotype pombe sil1 single and sil1 (Lhs1/Grp170-ortholog) double deletions for synthetic lethality and ER-stress sensitivity.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Individual deletions of LHS1 (Δlhs1) and SIL1 (Δsil1) in yeast cells are viable (13, 14), but the double deletion (Δlhs1Δsil1) is lethal suggesting that nucleotide exchange is essential for Kar2p activity and cell viability"</em> — PMID:20430899</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The in-vivo biological roles and physiological clients of sil1 in S. pombe are unknown; the only pombe phenotypes are scattered drug/stress sensitivities and a cell-fusion morphology defect drawn from genome-wide screens, none mechanistically connected to its BiP-NEF activity.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">BP_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> sil1 deletion is viable with grossly normal morphology; genome-wide phenomics and a mating-morphology screen recorded assorted stress phenotypes and an &#34;incomplete cell wall disassembly at cell fusion site&#34; phenotype, but there is no dedicated study of sil1 in fission yeast.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Whether sil1 has a specialized secretory/ER-proteostasis role in pombe (e.g. in mating or cell-wall remodeling) beyond generic BiP support is unresolved.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Directed phenotyping of sil1 deletion under ER stress (tunicamycin, DTT) and mating conditions, and identification of Sil1/BiP-dependent secretory cargo by proteomics.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Many proteins remain poorly characterized even in well-studied organisms"</em> — PMID:37787768</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The membrane topology and ER-retention mechanism of pombe Sil1 are unresolved: the protein is annotated as a single-pass membrane protein from one predicted TM helix, yet SIL1-family orthologs are ER-lumenal, and no canonical HDEL/KDEL retention motif is evident in the pombe sequence.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">CC_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> UniProt/TMHMM predict one hydrophobic segment at residues ~20-42 and an ECO:0000305 single-pass membrane call; S. cerevisiae Sil1p and human SIL1 are ER-lumenal with signal and ER-retention signals. The actual topology of the pombe protein has not been determined experimentally.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Clarifies whether the N-terminal hydrophobic segment is a signal/anchor for an ER-lumenal NEF (as in orthologs) and how the protein is retained in the ER.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Determine subcellular localization and topology (protease-protection, lumenal vs membrane fractionation, tagged-protein imaging) of pombe Sil1.</p>
+
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(sil1-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9UTR0" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Research Report: Functional Annotation of *sil1* (SPAC1071.03c, UniProt Q9UTR0) in *Schizosaccharomyces pombe*</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">26 citations</span>
+
+
+                    <span class="report-badge">1 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-06T16:37:16.512960</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="sil1-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="research-report-functional-annotation-of-sil1-spac107103c-uniprot-q9utr0-in-schizosaccharomyces-pombe">Research Report: Functional Annotation of <em>sil1</em> (SPAC1071.03c, UniProt Q9UTR0) in <em>Schizosaccharomyces pombe</em></h1>
+<h2 id="1-gene-identity-and-literature-availability">1. Gene Identity and Literature Availability</h2>
+<p>The <em>S. pombe</em> gene SPAC1071.03c (UniProt Q9UTR0), designated <em>sil1</em>, encodes an uncharacterized protein of 442 amino acids. No primary literature directly investigating this gene in fission yeast was identified. However, the protein's domain architecture—comprising an ARM-like domain (IPR011989), an ARM-type fold (IPR016024), and membership in the SIL1/FES1/HPBP1 family (IPR050693)—unambiguously identifies it as an ortholog of the well-characterized SIL1/SLS1 nucleotide exchange factors described in <em>Saccharomyces cerevisiae</em>, <em>Yarrowia lipolytica</em>, and mammals. Consequently, this report infers the function of the <em>S. pombe</em> sil1 gene product based on extensive ortholog evidence, which is summarized in the table below.</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Description</th>
+<th>Evidence Source</th>
+<th>Organism Studied</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene identity / inference scope</td>
+<td><strong>S. pombe</strong> SPAC1071.03c (UniProt Q9UTR0) is uncharacterized directly, but its ARM-like and SIL1/FES1/HPBP1 family annotations strongly support orthology to fungal/mammalian <strong>SIL1/Sls1</strong> proteins; functional assignment is therefore inferred from orthologs rather than direct fission-yeast experiments.</td>
+<td>UniProt/domain context summarized from the research prompt; ortholog-based family/function reviews (ichhaporia2021roleofthe pages 4-5, bracher2015grpehsp110grp170hspbp1sil1 pages 11-14)</td>
+<td><em>S. pombe</em> inferred from orthologs; family evidence from budding yeast and mammals</td>
+</tr>
+<tr>
+<td>Molecular function</td>
+<td>Canonical function is a <strong>nucleotide exchange factor (NEF)</strong> for the ER Hsp70 chaperone <strong>BiP/Kar2</strong>, promoting ADP release and ATP rebinding to reset the chaperone cycle and release bound substrates.</td>
+<td>(ichhaporia2021roleofthe pages 4-5, david2019redoxsignalingthrough pages 29-33, ichhaporia2021roleofthe pages 1-3)</td>
+<td><em>S. cerevisiae</em>, mammals</td>
+</tr>
+<tr>
+<td>Structural features</td>
+<td>SIL1-family proteins have an elongated ARM-domain architecture: ~16 α-helices arranged into <strong>4 armadillo repeats</strong> that form a curved superhelical scaffold specialized for BiP binding.</td>
+<td>(ichhaporia2021roleofthe pages 4-5, bracher2015grpehsp110grp170hspbp1sil1 pages 11-14)</td>
+<td>Yeast, mammals</td>
+</tr>
+<tr>
+<td>NEF mechanism</td>
+<td>The ARM domain wraps around <strong>lobe IIb</strong> of BiP/Kar2’s nucleotide-binding domain, with additional contacts to lobe Ib; this rotates the lobes apart, destabilizes ADP binding, and drives nucleotide exchange.</td>
+<td>(ichhaporia2021roleofthe pages 4-5, bracher2015grpehsp110grp170hspbp1sil1 pages 11-14)</td>
+<td>Yeast, mammals</td>
+</tr>
+<tr>
+<td>N-terminal regulatory region</td>
+<td>Beyond the ARM core, the N-terminal region can contact BiP’s substrate-binding domain as a <strong>pseudo-substrate-like regulatory element</strong>, modulating substrate release and BiP activity.</td>
+<td>(pareja2018arolefor pages 31-36, pareja2018arolefor pages 26-31)</td>
+<td>Yeast, mammals</td>
+</tr>
+<tr>
+<td>Subcellular localization</td>
+<td>SIL1 orthologs are <strong>ER-luminal</strong> proteins. They carry an <strong>N-terminal ER signal sequence</strong> and typically a <strong>C-terminal ER-retention motif</strong>; ER retention may also be reinforced by strong binding to abundant BiP.</td>
+<td>(pareja2018arolefor pages 26-31, pareja2018arolefor pages 31-36, ichhaporia2021roleofthe pages 4-5)</td>
+<td>Yeast, mammals</td>
+</tr>
+<tr>
+<td>Protein translocation into ER</td>
+<td>SIL1/Sls1 contributes to <strong>protein import/translocation into the ER lumen</strong> by supporting the Kar2/BiP cycle associated with the Sec61/Sec63 translocon. Loss of both SIL1 and the alternative NEF Lhs1 causes severe translocation failure.</td>
+<td>(bracher2015grpehsp110grp170hspbp1sil1 pages 19-21, ichhaporia2021roleofthe pages 4-5, verghese2012biologyofthe pages 24-25)</td>
+<td><em>S. cerevisiae</em>, <em>Yarrowia lipolytica</em></td>
+</tr>
+<tr>
+<td>Protein folding / ER proteostasis</td>
+<td>By regenerating ATP-bound BiP, SIL1 supports <strong>protein folding</strong>, client release, and general ER proteostasis; single-mutant phenotypes are often mild because the ER has a second BiP NEF, Lhs1/GRP170.</td>
+<td>(ichhaporia2021roleofthe pages 1-3, bracher2015grpehsp110grp170hspbp1sil1 pages 19-21, ichhaporia2018theroleof pages 42-46)</td>
+<td>Yeast, mammals</td>
+</tr>
+<tr>
+<td>ER-associated degradation (ERAD)</td>
+<td>Ortholog studies indicate SIL1 also supports <strong>ERAD</strong>, with loss of Sil1 reducing fitness in ERAD-defective backgrounds and slowing degradation of some ERAD substrates.</td>
+<td>(pareja2018arolefor pages 26-31, delic2013thesecretorypathway pages 10-13)</td>
+<td>Primarily <em>S. cerevisiae</em></td>
+</tr>
+<tr>
+<td>Reductant function</td>
+<td>In addition to NEF activity, yeast Sil1 has an <strong>unexpected reductant role</strong>: it reduces oxidized BiP and helps restore normal ATP-dependent chaperone activity after oxidative ER stress.</td>
+<td>(siegenthaler2017anunexpectedrole pages 1-2, david2019redoxsignalingthrough pages 66-70)</td>
+<td><em>S. cerevisiae</em></td>
+</tr>
+<tr>
+<td>Redox-active cysteines</td>
+<td>This reductant function depends on an <strong>N-terminal cysteine pair</strong> (Cys52/Cys57 in yeast Sil1). Removing both cysteines abolishes reduction of oxidized/glutathionylated BiP, while NEF activity remains intact.</td>
+<td>(siegenthaler2017anunexpectedrole pages 3-5, siegenthaler2017anunexpectedrole pages 8-9, siegenthaler2017anunexpectedrole pages 6-7)</td>
+<td><em>S. cerevisiae</em></td>
+</tr>
+<tr>
+<td>Relationship with Lhs1/GRP170</td>
+<td>SIL1 and <strong>Lhs1/GRP170</strong> are the two ER BiP NEFs. They are <strong>partially redundant but mechanistically distinct</strong>: double loss is lethal, yet they bind/activate BiP differently and may not serve identical substrate sets.</td>
+<td>(bracher2015grpehsp110grp170hspbp1sil1 pages 19-21, ichhaporia2021roleofthe pages 4-5, ichhaporia2018theroleof pages 42-46)</td>
+<td>Yeast, mammals</td>
+</tr>
+<tr>
+<td>Stress regulation / UPR connection</td>
+<td>SIL1-family factors are integrated into <strong>ER stress responses</strong>. SIL1 and Lhs1 can be upregulated during ER stress, helping expand ER folding capacity and reshape BiP-dependent quality control.</td>
+<td>(bracher2015grpehsp110grp170hspbp1sil1 pages 19-21, pareja2018arolefor pages 31-36)</td>
+<td>Yeast, mammals</td>
+</tr>
+<tr>
+<td>Regulation by N-glycosylation</td>
+<td>In budding yeast, Sil1 is <strong>Ost3-dependent N-glycosylated</strong> under basal conditions, but this glycosylation is selectively reduced under <strong>reductive ER stress</strong>. The unglycosylated form remains active and can better compensate for Lhs1 loss, suggesting adaptive tuning of BiP co-chaperone function by ER redox state.</td>
+<td>(stevens2017diminishedost3dependentnglycosylation pages 1-2, stevens2017diminishedost3dependentnglycosylation pages 4-5, stevens2017diminishedost3dependentnglycosylation pages 2-3, stevens2017diminishedost3dependentnglycosylation pages 3-4)</td>
+<td><em>S. cerevisiae</em></td>
+</tr>
+<tr>
+<td>Disease relevance</td>
+<td>In humans, <strong>loss-of-function mutations in SIL1</strong> cause <strong>Marinesco-Sjögren syndrome</strong>, establishing the biological importance of SIL1-mediated ER proteostasis and supporting the functional significance of SIL1 orthologs across eukaryotes.</td>
+<td>(ichhaporia2021roleofthe pages 1-3, ichhaporia2018theroleof pages 42-46)</td>
+<td>Human, mouse</td>
+</tr>
+<tr>
+<td>Best functional annotation for <em>S. pombe</em> sil1</td>
+<td>The most defensible annotation for <strong>SPAC1071.03c/Q9UTR0</strong> is: <strong>ER-luminal BiP/Kar2 nucleotide exchange factor of the SIL1 family</strong>, likely participating in ER protein translocation, folding, quality control, and possibly redox-responsive regulation, with partial functional overlap with Lhs1/GRP170.</td>
+<td>Inference integrating ortholog evidence (ichhaporia2021roleofthe pages 4-5, bracher2015grpehsp110grp170hspbp1sil1 pages 11-14, bracher2015grpehsp110grp170hspbp1sil1 pages 19-21, pareja2018arolefor pages 26-31)</td>
+<td><em>S. pombe</em> inferred from orthologs</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the most likely functions and properties of S. pombe sil1/SPAC1071.03c (Q9UTR0) based on ortholog evidence from yeast and mammals. It is useful for functional annotation because direct literature on the fission-yeast protein is lacking, so the strongest evidence comes from conserved SIL1-family mechanisms.</em></p>
+<h2 id="2-primary-molecular-function-nucleotide-exchange-factor-for-bipkar2">2. Primary Molecular Function: Nucleotide Exchange Factor for BiP/Kar2</h2>
+<p>The primary function of SIL1-family proteins is to serve as a <strong>nucleotide exchange factor (NEF) for the endoplasmic reticulum (ER) Hsp70 chaperone BiP</strong> (called Kar2 in yeast). BiP/Kar2 is a central regulator of ER function: it binds unfolded client proteins in an ADP-bound state and releases them upon ATP binding. SIL1 catalyzes the critical step of promoting ADP release from BiP's nucleotide-binding domain (NBD), allowing ATP to bind and triggering conformational changes that open BiP's substrate-binding domain (SBD) and release the polypeptide client, enabling it to fold (ichhaporia2021roleofthe pages 4-5, ichhaporia2021roleofthe pages 1-3). The mammalian SIL1 homolog (BAP, BiP-associated protein) stimulates BiP's ATP hydrolysis activity approximately two-fold independently and up to four-fold when combined with J-domain co-chaperones such as ERdj4 (pareja2018arolefor pages 26-31).</p>
+<h2 id="3-structural-basis-of-nef-activity">3. Structural Basis of NEF Activity</h2>
+<p>SIL1-family proteins adopt an elongated, kidney-bean-shaped structure composed of approximately 16 α-helices organized into <strong>four armadillo (ARM) repeats</strong> (ARM1–ARM4), each consisting of three α-helices packed into a superhelix (ichhaporia2021roleofthe pages 4-5). The ARM domain wraps around <strong>lobe IIb</strong> of BiP's NBD while making additional contacts with lobe Ib. This interaction introduces torsional strain that causes the two lobes to rotate apart, breaking the hydrogen bonds that coordinate the bound ADP molecule and facilitating its release (ichhaporia2021roleofthe pages 4-5).</p>
+<p>This mechanism is structurally distinct from that of the cytosolic paralog HspBP1, which distorts lobe I of the Hsp70 NBD rather than acting primarily through lobe IIb. Despite sharing a conserved ARM-repeat core fold, yeast Sil1p and mammalian HspBP1 employ different binding geometries to achieve nucleotide exchange (bracher2015grpehsp110grp170hspbp1sil1 pages 11-14). In addition to the core ARM domain, the N-terminal region of Sil1 contacts BiP's SBD and functions as a <strong>pseudo-substrate</strong>, modulating BiP's ATPase activity and promoting coordinated substrate release (pareja2018arolefor pages 31-36).</p>
+<h2 id="4-subcellular-localization">4. Subcellular Localization</h2>
+<p>SIL1 orthologs are <strong>ER-luminal proteins</strong>. They contain an N-terminal ER signal sequence that directs co-translational translocation into the ER lumen, and a C-terminal ER-retention motif (KELR in yeast Sls1p) (pareja2018arolefor pages 26-31, ichhaporia2018theroleof pages 34-38, ichhaporia2021roleofthe pages 4-5). Immunofluorescence studies confirm co-localization of SIL1 with BiP in the ER lumen (pareja2018arolefor pages 31-36). Interestingly, disruption of the KELR retention signal does not cause Sil1 secretion, suggesting that ER retention may be primarily mediated by SIL1's strong interaction with the highly abundant BiP, which is approximately 1,000-fold more concentrated than SIL1 in the ER lumen (pareja2018arolefor pages 26-31, pareja2018arolefor pages 31-36). By inference, the <em>S. pombe</em> sil1 gene product is predicted to localize to the ER lumen.</p>
+<h2 id="5-biological-processes-and-pathway-involvement">5. Biological Processes and Pathway Involvement</h2>
+<h3 id="51-protein-translocation-into-the-er">5.1 Protein Translocation into the ER</h3>
+<p>SIL1/Sls1 contributes to <strong>co-translational protein import</strong> into the ER lumen by supporting the BiP/Kar2 ATPase cycle associated with the Sec61/Sec63 translocon complex. In <em>S. cerevisiae</em>, Sil1 forms nucleotide-dependent interactions with Kar2p and stimulates Sec63p-mediated activation of Kar2p in a conformation-dependent manner (david2019redoxsignalingthrough pages 29-33, ichhaporia2021roleofthe pages 18-19). In <em>Y. lipolytica</em>, the ortholog Sls1 co-localizes with Kar2 and the Sec61 translocon, consistent with a role in co-translational translocation (delic2013thesecretorypathway pages 10-13).</p>
+<h3 id="52-protein-folding-and-er-proteostasis">5.2 Protein Folding and ER Proteostasis</h3>
+<p>By regenerating ATP-bound BiP, SIL1 supports the iterative cycles of client binding and release that constitute chaperone-assisted protein folding in the ER lumen (ichhaporia2021roleofthe pages 1-3, bracher2015grpehsp110grp170hspbp1sil1 pages 19-21). Loss of SIL1 in mammalian systems leads to compromised BiP function, activation of the unfolded protein response (UPR), and ultimately to proteostasis collapse in sensitive tissues (ichhaporia2018theroleof pages 42-46).</p>
+<h3 id="53-er-associated-degradation-erad">5.3 ER-Associated Degradation (ERAD)</h3>
+<p>SIL1 participates in <strong>ERAD</strong> pathways. In <em>S. cerevisiae</em>, Δ<em>sil1</em> mutants are primarily defective in ERAD; deletion of Sil1 reduces viability in ERAD-defective backgrounds and slows the degradation of ERAD substrates such as CPY* (pareja2018arolefor pages 26-31, delic2013thesecretorypathway pages 10-13).</p>
+<h3 id="54-redundancy-with-lhs1grp170">5.4 Redundancy with Lhs1/GRP170</h3>
+<p>SIL1 and <strong>Lhs1/GRP170</strong> are the two known ER-luminal NEFs for BiP/Kar2. They are partially redundant: single deletions of either factor produce comparatively mild phenotypes and trigger UPR activation, but <strong>combined loss of both SIL1 and Lhs1 is synthetically lethal</strong> and causes complete translocation failure (bracher2015grpehsp110grp170hspbp1sil1 pages 19-21, ichhaporia2021roleofthe pages 4-5, verghese2012biologyofthe pages 24-25). Despite this redundancy, the two NEFs are mechanistically distinct—they bind BiP through different molecular contacts, and point mutations that disrupt SIL1 binding do not affect GRP170/Lhs1 interaction with BiP (ichhaporia2021roleofthe pages 4-5, ichhaporia2018theroleof pages 34-38). Under normal conditions, Sil1p is approximately one order of magnitude more abundant than Lhs1p, although both constitute less than 0.1% of BiP content (bracher2015grpehsp110grp170hspbp1sil1 pages 19-21).</p>
+<h2 id="6-dual-reductant-function">6. Dual Reductant Function</h2>
+<p>A landmark discovery revealed that yeast Sil1 has an <strong>unexpected reductant function</strong> beyond its canonical NEF activity. During oxidative ER stress, a conserved cysteine in BiP's NBD (Cys63 in <em>S. cerevisiae</em> Kar2) becomes oxidized, converting BiP into an ATP-independent holdase that helps cells cope with stress. Sil1 can <strong>reverse this BiP cysteine oxidation</strong> through a redox-active cysteine pair (Cys52 and Cys57) located in its flexible N-terminal domain (siegenthaler2017anunexpectedrole pages 1-2). This reduction occurs via a dithiol-disulfide exchange mechanism, forming a transient BiP-Sil1 mixed-disulfide intermediate (siegenthaler2017anunexpectedrole pages 6-7). Sil1 is substantially more effective at reducing oxidized BiP than glutathione, requiring 100-fold less molar concentration to achieve comparable activity, owing to its high affinity for BiP (siegenthaler2017anunexpectedrole pages 5-6).</p>
+<p>Critically, the N-terminal cysteines are <strong>not required for NEF activity</strong> itself—the C52A/C57A double mutant retains normal nucleotide exchange function but completely loses reductant capacity (siegenthaler2017anunexpectedrole pages 8-9). In cells, loss of Sil1 dramatically slows the removal of BiP cysteine adducts post-oxidative stress, extending the half-life from approximately 6 minutes to more than 45 minutes (siegenthaler2017anunexpectedrole pages 3-5). Additionally, Sil1 may serve as an electron bridge between protein disulfide isomerase (PDI) and BiP, facilitating BiP reduction through multiple mechanisms (david2019redoxsignalingthrough pages 121-125).</p>
+<h2 id="7-regulation-by-n-glycosylation">7. Regulation by N-Glycosylation</h2>
+<p>In <em>S. cerevisiae</em>, Sil1 is subject to <strong>Ost3-dependent N-glycosylation</strong> that is dynamically regulated by the ER redox environment. Under reductive ER stress, the Ost3 thioredoxin-like domain becomes reduced, which inhibits N-glycosylation of Sil1 at Asn181. This produces an unglycosylated form (uSil1) that is functionally active and can more effectively compensate for Lhs1 loss than the glycosylated form (stevens2017diminishedost3dependentnglycosylation pages 1-2, stevens2017diminishedost3dependentnglycosylation pages 2-3, stevens2017diminishedost3dependentnglycosylation pages 3-4). This represents a specific adaptive mechanism, distinct from general UPR activation, by which cells tailor SIL1 activity to the redox status of the ER lumen (stevens2017diminishedost3dependentnglycosylation pages 2-2). Importantly, unglycosylatable Sil1 (N181Q variant) remains functional, demonstrating that N-glycosylation is not essential for NEF activity but rather serves a regulatory role (stevens2017diminishedost3dependentnglycosylation pages 2-3).</p>
+<h2 id="8-disease-relevance-and-evolutionary-conservation">8. Disease Relevance and Evolutionary Conservation</h2>
+<p>Loss-of-function mutations in human <em>SIL1</em> cause <strong>Marinesco-Sjögren syndrome (MSS)</strong>, an autosomal recessive multisystem disorder characterized by cerebellar ataxia, early-onset cataracts, and progressive myopathy (ichhaporia2021roleofthe pages 1-3, ichhaporia2018theroleof pages 42-46). The pathological importance of SIL1 in human disease underscores the functional significance of this protein family across eukaryotes and supports the inference that the <em>S. pombe</em> ortholog performs an analogous essential role in ER proteostasis.</p>
+<h2 id="9-conclusions-and-functional-annotation">9. Conclusions and Functional Annotation</h2>
+<p>Based on the conserved domain architecture (ARM-like repeats, SIL1/FES1/HPBP1 family membership) and extensive evidence from ortholog studies, the <em>S. pombe</em> sil1 gene product (SPAC1071.03c, Q9UTR0) is most parsimoniously annotated as an <strong>ER-luminal nucleotide exchange factor for the Hsp70 chaperone BiP/Kar2</strong>. It is predicted to participate in protein translocation into the ER, chaperone-assisted protein folding, ERAD, and potentially ER redox homeostasis. It likely functions in partial redundancy with the S. pombe Lhs1/GRP170 ortholog. Direct experimental characterization in <em>S. pombe</em> remains to be performed, but the strong conservation of domain architecture and the essential nature of this function across eukaryotes provide high confidence in this functional assignment.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(ichhaporia2021roleofthe pages 4-5): Viraj P. Ichhaporia and Linda M. Hendershot. Role of the hsp70 co-chaperone sil1 in health and disease. International Journal of Molecular Sciences, 22:1564, Feb 2021. URL: https://doi.org/10.3390/ijms22041564, doi:10.3390/ijms22041564. This article has 33 citations.</p>
+</li>
+<li>
+<p>(bracher2015grpehsp110grp170hspbp1sil1 pages 11-14): Andreas Bracher and Jacob Verghese. Grpe, hsp110/grp170, hspbp1/sil1 and bag domain proteins: nucleotide exchange factors for hsp70 molecular chaperones. Sub-cellular biochemistry, 78:1-33, Dec 2015. URL: https://doi.org/10.1007/978-3-319-11731-7_1, doi:10.1007/978-3-319-11731-7_1. This article has 88 citations.</p>
+</li>
+<li>
+<p>(david2019redoxsignalingthrough pages 29-33): Kevin David Siegenthaler. Redox signaling through the endoplasmic reticulum chaperone bip. Text, Jan 2019. URL: https://doi.org/10.7298/9fam-y122, doi:10.7298/9fam-y122. This article has 2 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ichhaporia2021roleofthe pages 1-3): Viraj P. Ichhaporia and Linda M. Hendershot. Role of the hsp70 co-chaperone sil1 in health and disease. International Journal of Molecular Sciences, 22:1564, Feb 2021. URL: https://doi.org/10.3390/ijms22041564, doi:10.3390/ijms22041564. This article has 33 citations.</p>
+</li>
+<li>
+<p>(pareja2018arolefor pages 31-36): Kristeen Alcaide Pareja. A role for the n-terminal domain in modulating the activities of the nucleotide exchange factor sil1. Text, Jan 2018. URL: https://doi.org/10.7298/x4t43rc8, doi:10.7298/x4t43rc8. This article has 0 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pareja2018arolefor pages 26-31): Kristeen Alcaide Pareja. A role for the n-terminal domain in modulating the activities of the nucleotide exchange factor sil1. Text, Jan 2018. URL: https://doi.org/10.7298/x4t43rc8, doi:10.7298/x4t43rc8. This article has 0 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bracher2015grpehsp110grp170hspbp1sil1 pages 19-21): Andreas Bracher and Jacob Verghese. Grpe, hsp110/grp170, hspbp1/sil1 and bag domain proteins: nucleotide exchange factors for hsp70 molecular chaperones. Sub-cellular biochemistry, 78:1-33, Dec 2015. URL: https://doi.org/10.1007/978-3-319-11731-7_1, doi:10.1007/978-3-319-11731-7_1. This article has 88 citations.</p>
+</li>
+<li>
+<p>(verghese2012biologyofthe pages 24-25): Jacob Verghese, Jennifer Abrams, Yanyu Wang, and Kevin A. Morano. Biology of the heat shock response and protein chaperones: budding yeast (saccharomyces cerevisiae) as a model system. Microbiology and Molecular Biology Reviews, 76:115-158, Jun 2012. URL: https://doi.org/10.1128/mmbr.05018-11, doi:10.1128/mmbr.05018-11. This article has 776 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ichhaporia2018theroleof pages 42-46): V. P. Ichhaporia. The role of bip co-chaperone sil1 in marinesco-sjögren syndrome pathogenesis. ArXiv, 2018. URL: https://doi.org/10.21007/etd.cghs.2018.0470, doi:10.21007/etd.cghs.2018.0470. This article has 1 citations.</p>
+</li>
+<li>
+<p>(delic2013thesecretorypathway pages 10-13): Marizela Delic, Minoska Valli, Alexandra B. Graf, Martin Pfeffer, Diethard Mattanovich, and Brigitte Gasser. The secretory pathway: exploring yeast diversity. FEMS microbiology reviews, 37 6:872-914, Nov 2013. URL: https://doi.org/10.1111/1574-6976.12020, doi:10.1111/1574-6976.12020. This article has 303 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(siegenthaler2017anunexpectedrole pages 1-2): Kevin D Siegenthaler, Kristeen A Pareja, Jie Wang, and Carolyn S Sevier. An unexpected role for the yeast nucleotide exchange factor sil1 as a reductant acting on the molecular chaperone bip. eLife, Mar 2017. URL: https://doi.org/10.7554/elife.24141, doi:10.7554/elife.24141. This article has 38 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(david2019redoxsignalingthrough pages 66-70): Kevin David Siegenthaler. Redox signaling through the endoplasmic reticulum chaperone bip. Text, Jan 2019. URL: https://doi.org/10.7298/9fam-y122, doi:10.7298/9fam-y122. This article has 2 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(siegenthaler2017anunexpectedrole pages 3-5): Kevin D Siegenthaler, Kristeen A Pareja, Jie Wang, and Carolyn S Sevier. An unexpected role for the yeast nucleotide exchange factor sil1 as a reductant acting on the molecular chaperone bip. eLife, Mar 2017. URL: https://doi.org/10.7554/elife.24141, doi:10.7554/elife.24141. This article has 38 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(siegenthaler2017anunexpectedrole pages 8-9): Kevin D Siegenthaler, Kristeen A Pareja, Jie Wang, and Carolyn S Sevier. An unexpected role for the yeast nucleotide exchange factor sil1 as a reductant acting on the molecular chaperone bip. eLife, Mar 2017. URL: https://doi.org/10.7554/elife.24141, doi:10.7554/elife.24141. This article has 38 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(siegenthaler2017anunexpectedrole pages 6-7): Kevin D Siegenthaler, Kristeen A Pareja, Jie Wang, and Carolyn S Sevier. An unexpected role for the yeast nucleotide exchange factor sil1 as a reductant acting on the molecular chaperone bip. eLife, Mar 2017. URL: https://doi.org/10.7554/elife.24141, doi:10.7554/elife.24141. This article has 38 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(stevens2017diminishedost3dependentnglycosylation pages 1-2): Kofi L. P. Stevens, Amy L. Black, Kelsi M. Wells, K. Y. Benjamin Yeo, Robert F. L. Steuart, Colin J. Stirling, Benjamin L. Schulz, and Carl J. Mousley. Diminished ost3-dependent n-glycosylation of the bip nucleotide exchange factor sil1 is an adaptive response to reductive er stress. Proceedings of the National Academy of Sciences, 114:12489-12494, Nov 2017. URL: https://doi.org/10.1073/pnas.1705641114, doi:10.1073/pnas.1705641114. This article has 17 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(stevens2017diminishedost3dependentnglycosylation pages 4-5): Kofi L. P. Stevens, Amy L. Black, Kelsi M. Wells, K. Y. Benjamin Yeo, Robert F. L. Steuart, Colin J. Stirling, Benjamin L. Schulz, and Carl J. Mousley. Diminished ost3-dependent n-glycosylation of the bip nucleotide exchange factor sil1 is an adaptive response to reductive er stress. Proceedings of the National Academy of Sciences, 114:12489-12494, Nov 2017. URL: https://doi.org/10.1073/pnas.1705641114, doi:10.1073/pnas.1705641114. This article has 17 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(stevens2017diminishedost3dependentnglycosylation pages 2-3): Kofi L. P. Stevens, Amy L. Black, Kelsi M. Wells, K. Y. Benjamin Yeo, Robert F. L. Steuart, Colin J. Stirling, Benjamin L. Schulz, and Carl J. Mousley. Diminished ost3-dependent n-glycosylation of the bip nucleotide exchange factor sil1 is an adaptive response to reductive er stress. Proceedings of the National Academy of Sciences, 114:12489-12494, Nov 2017. URL: https://doi.org/10.1073/pnas.1705641114, doi:10.1073/pnas.1705641114. This article has 17 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(stevens2017diminishedost3dependentnglycosylation pages 3-4): Kofi L. P. Stevens, Amy L. Black, Kelsi M. Wells, K. Y. Benjamin Yeo, Robert F. L. Steuart, Colin J. Stirling, Benjamin L. Schulz, and Carl J. Mousley. Diminished ost3-dependent n-glycosylation of the bip nucleotide exchange factor sil1 is an adaptive response to reductive er stress. Proceedings of the National Academy of Sciences, 114:12489-12494, Nov 2017. URL: https://doi.org/10.1073/pnas.1705641114, doi:10.1073/pnas.1705641114. This article has 17 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ichhaporia2018theroleof pages 34-38): V. P. Ichhaporia. The role of bip co-chaperone sil1 in marinesco-sjögren syndrome pathogenesis. ArXiv, 2018. URL: https://doi.org/10.21007/etd.cghs.2018.0470, doi:10.21007/etd.cghs.2018.0470. This article has 1 citations.</p>
+</li>
+<li>
+<p>(ichhaporia2021roleofthe pages 18-19): Viraj P. Ichhaporia and Linda M. Hendershot. Role of the hsp70 co-chaperone sil1 in health and disease. International Journal of Molecular Sciences, 22:1564, Feb 2021. URL: https://doi.org/10.3390/ijms22041564, doi:10.3390/ijms22041564. This article has 33 citations.</p>
+</li>
+<li>
+<p>(siegenthaler2017anunexpectedrole pages 5-6): Kevin D Siegenthaler, Kristeen A Pareja, Jie Wang, and Carolyn S Sevier. An unexpected role for the yeast nucleotide exchange factor sil1 as a reductant acting on the molecular chaperone bip. eLife, Mar 2017. URL: https://doi.org/10.7554/elife.24141, doi:10.7554/elife.24141. This article has 38 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(david2019redoxsignalingthrough pages 121-125): Kevin David Siegenthaler. Redox signaling through the endoplasmic reticulum chaperone bip. Text, Jan 2019. URL: https://doi.org/10.7298/9fam-y122, doi:10.7298/9fam-y122. This article has 2 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(stevens2017diminishedost3dependentnglycosylation pages 2-2): Kofi L. P. Stevens, Amy L. Black, Kelsi M. Wells, K. Y. Benjamin Yeo, Robert F. L. Steuart, Colin J. Stirling, Benjamin L. Schulz, and Carl J. Mousley. Diminished ost3-dependent n-glycosylation of the bip nucleotide exchange factor sil1 is an adaptive response to reductive er stress. Proceedings of the National Academy of Sciences, 114:12489-12494, Nov 2017. URL: https://doi.org/10.1073/pnas.1705641114, doi:10.1073/pnas.1705641114. This article has 17 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="sil1-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>pareja2018arolefor pages 26-31</li>
+<li>ichhaporia2021roleofthe pages 4-5</li>
+<li>pareja2018arolefor pages 31-36</li>
+<li>delic2013thesecretorypathway pages 10-13</li>
+<li>ichhaporia2018theroleof pages 42-46</li>
+<li>siegenthaler2017anunexpectedrole pages 1-2</li>
+<li>siegenthaler2017anunexpectedrole pages 6-7</li>
+<li>siegenthaler2017anunexpectedrole pages 5-6</li>
+<li>siegenthaler2017anunexpectedrole pages 8-9</li>
+<li>siegenthaler2017anunexpectedrole pages 3-5</li>
+<li>david2019redoxsignalingthrough pages 121-125</li>
+<li>david2019redoxsignalingthrough pages 29-33</li>
+<li>ichhaporia2021roleofthe pages 1-3</li>
+<li>verghese2012biologyofthe pages 24-25</li>
+<li>david2019redoxsignalingthrough pages 66-70</li>
+<li>ichhaporia2018theroleof pages 34-38</li>
+<li>ichhaporia2021roleofthe pages 18-19</li>
+<li>https://doi.org/10.3390/ijms22041564,</li>
+<li>https://doi.org/10.1007/978-3-319-11731-7_1,</li>
+<li>https://doi.org/10.7298/9fam-y122,</li>
+<li>https://doi.org/10.7298/x4t43rc8,</li>
+<li>https://doi.org/10.1128/mmbr.05018-11,</li>
+<li>https://doi.org/10.21007/etd.cghs.2018.0470,</li>
+<li>https://doi.org/10.1111/1574-6976.12020,</li>
+<li>https://doi.org/10.7554/elife.24141,</li>
+<li>https://doi.org/10.1073/pnas.1705641114,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(sil1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9UTR0" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="sil1-spac107103c-s-pombe-curation-notes">sil1 (SPAC1071.03c) — S. pombe — curation notes</h1>
+<p>UniProt: Q9UTR0 (<code>YL33_SCHPO</code>, "Uncharacterized protein C1071.03c", 338 aa, PE=4 Predicted).<br />
+PomBase standard name: <strong>sil1</strong>; product (PomBase): "nucleotide exchange factor for the ER lumenal Hsp70 chaperone, Sil1".<br />
+Characterisation status (PomBase): <strong>"biological role inferred"</strong> — i.e. no dedicated experimental characterisation in fission yeast; function assigned by orthology. Deletion viability: <strong>viable</strong>.<br />
+Taxonomic distribution (PomBase): eukaryotes only, fungi and metazoa.</p>
+<h2 id="identity-orthology-known-with-high-confidence">Identity / orthology (KNOWN with high confidence)</h2>
+<ul>
+<li>Orthologs (PomBase <code>ortholog_annotations</code>): human <strong>SIL1</strong> (HGNC:24624) and <em>S. cerevisiae</em> <strong>SIL1/YOL031C</strong> (Sil1p). So the pombe protein is the fission-yeast member of the SIL1/BAP (BiP-associated protein) family.</li>
+<li>UniProt family/domain signatures: InterPro <strong>IPR050693 "SIL1/FES1/HPBP1"</strong>; <strong>IPR011989 ARM-like</strong> and <strong>IPR016024 ARM-type fold</strong>; Gene3D <strong>1.25.10.10 (Leucine-rich Repeat Variant / ARM)</strong>; SUPFAM <strong>SSF48371 ARM repeat</strong>. PANTHER family <strong>PTHR19316 "Hsp70 Nucleotide Exchange Factors and Inhibitors"</strong>, subfamily <strong>PTHR19316:SF18 "HSP70-BINDING PROTEIN 1"</strong>. [file:SCHPO/sil1/sil1-uniprot.txt DR lines]</li>
+<li>The armadillo-repeat/ARM-type fold is the structural hallmark of the SIL1/HspBP1 class of Hsp70 nucleotide-exchange factors (distinct from the Hsp110/Grp170 class and the BAG/GrpE classes).</li>
+</ul>
+<h2 id="domain-sequence-reasoning-inline-from-sil1-uniprottxt">Domain / sequence reasoning (inline, from sil1-uniprot.txt)</h2>
+<ul>
+<li>338 aa. UniProt/TMHMM predict a single N-terminal transmembrane / signal-anchor helix (<strong>TRANSMEM 20..40</strong>, ECO:0000255; PomBase TM 20..42, TMHMM). UniProt CC gives SUBCELLULAR LOCATION: Membrane, single-pass membrane protein (ECO:0000305, i.e. inferred, not experimental).</li>
+<li>Interpretation: the N-terminal hydrophobic segment is most consistent with an <strong>ER-targeting signal/signal-anchor</strong> for a lumenal ER protein of the SIL1 family. Canonical Sil1 orthologs are ER-lumenal (S. cerevisiae Sil1p is lumenal with an HDEL-type ER-retention signal; human SIL1 has a cleaved signal peptide and a C-terminal ER-retrieval signal). The pombe C-terminus ends "...PWPKKYNI" — I do <strong>not</strong> see a canonical HDEL/KDEL tetrapeptide, so the exact ER-retention mechanism in pombe is unresolved from sequence alone (a genuine uncertainty; do not over-assert lumenal topology). The UniProt "single-pass membrane protein" call is an automatic ECO:0000305 inference from the one predicted TM and should be read cautiously — for the ER-lumenal SIL1 family this hydrophobic stretch is more likely a signal/anchor than a bona fide type-II membrane topology.</li>
+<li>No catalytic motifs expected: SIL1-family NEFs are non-enzymatic; they act as an ARM-fold "clamp" on the Hsp70 nucleotide-binding domain to accelerate ADP release (nucleotide exchange), not as an enzyme.</li>
+</ul>
+<h2 id="function-known-by-orthology-not-directly-shown-in-pombe">Function (KNOWN by orthology; NOT directly shown in pombe)</h2>
+<p>The SIL1/Sil1p family are <strong>nucleotide-exchange factors (NEFs) for the ER Hsp70 BiP</strong> (Kar2p in <em>S. cerevisiae</em>):</p>
+<ul>
+<li><em>S. cerevisiae</em>: "The chaperone activity of Kar2p is regulated by its intrinsic ATPase activity that can be stimulated by two different nucleotide exchange factors, namely Sil1p and Lhs1p ... the IIB domain of Kar2p is sufficient for binding of Sil1p, and point mutations within IIB specifically blocked Sil1p-dependent activation while remaining competent for activation by Lhs1p." [PMID:20430899 "Interactions between Kar2p and its nucleotide exchange factors Sil1p and Lhs1p are mechanistically distinct", abstract]</li>
+<li>This establishes both (a) the <strong>adenyl-nucleotide exchange activity on BiP/Kar2</strong> (grounds GO:0000774) and (b) that BiP in yeast has <strong>two functionally distinct NEFs</strong> (Sil1p and Lhs1p) — the basis for the redundancy knowledge gap in pombe (pombe has an Lhs1/Grp170-type NEF too).</li>
+<li>Human SIL1: loss-of-function mutations cause <strong>Marinesco–Sjögren syndrome</strong> (cerebellar ataxia, cataracts, myopathy, intellectual disability); human SIL1 is a BiP NEF. [WebSearch of review literature — e.g. "BiP and its Nucleotide Exchange Factors Grp170 and Sil1", PMC4356644; not cached, used for background only]</li>
+<li>Structural mechanism (Sil1–BiP complex): Sil1 acts as a clamp on the BiP ATPase (nucleotide-binding) domain, rotating lobe IIb away from the ADP-binding pocket to promote nucleotide release. [background, review literature; not cached]</li>
+</ul>
+<h2 id="pombe-specific-evidence-what-actually-exists-for-this-gene">Pombe-specific evidence (what actually exists for THIS gene)</h2>
+<p>All pombe annotations for sil1 are indirect (IBA/IEA/ISO) or high-throughput:<br />
+- GOA (see sil1-goa.tsv):<br />
+  - GO:0000774 adenyl-nucleotide exchange factor activity — <strong>IBA</strong> (GO_REF:0000033), PANTHER PTN007671284 with S. cerevisiae SGD:S000000305, SGD:S000005391 and human UniProtKB:Q9H173.<br />
+  - GO:0005783 endoplasmic reticulum — <strong>IBA</strong> (GO_REF:0000033).<br />
+  - GO:0016020 membrane — <strong>IEA</strong> (GO_REF:0000044) from UniProt SubCell SL-0162 (the single predicted TM).<br />
+  - GO:0006616 SRP-dependent cotranslational protein targeting to membrane, translocation — <strong>ISO</strong> (GO_REF:0000024) transferred from S. cerevisiae SGD:S000005391.<br />
+- PomBase phenotypes (all from genome-wide/HTP screens, none a dedicated sil1 study):<br />
+  - <code>sil1Δ</code> is viable with normal cell morphology (FYPO:0002060/0002177). Deletion collection: PMID:20473289.<br />
+  - Broad drug/stress-resistance and -sensitivity phenotypes (e.g. resistance to cadmium/cycloheximide/diamide/hydroxyurea/various salts; sensitivity to bleomycin/brefeldin A/caffeine/EGTA/lithium/X-rays) from phenomics profiling. PMID:37787768 ("Broad functional profiling of fission yeast proteins using phenomics and machine learning") — note this paper explicitly targets <em>poorly characterized / 'priority unstudied'</em> proteins.<br />
+  - FYPO:0004806 "incomplete cell wall disassembly at cell fusion site" from a mating-morphology screen. PMID:28410370 ("A systematic screen for morphological abnormalities during fission yeast sexual reproduction ...").<br />
+  - 13 genetic interactions from network/interactome screens (PMID:23050226, PMID:22681890).<br />
+  These are consistent with a general ER-proteostasis housekeeping role (drug/stress pleiotropy, brefeldin-A sensitivity implicating secretory-pathway function) but do <strong>not</strong> independently establish the molecular BiP-NEF activity in pombe.</p>
+<h2 id="known-vs-not-known-summary">KNOWN vs NOT-KNOWN summary</h2>
+<p>KNOWN (high confidence, by orthology + domain):<br />
+- Member of the SIL1/HspBP1 ARM-fold family of Hsp70 nucleotide-exchange factors; ortholog of ScSil1p and human SIL1.<br />
+- Expected molecular function: adenyl-nucleotide exchange factor activity on the ER Hsp70 BiP (GO:0000774).<br />
+- Expected localization: endoplasmic reticulum (GO:0005783). N-terminal hydrophobic signal/anchor (aa ~20-40).<br />
+- Non-essential in pombe (viable deletion).</p>
+<p>NOT KNOWN / genuine gaps (pombe-specific):<br />
+- No direct biochemical demonstration in <em>S. pombe</em> that Sil1 stimulates nucleotide exchange on pombe BiP.<br />
+- The pombe BiP partner and the degree of functional redundancy with the pombe Lhs1/Grp170-type NEF are not experimentally defined; whether Sil1 NEF activity is individually required in vivo (vs redundant) is unknown — mirrors the two-NEF (Sil1/Lhs1) situation in <em>S. cerevisiae</em>.<br />
+- In-vivo clients / physiological pathways (e.g. specific secretory cargo, cell-fusion/cell-wall phenotype mechanism) are not established; phenotype data are HTP-screen-level only.<br />
+- Exact membrane topology / ER-retention mechanism (no canonical HDEL/KDEL evident by eye) is unresolved.</p>
+<h2 id="annotation-review-plan">Annotation review plan</h2>
+<ul>
+<li>GO:0000774 adenyl-nucleotide exchange factor activity (IBA): ACCEPT as core MF — well-supported by orthology + family; more informative than "protein binding".</li>
+<li>GO:0005783 endoplasmic reticulum (IBA): ACCEPT as core localization.</li>
+<li>GO:0016020 membrane (IEA, SubCell): MARK_AS_OVER_ANNOTATED / KEEP_AS_NON_CORE — derived from a single predicted TM; "membrane" is uninformative and the SIL1 family is ER-lumenal-associated; ER (GO:0005783) is the meaningful compartment. Keep but non-core.</li>
+<li>GO:0006616 SRP-dependent cotranslational protein targeting to membrane, translocation (ISO from Sc): UNDECIDED / KEEP_AS_NON_CORE — this ISO transfer reflects Sil1p's participation in ER protein import as a Kar2p co-factor in <em>S. cerevisiae</em>; it is a downstream process attribution, not the core NEF MF, and is not directly shown in pombe. Do not REMOVE (curator ISO from experimental Sc annotation); treat as non-core / process-level.</li>
+</ul>
+<h2 id="references-gathered">References gathered</h2>
+<ul>
+<li>PMID:20430899 — Sc Sil1p/Lhs1p NEFs for Kar2p; abstract cached-quotable. HIGH relevance (ortholog function basis).</li>
+<li>PMID:28410370 — pombe mating morphology screen (source of FYPO:0004806). LOW/MEDIUM (HTP phenotype only).</li>
+<li>PMID:37787768 — pombe phenomics/ML broad profiling (source of stress phenotypes; flags sil1 as poorly characterized). LOW/MEDIUM.</li>
+<li>GO_REF:0000033 (IBA), GO_REF:0000024 (ISO), GO_REF:0000044 (SubCell IEA) — evidence pipelines.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9UTR0
+gene_symbol: sil1
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:284812
+  label: Schizosaccharomyces pombe (strain 972 / ATCC 24843)
+description: &gt;-
+  sil1 (systematic name SPAC1071.03c; UniProt Q9UTR0) is the Schizosaccharomyces
+  pombe member of the SIL1/HspBP1 family of nucleotide-exchange factors (NEFs) for
+  Hsp70 chaperones. It is the one-to-one ortholog of human SIL1 (the gene mutated in
+  Marinesco-Sjogren syndrome) and of Saccharomyces cerevisiae Sil1p/YOL031C. The
+  338-residue protein is built around an armadillo-repeat (ARM-type) alpha-helical
+  fold, the structural hallmark of this NEF class, and carries an N-terminal
+  hydrophobic segment (residues ~20-42) that is most consistent with an
+  endoplasmic-reticulum signal/anchor sequence. By orthology, Sil1-family proteins
+  act in the endoplasmic reticulum, where they bind the ATPase (nucleotide-binding)
+  domain of the ER Hsp70 chaperone BiP (Kar2p in budding yeast) and accelerate ADP
+  release, thereby driving the BiP chaperone cycle that folds and translocates
+  nascent secretory proteins. In budding yeast BiP is served by two functionally
+  distinct NEFs, Sil1p and the Hsp110/Grp170-type Lhs1p; either single deletion is
+  viable but the double deletion is lethal, indicating that BiP nucleotide exchange
+  is essential and partly redundant. In fission yeast sil1 is non-essential (deletion
+  viable) and has not been characterized biochemically; the molecular NEF activity,
+  ER localization, and biological roles above are inferred from conserved domain
+  architecture and orthology rather than from direct experiments in this species.
+references:
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: PMID:20430899
+  title: &#34;Interactions between Kar2p and its nucleotide exchange factors Sil1p and Lhs1p are mechanistically distinct.&#34;
+  findings:
+  - statement: &gt;-
+      The ER Hsp70 Kar2p (BiP) is regulated by two nucleotide-exchange factors, Sil1p
+      and Lhs1p; NEFs promote ADP release to drive the next round of ATP binding in the
+      chaperone cycle.
+    supporting_text: &gt;-
+      Two NEFs have been identified for Kar2p in the ER lumen of Saccharomyces cerevisiae,
+      namely Lhs1p and Sil1p
+  - statement: &gt;-
+      Sil1p binds the IIB subdomain of the Kar2p ATPase domain to stimulate nucleotide
+      exchange, mechanistically distinct from Lhs1p.
+    supporting_text: &gt;-
+      These studies identified a role for the IIB domain of Kar2p in Sil1p binding and
+      Sil1p-stimulated nucleotide exchange
+  - statement: &gt;-
+      Single deletions of SIL1 or LHS1 are viable but the double deletion is lethal,
+      showing BiP nucleotide exchange is essential and the two NEFs are partly redundant.
+    supporting_text: &gt;-
+      Individual deletions of LHS1 (Δlhs1) and SIL1 (Δsil1) in yeast cells are viable
+      (13, 14), but the double deletion (Δlhs1Δsil1) is lethal suggesting that nucleotide
+      exchange is essential for Kar2p activity and cell viability
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PMC-verified full text (Hale, Lovell, de Keyzer &amp; Stirling, J Biol Chem 2010).
+      Primary S. cerevisiae biochemistry establishing Sil1p as a BiP/Kar2p NEF acting
+      on the ATPase domain; it is the orthology basis for the pombe sil1 IBA/ISO
+      annotations and directly supports the Sil1/Lhs1 redundancy knowledge gap. Work is
+      in budding yeast, not fission yeast; used here for conserved-function reasoning.
+- id: PMID:37787768
+  title: &#34;Broad functional profiling of fission yeast proteins using phenomics and machine learning.&#34;
+  findings:
+  - statement: &gt;-
+      Genome-wide phenomics/machine-learning profiling of S. pombe deletion mutants;
+      the study explicitly targets poorly characterized proteins, and sil1 phenotypes in
+      PomBase derive from this class of broad screen rather than a dedicated study.
+    supporting_text: &gt;-
+      Many proteins remain poorly characterized even in well-studied organisms
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PMC-verified (Rodriguez-Lopez et al., eLife 2023). Source of several high-throughput
+      drug/stress phenotypes recorded for sil1 in PomBase; illustrates that pombe evidence
+      for this gene is screen-level, not gene-specific characterization.
+- id: PMID:28410370
+  title: &#34;A systematic screen for morphological abnormalities during fission yeast sexual reproduction identifies a mechanism of actin aster formation for cell fusion.&#34;
+  findings:
+  - statement: &gt;-
+      Systematic mating-morphology deletion screen in S. pombe; the cell-fusion phenotype
+      recorded for sil1 in PomBase (incomplete cell wall disassembly at the fusion site)
+      originates from this genome-wide screen.
+    supporting_text: &gt;-
+      morphological abnormalities of the mating process in fission yeast
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PMC-verified (Dudin et al., PLoS Genet 2017). A genome-wide morphology screen, not a
+      sil1-focused study; the associated phenotype is HTP-level and does not establish
+      sil1 molecular function.
+existing_annotations:
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Endoplasmic reticulum is the expected site of action for a SIL1-family BiP
+      nucleotide-exchange factor. The IBA (phylogenetic) inference is consistent with
+      the ER-lumenal localization of the S. cerevisiae and human orthologs and with the
+      N-terminal ER signal/anchor sequence of the pombe protein. This is the meaningful,
+      informative compartment for the gene and is retained as the core localization.
+      Direct localization data in fission yeast are not available.
+    action: ACCEPT
+- term:
+    id: GO:0000774
+    label: adenyl-nucleotide exchange factor activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      This is the defining molecular function of the SIL1/HspBP1 family: binding the
+      ATPase (nucleotide-binding) domain of an ER Hsp70 (BiP/Kar2p) and stimulating
+      ADP release (nucleotide exchange). It is well supported by orthology to
+      experimentally characterized S. cerevisiae Sil1p and human SIL1, and by the
+      diagnostic armadillo-repeat fold. This is a specific, informative MF term
+      (preferable to generic protein binding) and is retained as the core function.
+      The activity has not been demonstrated biochemically in S. pombe itself.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:20430899
+      supporting_text: &gt;-
+        These studies identified a role for the IIB domain of Kar2p in Sil1p binding and
+        Sil1p-stimulated nucleotide exchange
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      This IEA annotation is an automatic mapping from the UniProt Subcellular Location
+      keyword (SL-0162 Membrane), which itself derives from a single predicted N-terminal
+      transmembrane/hydrophobic segment (residues ~20-42). For a SIL1-family protein this
+      hydrophobic stretch is more consistent with an ER signal/anchor than with a
+      genuine multi-compartment membrane residence, and generic membrane is uninformative
+      relative to the endoplasmic reticulum term already annotated. Retained as a
+      non-core, low-information electronic annotation.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0006616
+    label: SRP-dependent cotranslational protein targeting to membrane, translocation
+  evidence_type: ISO
+  original_reference_id: GO_REF:0000024
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      This ISO annotation was transferred from a S. cerevisiae ortholog (SGD:S000005391)
+      and reflects the participation of the BiP/Kar2p chaperone system in translocation
+      of nascent secretory polypeptides into the ER. It is a downstream, process-level
+      attribution of the Sil1 NEF role (Sil1 assists BiP, which acts in ER protein import)
+      rather than sil1&#39;s core molecular function, and it is not directly demonstrated in
+      fission yeast. The essence of ER-protein-biogenesis involvement is defensible, so it
+      is kept as non-core rather than removed; the precise process term is broader than
+      what is established for sil1 specifically in pombe.
+    action: KEEP_AS_NON_CORE
+core_functions:
+- description: &gt;-
+    Nucleotide-exchange factor (NEF) for the endoplasmic-reticulum Hsp70 chaperone BiP.
+    sil1 is a SIL1/HspBP1-family, armadillo-repeat protein that binds the ATPase
+    (nucleotide-binding) domain of ER-lumenal BiP and accelerates ADP release, resetting
+    BiP for the next ATP-bound, substrate-engaging cycle. Through this activity it
+    supports BiP-dependent folding and translocation of nascent secretory proteins in
+    the ER. This molecular role is inferred from the diagnostic ARM fold and from
+    orthology to experimentally characterized S. cerevisiae Sil1p and human SIL1; the
+    activity, the BiP partner, and the in-vivo requirement have not been demonstrated in
+    S. pombe.
+  molecular_function:
+    id: GO:0000774
+    label: adenyl-nucleotide exchange factor activity
+  locations:
+  - id: GO:0005783
+    label: endoplasmic reticulum
+  supported_by:
+  - reference_id: PMID:20430899
+    supporting_text: &gt;-
+      Two NEFs have been identified for Kar2p in the ER lumen of Saccharomyces cerevisiae,
+      namely Lhs1p and Sil1p
+  knowledge_gaps:
+  - gap_statement: &gt;-
+      It has not been shown biochemically that S. pombe Sil1 binds fission-yeast BiP and
+      stimulates its nucleotide (ADP/ATP) exchange; the direct BiP partner and the
+      NEF activity are inferred from orthology, not measured in this species.
+    boundary: &gt;-
+      The ARM-fold NEF activity on BiP/Kar2p is firmly established for the S. cerevisiae
+      and human orthologs, and pombe sil1 is a clear one-to-one ortholog with the
+      conserved family fold, but no in-vitro exchange assay or BiP co-purification has been
+      reported for the pombe protein.
+    gap_kind:
+    - BIOLOGY
+    dark_aspect: MF_DARK
+    status: OPEN
+    significance: &gt;-
+      Confirms whether the strongly-inferred core function actually operates in fission
+      yeast, and whether pombe BiP regulation follows the conserved two-NEF logic.
+    resolution: &gt;-
+      In-vitro reconstitution of recombinant pombe Sil1 with pombe BiP measuring
+      Sil1-stimulated nucleotide exchange / ATPase activity, plus co-immunoprecipitation
+      of Sil1 with BiP from fission-yeast extracts.
+    provenance:
+    - reference_id: PMID:20430899
+      supporting_text: &gt;-
+        These studies identified a role for the IIB domain of Kar2p in Sil1p binding and
+        Sil1p-stimulated nucleotide exchange
+knowledge_gaps:
+- gap_statement: &gt;-
+    Whether Sil1 nucleotide-exchange activity is individually required in S. pombe, or is
+    functionally redundant with the fission-yeast Hsp110/Grp170-type NEF (the Lhs1/Grp170
+    class), is undetermined; the phenotypic consequence of losing sil1 versus losing both
+    BiP NEFs has not been tested in pombe.
+  boundary: &gt;-
+    In S. cerevisiae, single sil1 or lhs1 deletions are viable but the sil1 lhs1 double
+    deletion is lethal, showing the two NEFs are partly redundant and that BiP nucleotide
+    exchange is essential. In S. pombe, sil1 deletion is viable, but no analogous
+    single/double NEF-deletion analysis has been reported.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: RESIDUAL_SUBGAP
+  status: OPEN
+  significance: &gt;-
+    Determines whether sil1 is a dispensable, redundant NEF in pombe or contributes a
+    non-redundant function, and whether the conserved &#34;BiP has two NEFs, together
+    essential&#34; logic holds in fission yeast.
+  resolution: &gt;-
+    Construct and phenotype pombe sil1 single and sil1 (Lhs1/Grp170-ortholog) double
+    deletions for synthetic lethality and ER-stress sensitivity.
+  provenance:
+  - reference_id: PMID:20430899
+    supporting_text: &gt;-
+      Individual deletions of LHS1 (Δlhs1) and SIL1 (Δsil1) in yeast cells are viable
+      (13, 14), but the double deletion (Δlhs1Δsil1) is lethal suggesting that nucleotide
+      exchange is essential for Kar2p activity and cell viability
+- gap_statement: &gt;-
+    The in-vivo biological roles and physiological clients of sil1 in S. pombe are unknown;
+    the only pombe phenotypes are scattered drug/stress sensitivities and a cell-fusion
+    morphology defect drawn from genome-wide screens, none mechanistically connected to
+    its BiP-NEF activity.
+  boundary: &gt;-
+    sil1 deletion is viable with grossly normal morphology; genome-wide phenomics and a
+    mating-morphology screen recorded assorted stress phenotypes and an &#34;incomplete cell
+    wall disassembly at cell fusion site&#34; phenotype, but there is no dedicated study of
+    sil1 in fission yeast.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: BP_DARK
+  status: OPEN
+  significance: &gt;-
+    Whether sil1 has a specialized secretory/ER-proteostasis role in pombe (e.g. in mating
+    or cell-wall remodeling) beyond generic BiP support is unresolved.
+  resolution: &gt;-
+    Directed phenotyping of sil1 deletion under ER stress (tunicamycin, DTT) and mating
+    conditions, and identification of Sil1/BiP-dependent secretory cargo by proteomics.
+  provenance:
+  - reference_id: PMID:37787768
+    supporting_text: &gt;-
+      Many proteins remain poorly characterized even in well-studied organisms
+- gap_statement: &gt;-
+    The membrane topology and ER-retention mechanism of pombe Sil1 are unresolved: the
+    protein is annotated as a single-pass membrane protein from one predicted TM helix,
+    yet SIL1-family orthologs are ER-lumenal, and no canonical HDEL/KDEL retention motif
+    is evident in the pombe sequence.
+  boundary: &gt;-
+    UniProt/TMHMM predict one hydrophobic segment at residues ~20-42 and an ECO:0000305
+    single-pass membrane call; S. cerevisiae Sil1p and human SIL1 are ER-lumenal with
+    signal and ER-retention signals. The actual topology of the pombe protein has not
+    been determined experimentally.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: CC_DARK
+  status: OPEN
+  significance: &gt;-
+    Clarifies whether the N-terminal hydrophobic segment is a signal/anchor for an
+    ER-lumenal NEF (as in orthologs) and how the protein is retained in the ER.
+  resolution: &gt;-
+    Determine subcellular localization and topology (protease-protection, lumenal vs
+    membrane fractionation, tagged-protein imaging) of pombe Sil1.
+suggested_questions:
+- question: &gt;-
+    Does S. pombe Sil1 bind fission-yeast BiP and stimulate its nucleotide exchange, as
+    its orthologs do for Kar2p and mammalian BiP?
+  experts:
+  - ER chaperone / Hsp70 co-chaperone biochemists
+  - Fission-yeast secretory-pathway biologists
+- question: &gt;-
+    Is sil1 functionally redundant with the pombe Hsp110/Grp170-type BiP NEF, such that
+    the double deletion is synthetically lethal as in budding yeast?
+  experts:
+  - Yeast ER-proteostasis geneticists
+suggested_experiments:
+- experiment_type: In-vitro biochemistry
+  description: &gt;-
+    Reconstitute recombinant pombe Sil1 with pombe BiP and measure Sil1-stimulated
+    nucleotide exchange and ATPase activity to test the inferred NEF function directly.
+- experiment_type: Genetic interaction analysis
+  description: &gt;-
+    Build sil1 single and sil1 plus Lhs1/Grp170-ortholog double deletions and test for
+    synthetic lethality and ER-stress (tunicamycin, DTT) hypersensitivity to define
+    redundancy among pombe BiP NEFs.
+- experiment_type: Localization / topology
+  description: &gt;-
+    Determine the subcellular localization and membrane topology of tagged pombe Sil1
+    (ER lumen vs membrane; protease protection) to resolve the single-pass-membrane vs
+    lumenal ambiguity.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

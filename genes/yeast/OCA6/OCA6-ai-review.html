@@ -1,0 +1,2508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OCA6 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>OCA6</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q12454" target="_blank" class="term-link">
+                        Q12454
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Saccharomyces cerevisiae</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "OCA6";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q12454" data-a="DESCRIPTION: OCA6 (YDR067C) is a small (224-residue) cytoplasmi..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>OCA6 (YDR067C) is a small (224-residue) cytoplasmic protein of the budding yeast Saccharomyces cerevisiae that adopts a protein-tyrosine-phosphatase (PTP) superfamily fold and belongs to the fungal OCA family of PFA-DSP (Plant-and-Fungi Atypical Dual-Specificity Phosphatase)-related proteins, together with Oca1, Oca2, Siw14/Oca3, Oca4 and Oca5. Although classified within the PTP/DSP structural family (Pfam Y_phosphatase2 / Siw14-like; CDD PFA-DSP_Oca6) and carrying a predicted phosphocysteine active-site residue, its canonical CX5R catalytic loop is degenerate — the invariant phosphate-binding arginine is not present — so OCA6 is likely a catalytically impaired or pseudophosphatase member of the family rather than a bona fide protein-tyrosine phosphatase. The biochemically active prototype of the family, Siw14/Oca3, is an inositol-pyrophosphate (5-InsP7) phosphatase, not a phosphotyrosine phosphatase. OCA6 is genetically linked to the other OCA-family members and is implicated in cellular responses to caffeine, rapamycin and oxidative stress, and its deletion reduces replication of Brome mosaic virus in yeast. Its own catalytic status, physiological substrate, and precise role within the OCA family remain undetermined.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016791" target="_blank" class="term-link">
+                                    GO:0016791
+                                </a>
+                            </span>
+                            <span class="term-label">phosphatase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q12454" data-a="GO:0016791" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> General phosphatase activity inferred phylogenetically from membership in the PTP/PFA-DSP fold family. The fold is genuinely present, but OCA6&#39;s canonical CX5R catalytic loop is degenerate (missing the invariant P-loop arginine), so any catalytic activity is uncertain. Retained as a cautious, general, non-core molecular function that reflects the family fold without over-committing to a specific catalytic role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> IBA reflects the ancestral phosphatase fold of the PFA-DSP/PTP family, of which OCA6 is a member (PMID:21409566). &#34;phosphatase activity&#34; (GO:0016791) is general enough to be defensible at the family level and is not contradicted outright by the fold. However, direct catalytic activity of OCA6 has never been demonstrated and its CX5R P-loop arginine is absent (reviewer sequence analysis in OCA6-notes.md; corroborated by a fungal pseudophosphatome analysis reporting catalytic-motif substitutions in Oca1/Oca2/Oca6), so this is kept as non-core and not promoted to any specific catalytic term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21409566" target="_blank" class="term-link">
+                                        PMID:21409566
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Bioinformatic analysis revealed the existence of novel PFA-DSP-related proteins in fungi (Oca1, Oca2, Oca4 and Oca6 in Saccharomyces cerevisiae) and protozoa</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004725" target="_blank" class="term-link">
+                                    GO:0004725
+                                </a>
+                            </span>
+                            <span class="term-label">protein tyrosine phosphatase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q12454" data-a="GO:0004725" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Specific protein-tyrosine-phosphatase catalytic activity, assigned electronically from the &#34;Putative&#34; EC 3.1.3.48 in UniProt. This is an over-annotation: it asserts a specific catalysis (phosphotyrosine hydrolysis) that is (i) not supported by OCA6&#39;s degenerate CX5R catalytic loop, and (ii) biochemically inconsistent with the family — the active family prototype Siw14/Oca3 is an inositol-pyrophosphate (5-InsP7) phosphatase, not a protein-tyrosine phosphatase. The EC number is explicitly marked &#34;Putative&#34; in UniProt.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Electronic mapping from the UniProt &#34;Putative&#34; EC 3.1.3.48. There is no experimental evidence that OCA6 hydrolyzes phosphotyrosine, its P-loop arginine of the CX5R catalytic motif is absent (reviewer sequence analysis in OCA6-notes.md), and the characterized activity in this atypical DSP family is inositol-pyrophosphate phosphatase (Siw14/Oca3), not phosphotyrosine phosphatase. Asserting a specific PTP activity over-annotates a likely pseudophosphatase; the general fold-level phosphatase term (GO:0016791) already captures what the family membership supports.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21409566" target="_blank" class="term-link">
+                                        PMID:21409566
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Siw14/Oca3 was an active phosphatase in vitro, whereas no phosphatase activity could be detected for Oca1.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q12454" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasmic localization asserted electronically from the UniProt subcellular-location vocabulary. Consistent with the experimental HDA localization and with the protein carrying no signal peptide or transmembrane segment.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct localization; this IEA (SubCell mapping) is concordant with the experimentally supported HDA cytoplasm annotation from PMID:14562095. Cytoplasm is the core cellular component of OCA6.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14562095" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14562095
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Global analysis of protein localization in budding yeast.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q12454" data-a="GO:0005737" data-r="PMID:14562095" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasmic localization from the genome-wide GFP-fusion localization study. This is the single highest-confidence attribute of OCA6 and is consistent with a soluble cytoplasmic protein lacking signal/transmembrane features.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct high-throughput experimental localization evidence (GFP-tagged full-length protein). Cytoplasm is well supported and is the core cellular-component assignment for OCA6.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14562095" target="_blank" class="term-link">
+                                        PMID:14562095
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">we describe the construction and analysis of a collection of yeast strains expressing full-length, chromosomally tagged green fluorescent protein fusion proteins.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003674" target="_blank" class="term-link">
+                                    GO:0003674
+                                </a>
+                            </span>
+                            <span class="term-label">molecular_function</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q12454" data-a="GO:0003674" data-r="GO_REF:0000015" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root molecular_function with the ND (No biological Data) evidence code — the honest curator placeholder recording that no molecular function has been experimentally established for OCA6. This is accurate: OCA6&#39;s catalytic status and substrate are undetermined.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ND correctly reflects the absence of experimentally demonstrated molecular function for OCA6. Retained as-is; the associated knowledge gap is captured in core_functions.knowledge_gaps.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008150" target="_blank" class="term-link">
+                                    GO:0008150
+                                </a>
+                            </span>
+                            <span class="term-label">biological_process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q12454" data-a="GO:0008150" data-r="GO_REF:0000015" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root biological_process with the ND evidence code — placeholder recording that no specific biological process has been experimentally established for OCA6 at annotation-grade evidence. Family-level genetic links to caffeine/rapamycin/oxidative-stress responses and a BMV-screen phenotype exist but are not curated here as specific BP annotations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ND appropriately reflects the lack of an annotation-grade, OCA6-specific biological process. The genome-wide BMV-replication phenotype (PMID:14671320) and family-level caffeine/rapamycin genetic linkage (PMID:21409566) are documented in the notes and knowledge gaps rather than asserted as specific process annotations, given their low specificity for OCA6 alone.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Cytoplasmic protein adopting a protein-tyrosine-phosphatase (PTP) superfamily / PFA-DSP fold and belonging to the fungal OCA family of atypical dual-specificity-phosphatase-related proteins (with Oca1, Oca2, Siw14/Oca3, Oca4, Oca5). OCA6 is genetically linked to the other OCA members in cellular responses to caffeine, rapamycin and oxidative stress, and its own catalytic activity is doubtful because the canonical CX5R catalytic P-loop is degenerate (the invariant catalytic arginine is absent). It is best regarded as a likely catalytically impaired / pseudophosphatase family member whose specific molecular activity and substrate are not established; the one high-confidence attribute is cytoplasmic localization.</h3>
+                <span class="vote-buttons" data-g="Q12454" data-a="FUNCTION: Cytoplasmic protein adopting a protein-tyrosine-ph..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14562095" target="_blank" class="term-link">
+                                PMID:14562095
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">we describe the construction and analysis of a collection of yeast strains expressing full-length, chromosomally tagged green fluorescent protein fusion proteins.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21409566" target="_blank" class="term-link">
+                                PMID:21409566
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Oca1, Oca2, Siw14/Oca3, Oca4, and Oca6 were involved in the yeast response to caffeine and rapamycin stresses.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000015.md" target="_blank" class="term-link">
+                            GO_REF:0000015
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Use of the ND evidence code for Gene Ontology (GO) terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/14562095" target="_blank" class="term-link">
+                            PMID:14562095
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Global analysis of protein localization in budding yeast.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Genome-wide GFP-fusion localization assigned OCA6 to the cytoplasm; this is the basis of the HDA cytoplasm annotation.</div>
+
+                        <div class="finding-text">"we describe the construction and analysis of a collection of yeast strains expressing full-length, chromosomally tagged green fluorescent protein fusion proteins."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/14671320" target="_blank" class="term-link">
+                            PMID:14671320
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Systematic, genome-wide identification of host genes affecting replication of a positive-strand RNA virus.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">OCA6 was identified in a genome-wide yeast single-gene-deletion screen as one of ~100 host genes whose loss altered Brome mosaic virus (BMV) RNA replication; this is the basis of the UniProt &#34;Required for replication of BMV&#34; function statement.</div>
+
+                        <div class="finding-text">"This functional genomics approach revealed nearly 100 genes whose absence inhibited or stimulated BMV RNA replication and/or gene expression by 3- to &gt;25-fold."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21409566" target="_blank" class="term-link">
+                            PMID:21409566
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Phylogenetic and genetic linkage between novel atypical dual-specificity phosphatases from non-metazoan organisms.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">OCA6 is one of the fungal PFA-DSP-related atypical dual-specificity phosphatase proteins of S. cerevisiae; the closest characterized homolog is the active PFA-DSP Siw14/Oca3.</div>
+
+                        <div class="finding-text">"Bioinformatic analysis revealed the existence of novel PFA-DSP-related proteins in fungi (Oca1, Oca2, Oca4 and Oca6 in Saccharomyces cerevisiae) and protozoa"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">OCA6, together with the other OCA-family members, is involved in the yeast response to caffeine and rapamycin stresses, and oca6 caffeine sensitivity is suppressed by overexpression of the active family member Siw14/Oca3 (genetic linkage).</div>
+
+                        <div class="finding-text">"Oca1, Oca2, Siw14/Oca3, Oca4, and Oca6 were involved in the yeast response to caffeine and rapamycin stresses."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Within the family, catalytic activity is not uniform: Siw14/Oca3 is an active phosphatase in vitro while no activity could be detected for Oca1 — direct catalytic activity of OCA6 itself was not demonstrated.</div>
+
+                        <div class="finding-text">"Siw14/Oca3 was an active phosphatase in vitro, whereas no phosphatase activity could be detected for Oca1."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18407956" target="_blank" class="term-link">
+                            PMID:18407956
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A multidimensional chromatography technology for in-depth phosphoproteome analysis.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">OCA6 is phosphorylated on Thr2, detected by large-scale mass-spectrometry phosphoproteomics.</div>
+
+                        <div class="finding-text">"A multidimensional chromatography technology for in-depth phosphoproteome analysis"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11408586" target="_blank" class="term-link">
+                            PMID:11408586
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Identification of a Saccharomyces cerevisiae gene that is required for G1 arrest in response to the lipid oxidation product linoleic acid hydroperoxide.</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is OCA6 a catalytically active phosphatase, and if so what is its physiological substrate — a phosphoprotein or an inositol pyrophosphate such as 5-InsP7?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Protein/inositol-pyrophosphate phosphatase biochemists, PTP/dual-specificity-phosphatase structural biologists</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q12454" data-a="Q: Is OCA6 a catalytically active phosphatase, and if..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the composition of the OCA complex, and does OCA6 function within it as a catalytic subunit, a regulatory subunit, or a redundant paralog?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Yeast signaling / stress-response biologists</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q12454" data-a="Q: What is the composition of the OCA complex, and do..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Express and purify recombinant OCA6 and assay phosphatase activity against generic phosphatase substrates, phosphotyrosine peptides, and an inositol-pyrophosphate panel (including 5-InsP7), comparing wild type with active-site and P-loop-arginine-restored mutants to test whether the degenerate CX5R loop can be catalytically rescued.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: In-vitro enzymology</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q12454" data-a="EXPERIMENT: Express and purify recombinant OCA6 and assay phos..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Affinity-purify tagged OCA6 from yeast and identify interacting OCA-family members and other partners to define the OCA complex and place OCA6 within it.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: Affinity purification / mass spectrometry</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q12454" data-a="EXPERIMENT: Affinity-purify tagged OCA6 from yeast and identif..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Characterize oca6 deletion phenotypes under oxidative stress, caffeine, and rapamycin, and in the BMV-replication assay, with epistasis against SIW14/OCA3 and the other OCA genes to determine OCA6&#39;s specific and redundant contributions.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: Phenotypic / genetic analysis</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q12454" data-a="EXPERIMENT: Characterize oca6 deletion phenotypes under oxidat..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(OCA6-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q12454" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="oca6-ydr067c-s-cerevisiae-curation-notes">OCA6 (YDR067C) — S. cerevisiae — curation notes</h1>
+<p>Reviewer journal. Provenance recorded inline as <code>[PMID:xxxx "verbatim supporting text"]</code> or <code>[source URL]</code>.<br />
+This is a DARK / understudied gene: the primary deliverable is an honest <code>knowledge_gaps</code> section<br />
+plus carefully-reasoned <code>description</code>/<code>core_functions</code> grounded in domain, orthology, and literature.<br />
+OCA6-specific evidence is carefully separated from evidence about other OCA-family members.</p>
+<h2 id="identity">Identity</h2>
+<ul>
+<li>UniProt: Q12454 (OCA6_YEAST), 224 aa, MW ~26 kDa.</li>
+<li>Systematic name: YDR067C; SGD: S000002474; standard name OCA6 = "Oxidant-induced Cell-cycle Arrest protein 6".</li>
+<li>UniProt RecName: "Putative tyrosine-protein phosphatase OCA6"; EC=3.1.3.48 (marked <em>Putative</em>).</li>
+<li>PANTHER family PTHR31126 (TYROSINE-PROTEIN PHOSPHATASE); subfamily PTHR31126:SF14 (TYROSINE-PROTEIN PHOSPHATASE OCA6-RELATED).</li>
+<li>CDD: cd17663 = <strong>PFA-DSP_Oca6</strong> (Plant-and-Fungi Atypical Dual-Specificity Phosphatase, Oca6 clade).</li>
+<li>Pfam: PF03162 (Y_phosphatase2 / Siw14-like); InterPro IPR004861 (Siw14-like), IPR029021 (PTP-like fold),<br />
+  IPR020422 (TYR_PHOSPHATASE_DUAL). Gene3D 3.90.190.10 (PTP superfamily fold). SUPFAM SSF52799.</li>
+</ul>
+<h2 id="domain-catalytic-motif-analysis-done-inline-from-oca6-uniprottxt-sequence">Domain / catalytic-motif analysis (done INLINE from OCA6-uniprot.txt sequence)</h2>
+<p>Full sequence (224 aa):</p>
+<div class="codehilite"><pre><span></span><code>MTLVTPLQFS TVQPNLYRGS YPREINLPFL RTLRLKYILS LTPEPLSTDP   (1-50)
+LMVKFCEENN IKTIHIKCQS ERKADKTKPK IKRKKKTVPI EYDVVVRCVK   (51-100)
+FLIDKGHYPC YMHCTNGELI ISLVVACMRK FSYWSTVSIL NEFLVYNSSI   (101-150)
+NIHERNFIEN FNSEIEVDDL DIKDKVPWIT VRYIARTATE SKDELRVDDA   (151-200)
+NASEKVARVS SVSNSLPKLK FHSM                               (201-224)
+</code></pre></div>
+
+<ul>
+<li>UniProt annotates a single PTP DOMAIN (residues 8–170) and ACT_SITE at <strong>Cys114</strong> ("Phosphocysteine intermediate",<br />
+  ECO:0000255 PROSITE-ProRule PRU00160 — i.e. a rule/profile prediction, NOT experimental).</li>
+<li>The catalytic P-loop of PTP/DSP enzymes (and of the PFA-DSP family specifically) is the <strong>CX5R</strong> signature:<br />
+  the nucleophilic Cys, then five residues, then an invariant Arg that binds the substrate phosphate.<br />
+  [CDD PFA-DSP family: "C x x x x x R" active site, 7 residue positions — https://www.ncbi.nlm.nih.gov/Structure/cdd/cddsrv.cgi?uid=350351]</li>
+<li><strong>Inline finding: OCA6 has NO intact CX5R motif.</strong> Region around the predicted catalytic Cys is<br />
+<code>...HYP C(110) YMH C(114) TNGELI I(120) I(121) S...</code>. Taking Cys114 as the nucleophile, positions 115–120 are<br />
+<code>T-N-G-E-L-I</code>; the P-loop +6 position (where the invariant catalytic Arg must sit) is <strong>Ile120, not Arg</strong>.<br />
+  A regex scan of the whole protein for <code>C.{5}R</code> (CX5R) and <code>HC.{5}R</code> returns <strong>zero matches</strong> anywhere.<br />
+  All Cys are at 56,68,98,110,114,127; all Arg at 18,23,31,34,72,83,97,129,155,182,186,196,208 — none form a CX5R.</li>
+<li>
+<p>Interpretation: the invariant P-loop arginine of the CX5R catalytic loop appears <strong>absent/substituted</strong> in OCA6.<br />
+  This is the classic signature of a <strong>pseudophosphatase</strong> (fold retained, catalytic machinery degenerate).<br />
+  This is my own sequence-level analysis; it should be treated as strong but not laboratory-confirmed.</p>
+</li>
+<li>
+<p>Independent literature corroboration of a degenerate motif in OCA6:<br />
+  the fungal pseudophosphatome analysis reports that "the <strong>Oca1, Oca2, and Oca6 contain residue substitutions<br />
+  at the core catalytic motif</strong>, while Oca4 appears to lose the entire catalytic motif."<br />
+  [ACS Omega "Pseudophosphatase Scanner for Genome-Wide Fungal Pseudophosphatome Analysis",<br />
+   https://pubs.acs.org/doi/10.1021/acsomega.6c00759 — abstract/summary via web search 2026-07-05]<br />
+  NOTE: full text 403-gated; recorded as web evidence, not a cached PMID quote.</p>
+</li>
+<li>CAVEAT / conflicting signal: one secondary web summary states "Oca1, Siw14/Oca3, and Oca6 are supposed to be<br />
+  active enzymes." This is a secondary assertion; it conflicts with (a) my motif analysis and (b) the<br />
+  pseudophosphatase-scanner classification. <strong>No paper in the cache directly measures OCA6 catalytic activity.</strong><br />
+  Therefore catalytic status is treated as UNRESOLVED, leaning inactive, in the review.</li>
+<li>MOD_RES: Thr2 phosphorylated (large-scale phosphoproteomics) <a href="https://pubmed.ncbi.nlm.nih.gov/18407956">PMID:18407956</a>. Peripheral to function.</li>
+</ul>
+<h2 id="what-is-known-about-oca6-specifically-with-attribution">What is KNOWN about OCA6 specifically (with attribution)</h2>
+<ol>
+<li><strong>Subcellular location = cytoplasm.</strong> Genome-wide GFP-fusion localization.<br />
+   [PMID:14562095 — "Global analysis of protein localization in budding yeast"; abstract-only cache].<br />
+   GOA carries this as HDA (cytoplasm) plus a UniProt IEA (SubCell) duplicate.</li>
+<li><strong>Deletion reduces Brome mosaic virus (BMV) RNA replication in yeast.</strong> OCA6 is one of ~100 host genes from a<br />
+   genome-wide single-gene-deletion screen whose loss altered BMV replication.<br />
+   [PMID:14671320 — "Systematic, genome-wide identification of host genes affecting replication of a<br />
+   positive-strand RNA virus"; abstract-only]. This is a low-specificity, high-throughput hit; the abstract does<br />
+   NOT describe an OCA6-specific mechanism ("nearly 100 genes whose absence inhibited or stimulated BMV RNA<br />
+   replication"). UniProt promotes this to <code>-!- FUNCTION: Required for replication of Brome mosaic virus (BMV)</code><br />
+   with ECO:0000269, but it is a screen-level phenotype, not a demonstrated biochemical role.</li>
+<li><strong>OCA6 is a member of the fungal OCA family of PFA-DSP-related atypical DSPs.</strong><br />
+   [PMID:21409566 — "novel PFA-DSP-related proteins in fungi (Oca1, Oca2, Oca4 and Oca6 in Saccharomyces<br />
+   cerevisiae)"; "The closest yeast homolog for these proteins was the PFA-DSP from S. cerevisiae<br />
+   ScPFA-DSP1/Siw14/Oca3."].</li>
+<li><strong>OCA6 participates in caffeine/rapamycin stress responses, genetically linked to the OCA family.</strong><br />
+   [PMID:21409566 — "Oca1, Oca2, Siw14/Oca3, Oca4, and Oca6 were involved in the yeast response to caffeine and<br />
+   rapamycin stresses"; "overexpression of Siw14/Oca3 suppressed the caffeine sensitivity of oca1, oca2, oca4,<br />
+   and oca6 deleted strains, indicating a genetic linkage and suggesting a functional relationship for these<br />
+   proteins."]. So OCA6-null caffeine sensitivity is rescued by the <em>active</em> paralog Siw14 — consistent with OCA6<br />
+   working in a shared pathway rather than providing unique catalysis.</li>
+<li><strong>SGD phenotype survey (large-scale):</strong> oca6Δ shows decreased oxidative-stress resistance, decreased chemical<br />
+   resistance, abnormal chemical-compound accumulation, decreased competitive fitness, vacuolar morphology<br />
+   abnormalities. [SGD locus S000002474, https://www.yeastgenome.org/locus/S000002474 — SGD summarizes<br />
+   "biological role is unknown"; molecular function ND].</li>
+<li><strong>OCA "complex".</strong> Transcriptional profiles of oca1/oca2/oca3(SIW14)/oca5/oca6 deletion strains are highly<br />
+   similar and there is evidence for physical interactions among OCA proteins — hence the "OCA complex" framing.<br />
+   [web summary of high-throughput yeast complex/chemical-stress mapping; PMID:22282571 (Hillenmeyer et al. /<br />
+   related large-scale complex mapping) — NOT directly quoted from cache; treat as supporting, not primary].</li>
+</ol>
+<h2 id="what-is-not-known-about-oca6-knowledge-gaps">What is NOT known about OCA6 (knowledge gaps)</h2>
+<ul>
+<li><strong>Is OCA6 catalytically active?</strong> No direct assay of OCA6 phosphatase activity exists in the cache. The 2011<br />
+  paper measured Siw14 (active) and Oca1 (inactive), NOT OCA6. Sequence analysis (no CX5R Arg) and the<br />
+  pseudophosphatase-scanner classification both point to <em>likely catalytically dead / pseudophosphatase</em>, but this<br />
+  is inferred, not measured.</li>
+<li><strong>What is its physiological substrate?</strong> The active family prototype Siw14/Oca3 is a 5-InsP7 inositol<br />
+  pyrophosphate phosphatase (not a protein-tyrosine phosphatase). Whether OCA6 has any residual activity on<br />
+  inositol pyrophosphates, on a phosphoprotein, or acts purely as a non-catalytic scaffold/regulator within the<br />
+  OCA complex is unknown.</li>
+<li><strong>Its specific role in the OCA complex / oxidative-stress response.</strong> The "OCA" (oxidant-induced cell-cycle<br />
+  arrest) name derives from OCA1/YNL099C [PMID:11408586, Alic et al. 2001: YNL099C required for G1 arrest on<br />
+  linoleic-acid-hydroperoxide]. OCA6 was named by family membership; there is no direct demonstration that OCA6<br />
+  itself mediates oxidant-induced cell-cycle arrest. Whether OCA6 is a catalytic subunit, a regulatory subunit,<br />
+  or functionally redundant within the complex is unresolved.</li>
+<li><strong>Mechanism of the BMV-replication phenotype.</strong> Whether OCA6 acts directly on viral replication or indirectly<br />
+  (via stress signaling / membrane lipid / inositol-pyrophosphate homeostasis) is unknown.</li>
+</ul>
+<h2 id="attribution-discipline-oca6-vs-other-oca-members">Attribution discipline: OCA6 vs other OCA members</h2>
+<ul>
+<li><strong>Siw14/Oca3</strong>: the biochemically characterized active PFA-DSP (5-InsP7 phosphatase). Do NOT transfer its<br />
+  measured catalytic activity to OCA6.</li>
+<li><strong>Oca1/YNL099C</strong>: founding OCA gene (oxidant-induced G1 arrest); shown catalytically inactive in vitro.</li>
+<li><strong>Oca2, Oca4, Oca5</strong>: other family members; Oca4 has lost its catalytic motif; Oca5 reported as an inositol<br />
+  pyrophosphatase in another study. None of their specific data should be attributed to OCA6.</li>
+<li>OCA6-specific direct evidence is limited to: cytoplasmic localization (HTP), BMV-screen phenotype,<br />
+  caffeine-sensitivity/genetic-linkage as an oca6Δ member of the family, SGD phenotype survey, and the Thr2<br />
+  phosphosite. Everything else is family-level or orthology-based inference.</li>
+</ul>
+<h2 id="annotation-review-plan-6-goa-annotations">Annotation review plan (6 GOA annotations)</h2>
+<ol>
+<li>GO:0016791 phosphatase activity (IBA, GO_REF:0000033) — family/fold supports a phosphatase-like domain; but<br />
+   catalytic Arg is degenerate. Keep as a cautious non-core general MF (KEEP_AS_NON_CORE) — IBA reflects the fold,<br />
+   and "phosphatase activity" is general enough to be defensible for the family; flag catalytic uncertainty in<br />
+   reason. (Do not promote to a specific PTP activity.)</li>
+<li>GO:0004725 protein tyrosine phosphatase activity (IEA, GO_REF:0000120 = UniProtKB-EC from the <em>Putative</em> EC<br />
+   3.1.3.48) — this is the over-annotation. It asserts a <em>specific</em> protein-tyrosine-phosphatase catalysis that<br />
+   (a) is contradicted by the degenerate CX5R motif, and (b) is biochemically wrong even for the active family<br />
+   member (Siw14 is an inositol-pyrophosphate phosphatase, not a PTP). MARK_AS_OVER_ANNOTATED (specific PTP<br />
+   activity not supported; likely pseudophosphatase).</li>
+<li>GO:0005737 cytoplasm (IEA, GO_REF:0000044 SubCell) — ACCEPT (or non-core); supported.</li>
+<li>GO:0005737 cytoplasm (HDA, PMID:14562095) — ACCEPT; direct HTP localization evidence, this is the core CC.</li>
+<li>GO:0003674 molecular_function (ND, GO_REF:0000015) — ACCEPT as ND placeholder (SGD's honest "unknown").</li>
+<li>GO:0008150 biological_process (ND, GO_REF:0000015) — ACCEPT as ND placeholder.</li>
+</ol>
+<p>Core function: uncertain molecular function within a PTP-superfamily / PFA-DSP fold, acting in the cytoplasm as<br />
+a member of the OCA family implicated in caffeine/rapamycin and oxidative-stress responses; likely a<br />
+pseudophosphatase (degenerate CX5R). Location cytoplasm is the one high-confidence attribute.</p>
+<h2 id="deep-research-infra-failure-documented-not-fabricated">Deep research (infra failure — documented, not fabricated)</h2>
+<p>Automated deep research could not be produced for OCA6:<br />
+- <code>just deep-research-falcon yeast OCA6 --fallback perplexity-lite</code> was run TWICE (initial + one retry per policy).<br />
+  Both runs HUNG with no output and were killed (~20 min then an 8-min bounded retry; SIGTERM exit 143).<br />
+- The perplexity-lite fallback returned HTTP 401 <code>insufficient_quota</code> (Perplexity API out of quota).</p>
+<p>Per repository policy I did NOT fabricate a <code>-deep-research-{provider}.md</code> file. All findings in this review are<br />
+grounded directly in: the cached UniProt record (Q12454), the GOA TSV, cached PMIDs<br />
+(14562095, 14671320, 21409566, 18407956, 11408586), SGD (S000002474), CDD (cd17663 / PFA-DSP family),<br />
+PANTHER (PTHR31126 / SF14), and the reviewer's own inline CX5R catalytic-motif analysis of the UniProt sequence.<br />
+The review therefore does not depend on an automated deep-research file.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q12454
+gene_symbol: OCA6
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:559292
+  label: Saccharomyces cerevisiae
+description: &gt;-
+  OCA6 (YDR067C) is a small (224-residue) cytoplasmic protein of the budding yeast
+  Saccharomyces cerevisiae that adopts a protein-tyrosine-phosphatase (PTP) superfamily
+  fold and belongs to the fungal OCA family of PFA-DSP (Plant-and-Fungi Atypical
+  Dual-Specificity Phosphatase)-related proteins, together with Oca1, Oca2, Siw14/Oca3,
+  Oca4 and Oca5. Although classified within the PTP/DSP structural family (Pfam Y_phosphatase2 /
+  Siw14-like; CDD PFA-DSP_Oca6) and carrying a predicted phosphocysteine active-site residue,
+  its canonical CX5R catalytic loop is degenerate — the invariant phosphate-binding arginine
+  is not present — so OCA6 is likely a catalytically impaired or pseudophosphatase member of
+  the family rather than a bona fide protein-tyrosine phosphatase. The biochemically active
+  prototype of the family, Siw14/Oca3, is an inositol-pyrophosphate (5-InsP7) phosphatase, not
+  a phosphotyrosine phosphatase. OCA6 is genetically linked to the other OCA-family members and
+  is implicated in cellular responses to caffeine, rapamycin and oxidative stress, and its
+  deletion reduces replication of Brome mosaic virus in yeast. Its own catalytic status,
+  physiological substrate, and precise role within the OCA family remain undetermined.
+references:
+- id: GO_REF:0000015
+  title: Use of the ND evidence code for Gene Ontology (GO) terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:14562095
+  title: Global analysis of protein localization in budding yeast.
+  findings:
+  - statement: &gt;-
+      Genome-wide GFP-fusion localization assigned OCA6 to the cytoplasm; this is the
+      basis of the HDA cytoplasm annotation.
+    supporting_text: &gt;-
+      we describe the construction and analysis of a collection of yeast strains
+      expressing full-length, chromosomally tagged green fluorescent protein fusion
+      proteins.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified high-throughput GFP-localization resource (abstract-only cache).
+      Supports the cytoplasmic localization of OCA6. Assigns location, not molecular function.
+- id: PMID:14671320
+  title: Systematic, genome-wide identification of host genes affecting replication of
+    a positive-strand RNA virus.
+  findings:
+  - statement: &gt;-
+      OCA6 was identified in a genome-wide yeast single-gene-deletion screen as one of ~100
+      host genes whose loss altered Brome mosaic virus (BMV) RNA replication; this is the
+      basis of the UniProt &#34;Required for replication of BMV&#34; function statement.
+    supporting_text: &gt;-
+      This functional genomics approach revealed nearly 100 genes whose absence inhibited or
+      stimulated BMV RNA replication and/or gene expression by 3- to &gt;25-fold.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified primary paper (abstract-only cache). OCA6 is a hit in a large,
+      low-specificity genome-wide screen; the abstract describes ~100 genes and does not
+      establish an OCA6-specific mechanism. Supports a BMV-replication phenotype, not a
+      defined biochemical function.
+- id: PMID:21409566
+  title: Phylogenetic and genetic linkage between novel atypical dual-specificity phosphatases
+    from non-metazoan organisms.
+  findings:
+  - statement: &gt;-
+      OCA6 is one of the fungal PFA-DSP-related atypical dual-specificity phosphatase proteins
+      of S. cerevisiae; the closest characterized homolog is the active PFA-DSP Siw14/Oca3.
+    supporting_text: &gt;-
+      Bioinformatic analysis revealed the existence of novel PFA-DSP-related proteins in fungi
+      (Oca1, Oca2, Oca4 and Oca6 in Saccharomyces cerevisiae) and protozoa
+  - statement: &gt;-
+      OCA6, together with the other OCA-family members, is involved in the yeast response to
+      caffeine and rapamycin stresses, and oca6 caffeine sensitivity is suppressed by
+      overexpression of the active family member Siw14/Oca3 (genetic linkage).
+    supporting_text: &gt;-
+      Oca1, Oca2, Siw14/Oca3, Oca4, and Oca6 were involved in the yeast response to caffeine
+      and rapamycin stresses.
+  - statement: &gt;-
+      Within the family, catalytic activity is not uniform: Siw14/Oca3 is an active phosphatase
+      in vitro while no activity could be detected for Oca1 — direct catalytic activity of OCA6
+      itself was not demonstrated.
+    supporting_text: &gt;-
+      Siw14/Oca3 was an active phosphatase in vitro, whereas no phosphatase activity could be
+      detected for Oca1.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified primary paper (abstract-only cache) and the key OCA-family reference.
+      Establishes OCA6 as a PFA-DSP-related fungal atypical DSP, its genetic linkage to the
+      OCA family in caffeine/rapamycin stress responses, and that catalytic activity varies
+      across the family (Siw14 active, Oca1 inactive; OCA6 not directly assayed). Does NOT
+      demonstrate OCA6 catalytic activity or a protein-tyrosine-phosphatase function.
+- id: PMID:18407956
+  title: A multidimensional chromatography technology for in-depth phosphoproteome analysis.
+  findings:
+  - statement: &gt;-
+      OCA6 is phosphorylated on Thr2, detected by large-scale mass-spectrometry phosphoproteomics.
+    supporting_text: &gt;-
+      A multidimensional chromatography technology for in-depth phosphoproteome analysis
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified large-scale phosphoproteomics paper (abstract-only cache). Provides the
+      Thr2 phosphosite on OCA6; peripheral to its molecular function.
+- id: PMID:11408586
+  title: Identification of a Saccharomyces cerevisiae gene that is required for G1 arrest
+    in response to the lipid oxidation product linoleic acid hydroperoxide.
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Founding paper of the OCA (Oxidant-induced Cell-cycle Arrest) gene name — OCA1/YNL099C.
+      OCA6 is named by family membership, not by demonstration of its own role in oxidant-induced
+      G1 arrest; cited to document the origin of the OCA nomenclature, not OCA6-specific function.
+      Not used to support any positive OCA6 annotation.
+existing_annotations:
+- term:
+    id: GO:0016791
+    label: phosphatase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      General phosphatase activity inferred phylogenetically from membership in the
+      PTP/PFA-DSP fold family. The fold is genuinely present, but OCA6&#39;s canonical CX5R
+      catalytic loop is degenerate (missing the invariant P-loop arginine), so any catalytic
+      activity is uncertain. Retained as a cautious, general, non-core molecular function that
+      reflects the family fold without over-committing to a specific catalytic role.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      IBA reflects the ancestral phosphatase fold of the PFA-DSP/PTP family, of which OCA6 is a
+      member (PMID:21409566). &#34;phosphatase activity&#34; (GO:0016791) is general enough to be
+      defensible at the family level and is not contradicted outright by the fold. However,
+      direct catalytic activity of OCA6 has never been demonstrated and its CX5R P-loop arginine
+      is absent (reviewer sequence analysis in OCA6-notes.md; corroborated by a fungal
+      pseudophosphatome analysis reporting catalytic-motif substitutions in Oca1/Oca2/Oca6), so
+      this is kept as non-core and not promoted to any specific catalytic term.
+    supported_by:
+    - reference_id: PMID:21409566
+      supporting_text: &gt;-
+        Bioinformatic analysis revealed the existence of novel PFA-DSP-related proteins in fungi
+        (Oca1, Oca2, Oca4 and Oca6 in Saccharomyces cerevisiae) and protozoa
+- term:
+    id: GO:0004725
+    label: protein tyrosine phosphatase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Specific protein-tyrosine-phosphatase catalytic activity, assigned electronically from the
+      &#34;Putative&#34; EC 3.1.3.48 in UniProt. This is an over-annotation: it asserts a specific
+      catalysis (phosphotyrosine hydrolysis) that is (i) not supported by OCA6&#39;s degenerate CX5R
+      catalytic loop, and (ii) biochemically inconsistent with the family — the active family
+      prototype Siw14/Oca3 is an inositol-pyrophosphate (5-InsP7) phosphatase, not a
+      protein-tyrosine phosphatase. The EC number is explicitly marked &#34;Putative&#34; in UniProt.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Electronic mapping from the UniProt &#34;Putative&#34; EC 3.1.3.48. There is no experimental
+      evidence that OCA6 hydrolyzes phosphotyrosine, its P-loop arginine of the CX5R catalytic
+      motif is absent (reviewer sequence analysis in OCA6-notes.md), and the characterized
+      activity in this atypical DSP family is inositol-pyrophosphate phosphatase (Siw14/Oca3), not
+      phosphotyrosine phosphatase. Asserting a specific PTP activity over-annotates a likely
+      pseudophosphatase; the general fold-level phosphatase term (GO:0016791) already captures what
+      the family membership supports.
+    supported_by:
+    - reference_id: PMID:21409566
+      supporting_text: &gt;-
+        Siw14/Oca3 was an active phosphatase in vitro, whereas no phosphatase activity could be
+        detected for Oca1.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Cytoplasmic localization asserted electronically from the UniProt subcellular-location
+      vocabulary. Consistent with the experimental HDA localization and with the protein carrying
+      no signal peptide or transmembrane segment.
+    action: ACCEPT
+    reason: &gt;-
+      Correct localization; this IEA (SubCell mapping) is concordant with the experimentally
+      supported HDA cytoplasm annotation from PMID:14562095. Cytoplasm is the core cellular
+      component of OCA6.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: HDA
+  original_reference_id: PMID:14562095
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Cytoplasmic localization from the genome-wide GFP-fusion localization study. This is the
+      single highest-confidence attribute of OCA6 and is consistent with a soluble cytoplasmic
+      protein lacking signal/transmembrane features.
+    action: ACCEPT
+    reason: &gt;-
+      Direct high-throughput experimental localization evidence (GFP-tagged full-length protein).
+      Cytoplasm is well supported and is the core cellular-component assignment for OCA6.
+    supported_by:
+    - reference_id: PMID:14562095
+      supporting_text: &gt;-
+        we describe the construction and analysis of a collection of yeast strains
+        expressing full-length, chromosomally tagged green fluorescent protein fusion
+        proteins.
+- term:
+    id: GO:0003674
+    label: molecular_function
+  evidence_type: ND
+  original_reference_id: GO_REF:0000015
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Root molecular_function with the ND (No biological Data) evidence code — the honest curator
+      placeholder recording that no molecular function has been experimentally established for OCA6.
+      This is accurate: OCA6&#39;s catalytic status and substrate are undetermined.
+    action: ACCEPT
+    reason: &gt;-
+      ND correctly reflects the absence of experimentally demonstrated molecular function for OCA6.
+      Retained as-is; the associated knowledge gap is captured in core_functions.knowledge_gaps.
+- term:
+    id: GO:0008150
+    label: biological_process
+  evidence_type: ND
+  original_reference_id: GO_REF:0000015
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Root biological_process with the ND evidence code — placeholder recording that no specific
+      biological process has been experimentally established for OCA6 at annotation-grade evidence.
+      Family-level genetic links to caffeine/rapamycin/oxidative-stress responses and a BMV-screen
+      phenotype exist but are not curated here as specific BP annotations.
+    action: ACCEPT
+    reason: &gt;-
+      ND appropriately reflects the lack of an annotation-grade, OCA6-specific biological process.
+      The genome-wide BMV-replication phenotype (PMID:14671320) and family-level caffeine/rapamycin
+      genetic linkage (PMID:21409566) are documented in the notes and knowledge gaps rather than
+      asserted as specific process annotations, given their low specificity for OCA6 alone.
+core_functions:
+- description: &gt;-
+    Cytoplasmic protein adopting a protein-tyrosine-phosphatase (PTP) superfamily / PFA-DSP fold
+    and belonging to the fungal OCA family of atypical dual-specificity-phosphatase-related proteins
+    (with Oca1, Oca2, Siw14/Oca3, Oca4, Oca5). OCA6 is genetically linked to the other OCA members
+    in cellular responses to caffeine, rapamycin and oxidative stress, and its own catalytic activity
+    is doubtful because the canonical CX5R catalytic P-loop is degenerate (the invariant catalytic
+    arginine is absent). It is best regarded as a likely catalytically impaired / pseudophosphatase
+    family member whose specific molecular activity and substrate are not established; the one
+    high-confidence attribute is cytoplasmic localization.
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+  supported_by:
+  - reference_id: PMID:14562095
+    supporting_text: &gt;-
+      we describe the construction and analysis of a collection of yeast strains
+      expressing full-length, chromosomally tagged green fluorescent protein fusion
+      proteins.
+  - reference_id: PMID:21409566
+    supporting_text: &gt;-
+      Oca1, Oca2, Siw14/Oca3, Oca4, and Oca6 were involved in the yeast response to caffeine
+      and rapamycin stresses.
+  knowledge_gaps:
+  - gap_statement: &gt;-
+      Whether OCA6 is a catalytically active phosphatase at all is undetermined. It carries the
+      PFA-DSP/PTP fold and a predicted active-site cysteine, but its CX5R catalytic loop is
+      degenerate (the invariant phosphate-binding arginine is missing), and no direct enzymatic
+      assay of OCA6 has been reported.
+    boundary: &gt;-
+      The active family prototype Siw14/Oca3 was shown to be an active phosphatase in vitro and
+      Oca1 was shown to be inactive; OCA6 itself was not assayed. OCA6&#39;s fold assignment and
+      cytoplasmic localization are firmly established.
+    gap_kind:
+    - BIOLOGY
+    dark_aspect: MF_DARK
+    status: OPEN
+    significance: &gt;-
+      Distinguishing an active atypical DSP from a non-catalytic pseudophosphatase determines
+      whether OCA6 acts enzymatically or as a scaffolding/regulatory subunit of the OCA family.
+    resolution: &gt;-
+      In-vitro phosphatase assays of recombinant OCA6 against candidate substrates (including
+      inositol pyrophosphates such as 5-InsP7) and catalytic-residue mutagenesis.
+    provenance:
+    - reference_id: PMID:21409566
+      supporting_text: &gt;-
+        Siw14/Oca3 was an active phosphatase in vitro, whereas no phosphatase activity could be
+        detected for Oca1.
+  - gap_statement: &gt;-
+      The physiological substrate of OCA6 is unknown. Even if it retains activity, whether it acts
+      on a phosphoprotein (as the &#34;protein tyrosine phosphatase&#34; name implies), on inositol
+      pyrophosphates (as the active family member Siw14/Oca3 does), or on some other substrate is
+      undetermined.
+    boundary: &gt;-
+      Siw14/Oca3, the characterized member of this fungal PFA-DSP family, is a 5-InsP7
+      inositol-pyrophosphate phosphatase rather than a protein-tyrosine phosphatase, so the
+      UniProt &#34;tyrosine-protein phosphatase&#34; name is a family-level inference, not a measured
+      OCA6 substrate.
+    gap_kind:
+    - BIOLOGY
+    dark_aspect: MF_DARK
+    status: OPEN
+    resolution: &gt;-
+      Substrate-profiling of recombinant OCA6 (protein-phosphotyrosine vs inositol-pyrophosphate
+      panels) and identification of in-vivo interactors/substrates.
+    provenance:
+    - reference_id: PMID:21409566
+      supporting_text: &gt;-
+        Bioinformatic analysis revealed the existence of novel PFA-DSP-related proteins in fungi
+        (Oca1, Oca2, Oca4 and Oca6 in Saccharomyces cerevisiae) and protozoa
+  - gap_statement: &gt;-
+      OCA6&#39;s specific role within the OCA family / OCA complex and in the oxidative-stress response
+      is unresolved — whether it is a catalytic subunit, a regulatory/scaffolding subunit, or
+      functionally redundant with its paralogs, and how it contributes mechanistically to
+      caffeine/rapamycin/oxidant responses and to Brome mosaic virus replication.
+    boundary: &gt;-
+      OCA6 is genetically linked to the OCA family in caffeine/rapamycin responses (oca6 caffeine
+      sensitivity is suppressed by overexpressed Siw14/Oca3), its deletion reduces BMV replication
+      in a genome-wide screen, and SGD&#39;s large-scale phenotype surveys report reduced oxidative-stress
+      resistance for oca6 deletants; but no OCA6-specific mechanism has been defined, and the OCA
+      &#34;oxidant-induced cell-cycle arrest&#34; name derives from OCA1, not OCA6.
+    gap_kind:
+    - BIOLOGY
+    dark_aspect: BP_DARK
+    status: OPEN
+    resolution: &gt;-
+      Affinity purification of tagged OCA6 to define OCA-complex composition, epistasis within the
+      OCA family, and directed assays of oca6 phenotypes in oxidative-stress and BMV-replication
+      contexts.
+    provenance:
+    - reference_id: PMID:21409566
+      supporting_text: &gt;-
+        overexpression of Siw14/Oca3 suppressed the caffeine sensitivity of oca1, oca2, oca4, and
+        oca6 deleted strains, indicating a genetic linkage and suggesting a functional relationship
+        for these proteins.
+suggested_questions:
+- question: &gt;-
+    Is OCA6 a catalytically active phosphatase, and if so what is its physiological substrate —
+    a phosphoprotein or an inositol pyrophosphate such as 5-InsP7?
+  experts:
+  - Protein/inositol-pyrophosphate phosphatase biochemists
+  - PTP/dual-specificity-phosphatase structural biologists
+- question: &gt;-
+    What is the composition of the OCA complex, and does OCA6 function within it as a catalytic
+    subunit, a regulatory subunit, or a redundant paralog?
+  experts:
+  - Yeast signaling / stress-response biologists
+suggested_experiments:
+- experiment_type: In-vitro enzymology
+  description: &gt;-
+    Express and purify recombinant OCA6 and assay phosphatase activity against generic
+    phosphatase substrates, phosphotyrosine peptides, and an inositol-pyrophosphate panel
+    (including 5-InsP7), comparing wild type with active-site and P-loop-arginine-restored mutants
+    to test whether the degenerate CX5R loop can be catalytically rescued.
+- experiment_type: Affinity purification / mass spectrometry
+  description: &gt;-
+    Affinity-purify tagged OCA6 from yeast and identify interacting OCA-family members and other
+    partners to define the OCA complex and place OCA6 within it.
+- experiment_type: Phenotypic / genetic analysis
+  description: &gt;-
+    Characterize oca6 deletion phenotypes under oxidative stress, caffeine, and rapamycin, and in
+    the BMV-replication assay, with epistasis against SIW14/OCA3 and the other OCA genes to
+    determine OCA6&#39;s specific and redundant contributions.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,0 +1,4875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CERS3 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>CERS3</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q8IU89" target="_blank" class="term-link">
+                        Q8IU89
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "CERS3";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q8IU89" data-a="DESCRIPTION: CERS3 (ceramide synthase 3; formerly LASS3) is an ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>CERS3 (ceramide synthase 3; formerly LASS3) is an endoplasmic reticulum membrane enzyme that catalyzes the N-acylation step of de novo ceramide biosynthesis: transfer of a fatty acyl group from acyl-CoA onto the amino group of a sphingoid base (dihydrosphingosine/sphinganine in the de novo pathway, sphingosine in the salvage pathway) to form dihydroceramide/ceramide (sphingosine N-acyltransferase, EC 2.3.1.24). Among the six mammalian ceramide synthases it is distinguished by its selectivity for very-long- and ultra-long-chain acyl-CoAs (chain length greater than C22, up to C26 and longer). CERS3 produces the ultra-long-chain ceramides, including omega-hydroxy species and acylceramides, that form the extracellular lipid lamellae and cornified lipid envelope of the epidermis and are essential for the skin permeability barrier. It is expressed most prominently in the epidermis (at the interface between the stratum granulosum and stratum corneum) and in testis. It is a multi-pass ER membrane protein whose catalytic activity resides in a TLC (TRAM-LAG1-CLN8) domain; it also carries a degenerate homeobox-like region that has lost DNA-binding residues and is not functional. Loss-of-function variants cause autosomal recessive congenital ichthyosis 9 (ARCI9), a keratinization/skin-barrier disorder.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IU89" data-a="GO:0005783" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference that CERS3 is active in the endoplasmic reticulum. Correct: CERS3 is an ER membrane enzyme. The more precise curated location is ER membrane (GO:0005789); this ER term is accurate but less specific.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> CERS3 and the whole LAG1/LASS/CerS family are ER-resident enzymes, and UniProt records ER membrane as the subcellular location. The IBA is consistent with the experimental/curated localization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-428185
+
+                                </span>
+
+                                <div class="support-text">Ceramide synthase enzymes (CerS, LASS) associated with the endoplasmic reticulum membrane catalyze the reaction of a sphingoid and a long-chain fatty acyl CoA such as stearyl-CoA to form a dihydroceramide and CoASH</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046513" target="_blank" class="term-link">
+                                    GO:0046513
+                                </a>
+                            </span>
+                            <span class="term-label">ceramide biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IU89" data-a="GO:0046513" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference that CERS3 is involved in ceramide biosynthesis. This is a core function of CERS3, independently supported by direct experimental evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> CERS3 catalyzes the committed N-acylation step of de novo ceramide synthesis; ceramide biosynthetic process is a core biological process.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23754960" target="_blank" class="term-link">
+                                        PMID:23754960
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">CERS3 generates epidermis-specific ceramides by N-acylating dihydrosphingosine with acyl-CoAs ranging from long to very long aliphatic chains</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050291" target="_blank" class="term-link">
+                                    GO:0050291
+                                </a>
+                            </span>
+                            <span class="term-label">sphingosine N-acyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IU89" data-a="GO:0050291" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference of sphingosine N-acyltransferase (ceramide synthase) activity. This is the core molecular function of CERS3.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the exact core catalytic activity of CERS3 (transfer of an acyl chain from acyl-CoA onto a sphingoid base).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17977534" target="_blank" class="term-link">
+                                        PMID:17977534
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">ceramide is synthesized by N-acylation of a sphingoid long-chain base</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003677" target="_blank" class="term-link">
+                                    GO:0003677
+                                </a>
+                            </span>
+                            <span class="term-label">DNA binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IU89" data-a="GO:0003677" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated InterPro2GO annotation triggered by the homeodomain-like signature (IPR001356) that CERS3 shares with the LAG1/LASS/CerS family. CERS3 does not bind DNA: its homeobox-like region is degenerate and lacks the residues required for DNA binding, and the protein is an ER membrane enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is a demonstrably wrong electronic (IEA) inference. UniProt explicitly cautions that the predicted homeobox domain is degenerated and lacks DNA-binding residues, and that ER localization argues against homeobox function. The catalytic activity resides in the TLC domain.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/CERS3/CERS3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Contains a predicted homeobox domain which is degenerated, lacking residues important for DNA-binding.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IU89" data-a="GO:0005789" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated (ARBA/UniProtKB-SubCell) annotation to ER membrane. This is the precise, correct subcellular location of CERS3.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> CERS3 is a multi-pass ER membrane protein; ER membrane is the accurate curated location and the site of its catalytic activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/CERS3/CERS3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IU89" data-a="GO:0016020" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated InterPro2GO annotation to the generic &#39;membrane&#39; term. Correct in substance (CERS3 is an integral membrane protein) but far less informative than the ER membrane annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> &#39;membrane&#39; is a high-level, uninformative location. The specific ER membrane term (GO:0005789) is already present and should be preferred.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/CERS3/CERS3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046513" target="_blank" class="term-link">
+                                    GO:0046513
+                                </a>
+                            </span>
+                            <span class="term-label">ceramide biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IU89" data-a="GO:0046513" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated (ARBA/ortholog/InterPro) annotation to ceramide biosynthetic process, redundant with the experimental and IBA annotations. Correct core process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Ceramide biosynthesis is the core process CERS3 participates in.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23754960" target="_blank" class="term-link">
+                                        PMID:23754960
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">CERS3 generates epidermis-specific ceramides by N-acylating dihydrosphingosine with acyl-CoAs ranging from long to very long aliphatic chains</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050291" target="_blank" class="term-link">
+                                    GO:0050291
+                                </a>
+                            </span>
+                            <span class="term-label">sphingosine N-acyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IU89" data-a="GO:0050291" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated (ARBA/InterPro/RHEA/EC 2.3.1.24) annotation of the core ceramide synthase activity, redundant with the experimental, ISS, IBA and TAS annotations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correctly captures the core catalytic function via EC 2.3.1.24 / RHEA mapping.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17977534" target="_blank" class="term-link">
+                                        PMID:17977534
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">ceramide is synthesized by N-acylation of a sphingoid long-chain base</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IU89" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#39;protein binding&#39; from a genome-scale binary interactome (HuRI, Y2H) screen, one of five partners reported (here UniProtKB:Q8N138 / ORMDL3).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Per curation guidelines, bare &#39;protein binding&#39; is uninformative and is not retained as a core function. Experimental IPI is not removed.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                                        PMID:32296183
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">we present a human &#39;all-by-all&#39; reference interactome map of human binary protein interactions, or &#39;HuRI&#39;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IU89" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#39;protein binding&#39; from the HuRI binary interactome screen (partner UniProtKB:Q96FB2). Uninformative molecular function term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Bare &#39;protein binding&#39; is not retained as a core function. Experimental IPI is not removed.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                                        PMID:32296183
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">we present a human &#39;all-by-all&#39; reference interactome map of human binary protein interactions, or &#39;HuRI&#39;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IU89" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#39;protein binding&#39; from the HuRI binary interactome screen (partner UniProtKB:Q99519 / NEU1). Uninformative molecular function term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Bare &#39;protein binding&#39; is not retained as a core function. Experimental IPI is not removed.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                                        PMID:32296183
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">we present a human &#39;all-by-all&#39; reference interactome map of human binary protein interactions, or &#39;HuRI&#39;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IU89" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#39;protein binding&#39; from the HuRI binary interactome screen (partner UniProtKB:Q9H0N5 / PCBD2). Uninformative molecular function term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Bare &#39;protein binding&#39; is not retained as a core function. Experimental IPI is not removed.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                                        PMID:32296183
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">we present a human &#39;all-by-all&#39; reference interactome map of human binary protein interactions, or &#39;HuRI&#39;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IU89" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#39;protein binding&#39; from the HuRI binary interactome screen (partner UniProtKB:Q9NUM3 / SLC39A9). Uninformative molecular function term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Bare &#39;protein binding&#39; is not retained as a core function. Experimental IPI is not removed.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                                        PMID:32296183
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">we present a human &#39;all-by-all&#39; reference interactome map of human binary protein interactions, or &#39;HuRI&#39;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IU89" data-a="GO:0005783" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated ortholog transfer (Ensembl Compara, from mouse Cers3 Q1A3B0) of ER localization. Correct but less precise than ER membrane.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> CERS3 is ER-localized; consistent with all other localization evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/CERS3/CERS3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008544" target="_blank" class="term-link">
+                                    GO:0008544
+                                </a>
+                            </span>
+                            <span class="term-label">epidermis development</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IU89" data-a="GO:0008544" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated ortholog transfer (from mouse Cers3) of a role in epidermis development. CERS3-made ultra-long-chain ceramides are essential for the epidermal permeability barrier, a genuine physiological role downstream of the core molecular activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Epidermis development is a real, well-supported downstream role of CERS3-produced ULC-ceramides, but the core function is the ceramide synthase activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22038835" target="_blank" class="term-link">
+                                        PMID:22038835
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">are key components of extracellular lipid lamellae</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070268" target="_blank" class="term-link">
+                                    GO:0070268
+                                </a>
+                            </span>
+                            <span class="term-label">cornification</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IU89" data-a="GO:0070268" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated ortholog transfer (from mouse Cers3) of a role in cornification. Loss of CERS3 produces deficient cornification; a downstream barrier outcome rather than the core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> CERS3-derived ULC-ceramides contribute to the cornified lipid envelope; retain as a non-core downstream role.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22038835" target="_blank" class="term-link">
+                                        PMID:22038835
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">deficient cornification are hallmarks of mutant skin</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030148" target="_blank" class="term-link">
+                                    GO:0030148
+                                </a>
+                            </span>
+                            <span class="term-label">sphingolipid biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-1660661
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IU89" data-a="GO:0030148" data-r="Reactome:R-HSA-1660661" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) placement of CERS3 in sphingolipid de novo biosynthesis. Correct but broader than the specific ceramide biosynthetic process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Ceramide biosynthesis is part of sphingolipid biosynthesis; this parent term is accurate but less specific than GO:0046513.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-1660661
+
+                                </span>
+
+                                <div class="support-text">Glycosphingolipid biosynthesis is based on salvage of sphingolipids and de novo sphingolipid synthesis.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006665" target="_blank" class="term-link">
+                                    GO:0006665
+                                </a>
+                            </span>
+                            <span class="term-label">sphingolipid metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000041
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IU89" data-a="GO:0006665" data-r="GO_REF:0000041" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated UniPathway (UPA00222) mapping. Correct but the broadest process term for CERS3; the specific biosynthetic branch is captured by GO:0046513.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Accurate but very general; ceramide biosynthetic process is the more informative term for CERS3.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/CERS3/CERS3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PATHWAY: Lipid metabolism; sphingolipid metabolism.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050291" target="_blank" class="term-link">
+                                    GO:0050291
+                                </a>
+                            </span>
+                            <span class="term-label">sphingosine N-acyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-428185
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IU89" data-a="GO:0050291" data-r="Reactome:R-HSA-428185" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) annotation of the core ceramide synthase / sphingosine N-acyltransferase activity, redundant with the experimental and IBA annotations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correctly captures the core catalytic activity of CERS3.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-428185
+
+                                </span>
+
+                                <div class="support-text">Ceramide synthase enzymes (CerS, LASS) associated with the endoplasmic reticulum membrane catalyze the reaction of a sphingoid and a long-chain fatty acyl CoA such as stearyl-CoA to form a dihydroceramide and CoASH</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005654" target="_blank" class="term-link">
+                                    GO:0005654
+                                </a>
+                            </span>
+                            <span class="term-label">nucleoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000052
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IU89" data-a="GO:0005654" data-r="GO_REF:0000052" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HPA immunofluorescence (IDA) annotation to nucleoplasm. This conflicts with the well-established ER membrane localization of CERS3 and with the UniProt CAUTION that the protein is not nuclear. Likely nonspecific antibody signal.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> CERS3 is a multi-pass ER membrane enzyme, and UniProt explicitly states it localizes in the ER and not the nucleus; a nucleoplasmic location is not biologically supported. The experimental IDA is not removed.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/CERS3/CERS3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">the protein localizes in the endoplasmic reticulum and not in the nucleus, which also argues against homeobox function</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IU89" data-a="GO:0005789" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Curator sequence-similarity (ISS, from mouse Cers3 Q1A3B0) annotation to ER membrane. This is the precise, correct location of CERS3.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ER membrane is the accurate curated location and the site of CERS3 catalytic activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/CERS3/CERS3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050291" target="_blank" class="term-link">
+                                    GO:0050291
+                                </a>
+                            </span>
+                            <span class="term-label">sphingosine N-acyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IU89" data-a="GO:0050291" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Curator sequence-similarity (ISS, from mouse Cers3) annotation of the core ceramide synthase activity, redundant with the experimental, IBA, TAS and IEA annotations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correctly captures the core catalytic function of CERS3.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17977534" target="_blank" class="term-link">
+                                        PMID:17977534
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">ceramide is synthesized by N-acylation of a sphingoid long-chain base</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IU89" data-a="GO:0005783" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Curator sequence-similarity (ISS, from mouse Cers3) annotation to ER. Correct but less specific than ER membrane.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> CERS3 is ER-resident; consistent with the more precise ER membrane annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/CERS3/CERS3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008544" target="_blank" class="term-link">
+                                    GO:0008544
+                                </a>
+                            </span>
+                            <span class="term-label">epidermis development</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IU89" data-a="GO:0008544" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Curator sequence-similarity (ISS, from mouse Cers3) annotation to epidermis development, consistent with the essential role of CERS3-made ULC-ceramides in the skin barrier. A genuine downstream role, not the core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Epidermis development is a real physiological outcome of CERS3 activity but is downstream of its ceramide synthase function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22038835" target="_blank" class="term-link">
+                                        PMID:22038835
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">are key components of extracellular lipid lamellae</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046513" target="_blank" class="term-link">
+                                    GO:0046513
+                                </a>
+                            </span>
+                            <span class="term-label">ceramide biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17977534" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17977534
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Kinetic characterization of mammalian ceramide synthases: de...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IU89" data-a="GO:0046513" data-r="PMID:17977534" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental (IDA) annotation from biochemical characterization of mammalian ceramide synthases, including CERS3, N-acylating sphinganine to form (dihydro)ceramide. Core biological process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Ceramide biosynthesis is the core process CERS3 participates in; established directly by enzyme assays measuring ceramide synthase activity and K(m) toward sphinganine.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17977534" target="_blank" class="term-link">
+                                        PMID:17977534
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">ceramide is synthesized by N-acylation of a sphingoid long-chain base</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17977534" target="_blank" class="term-link">
+                                        PMID:17977534
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">K(m) value of each CerS towards sphinganine</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046513" target="_blank" class="term-link">
+                                    GO:0046513
+                                </a>
+                            </span>
+                            <span class="term-label">ceramide biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22038835" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22038835
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Loss of ceramide synthase 3 causes lethal skin barrier disru...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IU89" data-a="GO:0046513" data-r="PMID:22038835" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental (IDA) annotation showing CERS3 is required for synthesis of ultra-long-chain ceramides; CerS3 deficiency abolishes ULC-ceramides. Core biological process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> CERS3 is exclusively required for ultra-long-chain ceramide synthesis, a specialized part of ceramide biosynthesis; strong direct evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22038835" target="_blank" class="term-link">
+                                        PMID:22038835
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">we identified human and mouse ceramide synthase 3 (CerS3), among</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22038835" target="_blank" class="term-link">
+                                        PMID:22038835
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Deficiency of CerS3 in mice results in complete loss of</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050291" target="_blank" class="term-link">
+                                    GO:0050291
+                                </a>
+                            </span>
+                            <span class="term-label">sphingosine N-acyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17977534" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17977534
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Kinetic characterization of mammalian ceramide synthases: de...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IU89" data-a="GO:0050291" data-r="PMID:17977534" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental (IDA) determination of ceramide synthase / sphingosine N-acyltransferase activity, including kinetic characterization (K(m) toward sphinganine). This is the core molecular function of CERS3.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Biochemical assays directly demonstrate the N-acyltransferase activity of CERS3, with each CerS showing chain-length-specific acyl-CoA preference.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17977534" target="_blank" class="term-link">
+                                        PMID:17977534
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">specificity towards acyl CoAs of different chain lengths</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17977534" target="_blank" class="term-link">
+                                        PMID:17977534
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">K(m) value of each CerS towards sphinganine</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050291" target="_blank" class="term-link">
+                                    GO:0050291
+                                </a>
+                            </span>
+                            <span class="term-label">sphingosine N-acyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22038835" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22038835
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Loss of ceramide synthase 3 causes lethal skin barrier disru...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IU89" data-a="GO:0050291" data-r="PMID:22038835" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental (IDA) demonstration that CERS3 has ceramide synthase activity with selectivity for ultra-long-chain acyl-CoAs, required for ULC-ceramide synthesis. Core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> CERS3 is the ceramide synthase exclusively responsible for ULC-ceramide synthesis in vitro, establishing its N-acyltransferase activity with ultra-long-chain substrate selectivity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22038835" target="_blank" class="term-link">
+                                        PMID:22038835
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">to be exclusively required for the ULC-Cer synthesis in vitro</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070268" target="_blank" class="term-link">
+                                    GO:0070268
+                                </a>
+                            </span>
+                            <span class="term-label">cornification</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IU89" data-a="GO:0070268" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Curator sequence-similarity (ISS, from mouse Cers3) annotation to cornification. CerS3 loss causes deficient cornification; a downstream barrier outcome rather than the core molecular activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> CERS3-derived ULC-ceramides contribute to the cornified lipid envelope; retain as a non-core downstream role.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22038835" target="_blank" class="term-link">
+                                        PMID:22038835
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">deficient cornification are hallmarks of mutant skin</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030216" target="_blank" class="term-link">
+                                    GO:0030216
+                                </a>
+                            </span>
+                            <span class="term-label">keratinocyte differentiation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23754960" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23754960
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mutations in CERS3 cause autosomal recessive congenital icht...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IU89" data-a="GO:0030216" data-r="PMID:23754960" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mutant-phenotype (IMP) annotation: CERS3 loss-of-function mutations in humans (ARCI9) disturb the epidermal sphingolipid profile and impair terminal keratinocyte differentiation. Genuine downstream physiological role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> CERS3-produced ceramides are required for proper terminal differentiation of keratinocytes; a real but downstream role, secondary to the core ceramide synthase activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23754960" target="_blank" class="term-link">
+                                        PMID:23754960
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">these observations suggest that mutated CERS3 affects the terminal differentiation process in human skin</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046513" target="_blank" class="term-link">
+                                    GO:0046513
+                                </a>
+                            </span>
+                            <span class="term-label">ceramide biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23754960" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23754960
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mutations in CERS3 cause autosomal recessive congenital icht...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IU89" data-a="GO:0046513" data-r="PMID:23754960" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mutant-phenotype (IMP) annotation: CERS3 loss-of-function reduces epidermis-specific very-long-chain ceramides, establishing CERS3&#39;s role in ceramide biosynthesis in human skin. Core biological process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Patient keratinocytes carrying CERS3 mutations show a marked decrease in very-long-chain ceramides, directly demonstrating CERS3&#39;s involvement in ceramide biosynthesis.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23754960" target="_blank" class="term-link">
+                                        PMID:23754960
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">marked decrease of very long-chain (VLC) ceramides</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-428185
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IU89" data-a="GO:0005789" data-r="Reactome:R-HSA-428185" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) annotation to ER membrane, the precise and correct subcellular location of CERS3 and site of its catalytic activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ER membrane is the accurate curated location; Reactome describes ceramide synthases as ER-membrane-associated enzymes.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-428185
+
+                                </span>
+
+                                <div class="support-text">Ceramide synthase enzymes (CerS, LASS) associated with the endoplasmic reticulum membrane catalyze the reaction of a sphingoid and a long-chain fatty acyl CoA such as stearyl-CoA to form a dihydroceramide and CoASH</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Ceramide synthase (sphingosine N-acyltransferase) that catalyzes the N-acylation step of de novo ceramide biosynthesis at the ER membrane, transferring a very-long/ultra-long-chain fatty acyl group from acyl-CoA onto a sphingoid base (sphinganine) to form (dihydro)ceramide, producing the ultra-long-chain ceramides required for the epidermal permeability barrier.</h3>
+                <span class="vote-buttons" data-g="Q8IU89" data-a="FUNCTION: Ceramide synthase (sphingosine N-acyltransferase) ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050291" target="_blank" class="term-link">
+                            sphingosine N-acyltransferase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046513" target="_blank" class="term-link">
+                                ceramide biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                endoplasmic reticulum membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17977534" target="_blank" class="term-link">
+                                PMID:17977534
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">ceramide is synthesized by N-acylation of a sphingoid long-chain base</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22038835" target="_blank" class="term-link">
+                                PMID:22038835
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">to be exclusively required for the ULC-Cer synthesis in vitro</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/CERS3/CERS3-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">SUBCELLULAR LOCATION: Endoplasmic reticulum membrane</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000041.md" target="_blank" class="term-link">
+                            GO_REF:0000041
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniPathway vocabulary mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17977534" target="_blank" class="term-link">
+                            PMID:17977534
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Kinetic characterization of mammalian ceramide synthases: determination of K(m) values towards sphinganine.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22038835" target="_blank" class="term-link">
+                            PMID:22038835
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Loss of ceramide synthase 3 causes lethal skin barrier disruption.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23754960" target="_blank" class="term-link">
+                            PMID:23754960
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Mutations in CERS3 cause autosomal recessive congenital ichthyosis in humans.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-1660661
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Sphingolipid de novo biosynthesis</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-428185
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Ceramide synthases transfer acyl-CoA onto sphingoid</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/CERS3/CERS3-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB Q8IU89 (CERS3_HUMAN) record</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What are the specific in vivo acyl-chain-length preferences of human CERS3, and how do partner proteins such as ORMDL3, fatty acid elongases, and hydroxylases shape the ultra-long-chain acylceramide output in epidermis?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q8IU89" data-a="Q: What are the specific in vivo acyl-chain-length pr..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Reconstitute human CERS3 in a defined membrane system and measure activity across a panel of acyl-CoA chain lengths with sphinganine and sphingosine acceptors to quantify its ultra-long-chain selectivity.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q8IU89" data-a="EXPERIMENT: Reconstitute human CERS3 in a defined membrane sys..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Test whether the CERS3-ORMDL3 interaction detected in HuRI modulates CERS3 activity or sphingolipid flux in differentiating keratinocytes.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q8IU89" data-a="EXPERIMENT: Test whether the CERS3-ORMDL3 interaction detected..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(CERS3-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q8IU89" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="cers3-ceramide-synthase-3-lass3-review-notes">CERS3 (ceramide synthase 3, LASS3) — review notes</h1>
+<p>UniProtKB: Q8IU89. HGNC:23752. Chromosome 15q26.3. 383 aa.</p>
+<h2 id="function-grounded-in-uniprot-cached-primary-literature">Function (grounded in UniProt + cached primary literature)</h2>
+<p>CERS3 is a ceramide synthase (sphingosine N-acyltransferase, EC 2.3.1.24; also<br />
+EC 2.3.1.297 / 2.3.1.298 for VLC/ULC variants) that catalyzes the N-acylation<br />
+step of de novo ceramide biosynthesis: transfer of an acyl chain from acyl-CoA<br />
+onto the amino group of a sphingoid base (sphinganine/dihydrosphingosine in de<br />
+novo synthesis; sphingosine in the salvage pathway) to form<br />
+dihydroceramide/ceramide, at the ER membrane.</p>
+<ul>
+<li>Among the six mammalian CerS, CERS3 is distinguished by high selectivity for<br />
+<strong>very-long- and ultra-long-chain (≥C22, up to ≥C26/C28) acyl-CoAs</strong><br />
+  [UniProt FUNCTION; PMID:22038835 "we identified human and mouse ceramide<br />
+  synthase 3 (CerS3), among ... to be exclusively required for the ULC-Cer<br />
+  synthesis in vitro"].</li>
+<li>CerS family members display "a high specificity towards acyl CoAs of different<br />
+  chain lengths"; K(m) toward sphinganine determined <a href="https://pubmed.ncbi.nlm.nih.gov/17977534">PMID:17977534</a>.</li>
+<li>CERS3 is crucial for synthesis of ultra-long-chain ceramides (including<br />
+  omega-hydroxy acylceramides) that build the epidermal permeability barrier<br />
+  [PMID:22038835 "are key components of extracellular lipid lamellae";<br />
+  PMID:23754960].</li>
+</ul>
+<h2 id="localization">Localization</h2>
+<p>ER membrane; multi-pass membrane protein (6 predicted TM helices; C-terminus<br />
+cytoplasmic) [UniProt SUBCELLULAR LOCATION; TOPO_DOM 319..383 cytoplasmic<br />
+ECO:0000305|PubMed:26887952]. Not nuclear — see homeobox CAUTION below.</p>
+<h2 id="tissue-specificity">Tissue specificity</h2>
+<p>Expressed in epidermis (localizes at the interface between stratum granulosum<br />
+and stratum corneum, at protein level) and testis [UniProt TISSUE SPECIFICITY;<br />
+PMID:23754960]. HPA: tissue-enhanced esophagus, skin, vagina.</p>
+<h2 id="disease">Disease</h2>
+<p>Autosomal recessive congenital ichthyosis 9 (ARCI9, MIM:615023) — a<br />
+skin-barrier / keratinization disorder [PMID:23754960; UniProt DISEASE;<br />
+Reactome R-HSA-428185]. Mouse CerS3 knockout is neonatal-lethal from<br />
+transepidermal water loss <a href="https://pubmed.ncbi.nlm.nih.gov/22038835">PMID:22038835</a>.</p>
+<h2 id="homeobox-dna-binding-the-notable-over-annotation-trap">Homeobox / DNA binding — the notable over-annotation trap</h2>
+<p>CERS3 contains a <strong>degenerate homeobox-like region (66..127)</strong> and matches<br />
+InterPro IPR001356 (Homeodomain / HD), which drives an automated IEA<br />
+<code>GO:0003677 DNA binding</code> annotation. UniProt explicitly flags this as<br />
+spurious: CAUTION "Contains a predicted homeobox domain which is degenerated,<br />
+lacking residues important for DNA-binding. Moreover, the protein localizes in<br />
+the endoplasmic reticulum and not in the nucleus, which also argues against<br />
+homeobox function." The homeobox is a shared ancestral feature of the<br />
+LAG1/LASS/CerS family and is not functional in CerS. The catalytic domain is<br />
+the TLC (TRAM-LAG1-CLN8) domain (130..331). =&gt; <code>DNA binding</code> should be REMOVED<br />
+(demonstrably wrong IEA). Likewise the <code>nucleoplasm</code> IDA (HPA GO_REF:0000052)<br />
+conflicts with the ER localization and the CAUTION; mark as over-annotated<br />
+(HPA IF can pick up antibody signal that does not reflect functional site).</p>
+<h2 id="interactions-pmid32296183-huri">Interactions (PMID:32296183, HuRI)</h2>
+<p>High-throughput binary interactome (Y2H) screen. Reports 5 partners<br />
+(ORMDL3/Q8N138, Q96FB2, NEU1/Q99519, PCBD2/Q9H0N5, SLC39A9/Q9NUM3). These are<br />
+bare <code>protein binding</code> (GO:0005515) IPIs — uninformative per curation policy;<br />
+mark as over-annotated (do NOT remove experimental IPIs). ORMDL3 interaction is<br />
+biologically plausible (ORMDL proteins regulate sphingolipid/SPT flux) but the<br />
+HuRI screen alone does not establish a specific MF.</p>
+<h2 id="term-decisions-summary">Term decisions summary</h2>
+<ul>
+<li>MF core: <strong>GO:0050291 sphingosine N-acyltransferase activity</strong> (exact GOA<br />
+  label). Multiple IDA (PMID:17977534, PMID:22038835), ISS, IBA, TAS, IEA lines<br />
+  — ACCEPT the experimental/IBA ones as core.</li>
+<li>BP core: <strong>GO:0046513 ceramide biosynthetic process</strong> (IDA x2, IMP, IBA;<br />
+  ACCEPT). GO:0030148 sphingolipid biosynthetic process (TAS Reactome, broader —<br />
+  KEEP_AS_NON_CORE). GO:0006665 sphingolipid metabolic process (UniPathway IEA,<br />
+  broadest — KEEP_AS_NON_CORE).</li>
+<li>Epidermis-barrier BPs: GO:0008544 epidermis development,<br />
+  GO:0070268 cornification, GO:0030216 keratinocyte differentiation — real<br />
+  downstream physiological roles of CERS3-made ULC-ceramides but not the<br />
+  gene's core molecular activity =&gt; KEEP_AS_NON_CORE.</li>
+<li>CC: GO:0005789 ER membrane (ISS/IEA/TAS) — ACCEPT core location.<br />
+  GO:0005783 ER (IBA/ISS/IEA) — ACCEPT (correct but less precise than ER<br />
+  membrane). GO:0016020 membrane (IEA InterPro) — too general, MARK_AS_OVER_ANNOTATED.<br />
+  GO:0005654 nucleoplasm (IDA HPA) — MARK_AS_OVER_ANNOTATED (contradicts ER/CAUTION).</li>
+<li>GO:0003677 DNA binding (IEA InterPro homeodomain) — REMOVE (demonstrably<br />
+  wrong; UniProt CAUTION documents degenerate, non-DNA-binding homeobox).</li>
+<li>GO:0005515 protein binding IPIs x5 (PMID:32296183 HuRI) — MARK_AS_OVER_ANNOTATED<br />
+  (uninformative bare protein binding; per policy do not REMOVE experimental IPIs).<br />
+</content><br />
+</invoke></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q8IU89
+gene_symbol: CERS3
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  CERS3 (ceramide synthase 3; formerly LASS3) is an endoplasmic reticulum membrane
+  enzyme that catalyzes the N-acylation step of de novo ceramide biosynthesis: transfer
+  of a fatty acyl group from acyl-CoA onto the amino group of a sphingoid base
+  (dihydrosphingosine/sphinganine in the de novo pathway, sphingosine in the
+  salvage pathway) to form dihydroceramide/ceramide (sphingosine
+  N-acyltransferase, EC 2.3.1.24). Among the six mammalian ceramide synthases it
+  is distinguished by its selectivity for very-long- and ultra-long-chain acyl-CoAs
+  (chain length greater than C22, up to C26 and longer). CERS3 produces the
+  ultra-long-chain ceramides, including omega-hydroxy species and acylceramides,
+  that form the extracellular lipid lamellae and cornified lipid envelope of the
+  epidermis and are essential for the skin permeability barrier. It is expressed most
+  prominently in the epidermis (at the interface between the stratum granulosum and
+  stratum corneum) and in testis. It is a multi-pass ER membrane protein whose
+  catalytic activity resides in a TLC (TRAM-LAG1-CLN8) domain; it also carries a
+  degenerate homeobox-like region that has lost DNA-binding residues and is not
+  functional. Loss-of-function variants cause autosomal recessive congenital
+  ichthyosis 9 (ARCI9), a keratinization/skin-barrier disorder.
+existing_annotations:
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) inference that CERS3 is active in the endoplasmic
+      reticulum. Correct: CERS3 is an ER membrane enzyme. The more precise
+      curated location is ER membrane (GO:0005789); this ER term is accurate but
+      less specific.
+    action: ACCEPT
+    reason: &gt;-
+      CERS3 and the whole LAG1/LASS/CerS family are ER-resident enzymes, and
+      UniProt records ER membrane as the subcellular location. The IBA is
+      consistent with the experimental/curated localization.
+    supported_by:
+    - reference_id: Reactome:R-HSA-428185
+      supporting_text: &gt;-
+        Ceramide synthase enzymes (CerS, LASS) associated with the endoplasmic
+        reticulum membrane catalyze the reaction of a sphingoid and a long-chain
+        fatty acyl CoA such as stearyl-CoA to form a dihydroceramide and CoASH
+- term:
+    id: GO:0046513
+    label: ceramide biosynthetic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) inference that CERS3 is involved in ceramide
+      biosynthesis. This is a core function of CERS3, independently supported by
+      direct experimental evidence.
+    action: ACCEPT
+    reason: &gt;-
+      CERS3 catalyzes the committed N-acylation step of de novo ceramide
+      synthesis; ceramide biosynthetic process is a core biological process.
+    supported_by:
+    - reference_id: PMID:23754960
+      supporting_text: &gt;-
+        CERS3 generates epidermis-specific ceramides by N-acylating
+        dihydrosphingosine with acyl-CoAs ranging from long to very long
+        aliphatic chains
+- term:
+    id: GO:0050291
+    label: sphingosine N-acyltransferase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) inference of sphingosine N-acyltransferase (ceramide
+      synthase) activity. This is the core molecular function of CERS3.
+    action: ACCEPT
+    reason: &gt;-
+      This is the exact core catalytic activity of CERS3 (transfer of an acyl
+      chain from acyl-CoA onto a sphingoid base).
+    supported_by:
+    - reference_id: PMID:17977534
+      supporting_text: &gt;-
+        ceramide is synthesized by N-acylation of a sphingoid long-chain base
+- term:
+    id: GO:0003677
+    label: DNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Automated InterPro2GO annotation triggered by the homeodomain-like signature
+      (IPR001356) that CERS3 shares with the LAG1/LASS/CerS family. CERS3 does
+      not bind DNA: its homeobox-like region is degenerate and lacks the residues
+      required for DNA binding, and the protein is an ER membrane enzyme.
+    action: REMOVE
+    reason: &gt;-
+      This is a demonstrably wrong electronic (IEA) inference. UniProt explicitly
+      cautions that the predicted homeobox domain is degenerated and lacks
+      DNA-binding residues, and that ER localization argues against homeobox
+      function. The catalytic activity resides in the TLC domain.
+    supported_by:
+    - reference_id: file:human/CERS3/CERS3-uniprot.txt
+      supporting_text: &gt;-
+        Contains a predicted homeobox domain which is degenerated, lacking
+        residues important for DNA-binding.
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Automated (ARBA/UniProtKB-SubCell) annotation to ER membrane. This is the
+      precise, correct subcellular location of CERS3.
+    action: ACCEPT
+    reason: &gt;-
+      CERS3 is a multi-pass ER membrane protein; ER membrane is the accurate
+      curated location and the site of its catalytic activity.
+    supported_by:
+    - reference_id: file:human/CERS3/CERS3-uniprot.txt
+      supporting_text: &gt;-
+        SUBCELLULAR LOCATION: Endoplasmic reticulum membrane
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Automated InterPro2GO annotation to the generic &#39;membrane&#39; term. Correct in
+      substance (CERS3 is an integral membrane protein) but far less informative
+      than the ER membrane annotation.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      &#39;membrane&#39; is a high-level, uninformative location. The specific ER
+      membrane term (GO:0005789) is already present and should be preferred.
+    supported_by:
+    - reference_id: file:human/CERS3/CERS3-uniprot.txt
+      supporting_text: &gt;-
+        SUBCELLULAR LOCATION: Endoplasmic reticulum membrane
+- term:
+    id: GO:0046513
+    label: ceramide biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Automated (ARBA/ortholog/InterPro) annotation to ceramide biosynthetic
+      process, redundant with the experimental and IBA annotations. Correct core
+      process.
+    action: ACCEPT
+    reason: &gt;-
+      Ceramide biosynthesis is the core process CERS3 participates in.
+    supported_by:
+    - reference_id: PMID:23754960
+      supporting_text: &gt;-
+        CERS3 generates epidermis-specific ceramides by N-acylating
+        dihydrosphingosine with acyl-CoAs ranging from long to very long
+        aliphatic chains
+- term:
+    id: GO:0050291
+    label: sphingosine N-acyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Automated (ARBA/InterPro/RHEA/EC 2.3.1.24) annotation of the core ceramide
+      synthase activity, redundant with the experimental, ISS, IBA and TAS
+      annotations.
+    action: ACCEPT
+    reason: &gt;-
+      Correctly captures the core catalytic function via EC 2.3.1.24 / RHEA
+      mapping.
+    supported_by:
+    - reference_id: PMID:17977534
+      supporting_text: &gt;-
+        ceramide is synthesized by N-acylation of a sphingoid long-chain base
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#39;protein binding&#39; from a genome-scale binary interactome (HuRI, Y2H)
+      screen, one of five partners reported (here UniProtKB:Q8N138 / ORMDL3).
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Per curation guidelines, bare &#39;protein binding&#39; is uninformative and is not
+      retained as a core function. Experimental IPI is not removed.
+    supported_by:
+    - reference_id: PMID:32296183
+      supporting_text: &gt;-
+        we present a human &#39;all-by-all&#39; reference interactome map of human binary
+        protein interactions, or &#39;HuRI&#39;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#39;protein binding&#39; from the HuRI binary interactome screen (partner
+      UniProtKB:Q96FB2). Uninformative molecular function term.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Bare &#39;protein binding&#39; is not retained as a core function. Experimental IPI
+      is not removed.
+    supported_by:
+    - reference_id: PMID:32296183
+      supporting_text: &gt;-
+        we present a human &#39;all-by-all&#39; reference interactome map of human binary
+        protein interactions, or &#39;HuRI&#39;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#39;protein binding&#39; from the HuRI binary interactome screen (partner
+      UniProtKB:Q99519 / NEU1). Uninformative molecular function term.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Bare &#39;protein binding&#39; is not retained as a core function. Experimental IPI
+      is not removed.
+    supported_by:
+    - reference_id: PMID:32296183
+      supporting_text: &gt;-
+        we present a human &#39;all-by-all&#39; reference interactome map of human binary
+        protein interactions, or &#39;HuRI&#39;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#39;protein binding&#39; from the HuRI binary interactome screen (partner
+      UniProtKB:Q9H0N5 / PCBD2). Uninformative molecular function term.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Bare &#39;protein binding&#39; is not retained as a core function. Experimental IPI
+      is not removed.
+    supported_by:
+    - reference_id: PMID:32296183
+      supporting_text: &gt;-
+        we present a human &#39;all-by-all&#39; reference interactome map of human binary
+        protein interactions, or &#39;HuRI&#39;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#39;protein binding&#39; from the HuRI binary interactome screen (partner
+      UniProtKB:Q9NUM3 / SLC39A9). Uninformative molecular function term.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Bare &#39;protein binding&#39; is not retained as a core function. Experimental IPI
+      is not removed.
+    supported_by:
+    - reference_id: PMID:32296183
+      supporting_text: &gt;-
+        we present a human &#39;all-by-all&#39; reference interactome map of human binary
+        protein interactions, or &#39;HuRI&#39;
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Automated ortholog transfer (Ensembl Compara, from mouse Cers3 Q1A3B0) of
+      ER localization. Correct but less precise than ER membrane.
+    action: ACCEPT
+    reason: &gt;-
+      CERS3 is ER-localized; consistent with all other localization evidence.
+    supported_by:
+    - reference_id: file:human/CERS3/CERS3-uniprot.txt
+      supporting_text: &gt;-
+        SUBCELLULAR LOCATION: Endoplasmic reticulum membrane
+- term:
+    id: GO:0008544
+    label: epidermis development
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Automated ortholog transfer (from mouse Cers3) of a role in epidermis
+      development. CERS3-made ultra-long-chain ceramides are essential for the
+      epidermal permeability barrier, a genuine physiological role downstream of
+      the core molecular activity.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Epidermis development is a real, well-supported downstream role of
+      CERS3-produced ULC-ceramides, but the core function is the ceramide synthase
+      activity.
+    supported_by:
+    - reference_id: PMID:22038835
+      supporting_text: &gt;-
+        are key components of extracellular lipid lamellae
+- term:
+    id: GO:0070268
+    label: cornification
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Automated ortholog transfer (from mouse Cers3) of a role in cornification.
+      Loss of CERS3 produces deficient cornification; a downstream barrier
+      outcome rather than the core molecular function.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      CERS3-derived ULC-ceramides contribute to the cornified lipid envelope;
+      retain as a non-core downstream role.
+    supported_by:
+    - reference_id: PMID:22038835
+      supporting_text: &gt;-
+        deficient cornification are hallmarks of mutant skin
+- term:
+    id: GO:0030148
+    label: sphingolipid biosynthetic process
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-1660661
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Reactome (TAS) placement of CERS3 in sphingolipid de novo biosynthesis.
+      Correct but broader than the specific ceramide biosynthetic process.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Ceramide biosynthesis is part of sphingolipid biosynthesis; this parent
+      term is accurate but less specific than GO:0046513.
+    supported_by:
+    - reference_id: Reactome:R-HSA-1660661
+      supporting_text: &gt;-
+        Glycosphingolipid biosynthesis is based on salvage of sphingolipids and
+        de novo sphingolipid synthesis.
+- term:
+    id: GO:0006665
+    label: sphingolipid metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000041
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Automated UniPathway (UPA00222) mapping. Correct but the broadest process
+      term for CERS3; the specific biosynthetic branch is captured by GO:0046513.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Accurate but very general; ceramide biosynthetic process is the more
+      informative term for CERS3.
+    supported_by:
+    - reference_id: file:human/CERS3/CERS3-uniprot.txt
+      supporting_text: &gt;-
+        PATHWAY: Lipid metabolism; sphingolipid metabolism.
+- term:
+    id: GO:0050291
+    label: sphingosine N-acyltransferase activity
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-428185
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Reactome (TAS) annotation of the core ceramide synthase / sphingosine
+      N-acyltransferase activity, redundant with the experimental and IBA
+      annotations.
+    action: ACCEPT
+    reason: &gt;-
+      Correctly captures the core catalytic activity of CERS3.
+    supported_by:
+    - reference_id: Reactome:R-HSA-428185
+      supporting_text: &gt;-
+        Ceramide synthase enzymes (CerS, LASS) associated with the endoplasmic
+        reticulum membrane catalyze the reaction of a sphingoid and a long-chain
+        fatty acyl CoA such as stearyl-CoA to form a dihydroceramide and CoASH
+- term:
+    id: GO:0005654
+    label: nucleoplasm
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      HPA immunofluorescence (IDA) annotation to nucleoplasm. This conflicts with
+      the well-established ER membrane localization of CERS3 and with the UniProt
+      CAUTION that the protein is not nuclear. Likely nonspecific antibody signal.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      CERS3 is a multi-pass ER membrane enzyme, and UniProt explicitly states it
+      localizes in the ER and not the nucleus; a nucleoplasmic location is not
+      biologically supported. The experimental IDA is not removed.
+    supported_by:
+    - reference_id: file:human/CERS3/CERS3-uniprot.txt
+      supporting_text: &gt;-
+        the protein localizes in the endoplasmic reticulum and not in the
+        nucleus, which also argues against homeobox function
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Curator sequence-similarity (ISS, from mouse Cers3 Q1A3B0) annotation to ER
+      membrane. This is the precise, correct location of CERS3.
+    action: ACCEPT
+    reason: &gt;-
+      ER membrane is the accurate curated location and the site of CERS3
+      catalytic activity.
+    supported_by:
+    - reference_id: file:human/CERS3/CERS3-uniprot.txt
+      supporting_text: &gt;-
+        SUBCELLULAR LOCATION: Endoplasmic reticulum membrane
+- term:
+    id: GO:0050291
+    label: sphingosine N-acyltransferase activity
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Curator sequence-similarity (ISS, from mouse Cers3) annotation of the core
+      ceramide synthase activity, redundant with the experimental, IBA, TAS and
+      IEA annotations.
+    action: ACCEPT
+    reason: &gt;-
+      Correctly captures the core catalytic function of CERS3.
+    supported_by:
+    - reference_id: PMID:17977534
+      supporting_text: &gt;-
+        ceramide is synthesized by N-acylation of a sphingoid long-chain base
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Curator sequence-similarity (ISS, from mouse Cers3) annotation to ER.
+      Correct but less specific than ER membrane.
+    action: ACCEPT
+    reason: &gt;-
+      CERS3 is ER-resident; consistent with the more precise ER membrane
+      annotation.
+    supported_by:
+    - reference_id: file:human/CERS3/CERS3-uniprot.txt
+      supporting_text: &gt;-
+        SUBCELLULAR LOCATION: Endoplasmic reticulum membrane
+- term:
+    id: GO:0008544
+    label: epidermis development
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Curator sequence-similarity (ISS, from mouse Cers3) annotation to epidermis
+      development, consistent with the essential role of CERS3-made ULC-ceramides
+      in the skin barrier. A genuine downstream role, not the core molecular
+      function.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Epidermis development is a real physiological outcome of CERS3 activity but
+      is downstream of its ceramide synthase function.
+    supported_by:
+    - reference_id: PMID:22038835
+      supporting_text: &gt;-
+        are key components of extracellular lipid lamellae
+- term:
+    id: GO:0046513
+    label: ceramide biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:17977534
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Direct experimental (IDA) annotation from biochemical characterization of
+      mammalian ceramide synthases, including CERS3, N-acylating sphinganine to
+      form (dihydro)ceramide. Core biological process.
+    action: ACCEPT
+    reason: &gt;-
+      Ceramide biosynthesis is the core process CERS3 participates in;
+      established directly by enzyme assays measuring ceramide synthase activity
+      and K(m) toward sphinganine.
+    supported_by:
+    - reference_id: PMID:17977534
+      supporting_text: &gt;-
+        ceramide is synthesized by N-acylation of a sphingoid long-chain base
+    - reference_id: PMID:17977534
+      supporting_text: &gt;-
+        K(m) value of each CerS towards sphinganine
+- term:
+    id: GO:0046513
+    label: ceramide biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:22038835
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Direct experimental (IDA) annotation showing CERS3 is required for
+      synthesis of ultra-long-chain ceramides; CerS3 deficiency abolishes
+      ULC-ceramides. Core biological process.
+    action: ACCEPT
+    reason: &gt;-
+      CERS3 is exclusively required for ultra-long-chain ceramide synthesis, a
+      specialized part of ceramide biosynthesis; strong direct evidence.
+    supported_by:
+    - reference_id: PMID:22038835
+      supporting_text: &gt;-
+        we identified human and mouse ceramide synthase 3 (CerS3), among
+    - reference_id: PMID:22038835
+      supporting_text: &gt;-
+        Deficiency of CerS3 in mice results in complete loss of
+- term:
+    id: GO:0050291
+    label: sphingosine N-acyltransferase activity
+  evidence_type: IDA
+  original_reference_id: PMID:17977534
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct experimental (IDA) determination of ceramide synthase / sphingosine
+      N-acyltransferase activity, including kinetic characterization (K(m) toward
+      sphinganine). This is the core molecular function of CERS3.
+    action: ACCEPT
+    reason: &gt;-
+      Biochemical assays directly demonstrate the N-acyltransferase activity of
+      CERS3, with each CerS showing chain-length-specific acyl-CoA preference.
+    supported_by:
+    - reference_id: PMID:17977534
+      supporting_text: &gt;-
+        specificity towards acyl CoAs of different chain lengths
+    - reference_id: PMID:17977534
+      supporting_text: &gt;-
+        K(m) value of each CerS towards sphinganine
+- term:
+    id: GO:0050291
+    label: sphingosine N-acyltransferase activity
+  evidence_type: IDA
+  original_reference_id: PMID:22038835
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct experimental (IDA) demonstration that CERS3 has ceramide synthase
+      activity with selectivity for ultra-long-chain acyl-CoAs, required for
+      ULC-ceramide synthesis. Core molecular function.
+    action: ACCEPT
+    reason: &gt;-
+      CERS3 is the ceramide synthase exclusively responsible for ULC-ceramide
+      synthesis in vitro, establishing its N-acyltransferase activity with
+      ultra-long-chain substrate selectivity.
+    supported_by:
+    - reference_id: PMID:22038835
+      supporting_text: &gt;-
+        to be exclusively required for the ULC-Cer synthesis in vitro
+- term:
+    id: GO:0070268
+    label: cornification
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Curator sequence-similarity (ISS, from mouse Cers3) annotation to
+      cornification. CerS3 loss causes deficient cornification; a downstream
+      barrier outcome rather than the core molecular activity.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      CERS3-derived ULC-ceramides contribute to the cornified lipid envelope;
+      retain as a non-core downstream role.
+    supported_by:
+    - reference_id: PMID:22038835
+      supporting_text: &gt;-
+        deficient cornification are hallmarks of mutant skin
+- term:
+    id: GO:0030216
+    label: keratinocyte differentiation
+  evidence_type: IMP
+  original_reference_id: PMID:23754960
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Mutant-phenotype (IMP) annotation: CERS3 loss-of-function mutations in
+      humans (ARCI9) disturb the epidermal sphingolipid profile and impair
+      terminal keratinocyte differentiation. Genuine downstream physiological
+      role.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      CERS3-produced ceramides are required for proper terminal differentiation
+      of keratinocytes; a real but downstream role, secondary to the core
+      ceramide synthase activity.
+    supported_by:
+    - reference_id: PMID:23754960
+      supporting_text: &gt;-
+        these observations suggest that mutated CERS3 affects the terminal
+        differentiation process in human skin
+- term:
+    id: GO:0046513
+    label: ceramide biosynthetic process
+  evidence_type: IMP
+  original_reference_id: PMID:23754960
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Mutant-phenotype (IMP) annotation: CERS3 loss-of-function reduces
+      epidermis-specific very-long-chain ceramides, establishing CERS3&#39;s role in
+      ceramide biosynthesis in human skin. Core biological process.
+    action: ACCEPT
+    reason: &gt;-
+      Patient keratinocytes carrying CERS3 mutations show a marked decrease in
+      very-long-chain ceramides, directly demonstrating CERS3&#39;s involvement in
+      ceramide biosynthesis.
+    supported_by:
+    - reference_id: PMID:23754960
+      supporting_text: &gt;-
+        marked decrease of very long-chain (VLC) ceramides
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-428185
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome (TAS) annotation to ER membrane, the precise and correct
+      subcellular location of CERS3 and site of its catalytic activity.
+    action: ACCEPT
+    reason: &gt;-
+      ER membrane is the accurate curated location; Reactome describes ceramide
+      synthases as ER-membrane-associated enzymes.
+    supported_by:
+    - reference_id: Reactome:R-HSA-428185
+      supporting_text: &gt;-
+        Ceramide synthase enzymes (CerS, LASS) associated with the endoplasmic
+        reticulum membrane catalyze the reaction of a sphingoid and a long-chain
+        fatty acyl CoA such as stearyl-CoA to form a dihydroceramide and CoASH
+core_functions:
+- description: &gt;-
+    Ceramide synthase (sphingosine N-acyltransferase) that catalyzes the
+    N-acylation step of de novo ceramide biosynthesis at the ER membrane,
+    transferring a very-long/ultra-long-chain fatty acyl group from acyl-CoA onto
+    a sphingoid base (sphinganine) to form (dihydro)ceramide, producing the
+    ultra-long-chain ceramides required for the epidermal permeability barrier.
+  molecular_function:
+    id: GO:0050291
+    label: sphingosine N-acyltransferase activity
+  directly_involved_in:
+  - id: GO:0046513
+    label: ceramide biosynthetic process
+  locations:
+  - id: GO:0005789
+    label: endoplasmic reticulum membrane
+  supported_by:
+  - reference_id: PMID:17977534
+    supporting_text: &gt;-
+      ceramide is synthesized by N-acylation of a sphingoid long-chain base
+  - reference_id: PMID:22038835
+    supporting_text: &gt;-
+      to be exclusively required for the ULC-Cer synthesis in vitro
+  - reference_id: file:human/CERS3/CERS3-uniprot.txt
+    supporting_text: &gt;-
+      SUBCELLULAR LOCATION: Endoplasmic reticulum membrane
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000041
+  title: Gene Ontology annotation based on UniPathway vocabulary mapping
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:17977534
+  title: &#39;Kinetic characterization of mammalian ceramide synthases: determination
+    of K(m) values towards sphinganine.&#39;
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Biochemical characterization of mammalian ceramide synthases including CERS3;
+      supports the sphingosine N-acyltransferase activity and ceramide biosynthetic
+      process annotations. Cached entry is abstract-only; the curator&#39;s IDA was made
+      from the full text.
+- id: PMID:22038835
+  title: Loss of ceramide synthase 3 causes lethal skin barrier disruption.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Identifies CERS3 as exclusively required for ultra-long-chain ceramide
+      synthesis; CerS3-deficient mice lose ULC-ceramides and die of skin-barrier
+      failure. Directly supports the core catalytic and biosynthetic annotations.
+- id: PMID:23754960
+  title: Mutations in CERS3 cause autosomal recessive congenital ichthyosis in humans.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Establishes CERS3 loss-of-function as the cause of ARCI9 and its role in
+      producing epidermis-specific very-long-chain ceramides and in keratinocyte
+      terminal differentiation. Full text available and PMC-verified.
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Genome-scale Y2H (HuRI) interactome screen; source of five bare &#39;protein
+      binding&#39; IPIs for CERS3. Correctly cited but only supports uninformative
+      protein-binding annotations, not a specific molecular function.
+- id: Reactome:R-HSA-1660661
+  title: Sphingolipid de novo biosynthesis
+  findings: []
+- id: Reactome:R-HSA-428185
+  title: Ceramide synthases transfer acyl-CoA onto sphingoid
+  findings: []
+- id: file:human/CERS3/CERS3-uniprot.txt
+  title: UniProtKB Q8IU89 (CERS3_HUMAN) record
+  findings: []
+suggested_questions:
+- question: &gt;-
+    What are the specific in vivo acyl-chain-length preferences of human CERS3,
+    and how do partner proteins such as ORMDL3, fatty acid elongases, and
+    hydroxylases shape the ultra-long-chain acylceramide output in epidermis?
+suggested_experiments:
+- description: &gt;-
+    Reconstitute human CERS3 in a defined membrane system and measure activity
+    across a panel of acyl-CoA chain lengths with sphinganine and sphingosine
+    acceptors to quantify its ultra-long-chain selectivity.
+- description: &gt;-
+    Test whether the CERS3-ORMDL3 interaction detected in HuRI modulates CERS3
+    activity or sphingolipid flux in differentiating keratinocytes.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -107,7 +107,7 @@ fetch-gene organism gene *args="":
             echo ""
         fi
     fi
-    uv run ai-gene-review fetch-gene {{organism}} {{gene}} --output-dir . {{args}}
+    uv run --no-dev ai-gene-review fetch-gene {{organism}} {{gene}} --output-dir . {{args}}
 
 # Fetch ncRNA gene data from RNAcentral
 # Use --alias to specify a custom directory name and file prefix
@@ -494,6 +494,17 @@ module-deep-research-cyberian module *args="":
 module-deep-research-codex module *args="":
     uv run python scripts/module_deep_research_wrapper.py "{{module}}" codex {{args}}
 
+# Species/taxon-specific module + pathway research. This writes to the project
+# support folder when a project can be resolved, e.g. projects/P_PUTIDA/deep-research/.
+# Examples:
+#   just module-pathway-deep-research-falcon "central carbon metabolism" ppu00020 PSEPK --dry-run
+#   just module-pathway-deep-research falcon "aromatic compound catabolism" ppu01220 PSEPK
+module-pathway-deep-research provider module pathway organism *args="":
+    uv run python scripts/module_pathway_taxon_deep_research_wrapper.py "{{module}}" "{{pathway}}" "{{organism}}" "{{provider}}" {{args}}
+
+module-pathway-deep-research-falcon module pathway organism *args="":
+    uv run python scripts/module_pathway_taxon_deep_research_wrapper.py "{{module}}" "{{pathway}}" "{{organism}}" falcon {{args}}
+
 # Fetch a specific PMID
 fetch-pmid pmid output_dir="publications":
     uv run ai-gene-review fetch-pmid {{pmid}} --output-dir {{output_dir}}
@@ -617,10 +628,11 @@ aggregate-knowledge-gaps:
     uv run python scripts/aggregate_knowledge_gaps.py
 
 # Validate module YAML files: (1) structural schema validation against
-# ModuleReview, and (2) ontology term-label validation (GO/CHEBI/PO/SBO/... ids
-# resolve and their labels match). The external linkml-term-validator only
-# checks enum-bound slots, which ModuleReview lacks, so module term labels are
-# checked by the project's module_validator instead.
+# ModuleReview, and (2) custom module validation: ontology term-label checks,
+# GO branch checks for known F/P/C slots, PANTHER/PAINT PTN checks, and template
+# conformance. The external linkml-term-validator only checks enum-bound slots,
+# which ModuleReview lacks, so module semantics are checked by the project's
+# module_validator instead.
 validate-modules:
     #!/usr/bin/env bash
     set -uo pipefail
@@ -634,7 +646,14 @@ validate-modules:
         echo "Schema-validating $f"
         uv run linkml-validate --schema {{schema_path}} --target-class ModuleReview "$f" || rc=1
     done <<< "$files"
-    echo "Validating module term labels..."
+    echo "Validating module term labels, reference titles, and supporting_text..."
+    # module_validator also verifies every literature reference (PMID/DOI):
+    #  - each title (references list or EvidenceItem) must match the cited
+    #    publication title (catches wrong PMIDs and stale/abbreviated titles);
+    #  - each supporting_text quote must be a verbatim (normalized) substring of
+    #    the cached publications/PMID_*.md.
+    # Both use linkml-reference-validator's own matcher. Mismatches are errors;
+    # unfetchable/uncached references are advisory warnings.
     # shellcheck disable=SC2086
     uv run python -m ai_gene_review.validation.module_validator $files || rc=1
     exit "$rc"
@@ -1129,6 +1148,12 @@ render-all:
 # Render prediction evaluation table from *-predictions-review.yaml files
 render-prediction-eval pattern='genes/*/*/*-protnlm-predictions-review.yaml' output='pages/projects/PROTNLM_EVALUATION/protnlm-eval.html' title='ProtNLM-50 Prediction Evaluation':
     uv run python -m ai_gene_review.render_prediction_eval '{{pattern}}' -o '{{output}}' --title '{{title}}'
+
+# Render the BioReason-Pro comparison prediction evaluation tables (SFT, GO-GPT, DeepECTF)
+render-bioreason-eval:
+    uv run python -m ai_gene_review.render_prediction_eval 'genes/*/*/*-sft-predictions.yaml' -o 'pages/projects/BIOREASON_COMPARISON/sft-eval.html' --title 'BioReason-Pro SFT Prediction Evaluation'
+    uv run python -m ai_gene_review.render_prediction_eval 'genes/*/*/*-gogpt-leaf-predictions.yaml' -o 'pages/projects/BIOREASON_COMPARISON/gogpt-eval.html' --title 'BioReason-Pro GO-GPT Prediction Evaluation'
+    uv run python -m ai_gene_review.render_prediction_eval 'projects/BIOREASON_COMPARISON/recapitulation-experiment/claude-expt-1/genes/ECOLI/*/*-det-predictions-review.yaml' -o 'pages/projects/BIOREASON_COMPARISON/deepectf-eval.html' --title 'BioReason-Pro DeepECTF Evaluation (ESR-ECOLI-DET-Mini)'
 
 # Render project markdown files to HTML with auto-linked gene symbols
 render-projects:

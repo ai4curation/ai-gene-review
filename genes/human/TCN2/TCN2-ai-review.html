@@ -1,0 +1,4885 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TCN2 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>TCN2</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P20062" target="_blank" class="term-link">
+                        P20062
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "TCN2";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P20062" data-a="DESCRIPTION: Transcobalamin-2 (transcobalamin II, TC II) is the..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Transcobalamin-2 (transcobalamin II, TC II) is the primary secreted plasma cobalamin (vitamin B12)-binding and transport protein. It is a soluble, non-glycosylated 427-residue precursor (18-residue signal peptide, mature chain 19-427) secreted into the circulation, notably by vascular endothelial cells. In plasma it binds a single cobalamin molecule (holo-TC, 1:1 stoichiometry) that has been newly absorbed and exported from the enterocyte, and delivers it to cells throughout the body. The transcobalamin-cobalamin complex is captured from plasma by the ubiquitous cell-surface receptor CD320 (TCblR), a member of the LDL-receptor family, and is internalized by receptor-mediated endocytosis; the complex is delivered to lysosomes where transcobalamin is degraded and cobalamin is released for use as a cofactor (as methylcobalamin by methionine synthase and as adenosylcobalamin by methylmalonyl-CoA mutase). This CD320-dependent route is the physiologically essential pathway that supplies vitamin B12 to peripheral tissues. Transcobalamin-2 is not an enzyme; its molecular function is cobalamin binding, and it acts as the ligand recognized by its uptake receptor. Loss-of-function causes autosomal recessive transcobalamin II deficiency (TCN2D), which presents in early infancy with failure to thrive, severe megaloblastic anemia, pancytopenia, immunodeficiency with recurrent infections, and methylmalonic aciduria (with homocystinuria), and, if untreated, neurological and developmental impairment.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P20062" data-a="GO:0005576" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) annotation placing the secreted transcobalamin protein in the extracellular region. Consistent with the biology of a plasma cobalamin transport protein.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Transcobalamin-2 is a secreted plasma protein that acts extracellularly to bind and transport cobalamin. The location is directly supported by protein purification from plasma and by the UniProt secreted subcellular location. The IBA call agrees with experimental evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8443384" target="_blank" class="term-link">
+                                        PMID:8443384
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Transcobalamin II (TCII) is a cobalamin (Cbl, vitamin B12)-binding protein in mammalian plasma that facilitates the cellular uptake of the vitamin.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TCN2/TCN2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Secreted</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015889" target="_blank" class="term-link">
+                                    GO:0015889
+                                </a>
+                            </span>
+                            <span class="term-label">cobalamin transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P20062" data-a="GO:0015889" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) annotation for involvement in cobalamin transport, the core biological process of transcobalamin-2.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Cobalamin (vitamin B12) transport is the defining biological role of transcobalamin-2, which delivers newly absorbed cobalamin from the circulation to peripheral cells. This is supported by experimental evidence and by the eukaryotic cobalamin transport protein family assignment.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8443384" target="_blank" class="term-link">
+                                        PMID:8443384
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">binds Cbl and facilitates the uptake of Cbl in eukaryotic cells by binding to the receptor for TCII-Cbl on the plasma membrane of K562 cells.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1708393" target="_blank" class="term-link">
+                                        PMID:1708393
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The cellular uptake of cobalamin (Cbl, vitamin B12) is mediated by transcobalamin II (TCII), a plasma protein that binds Cbl and is secreted by</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031419" target="_blank" class="term-link">
+                                    GO:0031419
+                                </a>
+                            </span>
+                            <span class="term-label">cobalamin binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P20062" data-a="GO:0031419" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) annotation for cobalamin binding, the core molecular function of transcobalamin-2.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Cobalamin binding is the direct, structurally defined molecular function of transcobalamin-2 (one cobalamin buried at the interface of its two domains). The IBA call agrees with multiple experimental (IDA) annotations and crystal structures.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16537422" target="_blank" class="term-link">
+                                        PMID:16537422
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">One Cbl molecule in base-on conformation is buried inside the domain interface.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/3782074" target="_blank" class="term-link">
+                                        PMID:3782074
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the final preparation of holo-TCII contained 1 mol of cobalamin/mol of protein.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P20062" data-a="GO:0005576" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation mapping the UniProt &#34;Secreted&#34; subcellular-location keyword to the extracellular region.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The SubCell mapping is correct; transcobalamin-2 is a secreted plasma protein and is located in the extracellular region. Redundant with experimental and IBA calls for the same term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TCN2/TCN2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Secreted</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015889" target="_blank" class="term-link">
+                                    GO:0015889
+                                </a>
+                            </span>
+                            <span class="term-label">cobalamin transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P20062" data-a="GO:0015889" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (InterPro2GO) annotation of cobalamin transport based on the cobalamin-binding protein domain (IPR002157).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The InterPro domain-based mapping to cobalamin transport is appropriate for transcobalamin-2 and is corroborated by experimental and IBA evidence for the same process.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8443384" target="_blank" class="term-link">
+                                        PMID:8443384
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">binds Cbl and facilitates the uptake of Cbl in eukaryotic cells by binding to the receptor for TCII-Cbl on the plasma membrane of K562 cells.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031419" target="_blank" class="term-link">
+                                    GO:0031419
+                                </a>
+                            </span>
+                            <span class="term-label">cobalamin binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P20062" data-a="GO:0031419" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation (ARBA/InterPro) of cobalamin binding based on the cobalamin-binding protein signature (IPR002157).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The domain-based electronic call correctly assigns the core molecular function. Redundant with, and confirmed by, experimental (IDA) and IBA cobalamin-binding annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16537422" target="_blank" class="term-link">
+                                        PMID:16537422
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">One Cbl molecule in base-on conformation is buried inside the domain interface.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27411955" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27411955
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structural basis of transcobalamin recognition by human CD32...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P20062" data-a="GO:0005515" data-r="PMID:27411955" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IntAct/UniProt protein-binding (IPI) annotation recording the physical interaction of transcobalamin-2 with CD320 (UniProtKB:Q9NPF0), the transcobalamin receptor, demonstrated by the holo-TC:CD320 co-crystal structure.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The interaction with CD320 is real and experimentally well supported, but the generic term &#34;protein binding&#34; is uninformative and does not capture the biology. The informative molecular function is that transcobalamin-2 acts as the ligand recognized by its endocytic uptake receptor CD320, better represented by GO:0140355 cargo receptor ligand activity (also annotated). Retained (not removed) because it is a valid experimental interaction annotation, but flagged as an over-annotation per curation guidance to avoid bare &#34;protein binding&#34;.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27411955" target="_blank" class="term-link">
+                                        PMID:27411955
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Cellular uptake of vitamin B12 (cobalamin) requires capture of transcobalamin (TC) from the plasma by CD320, a ubiquitous cell surface receptor of the LDLR family.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015889" target="_blank" class="term-link">
+                                    GO:0015889
+                                </a>
+                            </span>
+                            <span class="term-label">cobalamin transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9758890
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P20062" data-a="GO:0015889" data-r="Reactome:R-HSA-9758890" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) annotation of cobalamin transport, from the pathway &#34;Transport of RCbl within the body&#34;, capturing transcobalamin-2&#39;s role in moving cobalamin from the enterocyte to peripheral cells.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correctly captures the core biological process. Redundant with experimental and IBA cobalamin-transport annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8443384" target="_blank" class="term-link">
+                                        PMID:8443384
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">binds Cbl and facilitates the uptake of Cbl in eukaryotic cells by binding to the receptor for TCII-Cbl on the plasma membrane of K562 cells.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/3782074" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:3782074
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Purification and molecular characterization of human transco...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P20062" data-a="GO:0005576" data-r="PMID:3782074" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (EXP) annotation of extracellular region based on purification of transcobalamin-2 from human plasma and determination of its N-terminal sequence and secreted nature.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly supported experimental localization. Transcobalamin-2 was purified from human plasma (Cohn fraction III) as a secreted cobalamin transport protein, consistent with an extracellular location.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/3782074" target="_blank" class="term-link">
+                                        PMID:3782074
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">purified from Cohn fraction III of human</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TCN2/TCN2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Secreted</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140355" target="_blank" class="term-link">
+                                    GO:0140355
+                                </a>
+                            </span>
+                            <span class="term-label">cargo receptor ligand activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/3782074" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:3782074
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Purification and molecular characterization of human transco...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P20062" data-a="GO:0140355" data-r="PMID:3782074" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (EXP, Reactome-assigned) annotation of cargo receptor ligand activity, representing transcobalamin-2 acting as the ligand carrying cobalamin cargo that is recognized and internalized by the CD320 (TCblR) uptake receptor.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This term captures the informative molecular function of transcobalamin-2 as the cargo-carrying ligand of its cell-surface uptake receptor CD320, which drives receptor-mediated endocytosis of cobalamin into cells. The ligand-for-receptor role is directly established by the holo-TC:CD320 co-crystal structure and by functional cellular-uptake assays; it is more informative than the bare &#34;protein binding&#34; IPI. This is a core molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27411955" target="_blank" class="term-link">
+                                        PMID:27411955
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">transcobalamin (TC)-bound Cbl is transported into cells by receptor-mediated endocytosis, which requires Ca2+-dependent complex formation of TC with its cognate cell surface receptor CD320</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8443384" target="_blank" class="term-link">
+                                        PMID:8443384
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">binds Cbl and facilitates the uptake of Cbl in eukaryotic cells by binding to the receptor for TCII-Cbl on the plasma membrane of K562 cells.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-3000074
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P20062" data-a="GO:0005576" data-r="Reactome:R-HSA-3000074" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) annotation of extracellular region, from the reaction &#34;TCN2 binds RCbl in the circulation&#34;, where secreted transcobalamin-2 binds cobalamin in plasma.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct extracellular location for the secreted plasma protein. Redundant with experimental and IBA calls for the same term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TCN2/TCN2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Secreted</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-3000122
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P20062" data-a="GO:0005576" data-r="Reactome:R-HSA-3000122" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) annotation of extracellular region, from the reaction &#34;CD320 binds extracellular TCN2:RCbl&#34;.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct extracellular location for the secreted transcobalamin-2:cobalamin complex captured by CD320 at the cell surface. Redundant with experimental and IBA calls.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TCN2/TCN2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Secreted</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-3325546
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P20062" data-a="GO:0005576" data-r="Reactome:R-HSA-3325546" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) annotation of extracellular region, from the disease reaction &#34;Defective CD320 does not transport extracellular TCII:Cbl to endosome&#34;.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct extracellular location for the secreted transcobalamin-2:cobalamin complex. Redundant with experimental and IBA calls for the same term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TCN2/TCN2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Secreted</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9759202
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P20062" data-a="GO:0005576" data-r="Reactome:R-HSA-9759202" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) annotation of extracellular region, from the reaction &#34;LRP2-mediated TCN2:RCbl uptake and delivery to lysosome&#34; (an alternative megalin/LRP2 uptake route, e.g. in renal tubule).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct extracellular location for the secreted transcobalamin-2:cobalamin complex prior to uptake. Redundant with experimental and IBA calls for the same term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TCN2/TCN2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Secreted</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9759209
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P20062" data-a="GO:0005576" data-r="Reactome:R-HSA-9759209" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) annotation of extracellular region, from the reaction &#34;LRP2 binds extracellular TCN2:RCbl&#34;.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct extracellular location for the secreted transcobalamin-2:cobalamin complex before receptor uptake. Redundant with experimental and IBA calls for the same term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TCN2/TCN2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Secreted</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-3000112
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P20062" data-a="GO:0005886" data-r="Reactome:R-HSA-3000112" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) annotation of plasma membrane, from &#34;CD320-mediated TCN2:RCbl uptake and delivery to lysosome&#34;, reflecting the transcobalamin-2:cobalamin complex being bound at the cell surface by CD320 before endocytosis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Transcobalamin-2 is a soluble secreted protein, not an integral or resident plasma-membrane protein. It is only transiently at the plasma membrane as the ligand of the membrane receptor CD320 during the receptor-binding/endocytosis step. Retained as a valid step in the transport pathway but marked non-core because it is a transient, pathway-context localization rather than an intrinsic residence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27411955" target="_blank" class="term-link">
+                                        PMID:27411955
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">transcobalamin (TC)-bound Cbl is transported into cells by receptor-mediated endocytosis, which requires Ca2+-dependent complex formation of TC with its cognate cell surface receptor CD320</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-3000122
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P20062" data-a="GO:0005886" data-r="Reactome:R-HSA-3000122" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) annotation of plasma membrane, from &#34;CD320 binds extracellular TCN2:RCbl&#34;, reflecting the transcobalamin-2:cobalamin complex engaging its cell-surface receptor.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> As above, transcobalamin-2 is a secreted soluble protein that only transiently associates with the plasma membrane as the ligand of CD320 during receptor binding. Retained as a valid pathway step but marked non-core rather than an intrinsic localization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27411955" target="_blank" class="term-link">
+                                        PMID:27411955
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Cellular uptake of vitamin B12 (cobalamin) requires capture of transcobalamin (TC) from the plasma by CD320, a ubiquitous cell surface receptor of the LDLR family.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043202" target="_blank" class="term-link">
+                                    GO:0043202
+                                </a>
+                            </span>
+                            <span class="term-label">lysosomal lumen</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-3000112
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P20062" data-a="GO:0043202" data-r="Reactome:R-HSA-3000112" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) annotation of lysosomal lumen, from &#34;CD320-mediated TCN2:RCbl uptake and delivery to lysosome&#34;, where the internalized transcobalamin-2:cobalamin complex is delivered to the lysosome.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The transcobalamin-2:cobalamin complex is trafficked to the lysosome, where transcobalamin-2 is degraded to release cobalamin. This is the terminal destination of the transport pathway, not an intrinsic steady-state location of the protein. Retained as a valid pathway step but marked non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TCN2/TCN2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">FUNCTION: Primary vitamin B12-binding and transport protein. Delivers</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043202" target="_blank" class="term-link">
+                                    GO:0043202
+                                </a>
+                            </span>
+                            <span class="term-label">lysosomal lumen</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-3000263
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P20062" data-a="GO:0043202" data-r="Reactome:R-HSA-3000263" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) annotation of lysosomal lumen, from &#34;TCN2:RCbl is degraded to release RCbl&#34;, where a lysosomal protease degrades transcobalamin-2 to liberate cobalamin.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Represents the terminal lysosomal degradation step of the transport pathway, not an intrinsic localization of transcobalamin-2. Retained as a valid pathway step but marked non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TCN2/TCN2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">FUNCTION: Primary vitamin B12-binding and transport protein. Delivers</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043202" target="_blank" class="term-link">
+                                    GO:0043202
+                                </a>
+                            </span>
+                            <span class="term-label">lysosomal lumen</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9759202
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P20062" data-a="GO:0043202" data-r="Reactome:R-HSA-9759202" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) annotation of lysosomal lumen, from &#34;LRP2-mediated TCN2:RCbl uptake and delivery to lysosome&#34; (LRP2/megalin uptake route).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> As with the CD320 route, the internalized complex is delivered to the lysosome for degradation and cobalamin release; this is a terminal pathway destination rather than an intrinsic localization. Retained as a valid pathway step but marked non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TCN2/TCN2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">FUNCTION: Primary vitamin B12-binding and transport protein. Delivers</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8443384" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8443384
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Functional human transcobalamin II isoproteins are secreted ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P20062" data-a="GO:0005576" data-r="PMID:8443384" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IDA) annotation of extracellular region; recombinant transcobalamin-2 was constitutively secreted by insect cells, consistent with its native secretion.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly supported experimental localization. Recombinant transcobalamin-2 was secreted into the culture medium and did not accumulate intracellularly, mirroring its secretion by cultured human endothelial cells.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8443384" target="_blank" class="term-link">
+                                        PMID:8443384
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Transcobalamin II (TCII) is a cobalamin (Cbl, vitamin B12)-binding protein in mammalian plasma that facilitates the cellular uptake of the vitamin.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TCN2/TCN2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Secreted</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015889" target="_blank" class="term-link">
+                                    GO:0015889
+                                </a>
+                            </span>
+                            <span class="term-label">cobalamin transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8443384" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8443384
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Functional human transcobalamin II isoproteins are secreted ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P20062" data-a="GO:0015889" data-r="PMID:8443384" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IDA) annotation of cobalamin transport; recombinant transcobalamin-2 bound cobalamin and facilitated its uptake into cells via the plasma-membrane TCII-Cbl receptor.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly demonstrated core biological process. Functional recombinant transcobalamin-2 bound Cbl and facilitated its uptake into K562 cells by binding the TCII-Cbl receptor on the plasma membrane.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8443384" target="_blank" class="term-link">
+                                        PMID:8443384
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">binds Cbl and facilitates the uptake of Cbl in eukaryotic cells by binding to the receptor for TCII-Cbl on the plasma membrane of K562 cells.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031419" target="_blank" class="term-link">
+                                    GO:0031419
+                                </a>
+                            </span>
+                            <span class="term-label">cobalamin binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27411955" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27411955
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structural basis of transcobalamin recognition by human CD32...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P20062" data-a="GO:0031419" data-r="PMID:27411955" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IDA) annotation of cobalamin binding; the holo-TC:CD320 co-crystal structure resolved cobalamin bound to transcobalamin-2.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly demonstrated core molecular function. The 2.1 Angstrom co-crystal structure of holo-transcobalamin-2 in complex with CD320 shows cobalamin bound to transcobalamin-2, with the cobalt of Cbl identified in the electron density.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27411955" target="_blank" class="term-link">
+                                        PMID:27411955
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Cellular uptake of vitamin B12 (cobalamin) requires capture of transcobalamin (TC) from the plasma by CD320, a ubiquitous cell surface receptor of the LDLR family.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031419" target="_blank" class="term-link">
+                                    GO:0031419
+                                </a>
+                            </span>
+                            <span class="term-label">cobalamin binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8443384" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8443384
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Functional human transcobalamin II isoproteins are secreted ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P20062" data-a="GO:0031419" data-r="PMID:8443384" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IDA) annotation of cobalamin binding; recombinant transcobalamin-2 bound cobalamin.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly demonstrated core molecular function. Functional recombinant transcobalamin-2 cross-reacted with antiserum to native TCII and bound Cbl.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8443384" target="_blank" class="term-link">
+                                        PMID:8443384
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">binds Cbl and facilitates the uptake of Cbl in eukaryotic cells by binding to the receptor for TCII-Cbl on the plasma membrane of K562 cells.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-3299657
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P20062" data-a="GO:0005576" data-r="Reactome:R-HSA-3299657" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) annotation of extracellular region, from the disease reaction &#34;Defective TCII does not bind Cbl in the circulation&#34;.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct extracellular location for the secreted plasma protein. Redundant with experimental and IBA calls for the same term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TCN2/TCN2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Secreted</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031419" target="_blank" class="term-link">
+                                    GO:0031419
+                                </a>
+                            </span>
+                            <span class="term-label">cobalamin binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16537422" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16537422
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structural basis for mammalian vitamin B12 transport by tran...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P20062" data-a="GO:0031419" data-r="PMID:16537422" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IDA) annotation of cobalamin binding; the crystal structure of human holo-transcobalamin resolved one cobalamin buried at the interface of its two domains.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly demonstrated core molecular function with atomic-resolution structural evidence. The holo-TC structure shows a single Cbl in base-on conformation buried at the domain interface, with a barrel histidine as the axial ligand.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16537422" target="_blank" class="term-link">
+                                        PMID:16537422
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">One Cbl molecule in base-on conformation is buried inside the domain interface.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/1708393" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:1708393
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The cDNA sequence and the deduced amino acid sequence of hum...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P20062" data-a="GO:0005576" data-r="PMID:1708393" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Traceable-author-statement (TAS) annotation of extracellular region; the cDNA encodes a secreted 409-residue protein with an 18-residue leader peptide, secreted by endothelial cells.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct extracellular location supported by the cloned cDNA encoding a signal peptide and secreted mature protein, and by demonstrated secretion from human umbilical vein endothelial cells. Redundant with experimental and IBA calls for the same term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1708393" target="_blank" class="term-link">
+                                        PMID:1708393
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The cellular uptake of cobalamin (Cbl, vitamin B12) is mediated by transcobalamin II (TCII), a plasma protein that binds Cbl and is secreted by</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015889" target="_blank" class="term-link">
+                                    GO:0015889
+                                </a>
+                            </span>
+                            <span class="term-label">cobalamin transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/3782074" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:3782074
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Purification and molecular characterization of human transco...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P20062" data-a="GO:0015889" data-r="PMID:3782074" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Traceable-author-statement (TAS) annotation of cobalamin transport, from the characterization of transcobalamin-2 as the plasma cobalamin transport protein.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correctly captures the core biological process. Transcobalamin-2 was purified as the plasma holo-cobalamin transport protein (1 mol cobalamin/mol protein). Redundant with experimental and IBA cobalamin-transport annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/3782074" target="_blank" class="term-link">
+                                        PMID:3782074
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the final preparation of holo-TCII contained 1 mol of cobalamin/mol of protein.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Binds vitamin B12 (cobalamin) with 1:1 stoichiometry as the primary plasma cobalamin-binding protein, sequestering a single cobalamin molecule at the interface of its two structural domains.</h3>
+                <span class="vote-buttons" data-g="P20062" data-a="FUNCTION: Binds vitamin B12 (cobalamin) with 1:1 stoichiomet..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031419" target="_blank" class="term-link">
+                            cobalamin binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16537422" target="_blank" class="term-link">
+                                PMID:16537422
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">One Cbl molecule in base-on conformation is buried inside the domain interface.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/3782074" target="_blank" class="term-link">
+                                PMID:3782074
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">the final preparation of holo-TCII contained 1 mol of cobalamin/mol of protein.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Acts as the cargo-carrying ligand recognized by the cell-surface uptake receptor CD320 (TCblR), enabling receptor-mediated endocytosis of the transcobalamin-cobalamin complex and thereby delivery of vitamin B12 into cells.</h3>
+                <span class="vote-buttons" data-g="P20062" data-a="FUNCTION: Acts as the cargo-carrying ligand recognized by th..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140355" target="_blank" class="term-link">
+                            cargo receptor ligand activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015889" target="_blank" class="term-link">
+                                cobalamin transport
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                extracellular region
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27411955" target="_blank" class="term-link">
+                                PMID:27411955
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">transcobalamin (TC)-bound Cbl is transported into cells by receptor-mediated endocytosis, which requires Ca2+-dependent complex formation of TC with its cognate cell surface receptor CD320</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8443384" target="_blank" class="term-link">
+                                PMID:8443384
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">binds Cbl and facilitates the uptake of Cbl in eukaryotic cells by binding to the receptor for TCII-Cbl on the plasma membrane of K562 cells.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>As a secreted plasma protein, transports newly absorbed cobalamin from the circulation to peripheral cells throughout the body, the physiologically essential route supplying vitamin B12 to tissues.</h3>
+                <span class="vote-buttons" data-g="P20062" data-a="FUNCTION: As a secreted plasma protein, transports newly abs..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031419" target="_blank" class="term-link">
+                            cobalamin binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015889" target="_blank" class="term-link">
+                                cobalamin transport
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                extracellular region
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/1708393" target="_blank" class="term-link">
+                                PMID:1708393
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">The cellular uptake of cobalamin (Cbl, vitamin B12) is mediated by transcobalamin II (TCII), a plasma protein that binds Cbl and is secreted by</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8443384" target="_blank" class="term-link">
+                                PMID:8443384
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Transcobalamin II (TCII) is a cobalamin (Cbl, vitamin B12)-binding protein in mammalian plasma that facilitates the cellular uptake of the vitamin.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16537422" target="_blank" class="term-link">
+                            PMID:16537422
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Structural basis for mammalian vitamin B12 transport by transcobalamin.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The crystal structure of human holo-transcobalamin reveals a two-domain architecture with one cobalamin buried in base-on conformation at the domain interface, defining the structural basis of cobalamin binding.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/1708393" target="_blank" class="term-link">
+                            PMID:1708393
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The cDNA sequence and the deduced amino acid sequence of human transcobalamin II show homology with rat intrinsic factor and human transcobalamin I.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The transcobalamin-2 cDNA encodes an 18-residue leader peptide and a secreted 409-residue protein; the protein is a plasma cobalamin-binding protein secreted by endothelial cells and mediates cellular uptake of cobalamin.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27411955" target="_blank" class="term-link">
+                            PMID:27411955
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Structural basis of transcobalamin recognition by human CD320 receptor.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The holo-TC:CD320 co-crystal structure shows transcobalamin-2, carrying bound cobalamin, engaging the LDLR-A domains of the cell-surface receptor CD320, the interaction that drives receptor-mediated cellular uptake of vitamin B12; binding is Ca2+-dependent and reduced at endosomal (low) pH.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/3782074" target="_blank" class="term-link">
+                            PMID:3782074
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Purification and molecular characterization of human transcobalamin II.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Transcobalamin-2 was purified from human plasma as a secreted holo-protein containing one cobalamin per protein molecule, establishing its extracellular localization and 1:1 cobalamin binding.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8443384" target="_blank" class="term-link">
+                            PMID:8443384
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Functional human transcobalamin II isoproteins are secreted by insect cells using the baculovirus expression system.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Recombinant transcobalamin-2 is constitutively secreted, binds cobalamin, and facilitates cobalamin uptake into cells by binding the plasma-membrane TCII-Cbl receptor, directly demonstrating its cobalamin-binding and transport functions.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/TCN2/TCN2-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB P20062 (TCO2_HUMAN) Transcobalamin-2</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt describes transcobalamin-2 as the primary vitamin B12-binding and transport protein that delivers cobalamin to cells, is secreted, and interacts with CD320 via its LDL-receptor class A domains; loss of function causes transcobalamin II deficiency (TCN2D).</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-3000074
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TCN2 binds RCbl in the circulation</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-3000112
+
+                    </span>
+                </div>
+
+                <div class="reference-title">CD320-mediated TCN2:RCbl uptake and delivery to lysosome</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-3000122
+
+                    </span>
+                </div>
+
+                <div class="reference-title">CD320 binds extracellular TCN2:RCbl</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-3000263
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TCN2:RCbl is degraded to release RCbl</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-3299657
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Defective TCII does not bind Cbl in the circulation</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-3325546
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Defective CD320 does not transport extracellular TCII:Cbl to endosome</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9758890
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Transport of RCbl within the body</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9759202
+
+                    </span>
+                </div>
+
+                <div class="reference-title">LRP2-mediated TCN2:RCbl uptake and delivery to lysosome</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9759209
+
+                    </span>
+                </div>
+
+                <div class="reference-title">LRP2 binds extracellular TCN2:RCbl</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Beyond CD320, how much does the LRP2/megalin-mediated route (e.g. in the renal tubule) contribute to transcobalamin-cobalamin reuptake and tissue cobalamin delivery in vivo?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P20062" data-a="Q: Beyond CD320, how much does the LRP2/megalin-media..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does apo-transcobalamin-2 have a distinct physiological function or receptor engagement compared with holo-transcobalamin-2?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P20062" data-a="Q: Does apo-transcobalamin-2 have a distinct physiolo..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Quantify the relative contribution of CD320 versus LRP2/megalin to tissue cobalamin delivery using tissue-specific knockout models and labelled-cobalamin uptake assays.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="P20062" data-a="EXPERIMENT: Quantify the relative contribution of CD320 versus..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Structural and kinetic characterization of cobalamin loading onto apo-transcobalamin-2, including whether an enterocyte export factor is required for efficient loading.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="P20062" data-a="EXPERIMENT: Structural and kinetic characterization of cobalam..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(TCN2-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P20062" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="tcn2-transcobalamin-2-transcobalamin-ii-review-notes">TCN2 (Transcobalamin-2 / Transcobalamin II) review notes</h1>
+<p>UniProt: P20062 (TCO2_HUMAN). HGNC:11653. Gene TCN2 (synonym TC2). 427 aa precursor;<br />
+signal peptide 1-18, mature chain 19-427. Secreted. Chromosome 22.<br />
+Deep research: falcon out of credits (HTTP 402); no deep-research file. Grounded in<br />
+UniProt record, GOA, and cached PMIDs/Reactome.</p>
+<h2 id="core-biology-verified">Core biology (verified)</h2>
+<p>TCN2 is the <strong>primary plasma vitamin B12 (cobalamin, Cbl)-binding and transport<br />
+protein</strong>. It is secreted (notably by vascular endothelial cells), circulates in<br />
+plasma, binds newly absorbed cobalamin exported from the enterocyte, and delivers it to<br />
+peripheral cells. The holo-TC (TC:Cbl) complex is captured from plasma by the ubiquitous<br />
+cell-surface receptor <strong>CD320 (TCblR)</strong>, a member of the LDL-receptor family, and taken<br />
+up by <strong>receptor-mediated endocytosis</strong>; TC:Cbl is delivered to lysosomes where TC is<br />
+degraded and Cbl released for downstream cofactor use (methylcobalamin for methionine<br />
+synthase; adenosylcobalamin for methylmalonyl-CoA mutase). This CD320 route is the<br />
+physiologically essential pathway supplying B12 to tissues. TCN2 is <strong>not an enzyme</strong>;<br />
+its molecular function is cobalamin binding, enabling cobalamin transport / acting as<br />
+the ligand for its uptake receptor.</p>
+<ul>
+<li>Function (UniProt CC): "Primary vitamin B12-binding and transport protein. Delivers<br />
+  cobalamin to cells." [ECO:0000269|PubMed:8443384]</li>
+<li>SUBUNIT: "Interacts with CD320 (via LDL-receptor class A domains)."<br />
+  [ECO:0000269|PubMed:27411955]</li>
+<li>SUBCELLULAR LOCATION: "Secreted" [ECO:0000269|PubMed:3782074, 8443384]</li>
+<li>SIMILARITY: "Belongs to the eukaryotic cobalamin transport proteins family."</li>
+</ul>
+<h2 id="evidence-from-cached-publications">Evidence from cached publications</h2>
+<ul>
+<li>
+<p><strong>PMID:3782074</strong> (Quadros et al. 1986, JBC) — Purification &amp; molecular characterization<br />
+  of human TCII from plasma; determined N-terminal 19 aa; holo-TCII contained 1 mol<br />
+  cobalamin/mol protein; single 43 kDa polypeptide. UniProt RP: "PROTEIN SEQUENCE OF<br />
+  19-37, AND SUBCELLULAR LOCATION." Basis for secreted/extracellular localization and<br />
+  cobalamin binding (1:1). Abstract-only cache.<br />
+  Verbatim: "the final preparation of holo-TCII contained 1 mol of cobalamin/mol of<br />
+  protein."</p>
+</li>
+<li>
+<p><strong>PMID:8443384</strong> (Quadros et al. 1993, Blood) — Recombinant human TCII secreted by<br />
+  insect (baculovirus) cells; binds Cbl and facilitates cellular uptake by binding to<br />
+  the TCII-Cbl receptor on the plasma membrane of K562 cells. UniProt FUNCTION source.<br />
+  Verbatim: "Transcobalamin II (TCII) is a cobalamin (Cbl, vitamin B12)-binding protein<br />
+  in mammalian plasma that facilitates the cellular uptake of the vitamin."<br />
+  Verbatim: "binds Cbl and facilitates the uptake of Cbl in eukaryotic cells by binding<br />
+  to the receptor for TCII-Cbl on the plasma membrane of K562 cells."</p>
+</li>
+<li>
+<p><strong>PMID:16537422</strong> (Wuerges et al. 2006, PNAS) — Crystal structures of human &amp; bovine<br />
+  holo-TC; two-domain architecture (N-terminal alpha6-alpha6 barrel + smaller C-terminal<br />
+  domain); one Cbl buried at the domain interface; base-on conformation; His of barrel<br />
+  becomes axial ligand. Direct structural evidence for cobalamin binding.<br />
+  Verbatim: "One Cbl molecule in base-on conformation is buried inside the domain<br />
+  interface."<br />
+  Verbatim: "the plasma transport, and cellular uptake uses cell surface receptors and<br />
+  three Cbl-transporting proteins, haptocorrin, intrinsic factor, and transcobalamin<br />
+  (TC)." [note: exact substring is "plasma transport, and cellular uptake"]</p>
+</li>
+<li>
+<p><strong>PMID:27411955</strong> (Alam et al. 2016, Nat Commun) — Crystal structure of human holo-TC<br />
+  in complex with CD320 ectodomain. Establishes TC as the ligand captured by CD320 for<br />
+  receptor-mediated endocytosis; pH-dependent release in endosome. Full text available.<br />
+  Basis for the IPI protein-binding (interactor CD320/Q9NPF0) and cargo-receptor-ligand.<br />
+  Verbatim: "Cellular uptake of vitamin B12 (cobalamin) requires capture of<br />
+  transcobalamin (TC) from the plasma by CD320, a ubiquitous cell surface receptor of<br />
+  the LDLR family."<br />
+  Verbatim: "transcobalamin (TC)-bound Cbl is transported into cells by receptor-mediated<br />
+  endocytosis, which requires Ca2+-dependent complex formation of TC with its cognate<br />
+  cell surface receptor CD320"</p>
+</li>
+<li>
+<p><strong>PMID:1708393</strong> (Platica et al. 1991, JBC) — cDNA/deduced aa sequence; leader peptide<br />
+  18 aa + secreted protein of 409 aa; homology to TCI and rat intrinsic factor. TAS<br />
+  basis (via PINC) for extracellular localization. Abstract-only.<br />
+  Verbatim: "The cellular uptake of cobalamin (Cbl, vitamin B12) is mediated by<br />
+  transcobalamin II (TCII), a plasma protein that binds Cbl and is secreted by human<br />
+  umbilical vein endothelial (HUVE) cells."</p>
+</li>
+</ul>
+<h2 id="goa-annotations-29-goa-rows-27-stub-entries-grouped">GOA annotations (29 GOA rows → 27 stub entries; grouped)</h2>
+<p>MF:<br />
+- GO:0031419 cobalamin binding — IBA (GO_REF:0000033), IEA (GO_REF:0000120), IDA<br />
+  x3 (PMID:27411955, PMID:8443384, PMID:16537422). CORE. ACCEPT experimental/IBA.<br />
+- GO:0140355 cargo receptor ligand activity — EXP (PMID:3782074, assigned Reactome).<br />
+  Captures TC being the ligand recognized by CD320 for endocytic uptake. Supportable<br />
+  (Alam 2016 structural + Reactome CD320 model). ACCEPT (core—ligand for its uptake<br />
+  receptor). Note: EXP reference PMID:3782074 is the purification paper; the functional<br />
+  ligand-for-receptor role is directly shown by PMID:27411955/8443384.<br />
+- GO:0005515 protein binding — IPI (PMID:27411955), interactor UniProtKB:Q9NPF0 (CD320).<br />
+  Bare "protein binding" — uninformative per policy → MARK_AS_OVER_ANNOTATED (the<br />
+  informative capture of the CD320 interaction is GO:0140355 cargo receptor ligand<br />
+  activity). Do NOT REMOVE (experimental IPI).</p>
+<p>BP:<br />
+- GO:0015889 cobalamin transport — IBA (GO_REF:0000033), IEA (GO_REF:0000002 InterPro),<br />
+  TAS (Reactome R-HSA-9758890), IDA (PMID:8443384), TAS (PMID:3782074). CORE. ACCEPT.</p>
+<p>CC:<br />
+- GO:0005576 extracellular region — IBA (GO_REF:0000033), IEA (GO_REF:0000044<br />
+  SubCell), EXP (PMID:3782074), IDA (PMID:8443384), TAS PMID:1708393, TAS Reactome<br />
+  (R-HSA-3000074, 3000122, 3325546, 9759202, 9759209, 3299657). Secreted protein → CORE<br />
+  location. ACCEPT experimental; ACCEPT/route-context for TAS/IEA/IBA.<br />
+- GO:0005886 plasma membrane — TAS Reactome (R-HSA-3000112, 3000122). TCN2 is not itself<br />
+  a PM protein; it is transiently AT the PM as the ligand of CD320 during receptor<br />
+  binding/endocytosis. KEEP_AS_NON_CORE (transient transport-pathway localization, not a<br />
+  resident membrane protein).<br />
+- GO:0043202 lysosomal lumen — TAS Reactome (R-HSA-3000112, 3000263, 9759202). TC:Cbl is<br />
+  delivered to lysosomes and degraded there. KEEP_AS_NON_CORE (transient<br />
+  transport-pathway localization; the terminal degradation compartment).</p>
+<h2 id="core-function-summary">Core function summary</h2>
+<ol>
+<li>Cobalamin (vitamin B12) binding — GO:0031419 (MF). 1:1 holo-TC; structurally defined.</li>
+<li>Cobalamin transport — GO:0015889 (BP). Delivers newly absorbed B12 to peripheral cells.</li>
+<li>Cargo receptor ligand activity — GO:0140355 (MF). TC:Cbl is the ligand captured by<br />
+   CD320 (TCblR) for receptor-mediated endocytic uptake.<br />
+Location: extracellular region GO:0005576 (secreted plasma protein).</li>
+</ol>
+<h2 id="disease">Disease</h2>
+<p>Transcobalamin II deficiency (TCN2D, MIM:275350): autosomal recessive; early-infancy<br />
+failure to thrive, megaloblastic anemia, pancytopenia, agammaglobulinemia,<br />
+immunodeficiency/recurrent infections, methylmalonic aciduria; untreated → neurological<br />
+(psychomotor/mental developmental delay). (UniProt DISEASE, PMID:14632784, 19373259,<br />
+32841161, 33023511.)<br />
+</content></p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P20062
+gene_symbol: TCN2
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: Transcobalamin-2 (transcobalamin II, TC II) is the primary secreted plasma
+  cobalamin (vitamin B12)-binding and transport protein. It is a soluble, non-glycosylated
+  427-residue precursor (18-residue signal peptide, mature chain 19-427) secreted into
+  the circulation, notably by vascular endothelial cells. In plasma it binds a single
+  cobalamin molecule (holo-TC, 1:1 stoichiometry) that has been newly absorbed and exported
+  from the enterocyte, and delivers it to cells throughout the body. The transcobalamin-cobalamin
+  complex is captured from plasma by the ubiquitous cell-surface receptor CD320 (TCblR),
+  a member of the LDL-receptor family, and is internalized by receptor-mediated endocytosis;
+  the complex is delivered to lysosomes where transcobalamin is degraded and cobalamin
+  is released for use as a cofactor (as methylcobalamin by methionine synthase and as
+  adenosylcobalamin by methylmalonyl-CoA mutase). This CD320-dependent route is the physiologically
+  essential pathway that supplies vitamin B12 to peripheral tissues. Transcobalamin-2
+  is not an enzyme; its molecular function is cobalamin binding, and it acts as the ligand
+  recognized by its uptake receptor. Loss-of-function causes autosomal recessive transcobalamin
+  II deficiency (TCN2D), which presents in early infancy with failure to thrive, severe
+  megaloblastic anemia, pancytopenia, immunodeficiency with recurrent infections, and
+  methylmalonic aciduria (with homocystinuria), and, if untreated, neurological and developmental
+  impairment.
+alternative_products:
+- name: &#39;1&#39;
+  id: P20062-1
+- name: &#39;2&#39;
+  id: P20062-2
+  sequence_note: VSP_043711
+existing_annotations:
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: Phylogenetic (IBA) annotation placing the secreted transcobalamin protein
+      in the extracellular region. Consistent with the biology of a plasma cobalamin
+      transport protein.
+    action: ACCEPT
+    reason: Transcobalamin-2 is a secreted plasma protein that acts extracellularly to
+      bind and transport cobalamin. The location is directly supported by protein purification
+      from plasma and by the UniProt secreted subcellular location. The IBA call agrees
+      with experimental evidence.
+    supported_by:
+    - reference_id: PMID:8443384
+      supporting_text: Transcobalamin II (TCII) is a cobalamin (Cbl, vitamin B12)-binding
+        protein in mammalian plasma that facilitates the cellular uptake of the vitamin.
+    - reference_id: file:human/TCN2/TCN2-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Secreted&#34;
+- term:
+    id: GO:0015889
+    label: cobalamin transport
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: Phylogenetic (IBA) annotation for involvement in cobalamin transport, the
+      core biological process of transcobalamin-2.
+    action: ACCEPT
+    reason: Cobalamin (vitamin B12) transport is the defining biological role of transcobalamin-2,
+      which delivers newly absorbed cobalamin from the circulation to peripheral cells.
+      This is supported by experimental evidence and by the eukaryotic cobalamin transport
+      protein family assignment.
+    supported_by:
+    - reference_id: PMID:8443384
+      supporting_text: binds Cbl and facilitates the uptake of Cbl in eukaryotic cells
+        by binding to the receptor for TCII-Cbl on the plasma membrane of K562 cells.
+    - reference_id: PMID:1708393
+      supporting_text: The cellular uptake of cobalamin (Cbl, vitamin B12) is mediated
+        by transcobalamin II (TCII), a plasma protein that binds Cbl and is secreted by
+- term:
+    id: GO:0031419
+    label: cobalamin binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: Phylogenetic (IBA) annotation for cobalamin binding, the core molecular function
+      of transcobalamin-2.
+    action: ACCEPT
+    reason: Cobalamin binding is the direct, structurally defined molecular function of
+      transcobalamin-2 (one cobalamin buried at the interface of its two domains). The
+      IBA call agrees with multiple experimental (IDA) annotations and crystal structures.
+    supported_by:
+    - reference_id: PMID:16537422
+      supporting_text: One Cbl molecule in base-on conformation is buried inside the domain
+        interface.
+    - reference_id: PMID:3782074
+      supporting_text: the final preparation of holo-TCII contained 1 mol of cobalamin/mol
+        of protein.
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: Electronic annotation mapping the UniProt &#34;Secreted&#34; subcellular-location
+      keyword to the extracellular region.
+    action: ACCEPT
+    reason: The SubCell mapping is correct; transcobalamin-2 is a secreted plasma protein
+      and is located in the extracellular region. Redundant with experimental and IBA
+      calls for the same term.
+    supported_by:
+    - reference_id: file:human/TCN2/TCN2-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Secreted&#34;
+- term:
+    id: GO:0015889
+    label: cobalamin transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: Electronic (InterPro2GO) annotation of cobalamin transport based on the cobalamin-binding
+      protein domain (IPR002157).
+    action: ACCEPT
+    reason: The InterPro domain-based mapping to cobalamin transport is appropriate for
+      transcobalamin-2 and is corroborated by experimental and IBA evidence for the same
+      process.
+    supported_by:
+    - reference_id: PMID:8443384
+      supporting_text: binds Cbl and facilitates the uptake of Cbl in eukaryotic cells
+        by binding to the receptor for TCII-Cbl on the plasma membrane of K562 cells.
+- term:
+    id: GO:0031419
+    label: cobalamin binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Electronic annotation (ARBA/InterPro) of cobalamin binding based on the cobalamin-binding
+      protein signature (IPR002157).
+    action: ACCEPT
+    reason: The domain-based electronic call correctly assigns the core molecular function.
+      Redundant with, and confirmed by, experimental (IDA) and IBA cobalamin-binding annotations.
+    supported_by:
+    - reference_id: PMID:16537422
+      supporting_text: One Cbl molecule in base-on conformation is buried inside the domain
+        interface.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:27411955
+  qualifier: enables
+  review:
+    summary: IntAct/UniProt protein-binding (IPI) annotation recording the physical interaction
+      of transcobalamin-2 with CD320 (UniProtKB:Q9NPF0), the transcobalamin receptor,
+      demonstrated by the holo-TC:CD320 co-crystal structure.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The interaction with CD320 is real and experimentally well supported, but the
+      generic term &#34;protein binding&#34; is uninformative and does not capture the biology.
+      The informative molecular function is that transcobalamin-2 acts as the ligand recognized
+      by its endocytic uptake receptor CD320, better represented by GO:0140355 cargo receptor
+      ligand activity (also annotated). Retained (not removed) because it is a valid experimental
+      interaction annotation, but flagged as an over-annotation per curation guidance to
+      avoid bare &#34;protein binding&#34;.
+    supported_by:
+    - reference_id: PMID:27411955
+      supporting_text: Cellular uptake of vitamin B12 (cobalamin) requires capture of transcobalamin
+        (TC) from the plasma by CD320, a ubiquitous cell surface receptor of the LDLR family.
+- term:
+    id: GO:0015889
+    label: cobalamin transport
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9758890
+  qualifier: involved_in
+  review:
+    summary: Reactome (TAS) annotation of cobalamin transport, from the pathway &#34;Transport
+      of RCbl within the body&#34;, capturing transcobalamin-2&#39;s role in moving cobalamin
+      from the enterocyte to peripheral cells.
+    action: ACCEPT
+    reason: Correctly captures the core biological process. Redundant with experimental
+      and IBA cobalamin-transport annotations.
+    supported_by:
+    - reference_id: PMID:8443384
+      supporting_text: binds Cbl and facilitates the uptake of Cbl in eukaryotic cells
+        by binding to the receptor for TCII-Cbl on the plasma membrane of K562 cells.
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: EXP
+  original_reference_id: PMID:3782074
+  qualifier: located_in
+  review:
+    summary: Experimental (EXP) annotation of extracellular region based on purification
+      of transcobalamin-2 from human plasma and determination of its N-terminal sequence
+      and secreted nature.
+    action: ACCEPT
+    reason: Directly supported experimental localization. Transcobalamin-2 was purified
+      from human plasma (Cohn fraction III) as a secreted cobalamin transport protein,
+      consistent with an extracellular location.
+    supported_by:
+    - reference_id: PMID:3782074
+      supporting_text: purified from Cohn fraction III of human
+    - reference_id: file:human/TCN2/TCN2-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Secreted&#34;
+- term:
+    id: GO:0140355
+    label: cargo receptor ligand activity
+  evidence_type: EXP
+  original_reference_id: PMID:3782074
+  qualifier: enables
+  review:
+    summary: Experimental (EXP, Reactome-assigned) annotation of cargo receptor ligand
+      activity, representing transcobalamin-2 acting as the ligand carrying cobalamin cargo
+      that is recognized and internalized by the CD320 (TCblR) uptake receptor.
+    action: ACCEPT
+    reason: This term captures the informative molecular function of transcobalamin-2 as
+      the cargo-carrying ligand of its cell-surface uptake receptor CD320, which drives
+      receptor-mediated endocytosis of cobalamin into cells. The ligand-for-receptor role
+      is directly established by the holo-TC:CD320 co-crystal structure and by functional
+      cellular-uptake assays; it is more informative than the bare &#34;protein binding&#34; IPI.
+      This is a core molecular function.
+    supported_by:
+    - reference_id: PMID:27411955
+      supporting_text: transcobalamin (TC)-bound Cbl is transported into cells by receptor-mediated
+        endocytosis, which requires Ca2+-dependent complex formation of TC with its cognate
+        cell surface receptor CD320
+    - reference_id: PMID:8443384
+      supporting_text: binds Cbl and facilitates the uptake of Cbl in eukaryotic cells
+        by binding to the receptor for TCII-Cbl on the plasma membrane of K562 cells.
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-3000074
+  qualifier: located_in
+  review:
+    summary: Reactome (TAS) annotation of extracellular region, from the reaction &#34;TCN2
+      binds RCbl in the circulation&#34;, where secreted transcobalamin-2 binds cobalamin
+      in plasma.
+    action: ACCEPT
+    reason: Correct extracellular location for the secreted plasma protein. Redundant with
+      experimental and IBA calls for the same term.
+    supported_by:
+    - reference_id: file:human/TCN2/TCN2-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Secreted&#34;
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-3000122
+  qualifier: located_in
+  review:
+    summary: Reactome (TAS) annotation of extracellular region, from the reaction &#34;CD320
+      binds extracellular TCN2:RCbl&#34;.
+    action: ACCEPT
+    reason: Correct extracellular location for the secreted transcobalamin-2:cobalamin
+      complex captured by CD320 at the cell surface. Redundant with experimental and IBA
+      calls.
+    supported_by:
+    - reference_id: file:human/TCN2/TCN2-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Secreted&#34;
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-3325546
+  qualifier: located_in
+  review:
+    summary: Reactome (TAS) annotation of extracellular region, from the disease reaction
+      &#34;Defective CD320 does not transport extracellular TCII:Cbl to endosome&#34;.
+    action: ACCEPT
+    reason: Correct extracellular location for the secreted transcobalamin-2:cobalamin
+      complex. Redundant with experimental and IBA calls for the same term.
+    supported_by:
+    - reference_id: file:human/TCN2/TCN2-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Secreted&#34;
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9759202
+  qualifier: located_in
+  review:
+    summary: Reactome (TAS) annotation of extracellular region, from the reaction &#34;LRP2-mediated
+      TCN2:RCbl uptake and delivery to lysosome&#34; (an alternative megalin/LRP2 uptake route,
+      e.g. in renal tubule).
+    action: ACCEPT
+    reason: Correct extracellular location for the secreted transcobalamin-2:cobalamin
+      complex prior to uptake. Redundant with experimental and IBA calls for the same term.
+    supported_by:
+    - reference_id: file:human/TCN2/TCN2-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Secreted&#34;
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9759209
+  qualifier: located_in
+  review:
+    summary: Reactome (TAS) annotation of extracellular region, from the reaction &#34;LRP2
+      binds extracellular TCN2:RCbl&#34;.
+    action: ACCEPT
+    reason: Correct extracellular location for the secreted transcobalamin-2:cobalamin
+      complex before receptor uptake. Redundant with experimental and IBA calls for the
+      same term.
+    supported_by:
+    - reference_id: file:human/TCN2/TCN2-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Secreted&#34;
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-3000112
+  qualifier: located_in
+  review:
+    summary: Reactome (TAS) annotation of plasma membrane, from &#34;CD320-mediated TCN2:RCbl
+      uptake and delivery to lysosome&#34;, reflecting the transcobalamin-2:cobalamin complex
+      being bound at the cell surface by CD320 before endocytosis.
+    action: KEEP_AS_NON_CORE
+    reason: Transcobalamin-2 is a soluble secreted protein, not an integral or resident
+      plasma-membrane protein. It is only transiently at the plasma membrane as the ligand
+      of the membrane receptor CD320 during the receptor-binding/endocytosis step. Retained
+      as a valid step in the transport pathway but marked non-core because it is a transient,
+      pathway-context localization rather than an intrinsic residence.
+    supported_by:
+    - reference_id: PMID:27411955
+      supporting_text: transcobalamin (TC)-bound Cbl is transported into cells by receptor-mediated
+        endocytosis, which requires Ca2+-dependent complex formation of TC with its cognate
+        cell surface receptor CD320
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-3000122
+  qualifier: located_in
+  review:
+    summary: Reactome (TAS) annotation of plasma membrane, from &#34;CD320 binds extracellular
+      TCN2:RCbl&#34;, reflecting the transcobalamin-2:cobalamin complex engaging its cell-surface
+      receptor.
+    action: KEEP_AS_NON_CORE
+    reason: As above, transcobalamin-2 is a secreted soluble protein that only transiently
+      associates with the plasma membrane as the ligand of CD320 during receptor binding.
+      Retained as a valid pathway step but marked non-core rather than an intrinsic localization.
+    supported_by:
+    - reference_id: PMID:27411955
+      supporting_text: Cellular uptake of vitamin B12 (cobalamin) requires capture of transcobalamin
+        (TC) from the plasma by CD320, a ubiquitous cell surface receptor of the LDLR family.
+- term:
+    id: GO:0043202
+    label: lysosomal lumen
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-3000112
+  qualifier: located_in
+  review:
+    summary: Reactome (TAS) annotation of lysosomal lumen, from &#34;CD320-mediated TCN2:RCbl
+      uptake and delivery to lysosome&#34;, where the internalized transcobalamin-2:cobalamin
+      complex is delivered to the lysosome.
+    action: KEEP_AS_NON_CORE
+    reason: The transcobalamin-2:cobalamin complex is trafficked to the lysosome, where
+      transcobalamin-2 is degraded to release cobalamin. This is the terminal destination
+      of the transport pathway, not an intrinsic steady-state location of the protein.
+      Retained as a valid pathway step but marked non-core.
+    supported_by:
+    - reference_id: file:human/TCN2/TCN2-uniprot.txt
+      supporting_text: &#34;FUNCTION: Primary vitamin B12-binding and transport protein. Delivers&#34;
+- term:
+    id: GO:0043202
+    label: lysosomal lumen
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-3000263
+  qualifier: located_in
+  review:
+    summary: Reactome (TAS) annotation of lysosomal lumen, from &#34;TCN2:RCbl is degraded
+      to release RCbl&#34;, where a lysosomal protease degrades transcobalamin-2 to liberate
+      cobalamin.
+    action: KEEP_AS_NON_CORE
+    reason: Represents the terminal lysosomal degradation step of the transport pathway,
+      not an intrinsic localization of transcobalamin-2. Retained as a valid pathway step
+      but marked non-core.
+    supported_by:
+    - reference_id: file:human/TCN2/TCN2-uniprot.txt
+      supporting_text: &#34;FUNCTION: Primary vitamin B12-binding and transport protein. Delivers&#34;
+- term:
+    id: GO:0043202
+    label: lysosomal lumen
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9759202
+  qualifier: located_in
+  review:
+    summary: Reactome (TAS) annotation of lysosomal lumen, from &#34;LRP2-mediated TCN2:RCbl
+      uptake and delivery to lysosome&#34; (LRP2/megalin uptake route).
+    action: KEEP_AS_NON_CORE
+    reason: As with the CD320 route, the internalized complex is delivered to the lysosome
+      for degradation and cobalamin release; this is a terminal pathway destination rather
+      than an intrinsic localization. Retained as a valid pathway step but marked non-core.
+    supported_by:
+    - reference_id: file:human/TCN2/TCN2-uniprot.txt
+      supporting_text: &#34;FUNCTION: Primary vitamin B12-binding and transport protein. Delivers&#34;
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: IDA
+  original_reference_id: PMID:8443384
+  qualifier: located_in
+  review:
+    summary: Experimental (IDA) annotation of extracellular region; recombinant transcobalamin-2
+      was constitutively secreted by insect cells, consistent with its native secretion.
+    action: ACCEPT
+    reason: Directly supported experimental localization. Recombinant transcobalamin-2
+      was secreted into the culture medium and did not accumulate intracellularly, mirroring
+      its secretion by cultured human endothelial cells.
+    supported_by:
+    - reference_id: PMID:8443384
+      supporting_text: Transcobalamin II (TCII) is a cobalamin (Cbl, vitamin B12)-binding
+        protein in mammalian plasma that facilitates the cellular uptake of the vitamin.
+    - reference_id: file:human/TCN2/TCN2-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Secreted&#34;
+- term:
+    id: GO:0015889
+    label: cobalamin transport
+  evidence_type: IDA
+  original_reference_id: PMID:8443384
+  qualifier: involved_in
+  review:
+    summary: Experimental (IDA) annotation of cobalamin transport; recombinant transcobalamin-2
+      bound cobalamin and facilitated its uptake into cells via the plasma-membrane TCII-Cbl
+      receptor.
+    action: ACCEPT
+    reason: Directly demonstrated core biological process. Functional recombinant transcobalamin-2
+      bound Cbl and facilitated its uptake into K562 cells by binding the TCII-Cbl receptor
+      on the plasma membrane.
+    supported_by:
+    - reference_id: PMID:8443384
+      supporting_text: binds Cbl and facilitates the uptake of Cbl in eukaryotic cells
+        by binding to the receptor for TCII-Cbl on the plasma membrane of K562 cells.
+- term:
+    id: GO:0031419
+    label: cobalamin binding
+  evidence_type: IDA
+  original_reference_id: PMID:27411955
+  qualifier: enables
+  review:
+    summary: Experimental (IDA) annotation of cobalamin binding; the holo-TC:CD320 co-crystal
+      structure resolved cobalamin bound to transcobalamin-2.
+    action: ACCEPT
+    reason: Directly demonstrated core molecular function. The 2.1 Angstrom co-crystal
+      structure of holo-transcobalamin-2 in complex with CD320 shows cobalamin bound to
+      transcobalamin-2, with the cobalt of Cbl identified in the electron density.
+    supported_by:
+    - reference_id: PMID:27411955
+      supporting_text: Cellular uptake of vitamin B12 (cobalamin) requires capture of transcobalamin
+        (TC) from the plasma by CD320, a ubiquitous cell surface receptor of the LDLR family.
+- term:
+    id: GO:0031419
+    label: cobalamin binding
+  evidence_type: IDA
+  original_reference_id: PMID:8443384
+  qualifier: enables
+  review:
+    summary: Experimental (IDA) annotation of cobalamin binding; recombinant transcobalamin-2
+      bound cobalamin.
+    action: ACCEPT
+    reason: Directly demonstrated core molecular function. Functional recombinant transcobalamin-2
+      cross-reacted with antiserum to native TCII and bound Cbl.
+    supported_by:
+    - reference_id: PMID:8443384
+      supporting_text: binds Cbl and facilitates the uptake of Cbl in eukaryotic cells
+        by binding to the receptor for TCII-Cbl on the plasma membrane of K562 cells.
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-3299657
+  qualifier: located_in
+  review:
+    summary: Reactome (TAS) annotation of extracellular region, from the disease reaction
+      &#34;Defective TCII does not bind Cbl in the circulation&#34;.
+    action: ACCEPT
+    reason: Correct extracellular location for the secreted plasma protein. Redundant with
+      experimental and IBA calls for the same term.
+    supported_by:
+    - reference_id: file:human/TCN2/TCN2-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Secreted&#34;
+- term:
+    id: GO:0031419
+    label: cobalamin binding
+  evidence_type: IDA
+  original_reference_id: PMID:16537422
+  qualifier: enables
+  review:
+    summary: Experimental (IDA) annotation of cobalamin binding; the crystal structure
+      of human holo-transcobalamin resolved one cobalamin buried at the interface of its
+      two domains.
+    action: ACCEPT
+    reason: Directly demonstrated core molecular function with atomic-resolution structural
+      evidence. The holo-TC structure shows a single Cbl in base-on conformation buried
+      at the domain interface, with a barrel histidine as the axial ligand.
+    supported_by:
+    - reference_id: PMID:16537422
+      supporting_text: One Cbl molecule in base-on conformation is buried inside the domain
+        interface.
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: TAS
+  original_reference_id: PMID:1708393
+  qualifier: located_in
+  review:
+    summary: Traceable-author-statement (TAS) annotation of extracellular region; the cDNA
+      encodes a secreted 409-residue protein with an 18-residue leader peptide, secreted
+      by endothelial cells.
+    action: ACCEPT
+    reason: Correct extracellular location supported by the cloned cDNA encoding a signal
+      peptide and secreted mature protein, and by demonstrated secretion from human umbilical
+      vein endothelial cells. Redundant with experimental and IBA calls for the same term.
+    supported_by:
+    - reference_id: PMID:1708393
+      supporting_text: The cellular uptake of cobalamin (Cbl, vitamin B12) is mediated
+        by transcobalamin II (TCII), a plasma protein that binds Cbl and is secreted by
+- term:
+    id: GO:0015889
+    label: cobalamin transport
+  evidence_type: TAS
+  original_reference_id: PMID:3782074
+  qualifier: involved_in
+  review:
+    summary: Traceable-author-statement (TAS) annotation of cobalamin transport, from the
+      characterization of transcobalamin-2 as the plasma cobalamin transport protein.
+    action: ACCEPT
+    reason: Correctly captures the core biological process. Transcobalamin-2 was purified
+      as the plasma holo-cobalamin transport protein (1 mol cobalamin/mol protein). Redundant
+      with experimental and IBA cobalamin-transport annotations.
+    supported_by:
+    - reference_id: PMID:3782074
+      supporting_text: the final preparation of holo-TCII contained 1 mol of cobalamin/mol
+        of protein.
+core_functions:
+- description: Binds vitamin B12 (cobalamin) with 1:1 stoichiometry as the primary plasma
+    cobalamin-binding protein, sequestering a single cobalamin molecule at the interface
+    of its two structural domains.
+  molecular_function:
+    id: GO:0031419
+    label: cobalamin binding
+  supported_by:
+  - reference_id: PMID:16537422
+    supporting_text: One Cbl molecule in base-on conformation is buried inside the domain
+      interface.
+  - reference_id: PMID:3782074
+    supporting_text: the final preparation of holo-TCII contained 1 mol of cobalamin/mol
+      of protein.
+- description: Acts as the cargo-carrying ligand recognized by the cell-surface uptake
+    receptor CD320 (TCblR), enabling receptor-mediated endocytosis of the transcobalamin-cobalamin
+    complex and thereby delivery of vitamin B12 into cells.
+  molecular_function:
+    id: GO:0140355
+    label: cargo receptor ligand activity
+  directly_involved_in:
+  - id: GO:0015889
+    label: cobalamin transport
+  locations:
+  - id: GO:0005576
+    label: extracellular region
+  supported_by:
+  - reference_id: PMID:27411955
+    supporting_text: transcobalamin (TC)-bound Cbl is transported into cells by receptor-mediated
+      endocytosis, which requires Ca2+-dependent complex formation of TC with its cognate
+      cell surface receptor CD320
+  - reference_id: PMID:8443384
+    supporting_text: binds Cbl and facilitates the uptake of Cbl in eukaryotic cells by
+      binding to the receptor for TCII-Cbl on the plasma membrane of K562 cells.
+- description: As a secreted plasma protein, transports newly absorbed cobalamin from the
+    circulation to peripheral cells throughout the body, the physiologically essential
+    route supplying vitamin B12 to tissues.
+  molecular_function:
+    id: GO:0031419
+    label: cobalamin binding
+  directly_involved_in:
+  - id: GO:0015889
+    label: cobalamin transport
+  locations:
+  - id: GO:0005576
+    label: extracellular region
+  supported_by:
+  - reference_id: PMID:1708393
+    supporting_text: The cellular uptake of cobalamin (Cbl, vitamin B12) is mediated by
+      transcobalamin II (TCII), a plasma protein that binds Cbl and is secreted by
+  - reference_id: PMID:8443384
+    supporting_text: Transcobalamin II (TCII) is a cobalamin (Cbl, vitamin B12)-binding
+      protein in mammalian plasma that facilitates the cellular uptake of the vitamin.
+proposed_new_terms: []
+suggested_questions:
+- question: Beyond CD320, how much does the LRP2/megalin-mediated route (e.g. in the renal
+    tubule) contribute to transcobalamin-cobalamin reuptake and tissue cobalamin delivery
+    in vivo?
+- question: Does apo-transcobalamin-2 have a distinct physiological function or receptor
+    engagement compared with holo-transcobalamin-2?
+suggested_experiments:
+- description: Quantify the relative contribution of CD320 versus LRP2/megalin to tissue
+    cobalamin delivery using tissue-specific knockout models and labelled-cobalamin uptake
+    assays.
+- description: Structural and kinetic characterization of cobalamin loading onto apo-transcobalamin-2,
+    including whether an enterocyte export factor is required for efficient loading.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary
+    mapping, accompanied by conservative changes to GO terms applied by UniProt
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:16537422
+  title: Structural basis for mammalian vitamin B12 transport by transcobalamin.
+  findings:
+  - statement: The crystal structure of human holo-transcobalamin reveals a two-domain
+      architecture with one cobalamin buried in base-on conformation at the domain interface,
+      defining the structural basis of cobalamin binding.
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified; primary structural evidence (PDB 2BB5) for cobalamin
+      binding by transcobalamin-2. Abstract-only in cache but supporting quotes are verbatim
+      from the abstract.
+- id: PMID:1708393
+  title: The cDNA sequence and the deduced amino acid sequence of human transcobalamin
+    II show homology with rat intrinsic factor and human transcobalamin I.
+  findings:
+  - statement: The transcobalamin-2 cDNA encodes an 18-residue leader peptide and a secreted
+      409-residue protein; the protein is a plasma cobalamin-binding protein secreted by
+      endothelial cells and mediates cellular uptake of cobalamin.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified; establishes secreted nature and cobalamin-transport
+      role. Abstract-only in cache.
+- id: PMID:27411955
+  title: Structural basis of transcobalamin recognition by human CD320 receptor.
+  findings:
+  - statement: The holo-TC:CD320 co-crystal structure shows transcobalamin-2, carrying
+      bound cobalamin, engaging the LDLR-A domains of the cell-surface receptor CD320,
+      the interaction that drives receptor-mediated cellular uptake of vitamin B12; binding
+      is Ca2+-dependent and reduced at endosomal (low) pH.
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified; full text available. Basis for both the protein-binding
+      IPI (interactor CD320/Q9NPF0) and the cargo receptor ligand activity.
+- id: PMID:3782074
+  title: Purification and molecular characterization of human transcobalamin II.
+  findings:
+  - statement: Transcobalamin-2 was purified from human plasma as a secreted holo-protein
+      containing one cobalamin per protein molecule, establishing its extracellular localization
+      and 1:1 cobalamin binding.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified; source of the EXP extracellular-region and cargo receptor
+      ligand annotations. Abstract-only in cache.
+- id: PMID:8443384
+  title: Functional human transcobalamin II isoproteins are secreted by insect cells using
+    the baculovirus expression system.
+  findings:
+  - statement: Recombinant transcobalamin-2 is constitutively secreted, binds cobalamin,
+      and facilitates cobalamin uptake into cells by binding the plasma-membrane TCII-Cbl
+      receptor, directly demonstrating its cobalamin-binding and transport functions.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified; UniProt FUNCTION source. Directly supports cobalamin
+      binding, cobalamin transport, and secreted localization. Abstract-only in cache.
+- id: file:human/TCN2/TCN2-uniprot.txt
+  title: UniProtKB P20062 (TCO2_HUMAN) Transcobalamin-2
+  findings:
+  - statement: UniProt describes transcobalamin-2 as the primary vitamin B12-binding and
+      transport protein that delivers cobalamin to cells, is secreted, and interacts with
+      CD320 via its LDL-receptor class A domains; loss of function causes transcobalamin
+      II deficiency (TCN2D).
+    reference_section_type: OTHER
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Curated UniProt record for P20062; supports secreted localization, function,
+      CD320 interaction, and disease.
+- id: Reactome:R-HSA-3000074
+  title: TCN2 binds RCbl in the circulation
+  findings: []
+- id: Reactome:R-HSA-3000112
+  title: CD320-mediated TCN2:RCbl uptake and delivery to lysosome
+  findings: []
+- id: Reactome:R-HSA-3000122
+  title: CD320 binds extracellular TCN2:RCbl
+  findings: []
+- id: Reactome:R-HSA-3000263
+  title: TCN2:RCbl is degraded to release RCbl
+  findings: []
+- id: Reactome:R-HSA-3299657
+  title: Defective TCII does not bind Cbl in the circulation
+  findings: []
+- id: Reactome:R-HSA-3325546
+  title: Defective CD320 does not transport extracellular TCII:Cbl to endosome
+  findings: []
+- id: Reactome:R-HSA-9758890
+  title: Transport of RCbl within the body
+  findings: []
+- id: Reactome:R-HSA-9759202
+  title: LRP2-mediated TCN2:RCbl uptake and delivery to lysosome
+  findings: []
+- id: Reactome:R-HSA-9759209
+  title: LRP2 binds extracellular TCN2:RCbl
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
