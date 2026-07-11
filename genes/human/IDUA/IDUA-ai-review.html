@@ -1,0 +1,5001 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IDUA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>IDUA</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P35475" target="_blank" class="term-link">
+                        P35475
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "IDUA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P35475" data-a="DESCRIPTION: IDUA encodes alpha-L-iduronidase, a lysosomal exo-..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>IDUA encodes alpha-L-iduronidase, a lysosomal exo-glycosidase (glycosyl hydrolase family 39; EC 3.2.1.76) that hydrolyses terminal, non-reducing alpha-L-iduronic acid residues from the glycosaminoglycans heparan sulfate and dermatan sulfate. It is one of the sequential enzymes of lysosomal glycosaminoglycan catabolism, acting by a retaining double-displacement mechanism (nucleophile Glu299, general acid/base Glu182); an N-glycan attached to Asn372 forms part of the substrate-binding pocket and is required for full activity. The enzyme is a monomer that is trafficked to and acts within the lysosomal lumen. Loss of IDUA activity blocks GAG degradation and causes lysosomal accumulation and urinary excretion of heparan sulfate and dermatan sulfate, producing mucopolysaccharidosis type I, which spans a clinical spectrum from severe (Hurler syndrome) through intermediate (Hurler-Scheie) to attenuated (Scheie syndrome).</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003940" target="_blank" class="term-link">
+                                    GO:0003940
+                                </a>
+                            </span>
+                            <span class="term-label">L-iduronidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P35475" data-a="GO:0003940" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) assignment of the defining catalytic activity of IDUA, L-iduronidase activity. This is the core molecular function of the gene and is concordant with direct experimental structural/biochemical evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> L-iduronidase activity is the well-established core function of IDUA, confirmed by crystal structures and enzyme kinetics of the human enzyme. The IBA call is consistent with the manual experimental annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24036510" target="_blank" class="term-link">
+                                        PMID:24036510
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">IDUA participates in the stepwise degradation of the glycosaminoglycans (GAGs) heparan sulphate and dermatan sulphate, by removing a single α-L-iduronyl residue from the non-reducing ends of these complex polysaccharides.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/IDUA/IDUA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">RecName: Full=Alpha-L-iduronidase;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003940" target="_blank" class="term-link">
+                                    GO:0003940
+                                </a>
+                            </span>
+                            <span class="term-label">L-iduronidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P35475" data-a="GO:0003940" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (multi-method IEA) assignment of L-iduronidase activity, mapped in part from EC 3.2.1.76. Correct and identical to the experimentally supported core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Redundant with the experimentally supported GO:0003940 annotations; the EC 3.2.1.76 mapping is exactly the enzyme&#39;s activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/IDUA/IDUA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">EC=3.2.1.76;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004553" target="_blank" class="term-link">
+                                    GO:0004553
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity, hydrolyzing O-glycosyl compounds</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P35475" data-a="GO:0004553" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro-derived (IPR000514, Glyco_hydro_39) mapping to the general parent term for O-glycosyl hydrolases. Correct but less informative than the specific L-iduronidase activity term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> IDUA is a glycoside hydrolase family 39 member and does hydrolyse O-glycosyl (alpha-L-iduronosidic) linkages, so the term is not wrong, but it is a broad grouping term subsumed by the specific GO:0003940 L-iduronidase activity. Kept as non-core rather than treated as the representative molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/IDUA/IDUA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Belongs to the glycosyl hydrolase 39 family.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005764" target="_blank" class="term-link">
+                                    GO:0005764
+                                </a>
+                            </span>
+                            <span class="term-label">lysosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P35475" data-a="GO:0005764" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UniProt Subcellular-Location keyword mapping placing IDUA in the lysosome. This is the correct and physiologically relevant compartment for the enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> IDUA is a mannose-6-phosphate-targeted lysosomal hydrolase; lysosomal localization is central to its function and is asserted by UniProt with literature support.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/IDUA/IDUA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Lysosome</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005975" target="_blank" class="term-link">
+                                    GO:0005975
+                                </a>
+                            </span>
+                            <span class="term-label">carbohydrate metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P35475" data-a="GO:0005975" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro-derived high-level biological-process term. IDUA does participate in carbohydrate metabolism, but this is a very broad grouping term subsumed by the specific glycosaminoglycan catabolic annotations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Not incorrect, but far too general; the informative processes are heparan sulfate and dermatan sulfate catabolism. Retained as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24036510" target="_blank" class="term-link">
+                                        PMID:24036510
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">IDUA participates in the stepwise degradation of the glycosaminoglycans (GAGs) heparan sulphate and dermatan sulphate, by removing a single α-L-iduronyl residue from the non-reducing ends of these complex polysaccharides.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030200" target="_blank" class="term-link">
+                                    GO:0030200
+                                </a>
+                            </span>
+                            <span class="term-label">heparan sulfate proteoglycan catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P35475" data-a="GO:0030200" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARBA electronic assignment of heparan sulfate proteoglycan catabolism, one of the two core degradative pathways in which IDUA acts. Well supported by experimental and structural evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> IDUA removes terminal alpha-L-iduronate from heparan sulfate during its stepwise lysosomal degradation; loss of IDUA blocks HS breakdown (HS accumulation in Idua-deficient mice).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24036510" target="_blank" class="term-link">
+                                        PMID:24036510
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">IDUA participates in the stepwise degradation of the glycosaminoglycans (GAGs) heparan sulphate and dermatan sulphate, by removing a single α-L-iduronyl residue from the non-reducing ends of these complex polysaccharides.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21873421" target="_blank" class="term-link">
+                                        PMID:21873421
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">representing the terminal iduronic acid residue capping the non-reducing end of the HS chain, where no further degradation can occur in the absence of Idua.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030209" target="_blank" class="term-link">
+                                    GO:0030209
+                                </a>
+                            </span>
+                            <span class="term-label">dermatan sulfate proteoglycan catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P35475" data-a="GO:0030209" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARBA electronic assignment of dermatan sulfate proteoglycan catabolism, the second core degradative pathway of IDUA. Duplicated by an experimental IDA annotation below.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> IDUA hydrolyses the unsulfated alpha-L-iduronosidic linkages of dermatan sulfate (this is its defining EC 3.2.1.76 reaction); a core biological process.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/IDUA/IDUA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Hydrolysis of unsulfated alpha-L-iduronosidic linkages in</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24036510" target="_blank" class="term-link">
+                                        PMID:24036510
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">IDUA participates in the stepwise degradation of the glycosaminoglycans (GAGs) heparan sulphate and dermatan sulphate, by removing a single α-L-iduronyl residue from the non-reducing ends of these complex polysaccharides.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030211" target="_blank" class="term-link">
+                                    GO:0030211
+                                </a>
+                            </span>
+                            <span class="term-label">heparin proteoglycan catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P35475" data-a="GO:0030211" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARBA electronic assignment of heparin proteoglycan catabolism. Heparin is a highly sulfated relative of heparan sulfate bearing the same alpha-L-iduronosidic linkages, on which IDUA acts. Supported experimentally by the Idua-knockout mouse (below) and retained consistent with that IMP.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Heparin shares the alpha-L-iduronosidic linkages of heparan sulfate, and the Idua-deficient mouse demonstrates that terminal iduronate removal from these chains requires IDUA. Kept consistent with the IMP annotation to the same term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21873421" target="_blank" class="term-link">
+                                        PMID:21873421
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">representing the terminal iduronic acid residue capping the non-reducing end of the HS chain, where no further degradation can occur in the absence of Idua.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043202" target="_blank" class="term-link">
+                                    GO:0043202
+                                </a>
+                            </span>
+                            <span class="term-label">lysosomal lumen</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P35475" data-a="GO:0043202" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARBA electronic assignment of lysosomal lumen localization. This is the precise compartment in which IDUA carries out GAG degradation and is well supported.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> IDUA is a soluble lysosomal hydrolase acting in the acidic lumen; the more specific lumen term is preferable to the generic lysosome term and is retained as a core localization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/IDUA/IDUA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Lysosome</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005102" target="_blank" class="term-link">
+                                    GO:0005102
+                                </a>
+                            </span>
+                            <span class="term-label">signaling receptor binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P35475" data-a="GO:0005102" data-r="GO_REF:0000107" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation transferred from the rat ortholog (D3ZE16) via Ensembl Compara. There is no evidence that IDUA, a soluble lysosomal glycosidase, acts as a signaling receptor ligand.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> IDUA is a lysosomal hydrolase with no established signaling-ligand role; this is an uninformative binding term propagated electronically from an ortholog and is not supported by the human literature or structural/functional characterization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/IDUA/IDUA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Lysosomal hydrolase responsible for the degradation of the</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006027" target="_blank" class="term-link">
+                                    GO:0006027
+                                </a>
+                            </span>
+                            <span class="term-label">glycosaminoglycan catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P35475" data-a="GO:0006027" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ensembl-transferred annotation to the parent glycosaminoglycan catabolic process term. This correctly captures IDUA&#39;s role in GAG breakdown and is the immediate parent of the HS and DS catabolic annotations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> IDUA is a bona fide GAG-degrading lysosomal exo-glycosidase; the term is correct, if broader than the HS/DS-specific terms.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24036510" target="_blank" class="term-link">
+                                        PMID:24036510
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">IDUA participates in the stepwise degradation of the glycosaminoglycans (GAGs) heparan sulphate and dermatan sulphate, by removing a single α-L-iduronyl residue from the non-reducing ends of these complex polysaccharides.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030200" target="_blank" class="term-link">
+                                    GO:0030200
+                                </a>
+                            </span>
+                            <span class="term-label">heparan sulfate proteoglycan catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-2024096
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P35475" data-a="GO:0030200" data-r="Reactome:R-HSA-2024096" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author annotation placing IDUA in the HS-GAG degradation pathway. Concordant with the experimentally supported role in heparan sulfate catabolism.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Reactome curates IDUA as a step in lysosomal heparan sulfate degradation, consistent with the enzyme&#39;s characterized activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-1678716
+
+                                </span>
+
+                                <div class="support-text">The lysosomal enzyme alpha-L-iduronidase (IDUA) cleaves the terminal L-iduronic acid residue from either heparan sulfate or dermatan sulfate chains of proteoglycans</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030209" target="_blank" class="term-link">
+                                    GO:0030209
+                                </a>
+                            </span>
+                            <span class="term-label">dermatan sulfate proteoglycan catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-1793186
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P35475" data-a="GO:0030209" data-r="Reactome:R-HSA-1793186" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author annotation placing IDUA in dermatan sulfate degradation (hydrolysis of the unsulfated alpha-L-iduronosidic link in DS). Concordant with the enzyme&#39;s EC 3.2.1.76 reaction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Curated Reactome pathway step matching IDUA&#39;s defining catalytic reaction on dermatan sulfate.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-1793186
+
+                                </span>
+
+                                <div class="support-text">The lysosomal enzyme alpha-L-iduronidase (IDUA) hydrolyzes the nonreducing terminal iduronide glycosidic bond in heparan sulfate and dermatan sulfate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003940" target="_blank" class="term-link">
+                                    GO:0003940
+                                </a>
+                            </span>
+                            <span class="term-label">L-iduronidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-1678716
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P35475" data-a="GO:0003940" data-r="Reactome:R-HSA-1678716" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author assertion of L-iduronidase activity (cleavage of terminal L-iduronate from HS chains). Core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Restates the enzyme&#39;s defining catalytic activity within a curated reaction.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-1678716
+
+                                </span>
+
+                                <div class="support-text">The lysosomal enzyme alpha-L-iduronidase (IDUA) cleaves the terminal L-iduronic acid residue from either heparan sulfate or dermatan sulfate chains of proteoglycans</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003940" target="_blank" class="term-link">
+                                    GO:0003940
+                                </a>
+                            </span>
+                            <span class="term-label">L-iduronidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-1793186
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P35475" data-a="GO:0003940" data-r="Reactome:R-HSA-1793186" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author assertion of L-iduronidase activity (hydrolysis of the unsulfated alpha-L-iduronosidic link in DS). Core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Restates the enzyme&#39;s defining catalytic activity within a curated dermatan sulfate reaction.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-1793186
+
+                                </span>
+
+                                <div class="support-text">The lysosomal enzyme alpha-L-iduronidase (IDUA) hydrolyzes the nonreducing terminal iduronide glycosidic bond in heparan sulfate and dermatan sulfate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003940" target="_blank" class="term-link">
+                                    GO:0003940
+                                </a>
+                            </span>
+                            <span class="term-label">L-iduronidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-2090037
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P35475" data-a="GO:0003940" data-r="Reactome:R-HSA-2090037" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author assertion of L-iduronidase activity within a heparan sulfate chain hydrolysis reaction. Core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Duplicate curated assertion of the enzyme&#39;s defining catalytic activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-1678716
+
+                                </span>
+
+                                <div class="support-text">The lysosomal enzyme alpha-L-iduronidase (IDUA) cleaves the terminal L-iduronic acid residue from either heparan sulfate or dermatan sulfate chains of proteoglycans</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003940" target="_blank" class="term-link">
+                                    GO:0003940
+                                </a>
+                            </span>
+                            <span class="term-label">L-iduronidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-2206299
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P35475" data-a="GO:0003940" data-r="Reactome:R-HSA-2206299" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author assertion of L-iduronidase activity (associated with a defective-IDUA/disease reaction). Core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Duplicate curated assertion of the enzyme&#39;s defining catalytic activity in the MPS I disease context.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-1678716
+
+                                </span>
+
+                                <div class="support-text">The lysosomal enzyme alpha-L-iduronidase (IDUA) cleaves the terminal L-iduronic acid residue from either heparan sulfate or dermatan sulfate chains of proteoglycans</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003940" target="_blank" class="term-link">
+                                    GO:0003940
+                                </a>
+                            </span>
+                            <span class="term-label">L-iduronidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9036037
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P35475" data-a="GO:0003940" data-r="Reactome:R-HSA-9036037" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author assertion of L-iduronidase activity within a heparan-sulfate-chain reaction. Core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Duplicate curated assertion of the enzyme&#39;s defining catalytic activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-1678716
+
+                                </span>
+
+                                <div class="support-text">The lysosomal enzyme alpha-L-iduronidase (IDUA) cleaves the terminal L-iduronic acid residue from either heparan sulfate or dermatan sulfate chains of proteoglycans</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003940" target="_blank" class="term-link">
+                                    GO:0003940
+                                </a>
+                            </span>
+                            <span class="term-label">L-iduronidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9036041
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P35475" data-a="GO:0003940" data-r="Reactome:R-HSA-9036041" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author assertion of L-iduronidase activity (associated with the defective-IDUA dermatan sulfate reaction). Core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Duplicate curated assertion of the enzyme&#39;s defining catalytic activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-1793186
+
+                                </span>
+
+                                <div class="support-text">The lysosomal enzyme alpha-L-iduronidase (IDUA) hydrolyzes the nonreducing terminal iduronide glycosidic bond in heparan sulfate and dermatan sulfate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003940" target="_blank" class="term-link">
+                                    GO:0003940
+                                </a>
+                            </span>
+                            <span class="term-label">L-iduronidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23959878" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23959878
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Human α-L-iduronidase uses its own N-glycan as a substrate-b...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P35475" data-a="GO:0003940" data-r="PMID:23959878" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (EXP) assignment of L-iduronidase activity from a structural/kinetic study of human IDUA that determined the crystal structure with iduronate bound and characterized catalysis, including the role of the Asn372 N-glycan.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct experimental determination of the enzyme&#39;s catalytic activity in humans; this is the strongest evidence for the core molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23959878" target="_blank" class="term-link">
+                                        PMID:23959878
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">human α-l-iduronidase (hIDUA), of which a dysfunction causes accumulation of dermatan/heparan sulfate leading to mucopolysaccharidosis type I, uses its own N-glycan as a substrate binding and catalytic module.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030211" target="_blank" class="term-link">
+                                    GO:0030211
+                                </a>
+                            </span>
+                            <span class="term-label">heparin proteoglycan catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21873421" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21873421
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mucopolysaccharidosis type I, unique structure of accumulate...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P35475" data-a="GO:0030211" data-r="PMID:21873421" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation from a murine Idua-knockout study showing accumulation of heparan sulfate with a terminal iduronate-capped disaccharide, demonstrating that Idua is required for degradation of iduronate-containing heparan sulfate/heparin chains.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Loss of Idua in mice blocks removal of terminal iduronate from HS/heparin, causing pathological accumulation; strong genetic evidence for IDUA&#39;s role in catabolism of iduronate-bearing HS/heparin. Retained (heparin is closely related to HS, and the phenotype is directly demonstrated).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21873421" target="_blank" class="term-link">
+                                        PMID:21873421
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">representing the terminal iduronic acid residue capping the non-reducing end of the HS chain, where no further degradation can occur in the absence of Idua.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070062" target="_blank" class="term-link">
+                                    GO:0070062
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular exosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23533145
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    In-depth proteomic analyses of exosomes isolated from expres...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P35475" data-a="GO:0070062" data-r="PMID:23533145" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput mass-spectrometry detection of IDUA among ~900 proteins in exosomes isolated from expressed prostatic secretions in urine. This reflects presence of the secretory/lysosomal protein in extracellular vesicles rather than a distinct functional site.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> A proteomics survey placed IDUA in urinary exosomes; lysosomal/secretory hydrolases are commonly recovered in extracellular vesicles. This is a valid detection but not the enzyme&#39;s primary functional location, so it is retained as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link">
+                                        PMID:23533145
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In pooled EPS-urine exosome samples, ~900 proteins were detected.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003940" target="_blank" class="term-link">
+                                    GO:0003940
+                                </a>
+                            </span>
+                            <span class="term-label">L-iduronidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24036510" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24036510
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Insights into mucopolysaccharidosis I from the structure and...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P35475" data-a="GO:0003940" data-r="PMID:24036510" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay (IDA) of L-iduronidase activity from the human IDUA crystal-structure and enzymology study that captured Michaelis and glycosyl-enzyme intermediate complexes with iduronate analogs and defined the retaining double-displacement mechanism.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Definitive experimental characterization of the enzyme&#39;s catalytic activity and mechanism; the primary evidence for the core molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24036510" target="_blank" class="term-link">
+                                        PMID:24036510
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">IDUA is an α-retaining glycoside hydrolase with strict substrate specificity for L-IdoA</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030209" target="_blank" class="term-link">
+                                    GO:0030209
+                                </a>
+                            </span>
+                            <span class="term-label">dermatan sulfate proteoglycan catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24036510" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24036510
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Insights into mucopolysaccharidosis I from the structure and...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P35475" data-a="GO:0030209" data-r="PMID:24036510" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation of dermatan sulfate proteoglycan catabolism from the structural and enzymological study showing IDUA removes alpha-L-iduronate from the non-reducing ends of dermatan sulfate (and heparan sulfate).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimentally grounded in IDUA&#39;s demonstrated action on dermatan sulfate; a core biological process.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24036510" target="_blank" class="term-link">
+                                        PMID:24036510
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">IDUA participates in the stepwise degradation of the glycosaminoglycans (GAGs) heparan sulphate and dermatan sulphate, by removing a single α-L-iduronyl residue from the non-reducing ends of these complex polysaccharides.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043202" target="_blank" class="term-link">
+                                    GO:0043202
+                                </a>
+                            </span>
+                            <span class="term-label">lysosomal lumen</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-2206299
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P35475" data-a="GO:0043202" data-r="Reactome:R-HSA-2206299" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author localization of IDUA to the lysosomal lumen (disease reaction context). Correct core compartment.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with IDUA being a soluble lysosomal-lumen hydrolase.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-1678716
+
+                                </span>
+
+                                <div class="support-text">The lysosomal enzyme alpha-L-iduronidase (IDUA)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043202" target="_blank" class="term-link">
+                                    GO:0043202
+                                </a>
+                            </span>
+                            <span class="term-label">lysosomal lumen</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9036037
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P35475" data-a="GO:0043202" data-r="Reactome:R-HSA-9036037" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author localization of IDUA to the lysosomal lumen (heparan sulfate reaction context). Correct core compartment.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with IDUA being a soluble lysosomal-lumen hydrolase.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-1678716
+
+                                </span>
+
+                                <div class="support-text">The lysosomal enzyme alpha-L-iduronidase (IDUA)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043202" target="_blank" class="term-link">
+                                    GO:0043202
+                                </a>
+                            </span>
+                            <span class="term-label">lysosomal lumen</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9036041
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P35475" data-a="GO:0043202" data-r="Reactome:R-HSA-9036041" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author localization of IDUA to the lysosomal lumen (dermatan sulfate reaction context). Correct core compartment.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with IDUA being a soluble lysosomal-lumen hydrolase.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-1793186
+
+                                </span>
+
+                                <div class="support-text">The lysosomal enzyme alpha-L-iduronidase (IDUA)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043202" target="_blank" class="term-link">
+                                    GO:0043202
+                                </a>
+                            </span>
+                            <span class="term-label">lysosomal lumen</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-1678716
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P35475" data-a="GO:0043202" data-r="Reactome:R-HSA-1678716" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author localization of IDUA to the lysosomal lumen (HS chain cleavage reaction). Correct core compartment.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with IDUA being a soluble lysosomal-lumen hydrolase.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-1678716
+
+                                </span>
+
+                                <div class="support-text">The lysosomal enzyme alpha-L-iduronidase (IDUA)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043202" target="_blank" class="term-link">
+                                    GO:0043202
+                                </a>
+                            </span>
+                            <span class="term-label">lysosomal lumen</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-1793186
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P35475" data-a="GO:0043202" data-r="Reactome:R-HSA-1793186" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author localization of IDUA to the lysosomal lumen (DS link hydrolysis reaction). Correct core compartment.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with IDUA being a soluble lysosomal-lumen hydrolase.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-1793186
+
+                                </span>
+
+                                <div class="support-text">The lysosomal enzyme alpha-L-iduronidase (IDUA)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043202" target="_blank" class="term-link">
+                                    GO:0043202
+                                </a>
+                            </span>
+                            <span class="term-label">lysosomal lumen</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-2090037
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P35475" data-a="GO:0043202" data-r="Reactome:R-HSA-2090037" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author localization of IDUA to the lysosomal lumen (heparan sulfate chain reaction). Correct core compartment.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with IDUA being a soluble lysosomal-lumen hydrolase.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-1678716
+
+                                </span>
+
+                                <div class="support-text">The lysosomal enzyme alpha-L-iduronidase (IDUA)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003940" target="_blank" class="term-link">
+                                    GO:0003940
+                                </a>
+                            </span>
+                            <span class="term-label">L-iduronidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/2470345" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:2470345
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Immunopurification and characterization of human alpha-L-idu...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P35475" data-a="GO:0003940" data-r="PMID:2470345" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Traceable-author annotation of L-iduronidase activity from the immunopurification and biochemical characterization of the human liver enzyme, which measured its activity toward heparan sulfate- and dermatan sulfate-derived substrates.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> An early experimental characterization establishing the enzyme&#39;s catalytic activity on GAG-derived substrates; core molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/2470345" target="_blank" class="term-link">
+                                        PMID:2470345
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">activities towards disaccharide substrates derived from two glycosaminoglycan sources, heparan sulphate and dermatan sulphate.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005984" target="_blank" class="term-link">
+                                    GO:0005984
+                                </a>
+                            </span>
+                            <span class="term-label">disaccharide metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/2470345" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:2470345
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Immunopurification and characterization of human alpha-L-idu...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P35475" data-a="GO:0005984" data-r="PMID:2470345" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Traceable-author annotation of disaccharide metabolic process, derived from an in vitro assay in which the two enzyme forms were tested against GAG-derived disaccharide substrates. IDUA&#39;s physiological substrates are polymeric heparan sulfate and dermatan sulfate, not free disaccharides.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The disaccharide substrates were an experimental convenience for measuring activity; the in vivo role is exolytic removal of terminal iduronate from GAG polymers, captured by the glycosaminoglycan/HS/DS catabolic terms. This general metabolic-process term overstates a biological role in disaccharide metabolism.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/2470345" target="_blank" class="term-link">
+                                        PMID:2470345
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">activities towards disaccharide substrates derived from two glycosaminoglycan sources, heparan sulphate and dermatan sulphate.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24036510" target="_blank" class="term-link">
+                                        PMID:24036510
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">by removing a single α-L-iduronyl residue from the non-reducing ends of these complex polysaccharides.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Hydrolysis of terminal, non-reducing alpha-L-iduronic acid residues from the glycosaminoglycans heparan sulfate and dermatan sulfate in the lysosomal lumen, a required exolytic step of lysosomal glycosaminoglycan catabolism.</h3>
+                <span class="vote-buttons" data-g="P35475" data-a="FUNCTION: Hydrolysis of terminal, non-reducing alpha-L-iduro..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003940" target="_blank" class="term-link">
+                            L-iduronidase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030200" target="_blank" class="term-link">
+                                heparan sulfate proteoglycan catabolic process
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030209" target="_blank" class="term-link">
+                                dermatan sulfate proteoglycan catabolic process
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006027" target="_blank" class="term-link">
+                                glycosaminoglycan catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043202" target="_blank" class="term-link">
+                                lysosomal lumen
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005764" target="_blank" class="term-link">
+                                lysosome
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Substrates:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:28815" target="_blank" class="term-link">
+                                heparan sulfate
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:18376" target="_blank" class="term-link">
+                                dermatan sulfate
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24036510" target="_blank" class="term-link">
+                                PMID:24036510
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">IDUA participates in the stepwise degradation of the glycosaminoglycans (GAGs) heparan sulphate and dermatan sulphate, by removing a single α-L-iduronyl residue from the non-reducing ends of these complex polysaccharides.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24036510" target="_blank" class="term-link">
+                                PMID:24036510
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">IDUA is an α-retaining glycoside hydrolase with strict substrate specificity for L-IdoA</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/IDUA/IDUA-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Lysosomal hydrolase responsible for the degradation of the</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/IDUA/IDUA-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">SUBCELLULAR LOCATION: Lysosome</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            Reactome:R-HSA-1678716
+
+                        </span>
+
+                        <div class="finding-text">The lysosomal enzyme alpha-L-iduronidase (IDUA) cleaves the terminal L-iduronic acid residue from either heparan sulfate or dermatan sulfate chains of proteoglycans</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21873421" target="_blank" class="term-link">
+                            PMID:21873421
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Mucopolysaccharidosis type I, unique structure of accumulated heparan sulfate and increased N-sulfotransferase activity in mice lacking α-l-iduronidase.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Idua-deficient mice accumulate heparan sulfate bearing a terminal iduronate-capped disaccharide at the non-reducing end, where no further degradation can occur without Idua, confirming IDUA&#39;s role in heparan sulfate/heparin catabolism.</div>
+
+                        <div class="finding-text">"representing the terminal iduronic acid residue capping the non-reducing end of the HS chain, where no further degradation can occur in the absence of Idua."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link">
+                            PMID:23533145
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">In-depth proteomic analyses of exosomes isolated from expressed prostatic secretions in urine.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">IDUA was among ~900 proteins detected by shotgun proteomics of urinary prostatic-secretion exosomes, supporting its recovery in extracellular vesicles.</div>
+
+                        <div class="finding-text">"In pooled EPS-urine exosome samples, ~900 proteins were detected."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23959878" target="_blank" class="term-link">
+                            PMID:23959878
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Human α-L-iduronidase uses its own N-glycan as a substrate-binding and catalytic module.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Crystal structure and enzymology of human IDUA showing that the N-glycan at Asn372 forms part of the substrate-binding pocket and is required for full L-iduronidase activity.</div>
+
+                        <div class="finding-text">"human α-l-iduronidase (hIDUA), of which a dysfunction causes accumulation of dermatan/heparan sulfate leading to mucopolysaccharidosis type I, uses its own N-glycan as a substrate binding and catalytic module."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24036510" target="_blank" class="term-link">
+                            PMID:24036510
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Insights into mucopolysaccharidosis I from the structure and action of α-L-iduronidase.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Crystal structures of human IDUA bound to iduronate analogs define the catalytic mechanism (retaining double displacement; nucleophile Glu299, acid/base Glu182) and confirm exolytic removal of alpha-L-iduronate from heparan and dermatan sulfate.</div>
+
+                        <div class="finding-text">"IDUA participates in the stepwise degradation of the glycosaminoglycans (GAGs) heparan sulphate and dermatan sulphate, by removing a single α-L-iduronyl residue from the non-reducing ends of these complex polysaccharides."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/2470345" target="_blank" class="term-link">
+                            PMID:2470345
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Immunopurification and characterization of human alpha-L-iduronidase with the use of monoclonal antibodies.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Immunopurified human alpha-L-iduronidase from liver was active toward disaccharide substrates derived from both heparan sulfate and dermatan sulfate.</div>
+
+                        <div class="finding-text">"activities towards disaccharide substrates derived from two glycosaminoglycan sources, heparan sulphate and dermatan sulphate."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-1678716
+
+                    </span>
+                </div>
+
+                <div class="reference-title">IDUA cleaves iduronate from HS chain</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-1793186
+
+                    </span>
+                </div>
+
+                <div class="reference-title">IDUA hydrolyses the unsulfated alpha-L-iduronosidic link in DS</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-2024096
+
+                    </span>
+                </div>
+
+                <div class="reference-title">HS-GAG degradation</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-2090037
+
+                    </span>
+                </div>
+
+                <div class="reference-title">IDUA hydrolyses Heparan sulfate chain(6)</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-2206299
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Defective IDUA does not hydrolyse Heparan sulfate chain(6)</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9036037
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Defective IDUA does not hydrolyse Heparan sulfate chain(1)</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9036041
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Defective IDUA does not hydrolyse the unsulfated alpha-L-iduronosidic link in DS</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/IDUA/IDUA-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry P35475 (IDUA_HUMAN)</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(IDUA-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P35475" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="idua-alpha-l-iduronidase-review-notes">IDUA (alpha-L-iduronidase) review notes</h1>
+<p>UniProt: P35475 (IDUA_HUMAN), EC 3.2.1.76, 653 aa precursor (signal 1-27, chain 28-653).<br />
+Family: glycosyl hydrolase family 39 (GH39; CAZy GH39). GO term for MF in GOA: <strong>GO:0003940 L-iduronidase activity</strong>.</p>
+<h2 id="core-biology">Core biology</h2>
+<p>IDUA is a lysosomal exo-glycosidase that hydrolyses terminal non-reducing alpha-L-iduronic<br />
+acid residues in the glycosaminoglycans heparan sulfate and dermatan sulfate, one of the<br />
+sequential steps of lysosomal GAG catabolism.</p>
+<ul>
+<li>FUNCTION (UniProt): "Lysosomal hydrolase responsible for the degradation of the glycosaminoglycans heparan sulfate and dermatan sulfate." [ECO:0000269|PubMed:7998955]</li>
+<li>CATALYTIC ACTIVITY (UniProt): "Hydrolysis of unsulfated alpha-L-iduronosidic linkages in dermatan sulfate.; EC=3.2.1.76"</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/24036510" title="IDUA participates in the stepwise degradation of the glycosaminoglycans (GAGs) heparan sulphate and dermatan sulphate, by removing a single α-L-iduronyl residue from the non-reducing ends of these complex polysaccharides.">PMID:24036510</a></li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/24036510" title="IDUA is an α-retaining glycoside hydrolase with strict substrate specificity for L-IdoA">PMID:24036510</a> — retaining double-displacement mechanism, nucleophile Glu299, general acid/base Glu182.</li>
+<li>Structure: three domains (TIM barrel with active site, beta-sandwich, fibronectin type III). N-glycan at Asn372 forms part of the substrate-binding pocket and is required for full activity [PMID:23959878, PMID:24036510].</li>
+<li>Subcellular location: Lysosome (UniProt SUBCELLULAR LOCATION: Lysosome; lysosomal lumen GO:0043202). Trafficked via M6P pathway. Monomer.</li>
+</ul>
+<h2 id="disease">Disease</h2>
+<p>Deficiency causes mucopolysaccharidosis type I (MPS I): MPS1H (Hurler, MIM:607014, severe),<br />
+MPS1H/S (Hurler-Scheie, MIM:607015, intermediate), MPS1S (Scheie, MIM:607016, attenuated).<br />
+Urinary excretion of dermatan sulfate and heparan sulfate. Many missense variants curated in UniProt.<br />
+Mouse Idua-/- accumulates HS with a terminal iduronic-acid-capped disaccharide<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/21873421" title="representing the terminal iduronic acid residue capping the non-reducing end of the HS chain, where no further degradation can occur in the absence of Idua">PMID:21873421</a>.</p>
+<h2 id="annotation-review-summary">Annotation review summary</h2>
+<ul>
+<li>MF GO:0003940 L-iduronidase activity: core. Supported by IDA (PMID:24036510), EXP (PMID:23959878),<br />
+  TAS (PMID:2470345, Reactome), IBA. ACCEPT.</li>
+<li>GO:0004553 hydrolase activity, hydrolyzing O-glycosyl compounds (IEA/InterPro): correct parent of<br />
+  GH39 activity but less informative than GO:0003940. KEEP_AS_NON_CORE.</li>
+<li>BP: heparan sulfate proteoglycan catabolic process (GO:0030200), dermatan sulfate proteoglycan<br />
+  catabolic process (GO:0030209), glycosaminoglycan catabolic process (GO:0006027): core, accept.<br />
+  IDA support for DS (PMID:24036510), IMP for HS/heparin (PMID:21873421, mouse Idua-/-).</li>
+<li>GO:0030211 heparin proteoglycan catabolic process (IEA/ARBA, IMP mouse): heparin is a highly<br />
+  sulfated variant of heparan sulfate; IDUA acts on the same alpha-L-iduronosidic linkages. Keep but<br />
+  non-core (heparin is a specialized subset; the physiological substrates are HS + DS).</li>
+<li>GO:0005975 carbohydrate metabolic process (IEA/InterPro): correct but very high-level parent;<br />
+  KEEP_AS_NON_CORE (subsumed by GAG catabolism).</li>
+<li>GO:0005984 disaccharide metabolic process (TAS PMID:2470345): the assay used HS/DS-derived<br />
+  disaccharide substrates; the physiological substrate is the polymer, not free disaccharides.<br />
+  MARK_AS_OVER_ANNOTATED (assay artifact / not the in vivo process).</li>
+<li>CC lysosome (GO:0005764), lysosomal lumen (GO:0043202): core, accept.</li>
+<li>GO:0070062 extracellular exosome (HDA PMID:23533145): mass-spec detection in prostatic-secretion<br />
+  urinary exosomes; typical for secretory/lysosomal proteins. KEEP_AS_NON_CORE (not the primary site).</li>
+<li>GO:0005102 signaling receptor binding (IEA/Ensembl, from rat ortholog D3ZE16): no evidence IDUA<br />
+  is a signaling receptor ligand; bare/uninformative binding term propagated electronically.<br />
+  MARK_AS_OVER_ANNOTATED.</li>
+</ul>
+<h2 id="core-mf-term-used-in-core_functions">Core MF term used in core_functions</h2>
+<p>GO:0003940 L-iduronidase activity (exact GOA term; confirmed current label via OLS).<br />
+</content><br />
+</invoke></p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P35475
+gene_symbol: IDUA
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  IDUA encodes alpha-L-iduronidase, a lysosomal exo-glycosidase (glycosyl hydrolase
+  family 39; EC 3.2.1.76) that hydrolyses terminal, non-reducing alpha-L-iduronic
+  acid residues from the glycosaminoglycans heparan sulfate and dermatan sulfate.
+  It is one of the sequential enzymes of lysosomal glycosaminoglycan catabolism,
+  acting by a retaining double-displacement mechanism (nucleophile Glu299, general
+  acid/base Glu182); an N-glycan attached to Asn372 forms part of the substrate-binding
+  pocket and is required for full activity. The enzyme is a monomer that is trafficked
+  to and acts within the lysosomal lumen. Loss of IDUA activity blocks GAG degradation
+  and causes lysosomal accumulation and urinary excretion of heparan sulfate and
+  dermatan sulfate, producing mucopolysaccharidosis type I, which spans a clinical
+  spectrum from severe (Hurler syndrome) through intermediate (Hurler-Scheie) to
+  attenuated (Scheie syndrome).
+alternative_products:
+- name: &#39;1&#39;
+  id: P35475-1
+- name: &#39;2&#39;
+  id: P35475-2
+  sequence_note: VSP_057029, VSP_057030
+existing_annotations:
+- term:
+    id: GO:0003940
+    label: L-iduronidase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) assignment of the defining catalytic activity of IDUA,
+      L-iduronidase activity. This is the core molecular function of the gene and
+      is concordant with direct experimental structural/biochemical evidence.
+    action: ACCEPT
+    reason: &gt;-
+      L-iduronidase activity is the well-established core function of IDUA, confirmed
+      by crystal structures and enzyme kinetics of the human enzyme. The IBA call is
+      consistent with the manual experimental annotations.
+    supported_by:
+    - reference_id: PMID:24036510
+      supporting_text: &gt;-
+        IDUA participates in the stepwise degradation of the glycosaminoglycans
+        (GAGs) heparan sulphate and dermatan sulphate, by removing a single
+        α-L-iduronyl residue from the non-reducing ends of these complex
+        polysaccharides.
+    - reference_id: file:human/IDUA/IDUA-uniprot.txt
+      supporting_text: &#39;RecName: Full=Alpha-L-iduronidase;&#39;
+- term:
+    id: GO:0003940
+    label: L-iduronidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic (multi-method IEA) assignment of L-iduronidase activity, mapped in
+      part from EC 3.2.1.76. Correct and identical to the experimentally supported
+      core molecular function.
+    action: ACCEPT
+    reason: &gt;-
+      Redundant with the experimentally supported GO:0003940 annotations; the EC
+      3.2.1.76 mapping is exactly the enzyme&#39;s activity.
+    supported_by:
+    - reference_id: file:human/IDUA/IDUA-uniprot.txt
+      supporting_text: EC=3.2.1.76;
+- term:
+    id: GO:0004553
+    label: hydrolase activity, hydrolyzing O-glycosyl compounds
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      InterPro-derived (IPR000514, Glyco_hydro_39) mapping to the general parent term
+      for O-glycosyl hydrolases. Correct but less informative than the specific
+      L-iduronidase activity term.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      IDUA is a glycoside hydrolase family 39 member and does hydrolyse O-glycosyl
+      (alpha-L-iduronosidic) linkages, so the term is not wrong, but it is a broad
+      grouping term subsumed by the specific GO:0003940 L-iduronidase activity. Kept
+      as non-core rather than treated as the representative molecular function.
+    supported_by:
+    - reference_id: file:human/IDUA/IDUA-uniprot.txt
+      supporting_text: Belongs to the glycosyl hydrolase 39 family.
+- term:
+    id: GO:0005764
+    label: lysosome
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      UniProt Subcellular-Location keyword mapping placing IDUA in the lysosome. This
+      is the correct and physiologically relevant compartment for the enzyme.
+    action: ACCEPT
+    reason: &gt;-
+      IDUA is a mannose-6-phosphate-targeted lysosomal hydrolase; lysosomal
+      localization is central to its function and is asserted by UniProt with
+      literature support.
+    supported_by:
+    - reference_id: file:human/IDUA/IDUA-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Lysosome&#39;
+- term:
+    id: GO:0005975
+    label: carbohydrate metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      InterPro-derived high-level biological-process term. IDUA does participate in
+      carbohydrate metabolism, but this is a very broad grouping term subsumed by the
+      specific glycosaminoglycan catabolic annotations.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Not incorrect, but far too general; the informative processes are heparan
+      sulfate and dermatan sulfate catabolism. Retained as non-core.
+    supported_by:
+    - reference_id: PMID:24036510
+      supporting_text: &gt;-
+        IDUA participates in the stepwise degradation of the glycosaminoglycans
+        (GAGs) heparan sulphate and dermatan sulphate, by removing a single
+        α-L-iduronyl residue from the non-reducing ends of these complex
+        polysaccharides.
+- term:
+    id: GO:0030200
+    label: heparan sulfate proteoglycan catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      ARBA electronic assignment of heparan sulfate proteoglycan catabolism, one of
+      the two core degradative pathways in which IDUA acts. Well supported by
+      experimental and structural evidence.
+    action: ACCEPT
+    reason: &gt;-
+      IDUA removes terminal alpha-L-iduronate from heparan sulfate during its stepwise
+      lysosomal degradation; loss of IDUA blocks HS breakdown (HS accumulation in
+      Idua-deficient mice).
+    supported_by:
+    - reference_id: PMID:24036510
+      supporting_text: &gt;-
+        IDUA participates in the stepwise degradation of the glycosaminoglycans
+        (GAGs) heparan sulphate and dermatan sulphate, by removing a single
+        α-L-iduronyl residue from the non-reducing ends of these complex
+        polysaccharides.
+    - reference_id: PMID:21873421
+      supporting_text: &gt;-
+        representing the terminal iduronic acid residue capping the non-reducing end
+        of the HS chain, where no further degradation can occur in the absence of Idua.
+- term:
+    id: GO:0030209
+    label: dermatan sulfate proteoglycan catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      ARBA electronic assignment of dermatan sulfate proteoglycan catabolism, the
+      second core degradative pathway of IDUA. Duplicated by an experimental IDA
+      annotation below.
+    action: ACCEPT
+    reason: &gt;-
+      IDUA hydrolyses the unsulfated alpha-L-iduronosidic linkages of dermatan sulfate
+      (this is its defining EC 3.2.1.76 reaction); a core biological process.
+    supported_by:
+    - reference_id: file:human/IDUA/IDUA-uniprot.txt
+      supporting_text: Hydrolysis of unsulfated alpha-L-iduronosidic linkages in
+    - reference_id: PMID:24036510
+      supporting_text: &gt;-
+        IDUA participates in the stepwise degradation of the glycosaminoglycans
+        (GAGs) heparan sulphate and dermatan sulphate, by removing a single
+        α-L-iduronyl residue from the non-reducing ends of these complex
+        polysaccharides.
+- term:
+    id: GO:0030211
+    label: heparin proteoglycan catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      ARBA electronic assignment of heparin proteoglycan catabolism. Heparin is a
+      highly sulfated relative of heparan sulfate bearing the same
+      alpha-L-iduronosidic linkages, on which IDUA acts. Supported experimentally by
+      the Idua-knockout mouse (below) and retained consistent with that IMP.
+    action: ACCEPT
+    reason: &gt;-
+      Heparin shares the alpha-L-iduronosidic linkages of heparan sulfate, and the
+      Idua-deficient mouse demonstrates that terminal iduronate removal from these
+      chains requires IDUA. Kept consistent with the IMP annotation to the same term.
+    supported_by:
+    - reference_id: PMID:21873421
+      supporting_text: &gt;-
+        representing the terminal iduronic acid residue capping the non-reducing end
+        of the HS chain, where no further degradation can occur in the absence of Idua.
+- term:
+    id: GO:0043202
+    label: lysosomal lumen
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      ARBA electronic assignment of lysosomal lumen localization. This is the precise
+      compartment in which IDUA carries out GAG degradation and is well supported.
+    action: ACCEPT
+    reason: &gt;-
+      IDUA is a soluble lysosomal hydrolase acting in the acidic lumen; the more
+      specific lumen term is preferable to the generic lysosome term and is retained
+      as a core localization.
+    supported_by:
+    - reference_id: file:human/IDUA/IDUA-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Lysosome&#39;
+- term:
+    id: GO:0005102
+    label: signaling receptor binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic annotation transferred from the rat ortholog (D3ZE16) via Ensembl
+      Compara. There is no evidence that IDUA, a soluble lysosomal glycosidase, acts
+      as a signaling receptor ligand.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      IDUA is a lysosomal hydrolase with no established signaling-ligand role; this is
+      an uninformative binding term propagated electronically from an ortholog and is
+      not supported by the human literature or structural/functional characterization.
+    supported_by:
+    - reference_id: file:human/IDUA/IDUA-uniprot.txt
+      supporting_text: &gt;-
+        Lysosomal hydrolase responsible for the degradation of the
+- term:
+    id: GO:0006027
+    label: glycosaminoglycan catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Ensembl-transferred annotation to the parent glycosaminoglycan catabolic process
+      term. This correctly captures IDUA&#39;s role in GAG breakdown and is the immediate
+      parent of the HS and DS catabolic annotations.
+    action: ACCEPT
+    reason: &gt;-
+      IDUA is a bona fide GAG-degrading lysosomal exo-glycosidase; the term is correct,
+      if broader than the HS/DS-specific terms.
+    supported_by:
+    - reference_id: PMID:24036510
+      supporting_text: &gt;-
+        IDUA participates in the stepwise degradation of the glycosaminoglycans
+        (GAGs) heparan sulphate and dermatan sulphate, by removing a single
+        α-L-iduronyl residue from the non-reducing ends of these complex
+        polysaccharides.
+- term:
+    id: GO:0030200
+    label: heparan sulfate proteoglycan catabolic process
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-2024096
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Reactome traceable-author annotation placing IDUA in the HS-GAG degradation
+      pathway. Concordant with the experimentally supported role in heparan sulfate
+      catabolism.
+    action: ACCEPT
+    reason: &gt;-
+      Reactome curates IDUA as a step in lysosomal heparan sulfate degradation,
+      consistent with the enzyme&#39;s characterized activity.
+    supported_by:
+    - reference_id: Reactome:R-HSA-1678716
+      supporting_text: &gt;-
+        The lysosomal enzyme alpha-L-iduronidase (IDUA) cleaves the terminal L-iduronic
+        acid residue from either heparan sulfate or dermatan sulfate chains of
+        proteoglycans
+- term:
+    id: GO:0030209
+    label: dermatan sulfate proteoglycan catabolic process
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-1793186
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Reactome traceable-author annotation placing IDUA in dermatan sulfate
+      degradation (hydrolysis of the unsulfated alpha-L-iduronosidic link in DS).
+      Concordant with the enzyme&#39;s EC 3.2.1.76 reaction.
+    action: ACCEPT
+    reason: &gt;-
+      Curated Reactome pathway step matching IDUA&#39;s defining catalytic reaction on
+      dermatan sulfate.
+    supported_by:
+    - reference_id: Reactome:R-HSA-1793186
+      supporting_text: &gt;-
+        The lysosomal enzyme alpha-L-iduronidase (IDUA) hydrolyzes the nonreducing
+        terminal iduronide glycosidic bond in heparan sulfate and dermatan sulfate
+- term:
+    id: GO:0003940
+    label: L-iduronidase activity
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-1678716
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Reactome traceable-author assertion of L-iduronidase activity (cleavage of
+      terminal L-iduronate from HS chains). Core molecular function.
+    action: ACCEPT
+    reason: &gt;-
+      Restates the enzyme&#39;s defining catalytic activity within a curated reaction.
+    supported_by:
+    - reference_id: Reactome:R-HSA-1678716
+      supporting_text: &gt;-
+        The lysosomal enzyme alpha-L-iduronidase (IDUA) cleaves the terminal L-iduronic
+        acid residue from either heparan sulfate or dermatan sulfate chains of
+        proteoglycans
+- term:
+    id: GO:0003940
+    label: L-iduronidase activity
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-1793186
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Reactome traceable-author assertion of L-iduronidase activity (hydrolysis of the
+      unsulfated alpha-L-iduronosidic link in DS). Core molecular function.
+    action: ACCEPT
+    reason: &gt;-
+      Restates the enzyme&#39;s defining catalytic activity within a curated dermatan
+      sulfate reaction.
+    supported_by:
+    - reference_id: Reactome:R-HSA-1793186
+      supporting_text: &gt;-
+        The lysosomal enzyme alpha-L-iduronidase (IDUA) hydrolyzes the nonreducing
+        terminal iduronide glycosidic bond in heparan sulfate and dermatan sulfate
+- term:
+    id: GO:0003940
+    label: L-iduronidase activity
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-2090037
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Reactome traceable-author assertion of L-iduronidase activity within a heparan
+      sulfate chain hydrolysis reaction. Core molecular function.
+    action: ACCEPT
+    reason: &gt;-
+      Duplicate curated assertion of the enzyme&#39;s defining catalytic activity.
+    supported_by:
+    - reference_id: Reactome:R-HSA-1678716
+      supporting_text: &gt;-
+        The lysosomal enzyme alpha-L-iduronidase (IDUA) cleaves the terminal L-iduronic
+        acid residue from either heparan sulfate or dermatan sulfate chains of
+        proteoglycans
+- term:
+    id: GO:0003940
+    label: L-iduronidase activity
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-2206299
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Reactome traceable-author assertion of L-iduronidase activity (associated with a
+      defective-IDUA/disease reaction). Core molecular function.
+    action: ACCEPT
+    reason: &gt;-
+      Duplicate curated assertion of the enzyme&#39;s defining catalytic activity in the
+      MPS I disease context.
+    supported_by:
+    - reference_id: Reactome:R-HSA-1678716
+      supporting_text: &gt;-
+        The lysosomal enzyme alpha-L-iduronidase (IDUA) cleaves the terminal L-iduronic
+        acid residue from either heparan sulfate or dermatan sulfate chains of
+        proteoglycans
+- term:
+    id: GO:0003940
+    label: L-iduronidase activity
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9036037
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Reactome traceable-author assertion of L-iduronidase activity within a
+      heparan-sulfate-chain reaction. Core molecular function.
+    action: ACCEPT
+    reason: &gt;-
+      Duplicate curated assertion of the enzyme&#39;s defining catalytic activity.
+    supported_by:
+    - reference_id: Reactome:R-HSA-1678716
+      supporting_text: &gt;-
+        The lysosomal enzyme alpha-L-iduronidase (IDUA) cleaves the terminal L-iduronic
+        acid residue from either heparan sulfate or dermatan sulfate chains of
+        proteoglycans
+- term:
+    id: GO:0003940
+    label: L-iduronidase activity
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9036041
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Reactome traceable-author assertion of L-iduronidase activity (associated with
+      the defective-IDUA dermatan sulfate reaction). Core molecular function.
+    action: ACCEPT
+    reason: &gt;-
+      Duplicate curated assertion of the enzyme&#39;s defining catalytic activity.
+    supported_by:
+    - reference_id: Reactome:R-HSA-1793186
+      supporting_text: &gt;-
+        The lysosomal enzyme alpha-L-iduronidase (IDUA) hydrolyzes the nonreducing
+        terminal iduronide glycosidic bond in heparan sulfate and dermatan sulfate
+- term:
+    id: GO:0003940
+    label: L-iduronidase activity
+  evidence_type: EXP
+  original_reference_id: PMID:23959878
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental (EXP) assignment of L-iduronidase activity from a structural/kinetic
+      study of human IDUA that determined the crystal structure with iduronate bound
+      and characterized catalysis, including the role of the Asn372 N-glycan.
+    action: ACCEPT
+    reason: &gt;-
+      Direct experimental determination of the enzyme&#39;s catalytic activity in humans;
+      this is the strongest evidence for the core molecular function.
+    supported_by:
+    - reference_id: PMID:23959878
+      supporting_text: &gt;-
+        human α-l-iduronidase (hIDUA), of which a dysfunction causes accumulation of
+        dermatan/heparan sulfate leading to mucopolysaccharidosis type I, uses its own
+        N-glycan as a substrate binding and catalytic module.
+- term:
+    id: GO:0030211
+    label: heparin proteoglycan catabolic process
+  evidence_type: IMP
+  original_reference_id: PMID:21873421
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: &gt;-
+      IMP annotation from a murine Idua-knockout study showing accumulation of heparan
+      sulfate with a terminal iduronate-capped disaccharide, demonstrating that Idua is
+      required for degradation of iduronate-containing heparan sulfate/heparin chains.
+    action: ACCEPT
+    reason: &gt;-
+      Loss of Idua in mice blocks removal of terminal iduronate from HS/heparin,
+      causing pathological accumulation; strong genetic evidence for IDUA&#39;s role in
+      catabolism of iduronate-bearing HS/heparin. Retained (heparin is closely related
+      to HS, and the phenotype is directly demonstrated).
+    supported_by:
+    - reference_id: PMID:21873421
+      supporting_text: &gt;-
+        representing the terminal iduronic acid residue capping the non-reducing end
+        of the HS chain, where no further degradation can occur in the absence of Idua.
+- term:
+    id: GO:0070062
+    label: extracellular exosome
+  evidence_type: HDA
+  original_reference_id: PMID:23533145
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput mass-spectrometry detection of IDUA among ~900 proteins in
+      exosomes isolated from expressed prostatic secretions in urine. This reflects
+      presence of the secretory/lysosomal protein in extracellular vesicles rather
+      than a distinct functional site.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      A proteomics survey placed IDUA in urinary exosomes; lysosomal/secretory
+      hydrolases are commonly recovered in extracellular vesicles. This is a valid
+      detection but not the enzyme&#39;s primary functional location, so it is retained as
+      non-core.
+    supported_by:
+    - reference_id: PMID:23533145
+      supporting_text: &gt;-
+        In pooled EPS-urine exosome samples, ~900 proteins were detected.
+- term:
+    id: GO:0003940
+    label: L-iduronidase activity
+  evidence_type: IDA
+  original_reference_id: PMID:24036510
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct assay (IDA) of L-iduronidase activity from the human IDUA crystal-structure
+      and enzymology study that captured Michaelis and glycosyl-enzyme intermediate
+      complexes with iduronate analogs and defined the retaining double-displacement
+      mechanism.
+    action: ACCEPT
+    reason: &gt;-
+      Definitive experimental characterization of the enzyme&#39;s catalytic activity and
+      mechanism; the primary evidence for the core molecular function.
+    supported_by:
+    - reference_id: PMID:24036510
+      supporting_text: &gt;-
+        IDUA is an α-retaining glycoside hydrolase with strict substrate specificity
+        for L-IdoA
+- term:
+    id: GO:0030209
+    label: dermatan sulfate proteoglycan catabolic process
+  evidence_type: IDA
+  original_reference_id: PMID:24036510
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      IDA annotation of dermatan sulfate proteoglycan catabolism from the structural
+      and enzymological study showing IDUA removes alpha-L-iduronate from the
+      non-reducing ends of dermatan sulfate (and heparan sulfate).
+    action: ACCEPT
+    reason: &gt;-
+      Experimentally grounded in IDUA&#39;s demonstrated action on dermatan sulfate; a core
+      biological process.
+    supported_by:
+    - reference_id: PMID:24036510
+      supporting_text: &gt;-
+        IDUA participates in the stepwise degradation of the glycosaminoglycans
+        (GAGs) heparan sulphate and dermatan sulphate, by removing a single
+        α-L-iduronyl residue from the non-reducing ends of these complex
+        polysaccharides.
+- term:
+    id: GO:0043202
+    label: lysosomal lumen
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-2206299
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome traceable-author localization of IDUA to the lysosomal lumen (disease
+      reaction context). Correct core compartment.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with IDUA being a soluble lysosomal-lumen hydrolase.
+    supported_by:
+    - reference_id: Reactome:R-HSA-1678716
+      supporting_text: The lysosomal enzyme alpha-L-iduronidase (IDUA)
+- term:
+    id: GO:0043202
+    label: lysosomal lumen
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9036037
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome traceable-author localization of IDUA to the lysosomal lumen (heparan
+      sulfate reaction context). Correct core compartment.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with IDUA being a soluble lysosomal-lumen hydrolase.
+    supported_by:
+    - reference_id: Reactome:R-HSA-1678716
+      supporting_text: The lysosomal enzyme alpha-L-iduronidase (IDUA)
+- term:
+    id: GO:0043202
+    label: lysosomal lumen
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9036041
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome traceable-author localization of IDUA to the lysosomal lumen (dermatan
+      sulfate reaction context). Correct core compartment.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with IDUA being a soluble lysosomal-lumen hydrolase.
+    supported_by:
+    - reference_id: Reactome:R-HSA-1793186
+      supporting_text: The lysosomal enzyme alpha-L-iduronidase (IDUA)
+- term:
+    id: GO:0043202
+    label: lysosomal lumen
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-1678716
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome traceable-author localization of IDUA to the lysosomal lumen (HS chain
+      cleavage reaction). Correct core compartment.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with IDUA being a soluble lysosomal-lumen hydrolase.
+    supported_by:
+    - reference_id: Reactome:R-HSA-1678716
+      supporting_text: The lysosomal enzyme alpha-L-iduronidase (IDUA)
+- term:
+    id: GO:0043202
+    label: lysosomal lumen
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-1793186
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome traceable-author localization of IDUA to the lysosomal lumen (DS link
+      hydrolysis reaction). Correct core compartment.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with IDUA being a soluble lysosomal-lumen hydrolase.
+    supported_by:
+    - reference_id: Reactome:R-HSA-1793186
+      supporting_text: The lysosomal enzyme alpha-L-iduronidase (IDUA)
+- term:
+    id: GO:0043202
+    label: lysosomal lumen
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-2090037
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome traceable-author localization of IDUA to the lysosomal lumen (heparan
+      sulfate chain reaction). Correct core compartment.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with IDUA being a soluble lysosomal-lumen hydrolase.
+    supported_by:
+    - reference_id: Reactome:R-HSA-1678716
+      supporting_text: The lysosomal enzyme alpha-L-iduronidase (IDUA)
+- term:
+    id: GO:0003940
+    label: L-iduronidase activity
+  evidence_type: TAS
+  original_reference_id: PMID:2470345
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Traceable-author annotation of L-iduronidase activity from the immunopurification
+      and biochemical characterization of the human liver enzyme, which measured its
+      activity toward heparan sulfate- and dermatan sulfate-derived substrates.
+    action: ACCEPT
+    reason: &gt;-
+      An early experimental characterization establishing the enzyme&#39;s catalytic
+      activity on GAG-derived substrates; core molecular function.
+    supported_by:
+    - reference_id: PMID:2470345
+      supporting_text: &gt;-
+        activities towards disaccharide substrates derived from two glycosaminoglycan
+        sources, heparan sulphate and dermatan sulphate.
+- term:
+    id: GO:0005984
+    label: disaccharide metabolic process
+  evidence_type: TAS
+  original_reference_id: PMID:2470345
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Traceable-author annotation of disaccharide metabolic process, derived from an
+      in vitro assay in which the two enzyme forms were tested against GAG-derived
+      disaccharide substrates. IDUA&#39;s physiological substrates are polymeric heparan
+      sulfate and dermatan sulfate, not free disaccharides.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The disaccharide substrates were an experimental convenience for measuring
+      activity; the in vivo role is exolytic removal of terminal iduronate from GAG
+      polymers, captured by the glycosaminoglycan/HS/DS catabolic terms. This
+      general metabolic-process term overstates a biological role in disaccharide
+      metabolism.
+    supported_by:
+    - reference_id: PMID:2470345
+      supporting_text: &gt;-
+        activities towards disaccharide substrates derived from two glycosaminoglycan
+        sources, heparan sulphate and dermatan sulphate.
+    - reference_id: PMID:24036510
+      supporting_text: &gt;-
+        by removing a single α-L-iduronyl residue from the non-reducing ends of these
+        complex polysaccharides.
+core_functions:
+- description: &gt;-
+    Hydrolysis of terminal, non-reducing alpha-L-iduronic acid residues from the
+    glycosaminoglycans heparan sulfate and dermatan sulfate in the lysosomal lumen,
+    a required exolytic step of lysosomal glycosaminoglycan catabolism.
+  molecular_function:
+    id: GO:0003940
+    label: L-iduronidase activity
+  directly_involved_in:
+  - id: GO:0030200
+    label: heparan sulfate proteoglycan catabolic process
+  - id: GO:0030209
+    label: dermatan sulfate proteoglycan catabolic process
+  - id: GO:0006027
+    label: glycosaminoglycan catabolic process
+  locations:
+  - id: GO:0043202
+    label: lysosomal lumen
+  - id: GO:0005764
+    label: lysosome
+  substrates:
+  - id: CHEBI:28815
+    label: heparan sulfate
+  - id: CHEBI:18376
+    label: dermatan sulfate
+  supported_by:
+  - reference_id: PMID:24036510
+    supporting_text: &gt;-
+      IDUA participates in the stepwise degradation of the glycosaminoglycans
+      (GAGs) heparan sulphate and dermatan sulphate, by removing a single
+      α-L-iduronyl residue from the non-reducing ends of these complex
+      polysaccharides.
+  - reference_id: PMID:24036510
+    supporting_text: &gt;-
+      IDUA is an α-retaining glycoside hydrolase with strict substrate specificity
+      for L-IdoA
+  - reference_id: file:human/IDUA/IDUA-uniprot.txt
+    supporting_text: &gt;-
+      Lysosomal hydrolase responsible for the degradation of the
+  - reference_id: file:human/IDUA/IDUA-uniprot.txt
+    supporting_text: &#39;SUBCELLULAR LOCATION: Lysosome&#39;
+  - reference_id: Reactome:R-HSA-1678716
+    supporting_text: &gt;-
+      The lysosomal enzyme alpha-L-iduronidase (IDUA) cleaves the terminal L-iduronic
+      acid residue from either heparan sulfate or dermatan sulfate chains of
+      proteoglycans
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:21873421
+  title: Mucopolysaccharidosis type I, unique structure of accumulated heparan sulfate
+    and increased N-sulfotransferase activity in mice lacking α-l-iduronidase.
+  findings:
+  - statement: &gt;-
+      Idua-deficient mice accumulate heparan sulfate bearing a terminal iduronate-capped
+      disaccharide at the non-reducing end, where no further degradation can occur
+      without Idua, confirming IDUA&#39;s role in heparan sulfate/heparin catabolism.
+    supporting_text: &gt;-
+      representing the terminal iduronic acid residue capping the non-reducing end of
+      the HS chain, where no further degradation can occur in the absence of Idua.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Murine Idua-knockout study directly demonstrating loss of terminal iduronate
+      removal from heparan sulfate; supports the HS/heparin catabolic-process
+      annotations.
+- id: PMID:23533145
+  title: In-depth proteomic analyses of exosomes isolated from expressed prostatic
+    secretions in urine.
+  findings:
+  - statement: &gt;-
+      IDUA was among ~900 proteins detected by shotgun proteomics of urinary
+      prostatic-secretion exosomes, supporting its recovery in extracellular vesicles.
+    supporting_text: In pooled EPS-urine exosome samples, ~900 proteins were detected.
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-throughput exosome proteomics; supports the extracellular-exosome
+      localization annotation but is peripheral to IDUA&#39;s core lysosomal function.
+- id: PMID:23959878
+  title: Human α-L-iduronidase uses its own N-glycan as a substrate-binding and catalytic
+    module.
+  findings:
+  - statement: &gt;-
+      Crystal structure and enzymology of human IDUA showing that the N-glycan at
+      Asn372 forms part of the substrate-binding pocket and is required for full
+      L-iduronidase activity.
+    supporting_text: &gt;-
+      human α-l-iduronidase (hIDUA), of which a dysfunction causes accumulation of
+      dermatan/heparan sulfate leading to mucopolysaccharidosis type I, uses its own
+      N-glycan as a substrate binding and catalytic module.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Structural/kinetic characterization of human IDUA; strong experimental support
+      for the core L-iduronidase activity.
+- id: PMID:24036510
+  title: Insights into mucopolysaccharidosis I from the structure and action of α-L-iduronidase.
+  findings:
+  - statement: &gt;-
+      Crystal structures of human IDUA bound to iduronate analogs define the catalytic
+      mechanism (retaining double displacement; nucleophile Glu299, acid/base Glu182)
+      and confirm exolytic removal of alpha-L-iduronate from heparan and dermatan
+      sulfate.
+    supporting_text: &gt;-
+      IDUA participates in the stepwise degradation of the glycosaminoglycans
+      (GAGs) heparan sulphate and dermatan sulphate, by removing a single
+      α-L-iduronyl residue from the non-reducing ends of these complex
+      polysaccharides.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Definitive structural and mechanistic study of human IDUA; primary support for
+      the molecular function and HS/DS catabolic processes.
+- id: PMID:2470345
+  title: Immunopurification and characterization of human alpha-L-iduronidase with
+    the use of monoclonal antibodies.
+  findings:
+  - statement: &gt;-
+      Immunopurified human alpha-L-iduronidase from liver was active toward disaccharide
+      substrates derived from both heparan sulfate and dermatan sulfate.
+    supporting_text: &gt;-
+      activities towards disaccharide substrates derived from two glycosaminoglycan
+      sources, heparan sulphate and dermatan sulphate.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Early biochemical characterization of the human enzyme; supports catalytic
+      activity but its disaccharide-metabolic-process annotation reflects the assay
+      substrate rather than the in vivo polymeric substrate.
+- id: Reactome:R-HSA-1678716
+  title: IDUA cleaves iduronate from HS chain
+  findings: []
+- id: Reactome:R-HSA-1793186
+  title: IDUA hydrolyses the unsulfated alpha-L-iduronosidic link in DS
+  findings: []
+- id: Reactome:R-HSA-2024096
+  title: HS-GAG degradation
+  findings: []
+- id: Reactome:R-HSA-2090037
+  title: IDUA hydrolyses Heparan sulfate chain(6)
+  findings: []
+- id: Reactome:R-HSA-2206299
+  title: Defective IDUA does not hydrolyse Heparan sulfate chain(6)
+  findings: []
+- id: Reactome:R-HSA-9036037
+  title: Defective IDUA does not hydrolyse Heparan sulfate chain(1)
+  findings: []
+- id: Reactome:R-HSA-9036041
+  title: Defective IDUA does not hydrolyse the unsulfated alpha-L-iduronosidic link
+    in DS
+  findings: []
+- id: file:human/IDUA/IDUA-uniprot.txt
+  title: UniProtKB entry P35475 (IDUA_HUMAN)
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

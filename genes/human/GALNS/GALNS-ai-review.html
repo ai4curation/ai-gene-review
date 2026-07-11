@@ -1,0 +1,3611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GALNS - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>GALNS</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P34059" target="_blank" class="term-link">
+                        P34059
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "GALNS";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P34059" data-a="DESCRIPTION: GALNS (N-acetylgalactosamine-6-sulfatase, also kno..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>GALNS (N-acetylgalactosamine-6-sulfatase, also known as galactose-6-sulfate sulfatase, GalN6S; EC 3.1.6.4) is a lysosomal sulfatase acting in the stepwise degradation of the glycosaminoglycans keratan sulfate and chondroitin-6-sulfate. It hydrolytically removes the 6-O-sulfate group from terminal N-acetyl-D-galactosamine-6-sulfate residues of chondroitin sulfate and from D-galactose-6-sulfate residues of keratan sulfate. Like all members of the sulfatase family, GALNS requires post-translational conversion of an active-site cysteine (Cys79) to Cα-formylglycine (3-oxoalanine) by the formylglycine-generating enzyme SUMF1; this modified residue, together with a bound Ca2+ ion, forms the catalytic nucleophile. GALNS is a homodimeric N-glycosylated glycoprotein that localises to the lysosome (lysosomal lumen), and, as a secreted lysosomal hydrolase, is also detected extracellularly. Deficiency of GALNS causes mucopolysaccharidosis type IVA (Morquio A syndrome), an autosomal recessive lysosomal storage disease with intracellular accumulation of keratan sulfate and chondroitin-6-sulfate, presenting with short stature, skeletal dysplasia, and corneal clouding.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004065" target="_blank" class="term-link">
+                                    GO:0004065
+                                </a>
+                            </span>
+                            <span class="term-label">arylsulfatase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P34059" data-a="GO:0004065" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Family-level (arylsulfatase) molecular function assigned by phylogenetic inference across the sulfatase family. GALNS is a bona fide sulfatase, so this term is correct but broad relative to its specific N-acetylgalactosamine-6-sulfatase activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The IBA sulfatase-family term is biologically correct: GALNS catalyses sulfate-ester hydrolysis and belongs to the sulfatase family. It is more general than the specific 6-sulfatase activity (GO:0043890, also annotated), and it is standard to retain the broader family MF alongside the specific one. Kept, though the specific GO:0043890 term better represents the core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22940367" target="_blank" class="term-link">
+                                        PMID:22940367
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In sulfatases, highly conserved catalytic machinery couples with diverse active site geometry, leading to cleavage of a wide variety of substrates.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GALNS/GALNS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Belongs to the sulfatase family.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005764" target="_blank" class="term-link">
+                                    GO:0005764
+                                </a>
+                            </span>
+                            <span class="term-label">lysosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P34059" data-a="GO:0005764" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic localisation to the lysosome, consistent with UniProt SUBCELLULAR LOCATION and with direct immunolocalisation (GO:0005764 IDA from PMID:30760748).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GALNS is a well-established lysosomal hydrolase; the IEA lysosome call agrees with experimental IDA evidence and UniProt curation, so it is retained as a correct core localisation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GALNS/GALNS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Lysosome</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30760748" target="_blank" class="term-link">
+                                        PMID:30760748
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">GALNS indeed showed a lysosomal localization in both ever smokers and COPD patients.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043890" target="_blank" class="term-link">
+                                    GO:0043890
+                                </a>
+                            </span>
+                            <span class="term-label">N-acetylgalactosamine-6-sulfatase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P34059" data-a="GO:0043890" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Specific molecular function: removal of the 6-O-sulfate from N-acetyl-D-galactosamine-6-sulfate (chondroitin-6-sulfate) and D-galactose-6-sulfate (keratan sulfate). This is the correct core MF for GALNS (EC 3.1.6.4), inferred here electronically from InterPro/EC mapping.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The GO:0043890 definition matches the experimentally established catalytic activity of GALNS exactly, and the same term is independently supported by EXP and IDA annotations. This is the core molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22940367" target="_blank" class="term-link">
+                                        PMID:22940367
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">removes sulfate groups from a terminal N-acetylgalactosamine-6-sulfate (or galactose-6-sulfate) in mucopolysaccharides such as keratan sulfate and chondroitin-6-sulfate</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GALNS/GALNS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Lysosomal enzyme that hydrolyzes sulfate groups from</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043890" target="_blank" class="term-link">
+                                    GO:0043890
+                                </a>
+                            </span>
+                            <span class="term-label">N-acetylgalactosamine-6-sulfatase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-2263490
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P34059" data-a="GO:0043890" data-r="Reactome:R-HSA-2263490" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome-asserted core molecular function (6-sulfatase acting on Gal6S/GalNAc6S in keratan sulfate and chondroitin sulfate).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Reactome models GALNS hydrolysing sulfate from galactose-6-sulfate in keratan sulfate and from N-acetylgalactosamine-6-sulfate in chondroitin sulfate; this is the correct core MF and duplicates the experimentally supported GO:0043890 annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-1630304
+
+                                </span>
+
+                                <div class="support-text">hydrolyses sulfate from galactose 6-sulfate units of keratan sulfate</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22940367" target="_blank" class="term-link">
+                                        PMID:22940367
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In the lysosome, GALNS removes sulfate groups from 6-sulfated galactosides and 6-sulfated N-acetylgalactosaminides in keratan sulfate and chondroitin-6-sulfate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005764" target="_blank" class="term-link">
+                                    GO:0005764
+                                </a>
+                            </span>
+                            <span class="term-label">lysosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30760748" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:30760748
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Expression, activity and localization of lysosomal sulfatase...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P34059" data-a="GO:0005764" data-r="PMID:30760748" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct immunolocalisation of GALNS to the lysosome in cultured human lung fibroblasts.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimental (IDA) evidence: co-staining with lysosomal markers showed GALNS in a lysosomal localisation. This confirms the core subcellular location.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30760748" target="_blank" class="term-link">
+                                        PMID:30760748
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">GALNS indeed showed a lysosomal localization in both ever smokers and COPD patients.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043890" target="_blank" class="term-link">
+                                    GO:0043890
+                                </a>
+                            </span>
+                            <span class="term-label">N-acetylgalactosamine-6-sulfatase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22940367" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22940367
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The structure of human GALNS reveals the molecular basis for...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P34059" data-a="GO:0043890" data-r="PMID:22940367" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental characterisation (structure and enzyme kinetics) of human GALNS as an N-acetylgalactosamine-6-sulfatase acting on keratan sulfate and chondroitin-6-sulfate.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct experimental support for the core molecular function: the crystallographic and kinetic study defines GALNS as removing 6-sulfate groups from the terminal sugars of keratan sulfate and chondroitin-6-sulfate, with a Ca2+/formylglycine active site.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22940367" target="_blank" class="term-link">
+                                        PMID:22940367
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In the lysosome, GALNS removes sulfate groups from 6-sulfated galactosides and 6-sulfated N-acetylgalactosaminides in keratan sulfate and chondroitin-6-sulfate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030207" target="_blank" class="term-link">
+                                    GO:0030207
+                                </a>
+                            </span>
+                            <span class="term-label">chondroitin sulfate proteoglycan catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18285341" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18285341
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Distinct effects of N-acetylgalactosamine-4-sulfatase and ga...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P34059" data-a="GO:0030207" data-r="PMID:18285341" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GALNS contributes to catabolism of chondroitin sulfate: modulating GALNS expression inversely changes cellular chondroitin sulfate content.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimental (IDA) evidence in MCF-7 cells shows that overexpression of GALNS lowers, and silencing raises, chondroitin sulfate content, supporting a direct role in chondroitin-6-sulfate catabolism. This is a genuine core biological process (the chondroitin side of GALNS&#39;s GAG-degradation role).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18285341" target="_blank" class="term-link">
+                                        PMID:18285341
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">galactose-6-sulfatase (GALNS) hydrolyze sulfate groups of CS</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18285341" target="_blank" class="term-link">
+                                        PMID:18285341
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">modification of expression of the lysosomal sulfatases ASB and GALNS regulates</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043890" target="_blank" class="term-link">
+                                    GO:0043890
+                                </a>
+                            </span>
+                            <span class="term-label">N-acetylgalactosamine-6-sulfatase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18285341" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18285341
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Distinct effects of N-acetylgalactosamine-4-sulfatase and ga...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P34059" data-a="GO:0043890" data-r="PMID:18285341" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct-assay support for the core 6-sulfatase molecular function of GALNS.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> IDA annotation to the correct specific molecular function; GALNS is characterised here as galactose-6-sulfatase that hydrolyses sulfate groups of chondroitin sulfate. Duplicates the core MF supported by other lines of evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18285341" target="_blank" class="term-link">
+                                        PMID:18285341
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">galactose-6-sulfatase (GALNS) hydrolyze sulfate groups of CS</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6798751
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P34059" data-a="GO:0005576" data-r="Reactome:R-HSA-6798751" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Extracellular localisation asserted via Reactome neutrophil-degranulation / azurophil-granule exocytosis pathway. A secreted-fraction localisation, not the primary site of GALNS action.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> As a lysosomal hydrolase, GALNS can be exocytosed and detected extracellularly (e.g. via neutrophil degranulation). The localisation is real but peripheral; the core site of action is the lysosome.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-6798751
+
+                                </span>
+
+                                <div class="support-text">Azurophil granules undergo limited exocytosis in response to stimulation</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035578" target="_blank" class="term-link">
+                                    GO:0035578
+                                </a>
+                            </span>
+                            <span class="term-label">azurophil granule lumen</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6798751
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P34059" data-a="GO:0035578" data-r="Reactome:R-HSA-6798751" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Localisation to the azurophil (primary) granule lumen of neutrophils, asserted via the Reactome neutrophil-degranulation pathway.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Azurophil granules are lysosome-related organelles of neutrophils; GALNS presence there reflects its lysosomal-hydrolase nature and the degranulation pathway, but this is not the core localisation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-6798751
+
+                                </span>
+
+                                <div class="support-text">Azurophil granules undergo limited exocytosis in response to stimulation</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043202" target="_blank" class="term-link">
+                                    GO:0043202
+                                </a>
+                            </span>
+                            <span class="term-label">lysosomal lumen</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-2263490
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P34059" data-a="GO:0043202" data-r="Reactome:R-HSA-2263490" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Localisation to the lysosomal lumen, the precise compartment where GALNS acts on keratan sulfate and chondroitin-6-sulfate.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Lysosomal lumen is the specific site of GALNS activity as a soluble lysosomal hydrolase; consistent with the lysosome IDA/IEA annotations and UniProt curation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-1630304
+
+                                </span>
+
+                                <div class="support-text">hydrolyses sulfate from galactose 6-sulfate units of keratan sulfate</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GALNS/GALNS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Lysosome</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070062" target="_blank" class="term-link">
+                                    GO:0070062
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular exosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23533145
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    In-depth proteomic analyses of exosomes isolated from expres...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P34059" data-a="GO:0070062" data-r="PMID:23533145" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput proteomic detection of GALNS in exosomes from expressed prostatic secretions in urine. A localisation byproduct of secreted/exosomal trafficking, not a core function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GALNS was among ~900 proteins detected by shotgun proteomics of prostatic-secretion exosomes. This supports extracellular-exosome localisation but is peripheral to the enzyme&#39;s lysosomal core role.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link">
+                                        PMID:23533145
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">exosome preparations were characterized by a shotgun proteomics procedure</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043202" target="_blank" class="term-link">
+                                    GO:0043202
+                                </a>
+                            </span>
+                            <span class="term-label">lysosomal lumen</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-1630304
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P34059" data-a="GO:0043202" data-r="Reactome:R-HSA-1630304" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Lysosomal-lumen localisation asserted by Reactome for the GALNS keratan-sulfate desulfation reaction; the precise site of GALNS catalysis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Duplicate of the lysosomal-lumen localisation supported by Reactome and UniProt; correct core compartment for this soluble lysosomal sulfatase.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-1630304
+
+                                </span>
+
+                                <div class="support-text">hydrolyses sulfate from galactose 6-sulfate units of keratan sulfate</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GALNS/GALNS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Lysosome</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008484" target="_blank" class="term-link">
+                                    GO:0008484
+                                </a>
+                            </span>
+                            <span class="term-label">sulfuric ester hydrolase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15962010" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15962010
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Sulphatase activities are regulated by the interaction of su...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P34059" data-a="GO:0008484" data-r="PMID:15962010" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Parent-level molecular function (sulfuric ester hydrolase). GALNS activity was measured in the SUMF1/SUMF2 study, but the specific GO:0043890 (6-sulfatase) term is the informative descendant.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0008484 is a broad ancestor of the specific N-acetylgalactosamine-6-sulfatase activity already annotated. GALNS activity was assayed among several sulfatases whose maturation depends on SUMF1; the general term adds little beyond the specific GO:0043890 term and is an over-annotation of specificity. Not wrong, but subsumed by the core MF.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15962010" target="_blank" class="term-link">
+                                        PMID:15962010
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">This modification is necessary for the catalytic activities of the sulphatases</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15962010" target="_blank" class="term-link">
+                                        PMID:15962010
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">we transfected Cos7 cells with several sulphatase cDNAs</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003943" target="_blank" class="term-link">
+                                    GO:0003943
+                                </a>
+                            </span>
+                            <span class="term-label">N-acetylgalactosamine-4-sulfatase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8325655" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8325655
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mucopolysaccharidosis IV A: assignment of the human N-acetyl...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P34059" data-a="GO:0003943" data-r="PMID:8325655" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Annotation to N-acetylgalactosamine-4-sulfatase activity, which is the wrong specificity for GALNS. GALNS is a 6-sulfatase (EC 3.1.6.4, GO:0043890); the 4-sulfatase (EC 3.1.6.12, GO:0003943) is ARSB. The cited reference is a chromosome-mapping abstract that does not assay a 4-sulfatase activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0003943 catalyses hydrolysis of the 4-sulfate groups of N-acetyl-D-galactosamine-4-sulfate (a distinct activity carried out by ARSB), whereas GALNS removes 6-sulfate groups. The original reference (PMID:8325655) only assigns the GALNS gene to chromosome 16q24 and does not support a 4-sulfatase activity. This is a wrong-specificity term (TAS, not experimental IDA); replace with the correct 6-sulfatase term GO:0043890.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043890" target="_blank" class="term-link">
+                                    N-acetylgalactosamine-6-sulfatase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8325655" target="_blank" class="term-link">
+                                        PMID:8325655
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">N-acetylgalactosamine-6-sulfate sulfatase (GALNS; EC 3.1.6.4)</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22940367" target="_blank" class="term-link">
+                                        PMID:22940367
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In the lysosome, GALNS removes sulfate groups from 6-sulfated galactosides and 6-sulfated N-acetylgalactosaminides in keratan sulfate and chondroitin-6-sulfate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042340" target="_blank" class="term-link">
+                                    GO:0042340
+                                </a>
+                            </span>
+                            <span class="term-label">keratan sulfate proteoglycan catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22940367" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22940367
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The structure of human GALNS reveals the molecular basis for...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P34059" data-a="GO:0042340" data-r="PMID:22940367" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GALNS removes the 6-O-sulfate from galactose-6-sulfate residues of keratan sulfate, a required step in keratan sulfate degradation; deficiency causes lysosomal keratan sulfate accumulation (MPS IVA). This keratan-sulfate catabolic role is not currently represented in GOA and is proposed here.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The keratan-sulfate side of GALNS&#39;s core biological process is well established (UniProt FUNCTION; structural/enzymology study; Reactome &#34;Keratan sulfate degradation&#34;) but absent from the GOA biological-process set, which only carries the chondroitin-sulfate term GO:0030207. GO:0042340 (keratan sulfate proteoglycan catabolic process) captures this core role.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22940367" target="_blank" class="term-link">
+                                        PMID:22940367
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">removes sulfate groups from a terminal N-acetylgalactosamine-6-sulfate (or galactose-6-sulfate) in mucopolysaccharides such as keratan sulfate and chondroitin-6-sulfate</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GALNS/GALNS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Lysosomal enzyme that hydrolyzes sulfate groups from</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Lysosomal N-acetylgalactosamine-6-sulfatase (galactose-6-sulfate sulfatase, EC 3.1.6.4) that hydrolytically removes the 6-O-sulfate group from terminal N-acetyl-D-galactosamine-6-sulfate (chondroitin-6-sulfate) and D-galactose-6-sulfate (keratan sulfate) residues, using a Ca2+/formylglycine active site, during glycosaminoglycan degradation.</h3>
+                <span class="vote-buttons" data-g="P34059" data-a="FUNCTION: Lysosomal N-acetylgalactosamine-6-sulfatase (galac..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043890" target="_blank" class="term-link">
+                            N-acetylgalactosamine-6-sulfatase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042340" target="_blank" class="term-link">
+                                keratan sulfate proteoglycan catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043202" target="_blank" class="term-link">
+                                lysosomal lumen
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22940367" target="_blank" class="term-link">
+                                PMID:22940367
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">removes sulfate groups from a terminal N-acetylgalactosamine-6-sulfate (or galactose-6-sulfate) in mucopolysaccharides such as keratan sulfate and chondroitin-6-sulfate</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/GALNS/GALNS-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Lysosomal enzyme that hydrolyzes sulfate groups from</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Same lysosomal 6-sulfatase activity acting on chondroitin-6-sulfate, contributing to chondroitin sulfate proteoglycan degradation in the lysosome.</h3>
+                <span class="vote-buttons" data-g="P34059" data-a="FUNCTION: Same lysosomal 6-sulfatase activity acting on chon..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043890" target="_blank" class="term-link">
+                            N-acetylgalactosamine-6-sulfatase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030207" target="_blank" class="term-link">
+                                chondroitin sulfate proteoglycan catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043202" target="_blank" class="term-link">
+                                lysosomal lumen
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18285341" target="_blank" class="term-link">
+                                PMID:18285341
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">galactose-6-sulfatase (GALNS) hydrolyze sulfate groups of CS</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15962010" target="_blank" class="term-link">
+                            PMID:15962010
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Sulphatase activities are regulated by the interaction of sulphatase-modifying factor 1 with SUMF2.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The formylglycine (FGly) modification of an active-site cysteine, generated by SUMF1 within the ER, is required for the catalytic activity of the sulphatases (including GALNS); SUMF2 modulates SUMF1 activity.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18285341" target="_blank" class="term-link">
+                            PMID:18285341
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Distinct effects of N-acetylgalactosamine-4-sulfatase and galactose-6-sulfatase expression on chondroitin sulfates.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Galactose-6-sulfatase (GALNS) hydrolyses sulfate groups of chondroitin sulfate; modulating GALNS expression (overexpression vs siRNA silencing) inversely changes cellular chondroitin sulfate content, demonstrating a role in chondroitin sulfate catabolism.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22940367" target="_blank" class="term-link">
+                            PMID:22940367
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The structure of human GALNS reveals the molecular basis for mucopolysaccharidosis IV A.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Crystal structure of human GALNS (EC 3.1.6.4); the enzyme removes 6-sulfate groups from terminal N-acetylgalactosamine-6-sulfate (chondroitin-6-sulfate) and galactose-6-sulfate (keratan sulfate). Formylglycine-generating enzyme converts Cys79 to a formylglycine nucleophile; the enzyme is a Ca2+-binding homodimer.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link">
+                            PMID:23533145
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">In-depth proteomic analyses of exosomes isolated from expressed prostatic secretions in urine.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Shotgun proteomics of exosomes from expressed prostatic secretions in urine detected ~900 proteins, among them GALNS, consistent with its presence in the secreted/extracellular-exosome fraction.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/30760748" target="_blank" class="term-link">
+                            PMID:30760748
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Expression, activity and localization of lysosomal sulfatases in Chronic Obstructive Pulmonary Disease.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Immunostaining of cultured lung fibroblasts shows GALNS in a lysosomal localisation in both ever smokers and COPD patients, confirming lysosomal localisation.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8325655" target="_blank" class="term-link">
+                            PMID:8325655
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Mucopolysaccharidosis IV A: assignment of the human N-acetylgalactosamine-6-sulfate sulfatase (GALNS) gene to chromosome 16q24.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Chromosome-mapping study assigning the human N-acetylgalactosamine-6-sulfate sulfatase (GALNS; EC 3.1.6.4) gene to chromosome 16q24; the paper does not assay a 4-sulfatase activity.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/820716" target="_blank" class="term-link">
+                            PMID:820716
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">N-acetylgalactosamine-6-sulfate sulfatase in man. Absence of the enzyme in Morquio disease.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Original demonstration of N-acetylgalactosamine-6-sulfate sulfatase (GALNS) activity in man and its absence in Morquio disease; source of the EC 3.1.6.4 catalytic-activity assignment in UniProt.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-1630304
+
+                    </span>
+                </div>
+
+                <div class="reference-title">GALNS oligomer hydrolyses sulfate from Gal6S in keratan sulfate</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-2263490
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Defective GALNS does not hydrolyse sulfate from Gal6S in keratan sulfate</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6798751
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Exocytosis of azurophil granule lumen proteins</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/GALNS/GALNS-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB P34059 (GALNS_HUMAN) curated record</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">FUNCTION: lysosomal enzyme that hydrolyzes sulfate groups from the glycosaminoglycans keratan sulfate and chondroitin-6-sulfate; SUBCELLULAR LOCATION lysosome; homodimer; formylglycine (3-oxoalanine) modification of Cys79 critical for activity; deficiency causes MPS4A (Morquio A).</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(GALNS-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P34059" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="galns-human-review-notes">GALNS (human) — review notes</h1>
+<p>UniProtKB:P34059 · HGNC:4122 · N-acetylgalactosamine-6-sulfatase (galactose-6-sulfate sulfatase; GalN6S) · EC 3.1.6.4</p>
+<p>Deep research: falcon provider was out of credits (HTTP 402) at the time of this review, so no<br />
+<code>-deep-research-falcon.md</code> was generated. This review is grounded in the UniProt record<br />
+(<code>GALNS-uniprot.txt</code>), the seeded GOA (<code>GALNS-goa.tsv</code>), cached publications, and cached Reactome entries.</p>
+<h2 id="core-biology-verified">Core biology (verified)</h2>
+<ul>
+<li>
+<p><strong>Molecular function.</strong> GALNS is a lysosomal sulfatase that hydrolytically removes the 6-O-sulfate<br />
+  group from two terminal sugars: N-acetyl-D-galactosamine-6-sulfate (in chondroitin-6-sulfate) and<br />
+  D-galactose-6-sulfate (in keratan sulfate). EC 3.1.6.4.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/22940367" title="removes sulfate groups from a terminal N-acetylgalactosamine-6-sulfate (or galactose-6-sulfate) in mucopolysaccharides such as keratan sulfate and chondroitin-6-sulfate">PMID:22940367</a><br />
+  UniProt CATALYTIC ACTIVITY: "Hydrolysis of the 6-sulfate groups of the N-acetyl-D-galactosamine 6-sulfate<br />
+  units of chondroitin sulfate and of the D-galactose 6-sulfate units of keratan sulfate."<br />
+  The GO term GO:0043890 "N-acetylgalactosamine-6-sulfatase activity" has a definition that matches<br />
+  this exactly and is the correct core MF term (present in GOA as IEA, TAS, EXP, and IDA).</p>
+</li>
+<li>
+<p><strong>Formylglycine dependence.</strong> Like all sulfatases, GALNS requires post-translational conversion of an<br />
+  active-site cysteine (Cys79, in a CXPXR motif) to Cα-formylglycine (3-oxoalanine), catalysed by the<br />
+  formylglycine-generating enzyme SUMF1/FGE; this modified residue is the catalytic nucleophile.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/22940367" title="FGE recognizes this motif and converts Cys 79 into a formylglycine aldehyde">PMID:22940367</a><br />
+  SUMF1 is the master regulator of all 17 human sulfatases; loss of SUMF1 causes multiple sulfatase<br />
+  deficiency. SUMF2 modulates (dampens) SUMF1 enhancement of sulfatase activity <a href="https://pubmed.ncbi.nlm.nih.gov/15962010">PMID:15962010</a>.</p>
+</li>
+<li>
+<p><strong>Cofactor / structure.</strong> Homodimeric glycoprotein; each monomer binds one Ca2+ ion coordinating the<br />
+  formylglycine nucleophile <a href="https://pubmed.ncbi.nlm.nih.gov/22940367">PMID:22940367</a>. Two N-glycosylation sites (Asn204, Asn423); three disulfide bonds.</p>
+</li>
+<li>
+<p><strong>Localisation.</strong> Lysosome / lysosomal lumen. Immunostaining in cultured lung fibroblasts confirms<br />
+  lysosomal localisation <a href="https://pubmed.ncbi.nlm.nih.gov/30760748" title="GALNS indeed showed a lysosomal localization in both ever smokers and COPD patients">PMID:30760748</a>.<br />
+  As a secreted lysosomal hydrolase it is also detected extracellularly (extracellular exosome HDA<br />
+  PMID:23533145; extracellular region / azurophil granule lumen via neutrophil degranulation Reactome).</p>
+</li>
+<li>
+<p><strong>Biological process.</strong> Catabolism of the glycosaminoglycans keratan sulfate and chondroitin-6-sulfate.<br />
+  GOA carries GO:0030207 chondroitin sulfate proteoglycan catabolic process (IDA, PMID:18285341 — modulating<br />
+  GALNS/ASB expression changes cellular chondroitin sulfate content). The keratan-sulfate side of the core<br />
+  BP is not yet in GOA; GO:0042340 (current label "keratan sulfate proteoglycan catabolic process") is the<br />
+  correct term and is added as a NEW annotation.</p>
+</li>
+<li>
+<p><strong>Disease.</strong> Deficiency causes mucopolysaccharidosis type IVA (MPS IVA / Morquio A syndrome; MIM 253000),<br />
+  an autosomal recessive lysosomal storage disease with intracellular accumulation of keratan sulfate and<br />
+  chondroitin-6-sulfate; short stature, skeletal dysplasia, corneal clouding, normal intelligence.<br />
+  Extensive allelic heterogeneity; most missense mutations destabilise the fold rather than hit the active<br />
+  site <a href="https://pubmed.ncbi.nlm.nih.gov/22940367">PMID:22940367</a>.</p>
+</li>
+</ul>
+<h2 id="annotation-by-annotation-decisions-summary">Annotation-by-annotation decisions (summary)</h2>
+<ul>
+<li>GO:0004065 arylsulfatase activity (IBA) — ACCEPT. Family-level MF, correct but broad; PAN-GO/IBA term<br />
+  for the sulfatase family. Not the most specific term but not wrong.</li>
+<li>GO:0005764 lysosome (IEA, GO_REF:0000120) — ACCEPT. Consistent with IDA + UniProt SUBCELL.</li>
+<li>GO:0043890 N-acetylgalactosamine-6-sulfatase activity (IEA) — ACCEPT. This is the correct core MF.</li>
+<li>GO:0043890 (TAS, Reactome:R-HSA-2263490) — ACCEPT. Same correct MF, Reactome-sourced.</li>
+<li>GO:0005764 lysosome (IDA, PMID:30760748) — ACCEPT. Direct immunolocalisation.</li>
+<li>GO:0043890 (EXP, PMID:22940367) — ACCEPT. Structure/enzymology paper; correct core MF.</li>
+<li>GO:0030207 chondroitin sulfate proteoglycan catabolic process (IDA, PMID:18285341) — ACCEPT (non-core<br />
+  vs KS but a genuine core catabolic role). Core BP.</li>
+<li>GO:0043890 (IDA, PMID:18285341) — ACCEPT. Correct core MF, IDA.</li>
+<li>GO:0005576 extracellular region (TAS, Reactome R-HSA-6798751 neutrophil degranulation) — KEEP_AS_NON_CORE.<br />
+  Secreted-fraction / degranulation localisation, not the primary site of action.</li>
+<li>GO:0035578 azurophil granule lumen (TAS, Reactome) — KEEP_AS_NON_CORE. Neutrophil degranulation context.</li>
+<li>GO:0043202 lysosomal lumen (TAS, Reactome R-HSA-2263490) — ACCEPT. Precise site of action.</li>
+<li>GO:0070062 extracellular exosome (HDA, PMID:23533145) — KEEP_AS_NON_CORE. High-throughput proteomics of<br />
+  prostatic-secretion exosomes; localisation byproduct, not core.</li>
+<li>GO:0043202 lysosomal lumen (TAS, Reactome R-HSA-1630304) — ACCEPT. Precise site of action.</li>
+<li>GO:0008484 sulfuric ester hydrolase activity (IDA, PMID:15962010) — MARK_AS_OVER_ANNOTATED. Parent MF<br />
+  (sulfuric ester hydrolase); GALNS's specific activity GO:0043890 is the informative child. The SUMF1/SUMF2<br />
+  paper measured GALNS activity as one of several sulfatases; the general term is subsumed by the specific one.</li>
+<li>GO:0003943 N-acetylgalactosamine-4-sulfatase activity (TAS, PMID:8325655) — MODIFY → GO:0043890. This is<br />
+  the wrong specificity: GALNS is a 6-sulfatase; the 4-sulfatase is ARSB. The cited paper (PMID:8325655) is a<br />
+  chromosome-mapping abstract that does not assay 4-sulfatase activity. TAS (not experimental), so replacing<br />
+  the mistaken 4-sulfatase term with the correct 6-sulfatase term is appropriate.</li>
+</ul>
+<h2 id="new">NEW</h2>
+<ul>
+<li>GO:0042340 keratan sulfate proteoglycan catabolic process — the KS-degradation half of the core BP,<br />
+  supported by UniProt FUNCTION and the structure paper; Reactome models "Keratan sulfate degradation"<br />
+  (R-HSA-2022857) with GALNS.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P34059
+gene_symbol: GALNS
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  GALNS (N-acetylgalactosamine-6-sulfatase, also known as galactose-6-sulfate sulfatase,
+  GalN6S; EC 3.1.6.4) is a lysosomal sulfatase acting in the stepwise degradation of the
+  glycosaminoglycans keratan sulfate and chondroitin-6-sulfate. It hydrolytically removes the
+  6-O-sulfate group from terminal N-acetyl-D-galactosamine-6-sulfate residues of chondroitin
+  sulfate and from D-galactose-6-sulfate residues of keratan sulfate. Like all members of the
+  sulfatase family, GALNS requires post-translational conversion of an active-site cysteine
+  (Cys79) to Cα-formylglycine (3-oxoalanine) by the formylglycine-generating enzyme SUMF1; this
+  modified residue, together with a bound Ca2+ ion, forms the catalytic nucleophile. GALNS is a
+  homodimeric N-glycosylated glycoprotein that localises to the lysosome (lysosomal lumen), and,
+  as a secreted lysosomal hydrolase, is also detected extracellularly. Deficiency of GALNS causes
+  mucopolysaccharidosis type IVA (Morquio A syndrome), an autosomal recessive lysosomal storage
+  disease with intracellular accumulation of keratan sulfate and chondroitin-6-sulfate, presenting
+  with short stature, skeletal dysplasia, and corneal clouding.
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:15962010
+  title: Sulphatase activities are regulated by the interaction of sulphatase-modifying
+    factor 1 with SUMF2.
+  findings:
+  - statement: &gt;-
+      The formylglycine (FGly) modification of an active-site cysteine, generated by SUMF1 within
+      the ER, is required for the catalytic activity of the sulphatases (including GALNS); SUMF2
+      modulates SUMF1 activity.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PMC full text available. Establishes the SUMF1/formylglycine dependence shared by GALNS; GALNS
+      is among the sulphatases assayed. Supports the general sulfatase-maturation requirement rather
+      than a GALNS-specific function.
+- id: PMID:18285341
+  title: Distinct effects of N-acetylgalactosamine-4-sulfatase and galactose-6-sulfatase
+    expression on chondroitin sulfates.
+  findings:
+  - statement: &gt;-
+      Galactose-6-sulfatase (GALNS) hydrolyses sulfate groups of chondroitin sulfate; modulating
+      GALNS expression (overexpression vs siRNA silencing) inversely changes cellular chondroitin
+      sulfate content, demonstrating a role in chondroitin sulfate catabolism.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Abstract-only cache, but the abstract explicitly links GALNS expression to cellular chondroitin
+      sulfate content in MCF-7 cells; supports the chondroitin sulfate catabolic-process annotation.
+- id: PMID:22940367
+  title: The structure of human GALNS reveals the molecular basis for mucopolysaccharidosis
+    IV A.
+  findings:
+  - statement: &gt;-
+      Crystal structure of human GALNS (EC 3.1.6.4); the enzyme removes 6-sulfate groups from terminal
+      N-acetylgalactosamine-6-sulfate (chondroitin-6-sulfate) and galactose-6-sulfate (keratan sulfate).
+      Formylglycine-generating enzyme converts Cys79 to a formylglycine nucleophile; the enzyme is a
+      Ca2+-binding homodimer.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PMC full text. Definitive structural and enzymological characterisation of human GALNS; the
+      primary support for the core molecular function, formylglycine mechanism, and homodimeric Ca2+
+      cofactor biology.
+- id: PMID:23533145
+  title: In-depth proteomic analyses of exosomes isolated from expressed prostatic
+    secretions in urine.
+  findings:
+  - statement: &gt;-
+      Shotgun proteomics of exosomes from expressed prostatic secretions in urine detected ~900 proteins,
+      among them GALNS, consistent with its presence in the secreted/extracellular-exosome fraction.
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-throughput proteomic detection in prostatic-secretion exosomes; supports extracellular-exosome
+      localisation only, not a core function.
+- id: PMID:30760748
+  title: Expression, activity and localization of lysosomal sulfatases in Chronic
+    Obstructive Pulmonary Disease.
+  findings:
+  - statement: &gt;-
+      Immunostaining of cultured lung fibroblasts shows GALNS in a lysosomal localisation in both ever
+      smokers and COPD patients, confirming lysosomal localisation.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PMC full text. Direct immunolocalisation evidence for lysosomal localisation of GALNS; source of
+      the IDA lysosome annotation.
+- id: PMID:8325655
+  title: &#39;Mucopolysaccharidosis IV A: assignment of the human N-acetylgalactosamine-6-sulfate
+    sulfatase (GALNS) gene to chromosome 16q24.&#39;
+  findings:
+  - statement: &gt;-
+      Chromosome-mapping study assigning the human N-acetylgalactosamine-6-sulfate sulfatase (GALNS;
+      EC 3.1.6.4) gene to chromosome 16q24; the paper does not assay a 4-sulfatase activity.
+  reference_review:
+    relevance: LOW
+    correctness: MISCITED
+    review_notes: &gt;-
+      This is a gene-mapping (FISH/chromosome-assignment) abstract for GALNS. It was cited (TAS) to
+      support GO:0003943 N-acetylgalactosamine-4-sulfatase activity, but GALNS is a 6-sulfatase
+      (EC 3.1.6.4); the 4-sulfatase is ARSB. The paper does not support a 4-sulfatase activity.
+- id: PMID:820716
+  title: N-acetylgalactosamine-6-sulfate sulfatase in man. Absence of the enzyme in
+    Morquio disease.
+  findings:
+  - statement: &gt;-
+      Original demonstration of N-acetylgalactosamine-6-sulfate sulfatase (GALNS) activity in man and
+      its absence in Morquio disease; source of the EC 3.1.6.4 catalytic-activity assignment in UniProt.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      UniProt cites this (ECO:0000269|PubMed:820716) for FUNCTION and CATALYTIC ACTIVITY. Not separately
+      annotated in GOA but underpins the core molecular function.
+- id: Reactome:R-HSA-1630304
+  title: GALNS oligomer hydrolyses sulfate from Gal6S in keratan sulfate
+  findings: []
+- id: Reactome:R-HSA-2263490
+  title: Defective GALNS does not hydrolyse sulfate from Gal6S in keratan sulfate
+  findings: []
+- id: Reactome:R-HSA-6798751
+  title: Exocytosis of azurophil granule lumen proteins
+  findings: []
+- id: file:human/GALNS/GALNS-uniprot.txt
+  title: UniProtKB P34059 (GALNS_HUMAN) curated record
+  findings:
+  - statement: &gt;-
+      FUNCTION: lysosomal enzyme that hydrolyzes sulfate groups from the glycosaminoglycans keratan
+      sulfate and chondroitin-6-sulfate; SUBCELLULAR LOCATION lysosome; homodimer; formylglycine
+      (3-oxoalanine) modification of Cys79 critical for activity; deficiency causes MPS4A (Morquio A).
+existing_annotations:
+- term:
+    id: GO:0004065
+    label: arylsulfatase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Family-level (arylsulfatase) molecular function assigned by phylogenetic inference across the
+      sulfatase family. GALNS is a bona fide sulfatase, so this term is correct but broad relative to
+      its specific N-acetylgalactosamine-6-sulfatase activity.
+    action: ACCEPT
+    reason: &gt;-
+      The IBA sulfatase-family term is biologically correct: GALNS catalyses sulfate-ester hydrolysis
+      and belongs to the sulfatase family. It is more general than the specific 6-sulfatase activity
+      (GO:0043890, also annotated), and it is standard to retain the broader family MF alongside the
+      specific one. Kept, though the specific GO:0043890 term better represents the core function.
+    supported_by:
+    - reference_id: PMID:22940367
+      supporting_text: &gt;-
+        In sulfatases, highly conserved catalytic machinery couples with diverse active site geometry,
+        leading to cleavage of a wide variety of substrates.
+    - reference_id: file:human/GALNS/GALNS-uniprot.txt
+      supporting_text: Belongs to the sulfatase family.
+- term:
+    id: GO:0005764
+    label: lysosome
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic localisation to the lysosome, consistent with UniProt SUBCELLULAR LOCATION and with
+      direct immunolocalisation (GO:0005764 IDA from PMID:30760748).
+    action: ACCEPT
+    reason: &gt;-
+      GALNS is a well-established lysosomal hydrolase; the IEA lysosome call agrees with experimental
+      IDA evidence and UniProt curation, so it is retained as a correct core localisation.
+    supported_by:
+    - reference_id: file:human/GALNS/GALNS-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Lysosome&#39;
+    - reference_id: PMID:30760748
+      supporting_text: GALNS indeed showed a lysosomal localization in both ever smokers and COPD patients.
+- term:
+    id: GO:0043890
+    label: N-acetylgalactosamine-6-sulfatase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Specific molecular function: removal of the 6-O-sulfate from N-acetyl-D-galactosamine-6-sulfate
+      (chondroitin-6-sulfate) and D-galactose-6-sulfate (keratan sulfate). This is the correct core MF
+      for GALNS (EC 3.1.6.4), inferred here electronically from InterPro/EC mapping.
+    action: ACCEPT
+    reason: &gt;-
+      The GO:0043890 definition matches the experimentally established catalytic activity of GALNS
+      exactly, and the same term is independently supported by EXP and IDA annotations. This is the
+      core molecular function.
+    supported_by:
+    - reference_id: PMID:22940367
+      supporting_text: &gt;-
+        removes sulfate groups from a terminal N-acetylgalactosamine-6-sulfate (or galactose-6-sulfate)
+        in mucopolysaccharides such as keratan sulfate and chondroitin-6-sulfate
+    - reference_id: file:human/GALNS/GALNS-uniprot.txt
+      supporting_text: Lysosomal enzyme that hydrolyzes sulfate groups from
+- term:
+    id: GO:0043890
+    label: N-acetylgalactosamine-6-sulfatase activity
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-2263490
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Reactome-asserted core molecular function (6-sulfatase acting on Gal6S/GalNAc6S in keratan sulfate
+      and chondroitin sulfate).
+    action: ACCEPT
+    reason: &gt;-
+      Reactome models GALNS hydrolysing sulfate from galactose-6-sulfate in keratan sulfate and from
+      N-acetylgalactosamine-6-sulfate in chondroitin sulfate; this is the correct core MF and duplicates
+      the experimentally supported GO:0043890 annotation.
+    supported_by:
+    - reference_id: Reactome:R-HSA-1630304
+      supporting_text: hydrolyses sulfate from galactose 6-sulfate units of keratan sulfate
+    - reference_id: PMID:22940367
+      supporting_text: &gt;-
+        In the lysosome, GALNS removes sulfate groups from 6-sulfated galactosides and 6-sulfated
+        N-acetylgalactosaminides in keratan sulfate and chondroitin-6-sulfate
+- term:
+    id: GO:0005764
+    label: lysosome
+  evidence_type: IDA
+  original_reference_id: PMID:30760748
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct immunolocalisation of GALNS to the lysosome in cultured human lung fibroblasts.
+    action: ACCEPT
+    reason: &gt;-
+      Experimental (IDA) evidence: co-staining with lysosomal markers showed GALNS in a lysosomal
+      localisation. This confirms the core subcellular location.
+    supported_by:
+    - reference_id: PMID:30760748
+      supporting_text: GALNS indeed showed a lysosomal localization in both ever smokers and COPD patients.
+- term:
+    id: GO:0043890
+    label: N-acetylgalactosamine-6-sulfatase activity
+  evidence_type: EXP
+  original_reference_id: PMID:22940367
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental characterisation (structure and enzyme kinetics) of human GALNS as an
+      N-acetylgalactosamine-6-sulfatase acting on keratan sulfate and chondroitin-6-sulfate.
+    action: ACCEPT
+    reason: &gt;-
+      Direct experimental support for the core molecular function: the crystallographic and kinetic
+      study defines GALNS as removing 6-sulfate groups from the terminal sugars of keratan sulfate and
+      chondroitin-6-sulfate, with a Ca2+/formylglycine active site.
+    supported_by:
+    - reference_id: PMID:22940367
+      supporting_text: &gt;-
+        In the lysosome, GALNS removes sulfate groups from 6-sulfated galactosides and 6-sulfated
+        N-acetylgalactosaminides in keratan sulfate and chondroitin-6-sulfate
+- term:
+    id: GO:0030207
+    label: chondroitin sulfate proteoglycan catabolic process
+  evidence_type: IDA
+  original_reference_id: PMID:18285341
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      GALNS contributes to catabolism of chondroitin sulfate: modulating GALNS expression inversely
+      changes cellular chondroitin sulfate content.
+    action: ACCEPT
+    reason: &gt;-
+      Experimental (IDA) evidence in MCF-7 cells shows that overexpression of GALNS lowers, and silencing
+      raises, chondroitin sulfate content, supporting a direct role in chondroitin-6-sulfate catabolism.
+      This is a genuine core biological process (the chondroitin side of GALNS&#39;s GAG-degradation role).
+    supported_by:
+    - reference_id: PMID:18285341
+      supporting_text: galactose-6-sulfatase (GALNS) hydrolyze sulfate groups of CS
+    - reference_id: PMID:18285341
+      supporting_text: &gt;-
+        modification of expression of the lysosomal sulfatases ASB and GALNS regulates
+- term:
+    id: GO:0043890
+    label: N-acetylgalactosamine-6-sulfatase activity
+  evidence_type: IDA
+  original_reference_id: PMID:18285341
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct-assay support for the core 6-sulfatase molecular function of GALNS.
+    action: ACCEPT
+    reason: &gt;-
+      IDA annotation to the correct specific molecular function; GALNS is characterised here as
+      galactose-6-sulfatase that hydrolyses sulfate groups of chondroitin sulfate. Duplicates the core
+      MF supported by other lines of evidence.
+    supported_by:
+    - reference_id: PMID:18285341
+      supporting_text: galactose-6-sulfatase (GALNS) hydrolyze sulfate groups of CS
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6798751
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Extracellular localisation asserted via Reactome neutrophil-degranulation / azurophil-granule
+      exocytosis pathway. A secreted-fraction localisation, not the primary site of GALNS action.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      As a lysosomal hydrolase, GALNS can be exocytosed and detected extracellularly (e.g. via neutrophil
+      degranulation). The localisation is real but peripheral; the core site of action is the lysosome.
+    supported_by:
+    - reference_id: Reactome:R-HSA-6798751
+      supporting_text: Azurophil granules undergo limited exocytosis in response to stimulation
+- term:
+    id: GO:0035578
+    label: azurophil granule lumen
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6798751
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Localisation to the azurophil (primary) granule lumen of neutrophils, asserted via the Reactome
+      neutrophil-degranulation pathway.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Azurophil granules are lysosome-related organelles of neutrophils; GALNS presence there reflects
+      its lysosomal-hydrolase nature and the degranulation pathway, but this is not the core localisation.
+    supported_by:
+    - reference_id: Reactome:R-HSA-6798751
+      supporting_text: Azurophil granules undergo limited exocytosis in response to stimulation
+- term:
+    id: GO:0043202
+    label: lysosomal lumen
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-2263490
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Localisation to the lysosomal lumen, the precise compartment where GALNS acts on keratan sulfate
+      and chondroitin-6-sulfate.
+    action: ACCEPT
+    reason: &gt;-
+      Lysosomal lumen is the specific site of GALNS activity as a soluble lysosomal hydrolase; consistent
+      with the lysosome IDA/IEA annotations and UniProt curation.
+    supported_by:
+    - reference_id: Reactome:R-HSA-1630304
+      supporting_text: hydrolyses sulfate from galactose 6-sulfate units of keratan sulfate
+    - reference_id: file:human/GALNS/GALNS-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Lysosome&#39;
+- term:
+    id: GO:0070062
+    label: extracellular exosome
+  evidence_type: HDA
+  original_reference_id: PMID:23533145
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput proteomic detection of GALNS in exosomes from expressed prostatic secretions in
+      urine. A localisation byproduct of secreted/exosomal trafficking, not a core function.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      GALNS was among ~900 proteins detected by shotgun proteomics of prostatic-secretion exosomes. This
+      supports extracellular-exosome localisation but is peripheral to the enzyme&#39;s lysosomal core role.
+    supported_by:
+    - reference_id: PMID:23533145
+      supporting_text: exosome preparations were characterized by a shotgun proteomics procedure
+- term:
+    id: GO:0043202
+    label: lysosomal lumen
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-1630304
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Lysosomal-lumen localisation asserted by Reactome for the GALNS keratan-sulfate desulfation
+      reaction; the precise site of GALNS catalysis.
+    action: ACCEPT
+    reason: &gt;-
+      Duplicate of the lysosomal-lumen localisation supported by Reactome and UniProt; correct core
+      compartment for this soluble lysosomal sulfatase.
+    supported_by:
+    - reference_id: Reactome:R-HSA-1630304
+      supporting_text: hydrolyses sulfate from galactose 6-sulfate units of keratan sulfate
+    - reference_id: file:human/GALNS/GALNS-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Lysosome&#39;
+- term:
+    id: GO:0008484
+    label: sulfuric ester hydrolase activity
+  evidence_type: IDA
+  original_reference_id: PMID:15962010
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Parent-level molecular function (sulfuric ester hydrolase). GALNS activity was measured in the
+      SUMF1/SUMF2 study, but the specific GO:0043890 (6-sulfatase) term is the informative descendant.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      GO:0008484 is a broad ancestor of the specific N-acetylgalactosamine-6-sulfatase activity already
+      annotated. GALNS activity was assayed among several sulfatases whose maturation depends on SUMF1;
+      the general term adds little beyond the specific GO:0043890 term and is an over-annotation of
+      specificity. Not wrong, but subsumed by the core MF.
+    supported_by:
+    - reference_id: PMID:15962010
+      supporting_text: This modification is necessary for the catalytic activities of the sulphatases
+    - reference_id: PMID:15962010
+      supporting_text: we transfected Cos7 cells with several sulphatase cDNAs
+- term:
+    id: GO:0003943
+    label: N-acetylgalactosamine-4-sulfatase activity
+  evidence_type: TAS
+  original_reference_id: PMID:8325655
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Annotation to N-acetylgalactosamine-4-sulfatase activity, which is the wrong specificity for GALNS.
+      GALNS is a 6-sulfatase (EC 3.1.6.4, GO:0043890); the 4-sulfatase (EC 3.1.6.12, GO:0003943) is ARSB.
+      The cited reference is a chromosome-mapping abstract that does not assay a 4-sulfatase activity.
+    action: MODIFY
+    reason: &gt;-
+      GO:0003943 catalyses hydrolysis of the 4-sulfate groups of N-acetyl-D-galactosamine-4-sulfate (a
+      distinct activity carried out by ARSB), whereas GALNS removes 6-sulfate groups. The original
+      reference (PMID:8325655) only assigns the GALNS gene to chromosome 16q24 and does not support a
+      4-sulfatase activity. This is a wrong-specificity term (TAS, not experimental IDA); replace with
+      the correct 6-sulfatase term GO:0043890.
+    proposed_replacement_terms:
+    - id: GO:0043890
+      label: N-acetylgalactosamine-6-sulfatase activity
+    supported_by:
+    - reference_id: PMID:8325655
+      supporting_text: N-acetylgalactosamine-6-sulfate sulfatase (GALNS; EC 3.1.6.4)
+    - reference_id: PMID:22940367
+      supporting_text: &gt;-
+        In the lysosome, GALNS removes sulfate groups from 6-sulfated galactosides and 6-sulfated
+        N-acetylgalactosaminides in keratan sulfate and chondroitin-6-sulfate
+- term:
+    id: GO:0042340
+    label: keratan sulfate proteoglycan catabolic process
+  evidence_type: EXP
+  original_reference_id: PMID:22940367
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      GALNS removes the 6-O-sulfate from galactose-6-sulfate residues of keratan sulfate, a required step
+      in keratan sulfate degradation; deficiency causes lysosomal keratan sulfate accumulation (MPS IVA).
+      This keratan-sulfate catabolic role is not currently represented in GOA and is proposed here.
+    action: NEW
+    reason: &gt;-
+      The keratan-sulfate side of GALNS&#39;s core biological process is well established (UniProt FUNCTION;
+      structural/enzymology study; Reactome &#34;Keratan sulfate degradation&#34;) but absent from the GOA
+      biological-process set, which only carries the chondroitin-sulfate term GO:0030207. GO:0042340
+      (keratan sulfate proteoglycan catabolic process) captures this core role.
+    supported_by:
+    - reference_id: PMID:22940367
+      supporting_text: &gt;-
+        removes sulfate groups from a terminal N-acetylgalactosamine-6-sulfate (or galactose-6-sulfate)
+        in mucopolysaccharides such as keratan sulfate and chondroitin-6-sulfate
+    - reference_id: file:human/GALNS/GALNS-uniprot.txt
+      supporting_text: Lysosomal enzyme that hydrolyzes sulfate groups from
+core_functions:
+- description: &gt;-
+    Lysosomal N-acetylgalactosamine-6-sulfatase (galactose-6-sulfate sulfatase, EC 3.1.6.4) that
+    hydrolytically removes the 6-O-sulfate group from terminal N-acetyl-D-galactosamine-6-sulfate
+    (chondroitin-6-sulfate) and D-galactose-6-sulfate (keratan sulfate) residues, using a
+    Ca2+/formylglycine active site, during glycosaminoglycan degradation.
+  molecular_function:
+    id: GO:0043890
+    label: N-acetylgalactosamine-6-sulfatase activity
+  directly_involved_in:
+  - id: GO:0042340
+    label: keratan sulfate proteoglycan catabolic process
+  locations:
+  - id: GO:0043202
+    label: lysosomal lumen
+  supported_by:
+  - reference_id: PMID:22940367
+    supporting_text: &gt;-
+      removes sulfate groups from a terminal N-acetylgalactosamine-6-sulfate (or galactose-6-sulfate)
+      in mucopolysaccharides such as keratan sulfate and chondroitin-6-sulfate
+  - reference_id: file:human/GALNS/GALNS-uniprot.txt
+    supporting_text: Lysosomal enzyme that hydrolyzes sulfate groups from
+- description: &gt;-
+    Same lysosomal 6-sulfatase activity acting on chondroitin-6-sulfate, contributing to chondroitin
+    sulfate proteoglycan degradation in the lysosome.
+  molecular_function:
+    id: GO:0043890
+    label: N-acetylgalactosamine-6-sulfatase activity
+  directly_involved_in:
+  - id: GO:0030207
+    label: chondroitin sulfate proteoglycan catabolic process
+  locations:
+  - id: GO:0043202
+    label: lysosomal lumen
+  supported_by:
+  - reference_id: PMID:18285341
+    supporting_text: galactose-6-sulfatase (GALNS) hydrolyze sulfate groups of CS
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
