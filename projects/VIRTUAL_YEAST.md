@@ -44,24 +44,29 @@ what a review action (`ACCEPT` / `KEEP_AS_NON_CORE` / `MARK_AS_OVER_ANNOTATED` /
 `negated: true`) provides. This repo therefore supplies the belief/provenance layer such a
 reward signal actually needs.
 
-## Pilot result (workstream #3, done)
+## Workstream #3 results (done)
 
-Using the 123 reviewed yeast genes as ground truth, we scored how computational vs
-experimental GO annotations survive expert review (n = 3,926 annotations).
-Full write-up: [**RESULTS**](VIRTUAL_YEAST/RESULTS.md).
+Full write-up + reproduction: [**RESULTS**](VIRTUAL_YEAST/RESULTS.md). Three grounded
+benchmarks over the curated yeast (123 genes / 3,926 annotations) and pombe (72 / 2,519)
+review sets:
 
-| evidence class | n | retained % | over-annotated / removed % |
-|---|---|---|---|
-| experimental (IDA/IMP/IPI…) | 2,458 | 76.7 | 22.4 |
-| computational (IBA/IEA/ISS…) | 1,342 | 92.5 | 6.9 |
+1. **Retention.** Computational annotations (IBA-dominated) are retained by expert review
+   more often (92.5%) than experimental ones (76.7%) — GO's conservative IBA/GO-CAM layer
+   is a cleaner functional prior than a raw experimental GAF.
+2. **Aspect localization.** The over-annotation is almost entirely in **molecular
+   function**: experimental MF is 45% flagged in yeast (22% in pombe), while experimental
+   **BP and CC are ~96–99% trustworthy** in both organisms. Actionable rule for AIVC priors:
+   *trust curated BP/CC; treat the experimental MF layer (esp. `protein binding`) as noisy.*
+3. **Novelty + paralog discrimination.** InterPro2GO domain predictions are ~90–94%
+   already-in-GOA (CNN / training-data redundancy). The top novel term, `GO:0140662`
+   (ATP-dependent protein folding chaperone), is predicted for 9 Hsp70 paralogs — and a
+   hand-curated [`SSZ1-interpro2go-predictions-review.yaml`](../genes/yeast/SSZ1/SSZ1-interpro2go-predictions-review.yaml)
+   scores it **PLI (paralog over-annotation)** for the atypical, ATPase-dispensable SSZ1
+   while it is correct for canonical SSA1/SSQ1 — the exact failure mode foundation-model
+   predictors commit.
 
-**Finding:** computational annotations — dominated by GO's conservative **IBA** phylogenetic
-pipeline — are retained *more* often than experimental ones, which are inflated by
-uninformative `IPI` "protein binding" and over-scoped calls. The message for AIVC priors:
-**a conservative IBA/GO-CAM layer is a cleaner functional prior than a raw experimental
-GAF**, and this repo's review actions are the filter that separates them. (See RESULTS.md
-for the important caveats — this is annotation-retention, not novel-prediction accuracy,
-and the gene set is non-random.)
+(See RESULTS.md for caveats: §1–2 measure annotation retention, not novel-prediction
+accuracy; the gene sets are non-random.)
 
 ---
 
@@ -82,11 +87,13 @@ Last updated: 2026-07-11
 - [ ] Include evidence code + supporting text as provenance per assertion
 - [ ] Document how this avoids the closed-world reward trap
 
-### 3. Prediction-vs-review benchmark *(pilot DONE; extend)*
+### 3. Prediction-vs-review benchmark *(DONE)*
 - [x] Score computational vs experimental annotation retention across reviewed yeast genes → [RESULTS](VIRTUAL_YEAST/RESULTS.md)
-- [ ] Extend to predictions **absent** from GOA using `PredictionReview` (PANTHER/IBA, ProtNLM already in-repo)
-- [ ] Stratify over-annotation by GO aspect (MF/BP/CC) and by paralog family
-- [ ] Compare against `genes/SCHPO/` (pombe) as an independent curated set
+- [x] Extend to predictions **absent** from GOA using `PredictionReview` — InterPro2GO novelty benchmark + hand-curated SSZ1 worked example (PLI paralog over-annotation)
+- [x] Stratify over-annotation by GO aspect (MF/BP/CC) — over-annotation localizes to experimental MF
+- [x] Compare against `genes/SCHPO/` (pombe) as an independent curated set — pattern replicates
+- [ ] Hand-adjudicate the remaining novel InterPro2GO predictions (16 yeast + 21 pombe) into `PredictionReview` files
+- [ ] Extend to a predictor with genuinely novel output (PANTHER/IBA propagation, ProtNLM) beyond domain-redundant InterPro2GO
 
 ### 4. Align curation to the paper's 8 functional modules *(prioritization)*
 - [ ] Ground each module to a GO-slim term set via the OLS MCP (do **not** hand-guess GO IDs)
