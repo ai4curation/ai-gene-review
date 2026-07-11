@@ -76,8 +76,11 @@ Directed movement up cAMP gradients; shared machinery reused throughout.
 Adhesion systems that hold streams and the mound together.
 - **csaA (csA / gp80)** — contact sites A, EDTA-resistant adhesion
 - **cadA (ddCAD-1 / gp24)** — Ca²⁺-dependent adhesion, early
-- **lagC (gp150 / csB)** — post-aggregation adhesion, signaling
-- **tgrB1 / tgrC1** — allorecognition / self-recognition receptor pair
+- **tgrC1 (= lagC / gp150)** — post-aggregation adhesion + allorecognition ligand
+- **tgrB1** — allorecognition receptor (TgrB1–TgrC1 self-recognition pair)
+
+> Note: **lagC / gp150 and tgrC1 are the same gene** (UniProt P42523,
+> `TGRC1_DICDI`; *lagC1* was renamed *tgrC1*). Curate once, under **tgrC1**.
 
 ### 5. DIF-1 morphogen: polyketide biosynthesis & signaling
 Chlorinated hexaphenone that induces prestalk fate.
@@ -165,9 +168,8 @@ Behavior of the multicellular slug and tip organizer.
 |------|--------|----------|
 | csaA | 4 | csA/gp80 adhesion |
 | cadA | 4 | ddCAD-1 adhesion |
-| lagC | 4 | gp150 post-aggregation adhesion |
+| tgrC1 | 4 | gp150/lagC post-aggregation adhesion + allorecognition ligand |
 | tgrB1 | 4 | Allorecognition receptor |
-| tgrC1 | 4 | Allorecognition ligand |
 | dmtA | 5 | DIF-1 biosynthesis |
 | dimB | 5/6 | DIF-response bZIP TF |
 | cudA | 6/7 | Prestalk/culmination nuclear factor |
