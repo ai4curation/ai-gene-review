@@ -1,0 +1,2230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>rpmE - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>rpmE</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88CU3" target="_blank" class="term-link">
+                        Q88CU3
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "rpmE";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88CU3" data-a="DESCRIPTION: rpmE (PP_5087) encodes large ribosomal subunit pro..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>rpmE (PP_5087) encodes large ribosomal subunit protein bL31 (50S ribosomal protein L31), a conserved protein component of the bacterial 50S large ribosomal subunit in Pseudomonas putida KT2440. It functions as a structural constituent of the ribosome and supports protein translation as part of the large subunit.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003735" target="_blank" class="term-link">
+                                    GO:0003735
+                                </a>
+                            </span>
+                            <span class="term-label">structural constituent of ribosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CU3" data-a="GO:0003735" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the core ribosomal-protein molecular function for a conserved 50S large-subunit component.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> structural constituent of ribosome is the defining molecular function of this 50S ribosomal protein
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/rpmE/rpmE-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">UniProtKB	Q88CU3	rpmE	enables	GO:0003735	structural constituent of ribosome	molecular_function	ECO:0000256	IEA	GO_REF:0000002	InterPro:IPR002150|InterPro:IPR027491	160488	Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)	InterPro	Large ribosomal subunit protein bL31	20260706</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/rpmE/rpmE-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DE   RecName: Full=Large ribosomal subunit protein bL31 {ECO:0000255|HAMAP-Rule:MF_00501};</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/rpmE/rpmE-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">- **Protein Description:** RecName: Full=Large ribosomal subunit protein bL31 {ECO:0000255|HAMAP-Rule:MF_00501}; AltName: Full=50S ribosomal protein L31 {ECO:0000305};</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005840" target="_blank" class="term-link">
+                                    GO:0005840
+                                </a>
+                            </span>
+                            <span class="term-label">ribosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CU3" data-a="GO:0005840" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The protein is a conserved bacterial 50S ribosomal protein and this cellular-component annotation is appropriate.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ribosome/large-subunit membership is the correct cellular-component context
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/rpmE/rpmE-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">UniProtKB	Q88CU3	rpmE	located_in	GO:0005840	ribosome	cellular_component	ECO:0000256	IEA	GO_REF:0000002	InterPro:IPR002150|InterPro:IPR027491	160488	Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)	InterPro	Large ribosomal subunit protein bL31	20260706</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/rpmE/rpmE-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DE   RecName: Full=Large ribosomal subunit protein bL31 {ECO:0000255|HAMAP-Rule:MF_00501};</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/rpmE/rpmE-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">- **Protein Description:** RecName: Full=Large ribosomal subunit protein bL31 {ECO:0000255|HAMAP-Rule:MF_00501}; AltName: Full=50S ribosomal protein L31 {ECO:0000305};</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006412" target="_blank" class="term-link">
+                                    GO:0006412
+                                </a>
+                            </span>
+                            <span class="term-label">translation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CU3" data-a="GO:0006412" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The protein acts as a component of the large ribosomal subunit during translation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> translation is the core biological process carried out by the assembled ribosome
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/rpmE/rpmE-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">UniProtKB	Q88CU3	rpmE	involved_in	GO:0006412	translation	biological_process	ECO:0000501	IEA	GO_REF:0000120	InterPro:IPR002150|InterPro:IPR027491|UniRule:UR000103188	160488	Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)	UniProt	Large ribosomal subunit protein bL31	20260706</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/rpmE/rpmE-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DE   RecName: Full=Large ribosomal subunit protein bL31 {ECO:0000255|HAMAP-Rule:MF_00501};</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/rpmE/rpmE-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">- **Protein Description:** RecName: Full=Large ribosomal subunit protein bL31 {ECO:0000255|HAMAP-Rule:MF_00501}; AltName: Full=50S ribosomal protein L31 {ECO:0000305};</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Serves as large ribosomal subunit protein bL31 (50S ribosomal protein L31), a structural protein component of the bacterial 50S large ribosomal subunit during translation.</h3>
+                <span class="vote-buttons" data-g="Q88CU3" data-a="FUNCTION: Serves as large ribosomal subunit protein bL31 (50..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003735" target="_blank" class="term-link">
+                            structural constituent of ribosome
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006412" target="_blank" class="term-link">
+                                translation
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005840" target="_blank" class="term-link">
+                                ribosome
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/rpmE/rpmE-goa.tsv
+
+                        </span>
+
+                        <div class="finding-text">UniProtKB	Q88CU3	rpmE	enables	GO:0003735	structural constituent of ribosome	molecular_function	ECO:0000256	IEA	GO_REF:0000002	InterPro:IPR002150|InterPro:IPR027491	160488	Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)	InterPro	Large ribosomal subunit protein bL31	20260706</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/rpmE/rpmE-goa.tsv
+
+                        </span>
+
+                        <div class="finding-text">UniProtKB	Q88CU3	rpmE	involved_in	GO:0006412	translation	biological_process	ECO:0000501	IEA	GO_REF:0000120	InterPro:IPR002150|InterPro:IPR027491|UniRule:UR000103188	160488	Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)	UniProt	Large ribosomal subunit protein bL31	20260706</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/rpmE/rpmE-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">DE   RecName: Full=Large ribosomal subunit protein bL31 {ECO:0000255|HAMAP-Rule:MF_00501};</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/rpmE/rpmE-deep-research-asta.md
+
+                        </span>
+
+                        <div class="finding-text">- **Protein Description:** RecName: Full=Large ribosomal subunit protein bL31 {ECO:0000255|HAMAP-Rule:MF_00501}; AltName: Full=50S ribosomal protein L31 {ECO:0000305};</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/rpmE/rpmE-goa.tsv
+
+                        </span>
+
+                        <div class="finding-text">UniProtKB	Q88CU3	rpmE	located_in	GO:0005840	ribosome	cellular_component	ECO:0000256	IEA	GO_REF:0000002	InterPro:IPR002150|InterPro:IPR027491	160488	Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)	InterPro	Large ribosomal subunit protein bL31	20260706</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/rpmE/rpmE-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for rpmE</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt protein name, family/domain, and functional annotation lines used for first-pass ribosomal-protein curation.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/rpmE/rpmE-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO GOA annotations for rpmE</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Fetched GOA rows reviewed in this first-pass curation file.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/rpmE/rpmE-deep-research-asta.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Asta retrieval report for rpmE</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Asta retrieval was used as fast gene-level literature/metadata context; no unsupported hypotheses were imported.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Asta</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(rpmE-deep-research-asta.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88CU3" data-a="DEEP_RESEARCH: Asta" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Asta Literature Retrieval: Gene Research for Functional Annotation ⚠️ CRITICAL: Gene/Protein Identification Context BEFORE YOU BEGIN RESEARCH: Y...</span>
+
+
+                    <span class="report-badge">Asta</span>
+
+
+                    <span class="report-badge">Asta Scientific Corpus Retrieval</span>
+
+
+                    <span class="report-badge">19 citations</span>
+
+
+
+                    <span class="report-meta-text">2026-07-09T09:27:45.110759</span>
+
+
+
+                </div>
+
+
+                <h1 id="asta-literature-retrieval-gene-research-for-functional-annotation-critical-geneprotein-identification-context-before-you-begin-research-y">Asta Literature Retrieval: Gene Research for Functional Annotation ⚠️ CRITICAL: Gene/Protein Identification Context BEFORE YOU BEGIN RESEARCH: Y...</h1>
+<p>This report is retrieval-only and is generated directly from Asta results.</p>
+<ul>
+<li>Papers retrieved: 19</li>
+<li>Snippets retrieved: 20</li>
+</ul>
+<h2 id="relevant-papers">Relevant Papers</h2>
+<h3 id="1-the-thermus-thermophilus-dead-box-protein-hera-is-a-general-rna-binding-protein-and-plays-a-key-role-in-trna-metabolism">[1] The Thermus thermophilus DEAD-box protein Hera is a general RNA binding protein and plays a key role in tRNA metabolism</h3>
+<ul>
+<li>Authors: Pascal Donsbach, Brian A. Yee, Dione L Sánchez-Hevia, J. Berenguer, S. Aigner et al.</li>
+<li>Year: 2020</li>
+<li>Venue: RNA</li>
+<li>URL: https://www.semanticscholar.org/paper/533f89524b50f1df6146e8665eed9512b23e1a5c</li>
+<li>DOI: 10.1261/rna.075580.120</li>
+<li>PMID: 32669294</li>
+<li>PMCID: 7566566</li>
+<li>Citations: 3</li>
+<li>Summary: Gene ontology analysis reveals an enrichment of genes related to translation, including mRNAs of ribosomal proteins, tRNAs, tRNA ligases, and t RNA-modifying enzymes, consistent with a key role of Hera in ribosome and tRNA metabolism.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.841)<br />
+    &gt; However, the peaks were in different positions within the gene in the four individual experiments performed (Fig. 6), and no specific binding site within the mRNA could be identified from the data.<br />
+    &gt; Among the genes identified were numerous genes related to protein biosynthesis (tRNAs, tRNA-aminoacyl synthetases, tRNA-modifying enzymes, ribosomal proteins). As an example, genes for ribosomal proteins were highly represented with 18 out of the 22 genes (82%) for small ribosomal proteins, (12 after cold shock, 55%), and 31 out of 34 genes (91%) for large ribosomal subunit proteins (22 after cold shock, 65%). Other protein families represented were chaperones (e.g., dnaK, dnaJ, grpE, but not dafA, groES, groEL, clpB), cold-shock and general stress proteins (TT_RS08235, _09210; hsp22, hsp30; uspA), topoisomerase genes (gyrA, gyrB, topA), genes for transporters and their subunits (often both the gene for the substrate-bind-ing protein and for the permease, for example, branchedchain amino acid ABC transporter, TT_RS01115 and _01120), and genes related to sugar-and cell wall metabolism and cell division, as well as CRISPR-related genes. In many cases, genes for all subunits of protein complexes (e.g., genes for cytochrome c oxidase subunits I and II; clpA, clpX coding for the ClpAX protease) were present.<br />
+    &gt; A systematic gene ontology analysis using the DAVID server 6.7 (https://david-d.ncifcrf.gov/home.jsp) (Huang da et al. 2009a,b) with the consolidated gene lists for Hera1/Hera2, and Hera3/Hera4, translated into UniProt accession numbers, revealed three annotation clusters with significant enrichment (Supplemental Table 4a,b).</li>
+<li>Snippet 2 (score: 0.730)<br />
+    &gt; (Huang da et al. 2009a,b) with the consolidated gene lists for Hera1/Hera2, and Hera3/Hera4, translated into UniProt accession numbers, revealed three annotation clusters with significant enrichment (Supplemental Table 4a,b). Under normal-growth conditions, the most enriched cluster (enrichment score 11.4) comprised genes related to ribonucleoproteins, ribosomes, ribosomal proteins, and translation. The second-most enriched cluster (enrichment score 3.8) comprised genes belonging to protein biosynthesis and tRNA metabolism, including aminoacyl-tRNA synthetases. A third cluster (enrichment score 2.2) comprised genes related to nucleotide-binding proteins. Among the genes with peaks under cold-shock conditions, the same three annotation clusters were identified, with enrichment scores 6.5, 4.1, and 2.5, respectively.<br />
+    &gt; We also analyzed the genes identified under both normal-growth and cold-shock conditions, only under normal-growth conditions, or only under cold-shock conditions. (Supplemental Table 4c-e). The same three annotation clusters (ribosome and translation, tRNA metabolism, and nucleotide binding, enrichment scores 6.4, 3.8, and 2.7, respectively) were reported for genes that contained peaks under both normal-growth and cold-shock conditions. Genes with peaks only under normal-growth conditions were enriched for genes related to ribosomes and translation, genes with peaks only under cold-shock conditions showed no specific enrichment. Genes that neither contained a peak under normal-growth nor under coldshock conditions also showed no significant enrichment of a particular family of proteins (Supplemental Table 4f).<br />
+    &gt; As an example for genes related to annotation cluster 1, 18 out of the 22 genes (82%) for proteins of the 30S ribosomal subunit were identified under normal-growth conditions, 12 (55%) after cold shock (11 common genes, three without peaks). For the proteins of the 50S ribosomal subunit, the picture was similar: Out of 34 genes, 31 (91%) were identified under normal-growth, 22 (65%) under coldshock conditions (20 common genes, one without peaks).</li>
+</ul>
+<h3 id="2-structure-aware-mycobacterium-tuberculosis-functional-annotation-uncloaks-resistance-metabolic-and-virulence-genes">[2] Structure-Aware Mycobacterium tuberculosis Functional Annotation Uncloaks Resistance, Metabolic, and Virulence Genes</h3>
+<ul>
+<li>Authors: Samuel J. Modlin, A. Elghraoui, Deepika Gunasekaran, Alyssa M Zlotnicki, N. Dillon et al.</li>
+<li>Year: 2021</li>
+<li>Venue: mSystems</li>
+<li>URL: https://www.semanticscholar.org/paper/76ff9a62b36b32cc10e46e71ffd4dd90344e4706</li>
+<li>DOI: 10.1128/mSystems.00673-21</li>
+<li>PMID: 34726489</li>
+<li>PMCID: 8562490</li>
+<li>Citations: 15</li>
+<li>Summary: This work systematically updates the functional genome annotation of Mycobacterium tuberculosis virulent type strain H37Rv and identifies hundreds of high-confidence candidates for mechanisms of antibiotic resistance, virulence factors, and basic metabolism and other functions key in clinical and basic tuberculosis research.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.797)<br />
+    &gt; 3. Fig. S2B -match/mismatch colours mixed up? (I think match should be teal and mismatch -red?) 4. Line 162-163: Rv1430 is in UniProt (EC 3.1.1.-) and has been present in Uniprot since version 45 of the gene record: https://www.uniprot.org/uniprot/L7N697. I presume you had conducted your literature analysis before the UniProt entry was updated to include the EC code, so maybe you can add the dates when the data was retrieved from UniProt and other databases you used in the Materials and Methods section? 5. Supplementary text, p. 9, first paragraph. I believe that an unrelated fragment of text was copy-pasted into the second sentence of the paragraph ("Many mutations that altered bacterial clearance...") 6. Supplementary text, p. 12, final paragraph. It should be Rv1191, not Rv1191c. Could you also add a short explanation why you believe it should be classified as a cathepsin (what protein did you transfer this annotation from)?<br />
+    &gt; Reviewer #3 (Comments for the Author):<br />
+    &gt; In this manuscript, Modlin et al., attempt to tackle the problem of assigning functions to ~1700 hypothetical and/or underannotated genes in the Mycobacterium tuberculosis H37Rv (Mtb) genome. Rapid and accurate annotation of microbial genomes is indeed a very critical and under appreciated part of microbial ecophysiology. This step is especially crucial for pathogenic organisms such as Mtb where accurate functional annotation of these hypothetical proteins could unravel mechanisms which could act as drug targets. The authors employed a two-pronged strategy to define a set of these unannotated or under-annotated genes and to then provide possible functions for many of these genes. First, they undertook a large-scale manual curation of literature to assign functions (including EC numbers for enzymatic functions) to ~575 genes.</li>
+</ul>
+<h3 id="3-mammalian-annotation-database-for-improved-annotation-and-functional-classification-of-omics-datasets-from-less-well-annotated-organisms">[3] Mammalian Annotation Database for improved annotation and functional classification of Omics datasets from less well-annotated organisms</h3>
+<ul>
+<li>Authors: Jochen T. Bick, Shuqin Zeng, M. Robinson, S. Ulbrich, S. Bauersachs</li>
+<li>Year: 2019</li>
+<li>Venue: Database: The Journal of Biological Databases and Curation</li>
+<li>URL: https://www.semanticscholar.org/paper/e0716471510abb041c775418ffa9cea283a8c47c</li>
+<li>DOI: 10.1093/database/baz086</li>
+<li>PMID: 31353404</li>
+<li>PMCID: 6661403</li>
+<li>Citations: 16</li>
+<li>Summary: The developed Mammalian Annotation Database tool (MAdb) showed clearly improved overrepresentation analysis results based on the assigned human homologous gene identifiers and a new tool (AnnOverlappeR) for the reliable assignment of the National Center for Biotechnology Information and Ensembl gene IDs.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.778)<br />
+    &gt; In transcriptomics and proteomics studies, one important step of data analysis is the functional annotation of obtained lists of differentially expressed genes (DEGs) or proteins (DEPs). With the increase in the number of organisms with sequenced and annotated genomes, such studies have been performed in many different species. However, the information about gene and protein functions, on which the annotation is based, is mainly derived from a limited number of model organisms or well-annotated species, such as mouse, humans and rat representing mammalian species or even from bacteria, yeast, worms or Drosophila. Based on the assumption that orthologous genes carry out identical or biologically equivalent functions in different organisms, functional annotation is transferred from wellstudied organisms to less well-annotated species (1). Whereas orthologous genes usually have maintained the same function during evolution (2) paralogous genes originated from gene duplication events and often evolved different functions (3,4). Orthologous genes usually have the same gene symbol and name for almost all corresponding species (5, 6). However, depending on the status of the gene annotation of a species, not all annotated genes have an official gene symbol (only locus number, e.g. LOC100152218 60S ribosomal protein L23a-like) and/or are assigned to functional annotation databases like their corresponding orthologs in the well-annotated model organisms. This leads to a substantial loss of information if the gene identifiers (IDs) of the respective species are used for functional annotation. To avoid this data loss and improve the results of functional annotation, one strategy is to transfer information from homologous genes (orthologs and paralogs) of well-annotated species (6).<br />
+    &gt; In many situations with non-model species such as livestock species, experimentalists avoid the additional work to assign human ortholog genes for functional annotation analysis and are not aware of the information loss.</li>
+</ul>
+<h3 id="4-avian-immunome-db-an-example-of-a-user-friendly-interface-for-extracting-genetic-information">[4] Avian Immunome DB: an example of a user-friendly interface for extracting genetic information</h3>
+<ul>
+<li>Authors: Ralf C. Mueller, Nicolai Mallig, Jacqueline Smith, Lél Eöry, Richard I. Kuo et al.</li>
+<li>Year: 2020</li>
+<li>Venue: BMC Bioinformatics</li>
+<li>URL: https://www.semanticscholar.org/paper/b894d9ca8ea2d653bf1711a0c67dab71d054487c</li>
+<li>DOI: 10.1186/s12859-020-03764-3</li>
+<li>PMID: 33176685</li>
+<li>PMCID: 7661159</li>
+<li>Citations: 6</li>
+<li>Summary: The Avian Immunome DB (Avimm) for easy gene property extraction as exemplified by avian immune genes is presented and described, which contains 1170 distinct avian immune genes with canonical gene symbols and 612 synonyms across 363 bird species.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.771)<br />
+    &gt; Ever since the advent of commercial next-generation sequencing platforms in the early 2000s with its associated decrease in sequencing costs [1], the number of DNA sequences increased considerably [2]. Generally, these data become publicly accessible in databases provided by projects focussing on different aspects of biological sequence information [3,4]. Ensembl [5] and NCBI [6] for instance, have a strong focus on genome annotation with the help of RNA transcript information while UniProt has a pronounced emphasis on protein-coding genes and biological function of proteins. UniProt's records are either based on manually annotated, non-redundant protein sequences (SwissProt) or on highquality computationally analysed records, which are enriched with automatic annotation (TrEMBL) [7]. Relying on accurate genome annotations and protein descriptions, Gene Ontology (GO) [8,9] categorises gene products and fits them into a computational model of biological systems. Their assignment deploys a controlled vocabulary, so-called GO terms, to link genes and gene products to biological processes, cellular components, or molecular functions.<br />
+    &gt; However, genome annotation is not standardised, and each service provider uses their own custom-built annotation pipelines. As a consequence, this often leads to ambiguity in gene names during genome annotation with different gene symbols being given to the same gene or the same gene symbol being given to different, but similar genes. Additionally, since the pre-existing wealth of sequencing information relies on model organisms like human and mouse, there is a strong bias in gene symbols towards those chosen for these species. Particularly for model species, this issue has been partially addressed, for example by the Human Genome Organisation (HUGO) Gene Nomenclature Committee (HGNC) [10], the Vertebrate Gene Nomenclature Committee (VGNC) [11], or the Chicken Gene Nomenclature Consortium [12]. However, this neither guarantees that gene names are harmonised among these consortia, nor does it keep researchers from assigning alternative gene symbols in their annotations, especially when working with non-model species.</li>
+</ul>
+<h3 id="5-draft-genome-sequence-of-type-strain-hbr26t-and-description-of-rhizobium-aethiopicum-sp-nov">[5] Draft genome sequence of type strain HBR26T and description of Rhizobium aethiopicum sp. nov.</h3>
+<ul>
+<li>Authors: A. A. Aserse, T. Woyke, N. Kyrpides, W. Whitman, K. Lindström</li>
+<li>Year: 2017</li>
+<li>Venue: Standards in Genomic Sciences</li>
+<li>URL: https://www.semanticscholar.org/paper/e1bdbb37e1c501cbf7bf61678c972e140a80414f</li>
+<li>DOI: 10.1186/s40793-017-0220-z</li>
+<li>PMID: 28163823</li>
+<li>PMCID: 5278577</li>
+<li>Citations: 20</li>
+<li>Summary: The genome of type strain HBR26T of R. aethiopicum sp.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.754)<br />
+    &gt; Genes were predicted using Prodigal [46] and using the DOE JGJ annotation pipeline [47]. The identified protein-coding genes were translated and functionally annotated by comparing the sequences with the NCBI non-redundant database, UniProt, TIGRFam, Pfam, KEGG, COG, and InterPro databases. The tRNA genes were found using tRNAScanSE tool [48] and ribosomal RNA genes were identified by searches against models of the ribosomal RNA genes at the SILVA database [49].<br />
+    &gt; Other non-coding RNAs such as the RNA components of the protein secretion complex and the RNase P were identified by searching the genome for the corresponding Rfam profiles using INFERNAL [50]. Additional analysis was accomplished using the IMG tool [51]. The same tool was also used for manual functional annotation of the predicted genes and for examining the genome sequence.</li>
+</ul>
+<h3 id="6-a-manual-curation-strategy-to-improve-genome-annotation-application-to-a-set-of-haloarchael-genomes">[6] A Manual Curation Strategy to Improve Genome Annotation: Application to a Set of Haloarchael Genomes</h3>
+<ul>
+<li>Authors: F. Pfeiffer, D. Oesterhelt</li>
+<li>Year: 2015</li>
+<li>Venue: Life</li>
+<li>URL: https://www.semanticscholar.org/paper/f5983d01e0ac838554f7f5c29481d70a9d728c30</li>
+<li>DOI: 10.3390/life5021427</li>
+<li>PMID: 26042526</li>
+<li>PMCID: 4500146</li>
+<li>Citations: 38</li>
+<li>Influential citations: 1</li>
+<li>Summary: A manual curation effort is described that attempts to produce high-quality genome annotations for a set of haloarchaeal genomes (Halobacterium salinarum and Hbt. hubeiense, Haloferax volcanii and Hfx. mediterranei).</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.745)<br />
+    &gt; Labelling of such a gene as "inactivated" seems biologically correct. This is translated to the CDS qualifier /pseudo in EMBL and securely ensures that the protein translation is not present in UniProt (e.g., searching for OE_1059R results in no hit). When, however, an invalid partial translation product is produced but not tagged as disrupted (as is the case for VNG0034H), then this is considered by EMBL as a "regular" gene (CDS). Such a gene fragment is included as a regular protein in UniProt (VNG0034H is Q9HSX6). Upon superficial analysis, this may be taken as evidence for an "improved" (because less incomplete) genome annotation in strain NRC-1 compared to strain R1. In addition, according to EMBL requirements, the "CDS" coordinates of OE_1059R must be given as 29913-31570, thus covering and including the integrated transposon ISH1 (with its transposase gene). Only a "tolerated" misc_feature annotation allows representation of this disrupted gene in a biologically meaningful way, representing the reconstructed ancestral gene.</li>
+</ul>
+<h3 id="7-identification-of-12-new-yeast-mitochondrial-ribosomal-proteins-including-6-that-have-no-prokaryotic-homologues">[7] Identification of 12 New Yeast Mitochondrial Ribosomal Proteins Including 6 That Have No Prokaryotic Homologues*</h3>
+<ul>
+<li>Authors: Cosmin Saveanu, M. Fromont‐Racine, A. Harington, Florence Ricard, A. Namane et al.</li>
+<li>Year: 2001</li>
+<li>Venue: The Journal of Biological Chemistry</li>
+<li>URL: https://www.semanticscholar.org/paper/19c21c6d297e524358a1809bfb53fc458763c293</li>
+<li>DOI: 10.1074/JBC.M010864200</li>
+<li>PMID: 11278769</li>
+<li>Citations: 81</li>
+<li>Influential citations: 4</li>
+<li>Summary: It is shown that a subset of the newly described ribosomal proteins are localized in mitochondria and are required for the respiratory competency of the yeast cells, bringing to 26 the total number of proteins described as components of the mitochondrial small Ribosomal subunit.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.743)<br />
+    &gt; However, this name does not allow one to discriminate between small and large subunit proteins and thus may be misleading. For example, Mrp2 is not the homologue of the prokaryotic S2 ribosomal proteins but belongs to the S14p family. Accordingly, we preferred to designate the newly identified genes RSMxx genes, where RSM stands for ribosomal small subunit of mitochondria, and xx is the number of the corresponding prokaryotic protein family (see Table II). The genes that encode proteins that are not significantly similar to prokaryotic proteins were named with the same prefix RSM followed by a number that begins with 22, because there are 21 prokaryotic small ribosomal subunit protein families. Thus, the proposed name of the YKL155c gene is RSM22 (Table II). The matched peptide has the sequence VT-PGSLYK. The differences between the masses of the marked peaks correspond to the masses of amino acid residues Gly, Pro, and Thr. D, the fragmentation spectrum for the peptide that is found within residues 400 -408 in the predicted sequence of Ygl129c shows a very good signal-to-noise ratio. Fragmentation spectra that were generated for other peptides show a signal-to-noise ratio between the two extremes shown in C and D.<br />
+    &gt; A large amount of functional data was generated in the course of genetic screenings and functional genomic studies in yeast. Hence, for a number of the identified proteins, some cellular or functional data were already available in public data bases. In addition, for some of the less well characterized proteins, we analyzed the cellular localization of the GFP C-terminally tagged proteins and the respiratory competency of strains disrupted for the corresponding genes. These data are summarized in Table II and described below.<br />
+    &gt; Functional Data on the New Proteins That Belong to Known Ribosomal Protein Families-Ribosomal protein families S7p and S10p are represented in yeast mitochondria by the corresponding homologues Yjr113c and Ydr041w. Mammalian homologues of S7 (19) and S10 (20) were also recently described as components of the bovine small mitochondrial ribosomal subunit.</li>
+</ul>
+<h3 id="8-characterization-of-holins-the-membrane-proteins-of-coliphage-asec2201-a-genomewide-in-silico-approach">[8] Characterization of holins, the membrane proteins of coliphage ASEC2201: a genomewide in silico approach</h3>
+<ul>
+<li>Authors: Humaira Saeed, Sudhaker Padmesh, Aditi Singh, S. Singh, Mohammed Haris Siddiqui et al.</li>
+<li>Year: 2025</li>
+<li>Venue: Frontiers in Microbiology</li>
+<li>URL: https://www.semanticscholar.org/paper/a39392e12bf3bda67bdfe600053e8403deb3b887</li>
+<li>DOI: 10.3389/fmicb.2025.1550594</li>
+<li>PMID: 40703241</li>
+<li>PMCID: 12283622</li>
+<li>Citations: 3</li>
+<li>Summary: In silico identification of cell-penetrating peptide motifs within the holin sequences suggests potential for enhanced intracellular delivery in CPP-fusion therapeutic constructs and demonstrates the potential of integrative in silico approaches in developing a comprehensive foundation for future experimental validation for proteins with no prior functional annotation.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.742)<br />
+    &gt; Protein-coding gene annotation is typically a two-step process. Initially, Prodigal is employed to identify open reading frames (ORFs) by locating gene coordinates, but it does not infer gene function. To assign putative functions, Prokka performs hierarchical annotation by comparing candidate genes to curated protein databases. It begins with a user-supplied, high-confidence protein set, using BLAST+ for sequence similarity searches. If no match is found, it progresses to UniProt's verified bacterial proteins, covering \~ 16,000 sequences, and then optionally to RefSeq proteins specific to the organism's genuscapturing nomenclature consistency. When sequence-based annotation fails, Prokka applies profile-based searches using HMMER's hmmscan to query against Pfam and TIGRFAMs databases. An e-value threshold of 10 −6 is consistently applied to ensure significance. If no reliable match is found across all levels, the gene is designated as a "hypothetical protein. " This layered strategy maximizes annotation accuracy and functional insight across diverse bacterial genomes (Seemann, 2014).<br />
+    &gt; The genome of coliphage ASEC2201 has been analyzed and three holin protein coding genes were selected. The sequences of all three holin proteins were retrieved from NCBI using accession no. SRX17770782 in the FASTA format. The sequence similarity search was performed via BLAST against the non-redundant database (Altschul et al., 1990).</li>
+</ul>
+<h3 id="9-a-systematic-approach-to-bacterial-phylogeny-using-order-level-sampling-and-identification-of-hgt-using-network-science">[9] A Systematic Approach to Bacterial Phylogeny Using Order Level Sampling and Identification of HGT Using Network Science</h3>
+<ul>
+<li>Authors: Ehdieh Khaledian, K. Brayton, S. Broschat</li>
+<li>Year: 2020</li>
+<li>Venue: Microorganisms</li>
+<li>URL: https://www.semanticscholar.org/paper/5d303b0cf4a3f5283020a12f57005090376fb165</li>
+<li>DOI: 10.3390/microorganisms8020312</li>
+<li>PMID: 32102454</li>
+<li>PMCID: 7074868</li>
+<li>Citations: 12</li>
+<li>Summary: This work presents a systematic approach for constructing a phylogenetic tree based on simultaneously clustering the complete proteomes of 360 bacterial species and identifies 49 protein sequences shared by 99% of the organisms to build a tree.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.741)<br />
+    &gt; Many of the 49 essential proteins used to construct our tree are those involved in translation, but not all (25 of them are not). The point of our study was to find genes that were conserved across the breadth of bacterial phyla so they could be used in a study such as this. Other studies have solely used ribosomal proteins, e.g., [8], or ad hoc methods of identifying the selected genes or proteins for inclusion. We identified the 49 proteins in a systematic manner. In some studies, researchers analyzed a much smaller set of related taxa (i.e., more closely related) and, thus, could use a more diverse set of proteins. However, we were specifically searching for a set of proteins that can be used for bacteria in all recognized phyla. It is not surprising to find ribosomal proteins to be widely conserved, as the ribosome, composed of a small and large subunit, is the basic unit for protein translation, a task common to all organisms [40][41][42][43][44][45]. The 30S ribosomal subunit is composed of 24 small proteins and one molecule of ribosomal RNA (16S rRNA) [40]. The 50S large subunit contains two rRNA molecules (23S and 5S rRNA) and 33 proteins [41]. The proteins shared by 94% of the bacteria in our study are a subset of those predicted as part of the minimal gene content of the last universal common ancestor in previous studies [46,47] and are in agreement with other studies on the minimal gene set that were published between 1995 and 2016 [48][49][50]. Of the 122 proteins shared by &gt;94% of the organisms in our dataset, 42 were 30S or 50S ribosomal proteins. Given that ribosomal proteins are among the most highly conserved of all proteins, these results are not surprising.</li>
+</ul>
+<h3 id="10-discovery-of-simple-sequence-repeat-markers-through-transcriptome-analysis-of-baccaurea-motleyana">[10] Discovery of Simple Sequence Repeat Markers through Transcriptome Analysis of Baccaurea motleyana</h3>
+<ul>
+<li>Authors: K. Nasir, Muhammad Fairuz Mohd Yusof, M. S. F. A. Razak, Siti Norsaidah Ibrahim, Mira Farzana Mohamad Moktar et al.</li>
+<li>Year: 2020</li>
+<li>Venue: Journal of Food Science and Engineering</li>
+<li>URL: https://www.semanticscholar.org/paper/f99fe2940881ec45ecbd8ba3da7f10b4fb22fc3b</li>
+<li>DOI: 10.17265/2159-5828/2020.02.001</li>
+<li>Summary: Baccaurea motleyana (rambai) is underutilized fruits that are native to Malaysia, Indonesia and Thailand and used for simple sequence repeat (SSR) analysis by MIcroSAtellite (MISA).</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.739)<br />
+    &gt; To get comprehensive gene function of rambai genes, gene annotation to seven databases, namely National Center for Biotechnology Information (NCBI) non-redundant protein sequences (NR), NCBI nucleotide sequences (NT), Kyoto Encyclopedia of Genes and Genome Ortholog (KO), SwissProt, Protein family (Pfam), Gene Ontology (GO) and Cluster of Orthologous Groups (KOG), was used as reference.<br />
+    &gt; The NCBI non-redundant protein sequences (NR), include protein sequence information from GenBank, Protein Data Bank (PDB), SwissProt, Protein Information Resource (PIR) and Protein Research Foundation (PRF). The NCBI nucleotide sequences (NT) are the nucleotide sequence database that includes nucleotide sequence from GenBank of the European Bioinformatics Institute (EMBL) and DNA Data Bank of Japan (DDBJ). KEGG is a database resource for understanding high-level functions and utilities of the biological system, such as cell, organism and ecosystem, from molecular-level information, especially for large-scale molecular datasets generated by genome sequencing and other high-throughput experimental technologies. KEGG is an established Cluster of Orthologous (KO) annotation system that can accomplish the function annotation of the genome/transcriptome of a newly sequenced species. SwissProt is a manual annotated and reviewed protein sequence database that has a high-quality protein sequence database from experimental results, computed features and scientific conclusions. Pfam is comprehensive collection of protein domains and families, represented as multiple sequence alignments and as profile of hidden Markov models. Many proteins are composed of structural domains, and the protein sequence of a specific structural domain possesses a certain degree of conservative property. GO is the established standard for the functional annotation of gene products and controlled vocabulary used to classify the functional attributes of gene products of a biological process, a molecular function and a cellular component.</li>
+</ul>
+<h3 id="11-annotation-of-ribosomal-protein-mass-peaks-in-maldi-tof-mass-spectra-of-bacterial-species-and-their-phylogenetic-significance">[11] Annotation of ribosomal protein mass peaks in MALDI-TOF mass spectra of bacterial species and their phylogenetic significance</h3>
+<ul>
+<li>Authors: Wenfa Ng</li>
+<li>Year: 2020</li>
+<li>Venue: bioRxiv</li>
+<li>URL: https://www.semanticscholar.org/paper/1ded3fb3c965a80ee8b675f5ef8c350192c8335c</li>
+<li>DOI: 10.1101/2020.07.15.203653</li>
+<li>Citations: 3</li>
+<li>Summary: Annotation of ribosomal protein mass peaks in MALDI-TOF mass spectra highlighted the deep biological basis inherent in the mass spectrometry-based microbial identification method.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.739)<br />
+    &gt; The question of whether there exists biological basis in the use of MALDI-TOF mass spectrometry for identifying bacterial species was answered in this study through the annotation of ribosomal protein mass peaks in the mass spectra of bacteria. Specifically, many small ribosomal proteins with molecular weight of less than 10000 Da were found to be present in the mass peaks profiled from various bacterial species. Annotated ribosomal proteins were S16, S17, S18, S20, and S21 from the small ribosome subunit, and L27, L28, L29, L30, L31, L31 Type B, L32, L33, L34, L35, and L36 from the large ribosome subunit. However, contrary to previous reports implying that ribosomal proteins could account for many of the mass peaks in MALDI-TOF mass spectra of bacterial species, the current study revealed that only between 1 and 6 mass peaks in each mass spectrum could be annotated by ribosomal proteins. Thus, other classes of proteins such as housekeeping proteins must be investigated for annotating mass peaks in MALDI-TOF mass spectra of bacterial species. Overall, ribosomal protein L36 and L29 accounted for the most number of ribosomal protein mass peak annotation. Other ribosomal proteins with large number of mass peak annotations were L34, L33 and L31. The underlying reasons accounting for the observed annotation frequency of ribosomal proteins remain unknown.<br />
+    &gt; Since ribosomal proteins are highly conserved given their important functional and structural roles in the ribosome macromolecular complex, possible phylogenetic significance of the annotated ribosomal proteins were sought in comparison with that based on 16S rRNA gene. Using maximum likelihood phylogenetic tree as readout, the data revealed that except for ribosomal protein L34, L31, L36 and S18, all other ribosomal proteins showed phylogenetic potential. Specifically, the measurement yardstick was based on whether the maximum likelihood phylogenetic tree based on the ribosomal protein could replicate phylogenetic cluster groups 1 and 2 of 16S rRNA's phylogeny of the same set of bacterial species. In thinking about phylogenetic significance, it is important to remember that the phylogenetic tree based on different genes and proteins are likely to be different.</li>
+</ul>
+<h3 id="12-from-genome-to-evolution-investigating-type-ii-methylotrophs-using-a-pangenomic-analysis">[12] From genome to evolution: investigating type II methylotrophs using a pangenomic analysis</h3>
+<ul>
+<li>Authors: Dipayan Samanta, Shailabh Rauniyar, Priya Saxena, R. K. Sani</li>
+<li>Year: 2024</li>
+<li>Venue: mSystems</li>
+<li>URL: https://www.semanticscholar.org/paper/2137ca22095ca8232a2e71d6670f677e1ad88b47</li>
+<li>DOI: 10.1128/msystems.00248-24</li>
+<li>PMID: 38695578</li>
+<li>PMCID: 11237726</li>
+<li>Citations: 9</li>
+<li>Summary: A comprehensive pangenomic approach was employed to analyze the genomes of 75 type II methylotrophs spanning various genera, revealing remarkable metabolic diversity, unique gene characteristics, and distinct clustering patterns of type II methylotrophs, providing valuable insights for future carbon sequestration and biotechnological applications.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.737)<br />
+    &gt; The functional annotation of exact core hypothetical genes represents a crucial step in unraveling the functional potential and understanding the significance of these genes within the broader context of the studied organisms or biological systems.Out of the 256 gene families in the exact core, a subset of 15 gene families remained unassigned in terms of their function.Table 1 presents the annotation results of hypothetical proteins, which might contribute valuable addition to the existing gene repertoire of methylo trophs.Table S4 provides a comprehensive overview of the detailed FASTA sequences and corresponding scores associated with the annotation of the hypothetical proteins.<br />
+    &gt; Our efforts to unravel the functionality of the type II methylotrophs led to the discovery of 12 gene families.Through our investigations, we were able to shed light on the functions of these 12 predicted proteins.50S ribosomal protein L31 is involved in the assembly and stabilization of the ribosomal subunits, facilitating the translation of mRNA into functional proteins (36).The NADH dehydrogenase (ubiquinone) 1 alpha subcomplex, on the other hand, is part of the respiratory chain complex I, which is involved in energy production through oxidative phosphorylation (37).This subcomplex is responsible for the transfer of electrons from NADH to ubiquinone, a critical step in the electron transport chain.The Xaa-Pro aminopeptidase (EC:3.4.11.9) is involved in the cleavage of Xaa-Pro peptide bonds, contributing to protein degradation and turnover (38).Glutamine amidotransferase plays a key role in nitrogen metabolism by catalyzing the transfer of an amino group from glutamine to various acceptor molecules.Lysine decarboxylase participates in the decarboxylation of lysine, a process important for the synthesis of certain polyamines.The DNA polymerase III subunit is an essential compo nent of the DNA replication machinery, contributing to accurate and efficient DNA synthesis (39).The type III secretion system enables the delivery of effector proteins from bacteria to host cells, playing a role in pathogenicity (40,41).</li>
+</ul>
+<h3 id="13-basidioascus-undulatus-genome-origins-and-sexuality">[13] Basidioascus undulatus: genome, origins, and sexuality</h3>
+<ul>
+<li>Authors: Hai D. T. Nguyen, D. Chabot, Y. Hirooka, R. Roberson, K. Seifert</li>
+<li>Year: 2015</li>
+<li>Venue: IMA Fungus</li>
+<li>URL: https://www.semanticscholar.org/paper/a5deb29da5109780b4d55dfa35ea0d9fe13216d5</li>
+<li>DOI: 10.5598/imafungus.2015.06.01.14</li>
+<li>PMID: 26203425</li>
+<li>PMCID: 4500085</li>
+<li>Citations: 12</li>
+<li>Influential citations: 1</li>
+<li>Summary: Nuclear staining and confocal microscopy showed meiosis occurring in basidia and genome analysis confirmed the existence of genes involved in meiosis and mating, leading to a move out of the Wallemiomycetes and into the new class Geminibasidiales cl. nov.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.737)<br />
+    &gt; run on the scaffolds to detect the percentage of conserved eukaryotic genes (CEGs).<br />
+    &gt; Genome annotation was performed following established guidelines (Haas et al. 2011 (Slater &amp; Birney 2005). Predicted gene models exhibiting strong evidence by exon alignment were exported as protein sequences and coding nucleotide sequences (CDS). Predicted gene models lacking evidence from exon alignment were discarded in downstream analyses. To determine function, the protein sequences were used as input for InterProScan 5RC6 (Jones et al. 2014) (parameters: -dp -f -t p -iprlookup -pa -goterms) and were also compared to the manually curated protein data set from UniProt/Swiss-Prot by blastp v. 2.2.28+. The results in XML format from blastp v. 2.2.28+ and InterProScan were loaded into Blast2GO v. 2.7.1 (Conesa et al. 2005) and merged to create an annotation table (available from the first author on request). The gene models with BLAST hits having e-value of less than 1.0E -100 and mean similarity hit of ≥ 70% were assumed to be orthologs and they were given names following recommended conventions (http:// www.uniprot.org/docs/proknameprot). Ribosomal RNA's were predicted by RNAmmer v. 1.2 (Lagesen et al. 2007). Data files are publicly available at NCBI (Genome Accession No. JTLS00000000 version JTLS01000000; BioProject Accession No. PRJNA247992) and JGI MycoCosm portal (Grigoriev et al. 2014).</li>
+</ul>
+<h3 id="14-cronos-the-cross-reference-navigation-server">[14] CRONOS: the cross-reference navigation server</h3>
+<ul>
+<li>Authors: Brigitte Waegele, I. Dunger, G. Fobo, Corinna Montrone, H. Mewes et al.</li>
+<li>Year: 2008</li>
+<li>Venue: Bioinformatics</li>
+<li>URL: https://www.semanticscholar.org/paper/8c05b3aa0ba01c41ee97c2dc98ea7b5b14ce0e9c</li>
+<li>DOI: 10.1093/bioinformatics/btn590</li>
+<li>PMID: 19010804</li>
+<li>PMCID: 2638938</li>
+<li>Citations: 20</li>
+<li>Summary: CRONOS, a cross-reference server that contains entries from five mammalian organisms presented by major gene and protein information resources, is developed, which shows that the cross-references are highly accurate.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.735)<br />
+    &gt; In order to detect gene and protein names which are assigned to products of different genes and thus result in erroneous cross-references, dedicated lists are created for each organism separately. Organism-specific lists are necessary, since terms that are ambiguous in one organism might be explicit in another. For example, ADORA2 is an ambiguous gene name in Homo sapiens but not in mouse, and GALT in mouse but not in H.sapiens.<br />
+    &gt; In a first step, ambiguous names within the databases were extracted. If a name occurs in at least two entries describing different genes or proteins (splice variants count as one gene/protein), this particular name is marked as ambiguous and is excluded from the mapping process. In a second step, corresponding gene names occurring in the manually annotated sections of RefSeq as well as in UniProt were analyzed. Entries containing the same gene product name and having a one-to-many or many-to-many relation (e.g. one Swiss-Prot entry maps to many RefSeq entries) were scrutinized for misleading annotation. This process is done manually by inspecting additional information like sequence similarity or functional information about the involved entries. In most of the cases, the exclusion of the ambiguous gene names resulted in correct one-to-one relations.<br />
+    &gt; As statistical analysis revealed (Supplementary Material S2) that gene names with less than four letters are exceptionally error-prone, only gene names with at least four letters are kept for mapping purposes. However, gene names with less than four letters can be queried, e.g. a search for the tumor suppressor 'p53' reveals the respective entries with the official gene name 'TP53'. Organism-specific lists of ambiguous gene and protein names are available for download on the CRONOS home page.</li>
+</ul>
+<h3 id="15-permanent-draft-genome-of-thermithiobaclillus-tepidarius-dsm-3134t-a-moderately-thermophilic-obligately-chemolithoautotrophic-member-of-the-acidithiobacillia">[15] Permanent draft genome of Thermithiobaclillus tepidarius DSM 3134T, a moderately thermophilic, obligately chemolithoautotrophic member of the Acidithiobacillia</h3>
+<ul>
+<li>Authors: R. Boden, L. Hutt, Marcel Huntemann, Alicia Clum, Manoj Pillay et al.</li>
+<li>Year: 2016</li>
+<li>Venue: Standards in Genomic Sciences</li>
+<li>URL: https://www.semanticscholar.org/paper/f2117c6922312a227e69b8448f807915356842c9</li>
+<li>DOI: 10.1186/s40793-016-0188-0</li>
+<li>PMID: 27708749</li>
+<li>PMCID: 5037610</li>
+<li>Citations: 20</li>
+<li>Influential citations: 1</li>
+<li>Summary: It is speculated that DUF302 and sox genes may have a role in periplasmic trithionate oxidation, as the Kelly-Friedrich pathway of thiosulfate oxidation is not used in Thermithiobacillus spp.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.734)<br />
+    &gt; Genes were identified using Prodigal [18] as part of the DOE-JGI genome annotation pipeline [19]. The predicted CDSs were translated and used to search the National Center for Biotechnology Information non-redundant database, UniProt, TIGR-Fam, Pfam, KEGG, COG, and InterPro database. These data sources were combined to assert a product description for each predicted protein. tRNAScanSE was used to find tRNA genes and rRNA genes were found using searches against models of the ribosomal RNA genes built from SIVLA [20,21].<br />
+    &gt; Additional gene prediction analysis and functional annotation was performed within the IMG-ER platform [22,23]. For each gene discussed in this publication, the annotation was manually checked against the Gen-Bank® databased manual searches using the BLASTn and BLASTp algorithms -both of the gene from T. tepidarius and using the equivalent gene from members of the Acidithiobacillia or Escherichia coli.</li>
+</ul>
+<h3 id="16-mitogenome-of-medicago-lupulina-l-cultivar-population-vik32-line-mls-1-dynamic-structural-organization-and-foreign-sequences">[16] Mitogenome of Medicago lupulina L. Cultivar-Population VIK32, Line MlS-1: Dynamic Structural Organization and Foreign Sequences</h3>
+<ul>
+<li>Authors: M. Vladimirova, M. Roumiantseva, A. S. Saksaganskaia, A. P. Kozlova, V. Muntyan et al.</li>
+<li>Year: 2025</li>
+<li>Venue: International Journal of Molecular Sciences</li>
+<li>URL: https://www.semanticscholar.org/paper/330ca6bee6a495267fb0c36453382e2fa3b4a6fc</li>
+<li>DOI: 10.3390/ijms262411830</li>
+<li>PMID: 41465260</li>
+<li>PMCID: 12733082</li>
+<li>Summary: This work establishes a foundation for investigating the role of mitochondrial genome variation in key plant’s phenotypic traits, such as the enhanced responsiveness to arbuscular mycorrhiza observed in this agronomically valuable line of Medicago lupulina L. vulgaris Koch.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.733)<br />
+    &gt; (ii). Annotation of Protein-Coding Genes Among the 33 ORFs encoding proteins with predicted functions were: nine encoding NADH dehydrogenase subunits, one encoding cytochrome b, three encoding cytochrome C oxidase subunits, five encoding ATP synthase subunits, four responsible for cytochrome C maturation, nine encoding ribosomal proteins, and two with other functions (matR and mttB; Table 1, Figure 2). Among these, the cox2, rps3, nad1, nad5, and rpl2 genes were characterized with potential mutations due to single nucleotide polymorphisms (SNPs). The rpl2 sequence from the VIK32, line MlS-1 mtDNA showed identity with exon 2 of the chloroplast gene encoding ribosomal protein L2. For example, it showed identity with an exon of the line MlS-1 chloroplast gene rplB (OR674883.1; coordinates 78,587-79,084; Cover 69%, Identity 98.3%) (Figure 3), as well as with exon 2 of the chloroplast gene rpl2 from M. lupulina (OM681370.1; Cover 72%, Identity 98.4%) and M. truncatula cultivar Jemalong A17 (MT965675.1; Cover 72%, Identity 97.5%). This sequence also showed high similarity to sequences from the chloroplast genomes of phylogenetically distant plants from the genera Trigonella, Melilotus, Lathyrus, and Pisum (Cover 97%, Identity 95.6-96.2%). The 45 protein-coding genes were characterized as genes encoding hypothetical proteins (Figure 2).</li>
+</ul>
+<h3 id="17-de-novo-genome-assembly-and-phylogenetic-analysis-of-cirsium-nipponicum">[17] De Novo Genome Assembly and Phylogenetic Analysis of Cirsium nipponicum</h3>
+<ul>
+<li>Authors: Bae Young Choi, Jaewook Kim, Hyeonseon Park, Jincheol Kim, Seahee Han et al.</li>
+<li>Year: 2024</li>
+<li>Venue: Genes</li>
+<li>URL: https://www.semanticscholar.org/paper/658e8e30fac9b7c176a0e8e3f095d9f58b9c93a0</li>
+<li>DOI: 10.3390/genes15101269</li>
+<li>PMID: 39457393</li>
+<li>PMCID: 11507141</li>
+<li>Summary: This study provides a reference genome of C. nipponicum, enhancing the understanding of its genetic background and facilitating an exploration of genetic resources for beneficial phytochemicals.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.731)<br />
+    &gt; accessed on 23 March 2016). GeneMarkS-T was employed to predict genes in the unique isoforms [31]. Finally, all predicted gene models were combined to produce non-redundant and consensus gene sets using TSEBRA [23].<br />
+    &gt; Functional annotation of protein-coding genes were conducted using EnTAP v. 1.1.1 [32] with two methods. First, protein sequences of protein-coding genes were subjected to a BLASTp analysis against the NCBI RefSeq database [33] and Uniprot database using DI-AMOND [26,34]. Second, genes were annotated with KEGG terms and GO terms using eggNOG-mapper [35].<br />
+    &gt; Transfer RNA (tRNA) genes were annotated using tRNAscan-SE v. 2.0.12 with eukaryote parameters [36]. Ribosomal RNA (rRNA) and its subunits were identified using Barrnap v. 0.9 in Eukaryotic mode [37]. To detect microRNA (miRNA) and small nuclear RNA (snRNA), sequence analysis was conducted by comparing against the Rfam database using Infernal's cmscan v. 1.1.5 [38,39].</li>
+</ul>
+<h3 id="18-cellphonedb-inferring-cellcell-communication-from-combined-expression-of-multi-subunit-ligandreceptor-complexes">[18] CellPhoneDB: inferring cell–cell communication from combined expression of multi-subunit ligand–receptor complexes</h3>
+<ul>
+<li>Authors: M. Efremova, Miquel Vento-Tormo, S. Teichmann, R. Vento-Tormo</li>
+<li>Year: 2020</li>
+<li>Venue: Nature Protocols</li>
+<li>URL: https://www.semanticscholar.org/paper/6a3b3e4a2eebc3fad3b03ee6d8228264247abbc8</li>
+<li>DOI: 10.1038/s41596-020-0292-x</li>
+<li>PMID: 32103204</li>
+<li>Citations: 2774</li>
+<li>Influential citations: 299</li>
+<li>Summary: The structure and content of CellPhoneDB is outlined, procedures for inferring cell–cell communication networks from single-cell RNA sequencing data are provided and a practical step-by-step guide to help implement the protocol is presented.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.730)<br />
+    &gt; CellPhoneDB stores ligand-receptor interactions, as well as other properties of the interacting partners, including their subunit architecture and gene and protein identifiers. To create the content of the database, four main .csv data files are required: gene_input.csv, protein_input.csv, complex_input.csv and interaction_input.csv (Fig. 4).<br />
+    &gt; gene_input Mandatory fields are 'gene_name', 'uniprot', 'hgnc_symbol' and 'ensembl'. This file is critical for establishing the link between the scRNA-seq data and the interaction pairs stored at the protein level. It includes the following gene and protein identifiers: (i) gene name ('gene_name'), (ii) UniProt identifier ('uniprot'), (iii) HUGO Nomenclature Committee (HGNC) symbol ('hgnc_symbol') and (iv) gene Ensembl identifier (ENSG) ('ensembl'). To create this file, lists of linked proteins and gene identifiers are downloaded from UniProt and merged using gene names. Several rules need to be considered when merging the files • UniProt annotation prevails over the gene Ensembl annotation when the same gene Ensembl identifier points toward different UniProt identifiers. • UniProt and Ensembl lists are also merged by their UniProt identifier, but this information is used only when the UniProt or Ensembl identifier is missing in the original list merged by gene name. • If the same gene name points toward different HGNC symbols, only the HGNC symbol matching the gene name annotation is considered. • Only one HLA isoform is considered in our interaction analysis, and it is stored in a manually HLA-curated list of genes, named HLA_curated.<br />
+    &gt; protein_input Mandatory fields are 'uniprot' and 'protein_name'.</li>
+</ul>
+<h3 id="19-autogenous-regulation-in-vivo-of-the-rpme-gene-encoding-ribosomal-protein-l31-bl31-a-key-component-of-the-proteinprotein-intersubunit-bridge-b1b">[19] Autogenous regulation in vivo of the rpmE gene encoding ribosomal protein L31 (bL31), a key component of the protein–protein intersubunit bridge B1b</h3>
+<ul>
+<li>Authors: L. Aseev, L. S. Koledinskaya, I. Boni</li>
+<li>Year: 2020</li>
+<li>Venue: RNA</li>
+<li>URL: https://www.semanticscholar.org/paper/ce91b89123f8e2d98b55d79e558c309b546cb3ce</li>
+<li>DOI: 10.1261/rna.074237.119</li>
+<li>PMID: 32209634</li>
+<li>PMCID: 7297116</li>
+<li>Citations: 8</li>
+<li>Summary: Sequence/structure computational approaches classify bL31 as an RNA-binding protein, consistent with its repressor function discovered here, which shows that its unstructured amino-terminal part enriched in lysine is necessary for the repressor activity.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.724)<br />
+    &gt; Autogenous regulation in vivo of the rpmE gene encoding ribosomal protein L31 (bL31), a key component of the protein–protein intersubunit bridge B1b</li>
+</ul>
+<h2 id="notes">Notes</h2>
+<ul>
+<li>This provider combines <code>search_papers_by_relevance</code> with <code>snippet_search</code>.</li>
+<li>No synthesis or second-stage model call is performed.</li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>Pascal Donsbach, Brian A. Yee, Dione L Sánchez-Hevia, J. Berenguer, S. Aigner et al. (2020). The Thermus thermophilus DEAD-box protein Hera is a general RNA binding protein and plays a key role in tRNA metabolism. RNA. https://www.semanticscholar.org/paper/533f89524b50f1df6146e8665eed9512b23e1a5c</li>
+<li>Samuel J. Modlin, A. Elghraoui, Deepika Gunasekaran, Alyssa M Zlotnicki, N. Dillon et al. (2021). Structure-Aware Mycobacterium tuberculosis Functional Annotation Uncloaks Resistance, Metabolic, and Virulence Genes. mSystems. https://www.semanticscholar.org/paper/76ff9a62b36b32cc10e46e71ffd4dd90344e4706</li>
+<li>Jochen T. Bick, Shuqin Zeng, M. Robinson, S. Ulbrich, S. Bauersachs (2019). Mammalian Annotation Database for improved annotation and functional classification of Omics datasets from less well-annotated organisms. Database: The Journal of Biological Databases and Curation. https://www.semanticscholar.org/paper/e0716471510abb041c775418ffa9cea283a8c47c</li>
+<li>Ralf C. Mueller, Nicolai Mallig, Jacqueline Smith, Lél Eöry, Richard I. Kuo et al. (2020). Avian Immunome DB: an example of a user-friendly interface for extracting genetic information. BMC Bioinformatics. https://www.semanticscholar.org/paper/b894d9ca8ea2d653bf1711a0c67dab71d054487c</li>
+<li>A. A. Aserse, T. Woyke, N. Kyrpides, W. Whitman, K. Lindström (2017). Draft genome sequence of type strain HBR26T and description of Rhizobium aethiopicum sp. nov.. Standards in Genomic Sciences. https://www.semanticscholar.org/paper/e1bdbb37e1c501cbf7bf61678c972e140a80414f</li>
+<li>F. Pfeiffer, D. Oesterhelt (2015). A Manual Curation Strategy to Improve Genome Annotation: Application to a Set of Haloarchael Genomes. Life. https://www.semanticscholar.org/paper/f5983d01e0ac838554f7f5c29481d70a9d728c30</li>
+<li>Cosmin Saveanu, M. Fromont‐Racine, A. Harington, Florence Ricard, A. Namane et al. (2001). Identification of 12 New Yeast Mitochondrial Ribosomal Proteins Including 6 That Have No Prokaryotic Homologues*. The Journal of Biological Chemistry. https://www.semanticscholar.org/paper/19c21c6d297e524358a1809bfb53fc458763c293</li>
+<li>Humaira Saeed, Sudhaker Padmesh, Aditi Singh, S. Singh, Mohammed Haris Siddiqui et al. (2025). Characterization of holins, the membrane proteins of coliphage ASEC2201: a genomewide in silico approach. Frontiers in Microbiology. https://www.semanticscholar.org/paper/a39392e12bf3bda67bdfe600053e8403deb3b887</li>
+<li>Ehdieh Khaledian, K. Brayton, S. Broschat (2020). A Systematic Approach to Bacterial Phylogeny Using Order Level Sampling and Identification of HGT Using Network Science. Microorganisms. https://www.semanticscholar.org/paper/5d303b0cf4a3f5283020a12f57005090376fb165</li>
+<li>K. Nasir, Muhammad Fairuz Mohd Yusof, M. S. F. A. Razak, Siti Norsaidah Ibrahim, Mira Farzana Mohamad Moktar et al. (2020). Discovery of Simple Sequence Repeat Markers through Transcriptome Analysis of Baccaurea motleyana. Journal of Food Science and Engineering. https://www.semanticscholar.org/paper/f99fe2940881ec45ecbd8ba3da7f10b4fb22fc3b</li>
+<li>Wenfa Ng (2020). Annotation of ribosomal protein mass peaks in MALDI-TOF mass spectra of bacterial species and their phylogenetic significance. bioRxiv. https://www.semanticscholar.org/paper/1ded3fb3c965a80ee8b675f5ef8c350192c8335c</li>
+<li>Dipayan Samanta, Shailabh Rauniyar, Priya Saxena, R. K. Sani (2024). From genome to evolution: investigating type II methylotrophs using a pangenomic analysis. mSystems. https://www.semanticscholar.org/paper/2137ca22095ca8232a2e71d6670f677e1ad88b47</li>
+<li>Hai D. T. Nguyen, D. Chabot, Y. Hirooka, R. Roberson, K. Seifert (2015). Basidioascus undulatus: genome, origins, and sexuality. IMA Fungus. https://www.semanticscholar.org/paper/a5deb29da5109780b4d55dfa35ea0d9fe13216d5</li>
+<li>Brigitte Waegele, I. Dunger, G. Fobo, Corinna Montrone, H. Mewes et al. (2008). CRONOS: the cross-reference navigation server. Bioinformatics. https://www.semanticscholar.org/paper/8c05b3aa0ba01c41ee97c2dc98ea7b5b14ce0e9c</li>
+<li>R. Boden, L. Hutt, Marcel Huntemann, Alicia Clum, Manoj Pillay et al. (2016). Permanent draft genome of Thermithiobaclillus tepidarius DSM 3134T, a moderately thermophilic, obligately chemolithoautotrophic member of the Acidithiobacillia. Standards in Genomic Sciences. https://www.semanticscholar.org/paper/f2117c6922312a227e69b8448f807915356842c9</li>
+<li>M. Vladimirova, M. Roumiantseva, A. S. Saksaganskaia, A. P. Kozlova, V. Muntyan et al. (2025). Mitogenome of Medicago lupulina L. Cultivar-Population VIK32, Line MlS-1: Dynamic Structural Organization and Foreign Sequences. International Journal of Molecular Sciences. https://www.semanticscholar.org/paper/330ca6bee6a495267fb0c36453382e2fa3b4a6fc</li>
+<li>Bae Young Choi, Jaewook Kim, Hyeonseon Park, Jincheol Kim, Seahee Han et al. (2024). De Novo Genome Assembly and Phylogenetic Analysis of Cirsium nipponicum. Genes. https://www.semanticscholar.org/paper/658e8e30fac9b7c176a0e8e3f095d9f58b9c93a0</li>
+<li>M. Efremova, Miquel Vento-Tormo, S. Teichmann, R. Vento-Tormo (2020). CellPhoneDB: inferring cell–cell communication from combined expression of multi-subunit ligand–receptor complexes. Nature Protocols. https://www.semanticscholar.org/paper/6a3b3e4a2eebc3fad3b03ee6d8228264247abbc8</li>
+<li>L. Aseev, L. S. Koledinskaya, I. Boni (2020). Autogenous regulation in vivo of the rpmE gene encoding ribosomal protein L31 (bL31), a key component of the protein–protein intersubunit bridge B1b. RNA. https://www.semanticscholar.org/paper/ce91b89123f8e2d98b55d79e558c309b546cb3ce</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88CU3
+gene_symbol: rpmE
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: rpmE (PP_5087) encodes large ribosomal subunit protein bL31 (50S ribosomal protein L31),
+  a conserved protein component of the bacterial 50S large ribosomal subunit in Pseudomonas putida KT2440.
+  It functions as a structural constituent of the ribosome and supports protein translation as part of
+  the large subunit.
+existing_annotations:
+- term:
+    id: GO:0003735
+    label: structural constituent of ribosome
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: This is the core ribosomal-protein molecular function for a conserved 50S large-subunit component.
+    action: ACCEPT
+    reason: structural constituent of ribosome is the defining molecular function of this 50S ribosomal
+      protein
+    supported_by:
+    - reference_id: file:PSEPK/rpmE/rpmE-goa.tsv
+      supporting_text: &#34;UniProtKB\tQ88CU3\trpmE\tenables\tGO:0003735\tstructural constituent of ribosome\t\
+        molecular_function\tECO:0000256\tIEA\tGO_REF:0000002\tInterPro:IPR002150|InterPro:IPR027491\t\
+        160488\tPseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)\t\
+        InterPro\tLarge ribosomal subunit protein bL31\t20260706&#34;
+    - reference_id: file:PSEPK/rpmE/rpmE-uniprot.txt
+      supporting_text: &#39;DE   RecName: Full=Large ribosomal subunit protein bL31 {ECO:0000255|HAMAP-Rule:MF_00501};&#39;
+    - reference_id: file:PSEPK/rpmE/rpmE-deep-research-asta.md
+      supporting_text: &#39;- **Protein Description:** RecName: Full=Large ribosomal subunit protein bL31
+        {ECO:0000255|HAMAP-Rule:MF_00501}; AltName: Full=50S ribosomal protein L31 {ECO:0000305};&#39;
+- term:
+    id: GO:0005840
+    label: ribosome
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: located_in
+  review:
+    summary: The protein is a conserved bacterial 50S ribosomal protein and this cellular-component annotation
+      is appropriate.
+    action: ACCEPT
+    reason: ribosome/large-subunit membership is the correct cellular-component context
+    supported_by:
+    - reference_id: file:PSEPK/rpmE/rpmE-goa.tsv
+      supporting_text: &#34;UniProtKB\tQ88CU3\trpmE\tlocated_in\tGO:0005840\tribosome\tcellular_component\t\
+        ECO:0000256\tIEA\tGO_REF:0000002\tInterPro:IPR002150|InterPro:IPR027491\t160488\tPseudomonas putida\
+        \ (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)\tInterPro\tLarge ribosomal\
+        \ subunit protein bL31\t20260706&#34;
+    - reference_id: file:PSEPK/rpmE/rpmE-uniprot.txt
+      supporting_text: &#39;DE   RecName: Full=Large ribosomal subunit protein bL31 {ECO:0000255|HAMAP-Rule:MF_00501};&#39;
+    - reference_id: file:PSEPK/rpmE/rpmE-deep-research-asta.md
+      supporting_text: &#39;- **Protein Description:** RecName: Full=Large ribosomal subunit protein bL31
+        {ECO:0000255|HAMAP-Rule:MF_00501}; AltName: Full=50S ribosomal protein L31 {ECO:0000305};&#39;
+- term:
+    id: GO:0006412
+    label: translation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: The protein acts as a component of the large ribosomal subunit during translation.
+    action: ACCEPT
+    reason: translation is the core biological process carried out by the assembled ribosome
+    supported_by:
+    - reference_id: file:PSEPK/rpmE/rpmE-goa.tsv
+      supporting_text: &#34;UniProtKB\tQ88CU3\trpmE\tinvolved_in\tGO:0006412\ttranslation\tbiological_process\t\
+        ECO:0000501\tIEA\tGO_REF:0000120\tInterPro:IPR002150|InterPro:IPR027491|UniRule:UR000103188\t\
+        160488\tPseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)\t\
+        UniProt\tLarge ribosomal subunit protein bL31\t20260706&#34;
+    - reference_id: file:PSEPK/rpmE/rpmE-uniprot.txt
+      supporting_text: &#39;DE   RecName: Full=Large ribosomal subunit protein bL31 {ECO:0000255|HAMAP-Rule:MF_00501};&#39;
+    - reference_id: file:PSEPK/rpmE/rpmE-deep-research-asta.md
+      supporting_text: &#39;- **Protein Description:** RecName: Full=Large ribosomal subunit protein bL31
+        {ECO:0000255|HAMAP-Rule:MF_00501}; AltName: Full=50S ribosomal protein L31 {ECO:0000305};&#39;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/rpmE/rpmE-uniprot.txt
+  title: UniProtKB entry for rpmE
+  findings:
+  - statement: UniProt protein name, family/domain, and functional annotation lines used for first-pass
+      ribosomal-protein curation.
+- id: file:PSEPK/rpmE/rpmE-goa.tsv
+  title: QuickGO GOA annotations for rpmE
+  findings:
+  - statement: Fetched GOA rows reviewed in this first-pass curation file.
+- id: file:PSEPK/rpmE/rpmE-deep-research-asta.md
+  title: Asta retrieval report for rpmE
+  findings:
+  - statement: Asta retrieval was used as fast gene-level literature/metadata context; no unsupported
+      hypotheses were imported.
+core_functions:
+- description: Serves as large ribosomal subunit protein bL31 (50S ribosomal protein L31), a structural
+    protein component of the bacterial 50S large ribosomal subunit during translation.
+  molecular_function:
+    id: GO:0003735
+    label: structural constituent of ribosome
+  directly_involved_in:
+  - id: GO:0006412
+    label: translation
+  locations:
+  - id: GO:0005840
+    label: ribosome
+  supported_by:
+  - reference_id: file:PSEPK/rpmE/rpmE-goa.tsv
+    supporting_text: &#34;UniProtKB\tQ88CU3\trpmE\tenables\tGO:0003735\tstructural constituent of ribosome\t\
+      molecular_function\tECO:0000256\tIEA\tGO_REF:0000002\tInterPro:IPR002150|InterPro:IPR027491\t160488\t\
+      Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)\tInterPro\t\
+      Large ribosomal subunit protein bL31\t20260706&#34;
+  - reference_id: file:PSEPK/rpmE/rpmE-goa.tsv
+    supporting_text: &#34;UniProtKB\tQ88CU3\trpmE\tinvolved_in\tGO:0006412\ttranslation\tbiological_process\t\
+      ECO:0000501\tIEA\tGO_REF:0000120\tInterPro:IPR002150|InterPro:IPR027491|UniRule:UR000103188\t160488\t\
+      Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)\tUniProt\t\
+      Large ribosomal subunit protein bL31\t20260706&#34;
+  - reference_id: file:PSEPK/rpmE/rpmE-uniprot.txt
+    supporting_text: &#39;DE   RecName: Full=Large ribosomal subunit protein bL31 {ECO:0000255|HAMAP-Rule:MF_00501};&#39;
+  - reference_id: file:PSEPK/rpmE/rpmE-deep-research-asta.md
+    supporting_text: &#39;- **Protein Description:** RecName: Full=Large ribosomal subunit protein bL31 {ECO:0000255|HAMAP-Rule:MF_00501};
+      AltName: Full=50S ribosomal protein L31 {ECO:0000305};&#39;
+  - reference_id: file:PSEPK/rpmE/rpmE-goa.tsv
+    supporting_text: &#34;UniProtKB\tQ88CU3\trpmE\tlocated_in\tGO:0005840\tribosome\tcellular_component\t\
+      ECO:0000256\tIEA\tGO_REF:0000002\tInterPro:IPR002150|InterPro:IPR027491\t160488\tPseudomonas putida\
+      \ (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)\tInterPro\tLarge ribosomal subunit\
+      \ protein bL31\t20260706&#34;
+proposed_new_terms: []
+suggested_questions: []
+suggested_experiments: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

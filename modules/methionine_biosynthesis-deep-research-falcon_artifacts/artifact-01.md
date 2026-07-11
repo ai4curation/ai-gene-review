@@ -1,0 +1,13 @@
+| Organism/Lineage | Step 1 (Acylation enzyme) | Step 2 (Sulfur incorporation route) | Step 3 (Methylation enzyme) | Key Regulatory Mechanism |
+|---|---|---|---|---|
+| *Escherichia coli* | **metA**; homoserine *O*-succinyltransferase | Trans-sulfuration via **metB + metC** | **metE** and **metH** | **MetJ** repressor + **MetR** activator (pqac-00000004, pqac-00000014, pqac-00000017) |
+| *Bacillus subtilis* | **metB**; homoserine *O*-acetyltransferase, SAM-inhibited | Primarily direct sulfhydrylation via **metY** | **metE** | **S-box / SAM-I riboswitch** (pqac-00000003, pqac-00000012, pqac-00000017) |
+| *Corynebacterium glutamicum* | **metX**; homoserine *O*-acetyltransferase | Both trans-sulfuration and direct sulfhydrylation | **metH / metE** | **McbR** repressor (pqac-00000005, pqac-00000019) |
+| *Mycobacterium tuberculosis* | **metX**; homoserine *O*-acetyltransferase | Trans-sulfuration | **metE** and **metH**; cobalamin-regulated usage | Cobalamin-dependent switching of **metE/metH**; broader transcriptional control unresolved here (pqac-00000034, pqac-00000035, pqac-00000036) |
+| *Saccharomyces cerevisiae* | **MET2**; homoserine *O*-acetyltransferase | Direct sulfhydrylation via **MET25/MET17/MET15** | **Met6p**; B12-independent methionine synthase | **Met4/Met28/Met31/Met32** transcriptional network (pqac-00000051, pqac-00000053, pqac-00000055) |
+| Plants (*Arabidopsis*) | **O-phosphohomoserine** branch point; no homoserine acylation step | Trans-sulfuration-like route via **CGS + CBL** in chloroplast | Cobalamin-independent **MS** isoforms in chloroplast/cytosol | **SAM feedback on CGS mRNA/expression** (pqac-00000037, pqac-00000038, pqac-00000039, pqac-00000043) |
+| Methanogens | Variable / not standardized in the bacterial acylation framework | Variable | **MesA**; folate-independent methionine synthase using **MtrA**-derived methyl groups | Not resolved in the cited sources (pqac-00000006, pqac-00000008, pqac-00000032) |
+| Anaerobic Wood-Ljungdahl bacteria | Variable / not standardized in the bacterial acylation framework | Variable | **MesB / MesC**; folate-independent methionine synthases using **CoFeSP** | Not resolved in the cited sources (pqac-00000006, pqac-00000011, pqac-00000030, pqac-00000032) |
+
+
+*Table: This table compares the major route choices for methionine biosynthesis across representative lineages, emphasizing the lineage-specific substitutions at homoserine activation, sulfur incorporation, methylation, and regulation. It is useful for genome-based pathway reconstruction because it highlights which enzymes are alternatives rather than universal requirements.*

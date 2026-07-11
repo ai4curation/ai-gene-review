@@ -1,0 +1,3491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>braD - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>braD</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88DF9" target="_blank" class="term-link">
+                        Q88DF9
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "braD";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88DF9" data-a="DESCRIPTION: braD (PP_4866) encodes a predicted multi-pass inne..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>braD (PP_4866) encodes a predicted multi-pass inner-membrane permease component of the PP_4863-PP_4867 Bra/Liv high-affinity branched-chain amino-acid ABC uptake system. Automated annotations support valine, isoleucine, and leucine transporter activity.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005304" target="_blank" class="term-link">
+                                    GO:0005304
+                                </a>
+                            </span>
+                            <span class="term-label">L-valine transmembrane transporter activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DF9" data-a="GO:0005304" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> L-valine transmembrane transporter activity is consistent with the Bra/Liv branched-chain amino-acid ABC importer.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The BraD PANTHER subfamily supports a high-affinity branched-chain amino-acid transport-system permease.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/braD/braD-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0005304	L-valine transmembrane transporter activity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/braD/braD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PANTHER; PTHR11795:SF371; HIGH-AFFINITY BRANCHED-CHAIN AMINO ACID TRANSPORT SYSTEM PERMEASE PROTEIN LIVH; 1.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DF9" data-a="GO:0005886" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Plasma membrane localization is appropriate for this predicted inner-membrane ABC permease.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt predicts this Bra/Liv permease as a cell inner-membrane multi-pass membrane protein.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/braD/braD-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0005886	plasma membrane</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/braD/braD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Cell inner membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015188" target="_blank" class="term-link">
+                                    GO:0015188
+                                </a>
+                            </span>
+                            <span class="term-label">L-isoleucine transmembrane transporter activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DF9" data-a="GO:0015188" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> L-isoleucine transmembrane transporter activity is consistent with the Bra/Liv branched-chain amino-acid ABC importer.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The BraD PANTHER subfamily supports a high-affinity branched-chain amino-acid transport-system permease.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/braD/braD-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0015188	L-isoleucine transmembrane transporter activity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/braD/braD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PANTHER; PTHR11795:SF371; HIGH-AFFINITY BRANCHED-CHAIN AMINO ACID TRANSPORT SYSTEM PERMEASE PROTEIN LIVH; 1.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015190" target="_blank" class="term-link">
+                                    GO:0015190
+                                </a>
+                            </span>
+                            <span class="term-label">L-leucine transmembrane transporter activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DF9" data-a="GO:0015190" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> L-leucine transmembrane transporter activity is consistent with BraD in a Bra/Liv BCAA importer.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> BraD is part of a high-affinity branched-chain amino-acid transport system, and GOA supplies the L-leucine transporter activity row.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/braD/braD-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0015190	L-leucine transmembrane transporter activity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/braD/braD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PANTHER; PTHR11795:SF371; HIGH-AFFINITY BRANCHED-CHAIN AMINO ACID TRANSPORT SYSTEM PERMEASE PROTEIN LIVH; 1.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015192" target="_blank" class="term-link">
+                                    GO:0015192
+                                </a>
+                            </span>
+                            <span class="term-label">L-phenylalanine transmembrane transporter activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DF9" data-a="GO:0015192" data-r="GO_REF:0000118" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> L-phenylalanine transporter activity may reflect broad hydrophobic-amino-acid family transfer rather than the core Bra/Liv BCAA assignment.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The local product names and PANTHER subfamilies support a branched-chain amino-acid transporter; phenylalanine transport is not promoted to core without PSEPK-specific substrate evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/braD/braD-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0015192	L-phenylalanine transmembrane transporter activity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/braD/braD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Full=High-affinity branched-chain amino acid transport system permease protein BraD</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015808" target="_blank" class="term-link">
+                                    GO:0015808
+                                </a>
+                            </span>
+                            <span class="term-label">L-alanine transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DF9" data-a="GO:0015808" data-r="GO_REF:0000118" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> L-alanine transport is plausible only as broad-family transfer and is not the core Bra/Liv function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The strongest locus-level evidence supports branched-chain amino-acid uptake, not alanine transport.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/braD/braD-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0015808	L-alanine transport</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/braD/braD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PANTHER; PTHR11795:SF371; HIGH-AFFINITY BRANCHED-CHAIN AMINO ACID TRANSPORT SYSTEM PERMEASE PROTEIN LIVH; 1.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015823" target="_blank" class="term-link">
+                                    GO:0015823
+                                </a>
+                            </span>
+                            <span class="term-label">phenylalanine transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DF9" data-a="GO:0015823" data-r="GO_REF:0000118" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phenylalanine transport is not supported as the core function of this Bra/Liv permease.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The review treats phenylalanine transport as a hydrophobic-amino-acid family spillover pending direct substrate evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/braD/braD-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0015823	phenylalanine transport</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/braD/braD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Full=High-affinity branched-chain amino acid transport system permease protein BraD</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DF9" data-a="GO:0016020" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Membrane localization is true but less informative than plasma membrane for this bacterial inner-membrane permease.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The record also has a plasma-membrane annotation and UniProt predicts a cell inner-membrane multi-pass protein.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/braD/braD-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0016020	membrane</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/braD/braD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Cell inner membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0022857" target="_blank" class="term-link">
+                                    GO:0022857
+                                </a>
+                            </span>
+                            <span class="term-label">transmembrane transporter activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DF9" data-a="GO:0022857" data-r="GO_REF:0000120" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic transmembrane transporter activity is too broad for this Bra/Liv ABC-transporter permease component.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The product name and PANTHER subfamily support branched-chain amino acid transmembrane transporter activity as the better complex-level activity.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015658" target="_blank" class="term-link">
+                                    branched-chain amino acid transmembrane transporter activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/braD/braD-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0022857	transmembrane transporter activity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/braD/braD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Full=High-affinity branched-chain amino acid transport system permease protein BraD</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042941" target="_blank" class="term-link">
+                                    GO:0042941
+                                </a>
+                            </span>
+                            <span class="term-label">D-alanine transmembrane transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DF9" data-a="GO:0042941" data-r="GO_REF:0000118" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> D-alanine transmembrane transport is not part of the core Bra/Liv branched-chain amino-acid uptake assignment.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The local evidence supports BraD as a high-affinity BCAA transporter permease; D-alanine transport is treated as over-propagated family context.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/braD/braD-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0042941	D-alanine transmembrane transport</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/braD/braD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Full=High-affinity branched-chain amino acid transport system permease protein BraD</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0055085" target="_blank" class="term-link">
+                                    GO:0055085
+                                </a>
+                            </span>
+                            <span class="term-label">transmembrane transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DF9" data-a="GO:0055085" data-r="GO_REF:0000120" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Transmembrane transport is true but broad relative to the branched-chain amino-acid ABC-import context.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Branched-chain amino acid transport better captures the expected substrate class for this Bra/Liv permease.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015803" target="_blank" class="term-link">
+                                    branched-chain amino acid transport
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/braD/braD-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0055085	transmembrane transport</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/braD/braD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PANTHER; PTHR11795:SF371; HIGH-AFFINITY BRANCHED-CHAIN AMINO ACID TRANSPORT SYSTEM PERMEASE PROTEIN LIVH; 1.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1903785" target="_blank" class="term-link">
+                                    GO:1903785
+                                </a>
+                            </span>
+                            <span class="term-label">L-valine transmembrane transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DF9" data-a="GO:1903785" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> L-valine transmembrane transport is consistent with the Bra/Liv BCAA uptake system.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> BraD is a high-affinity branched-chain amino-acid transport-system permease.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/braD/braD-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:1903785	L-valine transmembrane transport</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/braD/braD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PANTHER; PTHR11795:SF371; HIGH-AFFINITY BRANCHED-CHAIN AMINO ACID TRANSPORT SYSTEM PERMEASE PROTEIN LIVH; 1.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1903806" target="_blank" class="term-link">
+                                    GO:1903806
+                                </a>
+                            </span>
+                            <span class="term-label">L-isoleucine import across plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DF9" data-a="GO:1903806" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> L-isoleucine import across the plasma membrane is an appropriate substrate-specific process for this Bra/Liv importer component.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The BraD permease supports a BCAA uptake-system interpretation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/braD/braD-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:1903806	L-isoleucine import across plasma membrane</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/braD/braD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Full=High-affinity branched-chain amino acid transport system permease protein BraD</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015658" target="_blank" class="term-link">
+                                    GO:0015658
+                                </a>
+                            </span>
+                            <span class="term-label">branched-chain amino acid transmembrane transporter activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:PSEPK/braD/braD-uniprot.txt
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DF9" data-a="GO:0015658" data-r="file:PSEPK/braD/braD-uniprot.txt" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Branched-chain amino acid transmembrane transporter activity captures the complex-level activity to which BraD contributes.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> BraD is a permease subunit of the adjacent Bra/Liv branched-chain amino-acid ABC transporter.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/braD/braD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PANTHER; PTHR11795:SF371; HIGH-AFFINITY BRANCHED-CHAIN AMINO ACID TRANSPORT SYSTEM PERMEASE PROTEIN LIVH; 1.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/braD/braD-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">Protein Description:** SubName: Full=High-affinity branched-chain amino acid transport system permease protein BraD</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1903801" target="_blank" class="term-link">
+                                    GO:1903801
+                                </a>
+                            </span>
+                            <span class="term-label">L-leucine import across plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:PSEPK/braD/braD-uniprot.txt
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DF9" data-a="GO:1903801" data-r="file:PSEPK/braD/braD-uniprot.txt" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> L-leucine import across the plasma membrane is a useful missing process annotation for the BraD permease.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> BraD has an L-leucine transporter activity annotation within a high-affinity branched-chain amino-acid ABC transporter context.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/braD/braD-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0015190	L-leucine transmembrane transporter activity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/braD/braD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PANTHER; PTHR11795:SF371; HIGH-AFFINITY BRANCHED-CHAIN AMINO ACID TRANSPORT SYSTEM PERMEASE PROTEIN LIVH; 1.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043190" target="_blank" class="term-link">
+                                    GO:0043190
+                                </a>
+                            </span>
+                            <span class="term-label">ATP-binding cassette (ABC) transporter complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:PSEPK/braD/braD-uniprot.txt
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DF9" data-a="GO:0043190" data-r="file:PSEPK/braD/braD-uniprot.txt" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ABC transporter complex membership is appropriate for this BraD permease.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> BraD is a permease subunit in the adjacent Bra/Liv branched-chain amino-acid ABC transporter locus.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/braD/braD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Full=High-affinity branched-chain amino acid transport system permease protein BraD</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/braD/braD-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">Protein Description:** SubName: Full=High-affinity branched-chain amino acid transport system permease protein BraD</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Multi-pass permease component contributing to a predicted PP_4863-PP_4867 Bra/Liv branched-chain amino-acid ABC uptake system.</h3>
+                <span class="vote-buttons" data-g="Q88DF9" data-a="FUNCTION: Multi-pass permease component contributing to a pr..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1903785" target="_blank" class="term-link">
+                                L-valine transmembrane transport
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1903806" target="_blank" class="term-link">
+                                L-isoleucine import across plasma membrane
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1903801" target="_blank" class="term-link">
+                                L-leucine import across plasma membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043190" target="_blank" class="term-link">
+                            ATP-binding cassette (ABC) transporter complex
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/braD/braD-goa.tsv
+
+                        </span>
+
+                        <div class="finding-text">GO:0015190	L-leucine transmembrane transporter activity</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/braD/braD-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Full=High-affinity branched-chain amino acid transport system permease protein BraD</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/braD/braD-deep-research-asta.md
+
+                        </span>
+
+                        <div class="finding-text">Protein Description:** SubName: Full=High-affinity branched-chain amino acid transport system permease protein BraD</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/braD/braD-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO GOA annotations for braD</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/braD/braD-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for braD (Q88DF9)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"Full=High-affinity branched-chain amino acid transport system permease protein BraD"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/braD/braD-deep-research-asta.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Asta retrieval report for braD (Q88DF9)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"Protein Description:** SubName: Full=High-affinity branched-chain amino acid transport system permease protein BraD"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is the PP_4863-PP_4867 Bra/Liv ABC importer functionally redundant with the PP_1137-PP_1141 LivFGMHK system, or does it differ in regulation or substrate preference for L-leucine, L-isoleucine, L-valine, alanine, or related hydrophobic amino acids?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88DF9" data-a="Q: Is the PP_4863-PP_4867 Bra/Liv ABC importer functi..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Measure uptake and growth phenotypes for livF-II, braF, braE, braD, and PP_4867 mutants, alone and in combination with the PP_1137-PP_1141 liv locus, using L-leucine, L-isoleucine, L-valine, alanine, and phenylalanine as candidate substrates.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: targeted transporter mutant substrate-uptake and redundancy assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88DF9" data-a="EXPERIMENT: Measure uptake and growth phenotypes for livF-II, ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Asta</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(braD-deep-research-asta.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88DF9" data-a="DEEP_RESEARCH: Asta" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Asta Literature Retrieval: Gene Research for Functional Annotation ⚠️ CRITICAL: Gene/Protein Identification Context BEFORE YOU BEGIN RESEARCH: Y...</span>
+
+
+                    <span class="report-badge">Asta</span>
+
+
+                    <span class="report-badge">Asta Scientific Corpus Retrieval</span>
+
+
+                    <span class="report-badge">20 citations</span>
+
+
+
+                    <span class="report-meta-text">2026-07-08T17:15:48.511872</span>
+
+
+
+                </div>
+
+
+                <h1 id="asta-literature-retrieval-gene-research-for-functional-annotation-critical-geneprotein-identification-context-before-you-begin-research-y">Asta Literature Retrieval: Gene Research for Functional Annotation ⚠️ CRITICAL: Gene/Protein Identification Context BEFORE YOU BEGIN RESEARCH: Y...</h1>
+<p>This report is retrieval-only and is generated directly from Asta results.</p>
+<ul>
+<li>Papers retrieved: 20</li>
+<li>Snippets retrieved: 20</li>
+</ul>
+<h2 id="relevant-papers">Relevant Papers</h2>
+<h3 id="1-high-throughput-phenotypic-characterization-of-pseudomonas-aeruginosa-membrane-transport-genes">[1] High-Throughput Phenotypic Characterization of Pseudomonas aeruginosa Membrane Transport Genes</h3>
+<ul>
+<li>Authors: Daniel A. Johnson, S. Tetu, Katherine H. Phillippy, Joan Chen, Q. Ren et al.</li>
+<li>Year: 2008</li>
+<li>Venue: PLoS Genetics</li>
+<li>URL: https://www.semanticscholar.org/paper/8b4d3d995613c25608cde9d7ab31cded1839768b</li>
+<li>DOI: 10.1371/journal.pgen.1000211</li>
+<li>PMID: 18833300</li>
+<li>PMCID: 2542419</li>
+<li>Citations: 85</li>
+<li>Influential citations: 5</li>
+<li>Summary: This work utilized Biolog phenotype MicroArrays to identify phenotypes of gene knockout mutants in the opportunistic pathogen and versatile soil bacterium Pseudomonas aeruginosa in a relatively high-throughput fashion and showed the bioinformatic predictions to be largely correct in 22 out of 27 cases.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.754)<br />
+    &gt; Genes PA0888, PA0889, PA0890 and PA0892, comprise four of the six genes which make up the aot operon (aotJ, aotQ, aotM and aotP, respectively), previously shown to be involved in arginine/ ornithine uptake [21].PA0888 is thought to encode an arginine/ ornithine transport system substrate binding protein, PA0889 and PA0890 encode putative permease proteins while PA0892 is predicted to encode the associated ATP-binding component gene.Disruption of each of these four genes resulted in mutants defective in arginine/ornithine uptake, as expected (Table 2).PA1070, PA1071, PA1072, PA1073, PA1074, which correspond to braG, braF, braE, braD and braC, comprise a five gene operon which has also been characterized experimentally.The braC has been shown to encode the binding protein for branchedchain amino acids [26], braF and braG genes are thought to encode ATP-binding proteins, while braE and braD encode very hydrophobic proteins [22].Complementation experiments have shown that each of these genes is essential for correct functioning of the high affinity branched-chain amino acid transport system encoded by the bra operon [27].In this work, mutants for each of these genes were found to be defective in Alanine metabolism, while utilization of L-Valine and L-Isoleucine was also altered in some cases (PA1074 and PA1071 were also defective in d-Amino Valeric Acid uptake, Table 2).</li>
+</ul>
+<h3 id="2-structure-aware-mycobacterium-tuberculosis-functional-annotation-uncloaks-resistance-metabolic-and-virulence-genes">[2] Structure-Aware Mycobacterium tuberculosis Functional Annotation Uncloaks Resistance, Metabolic, and Virulence Genes</h3>
+<ul>
+<li>Authors: Samuel J. Modlin, A. Elghraoui, Deepika Gunasekaran, Alyssa M Zlotnicki, N. Dillon et al.</li>
+<li>Year: 2021</li>
+<li>Venue: mSystems</li>
+<li>URL: https://www.semanticscholar.org/paper/76ff9a62b36b32cc10e46e71ffd4dd90344e4706</li>
+<li>DOI: 10.1128/mSystems.00673-21</li>
+<li>PMID: 34726489</li>
+<li>PMCID: 8562490</li>
+<li>Citations: 15</li>
+<li>Summary: This work systematically updates the functional genome annotation of Mycobacterium tuberculosis virulent type strain H37Rv and identifies hundreds of high-confidence candidates for mechanisms of antibiotic resistance, virulence factors, and basic metabolism and other functions key in clinical and basic tuberculosis research.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.716)<br />
+    &gt; 3. Fig. S2B -match/mismatch colours mixed up? (I think match should be teal and mismatch -red?) 4. Line 162-163: Rv1430 is in UniProt (EC 3.1.1.-) and has been present in Uniprot since version 45 of the gene record: https://www.uniprot.org/uniprot/L7N697. I presume you had conducted your literature analysis before the UniProt entry was updated to include the EC code, so maybe you can add the dates when the data was retrieved from UniProt and other databases you used in the Materials and Methods section? 5. Supplementary text, p. 9, first paragraph. I believe that an unrelated fragment of text was copy-pasted into the second sentence of the paragraph ("Many mutations that altered bacterial clearance...") 6. Supplementary text, p. 12, final paragraph. It should be Rv1191, not Rv1191c. Could you also add a short explanation why you believe it should be classified as a cathepsin (what protein did you transfer this annotation from)?<br />
+    &gt; Reviewer #3 (Comments for the Author):<br />
+    &gt; In this manuscript, Modlin et al., attempt to tackle the problem of assigning functions to ~1700 hypothetical and/or underannotated genes in the Mycobacterium tuberculosis H37Rv (Mtb) genome. Rapid and accurate annotation of microbial genomes is indeed a very critical and under appreciated part of microbial ecophysiology. This step is especially crucial for pathogenic organisms such as Mtb where accurate functional annotation of these hypothetical proteins could unravel mechanisms which could act as drug targets. The authors employed a two-pronged strategy to define a set of these unannotated or under-annotated genes and to then provide possible functions for many of these genes. First, they undertook a large-scale manual curation of literature to assign functions (including EC numbers for enzymatic functions) to ~575 genes.</li>
+</ul>
+<h3 id="3-trade-offs-trade-ups-and-high-mutational-parallelism-underlie-microbial-adaptation-during-extreme-cycles-of-feast-and-famine">[3] Trade-offs, trade-ups, and high mutational parallelism underlie microbial adaptation during extreme cycles of feast and famine</h3>
+<ul>
+<li>Authors: Megan G. Behringer, Wei-Chin Ho, Samuel F. Miller, Sarah B. Worthan, Zeer Cen et al.</li>
+<li>Year: 2024</li>
+<li>Venue: Current biology : CB</li>
+<li>URL: https://www.semanticscholar.org/paper/13c71a271ad81ea813516193454b0fed04b2cd2b</li>
+<li>DOI: 10.1016/j.cub.2024.02.040</li>
+<li>PMID: 38460514</li>
+<li>PMCID: 11066936</li>
+<li>Citations: 18</li>
+<li>Summary: It is found that evolution in response to extreme feast/famine is characterized by narrow adaptive trajectories with high mutational parallelism and notable mutational order, which demonstrate how microbes can navigate the adaptive landscapes of regularly fluctuating conditions and ultimately follow mutational trajectories that confer benefits across diverse environments.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.715)<br />
+    &gt; Genes overrepresented for nonsynonymous and structural mutations were classified into functional groups based on the functional annotation table constructed with DAVID v.2023q3 91,92 (Table S4). We established the following rules for generalizing genes into functional groups: Chaperone: genes that encode proteins that perform chaperone or chaperonin-like activities (Uniprot Keyword: KW-0143); Envelope: Genes that encode proteins involved in the maintenance of the cell-envelope such as phospholipid biosynthesis (GO-BP: 0008654) and peptidoglycan biosynthesis (GO-BP: 0000270); Metabolism: Genes that encode proteins involved in general metabolic functions, such as purine metabolism (KEGG: eco00230), amino acid metabolism (KEGG: eco00470, eco00330); or TCA Cycle (KEGG: eco00020); Regulators: Genes that encode proteins directly involved in transcription (GO-BP: 0031564; Uniprot Keyword: KW-0804), translation (GO-BP:0006412, GO-BP:0006413; Uniprot Keyword: KW-0689), or the regulation of transcription (GO-BP: 0006355, GO-BP:2000143, GO-BP:0006353, GO-BP: GO:0045893; Uniprot Keyword: KW-0805); and Transport: Genes that encode proteins involved in transport: such as ABC transporters (Interpro: PR017871), MFS transporters (Interpro: IPR011701); symporters (Interpro: IPR023954, IPR001204, IPR001734, IPR023025, IPR004840), or Antiporters (Interpro: IPR004771). A combination of resources were used to determine if a parallel mutation arose in a functional region of a protein including, EcoCyc, 96 UniProt, 97 and the primary literature (see supplemental bibliography).</li>
+</ul>
+<h3 id="4-quantitative-proteomic-dataset-of-whole-protein-in-three-melanoma-samples-of-921-921-a-and-921-b">[4] Quantitative proteomic dataset of whole protein in three melanoma samples of 92.1, 92.1-A and 92.1-B</h3>
+<ul>
+<li>Authors: Xi-feng Fei, Xiangtong Xie, X. Ji, Haiyan Tian, F. Sun et al.</li>
+<li>Year: 2022</li>
+<li>Venue: Data in Brief</li>
+<li>URL: https://www.semanticscholar.org/paper/33312bb6cc2cf985d32f3a31cf4fdee6b4e17385</li>
+<li>DOI: 10.1016/j.dib.2022.108592</li>
+<li>PMID: 36164296</li>
+<li>PMCID: 9508510</li>
+<li>Citations: 2</li>
+<li>Influential citations: 1</li>
+<li>Summary: Covering differential proteomes of three cell lines in a pairwise model, the data could be used to further screen the kinesins that play a vital role in regulating the growth of UM.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.709)<br />
+    &gt; 2.8.1. Annotation methods 2.8.1.1. Functional annotation. UniProt-GOA database was utilized to retrieve Gene Ontology (GO) annotation proteome. First, the identified protein identity was converted to UniProt identity and then mapped to GO identity based on the protein identity. When the identified protein was not annotated by UniProt-GOA, the functional annotation of that protein was conducted using the InterProScan software according to the amino acid sequence alignment approach. All proteins were then classified into 3 groups: molecular function, cellular component and biological process.</li>
+</ul>
+<h3 id="5-avian-immunome-db-an-example-of-a-user-friendly-interface-for-extracting-genetic-information">[5] Avian Immunome DB: an example of a user-friendly interface for extracting genetic information</h3>
+<ul>
+<li>Authors: Ralf C. Mueller, Nicolai Mallig, Jacqueline Smith, Lél Eöry, Richard I. Kuo et al.</li>
+<li>Year: 2020</li>
+<li>Venue: BMC Bioinformatics</li>
+<li>URL: https://www.semanticscholar.org/paper/b894d9ca8ea2d653bf1711a0c67dab71d054487c</li>
+<li>DOI: 10.1186/s12859-020-03764-3</li>
+<li>PMID: 33176685</li>
+<li>PMCID: 7661159</li>
+<li>Citations: 6</li>
+<li>Summary: The Avian Immunome DB (Avimm) for easy gene property extraction as exemplified by avian immune genes is presented and described, which contains 1170 distinct avian immune genes with canonical gene symbols and 612 synonyms across 363 bird species.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.693)<br />
+    &gt; Ever since the advent of commercial next-generation sequencing platforms in the early 2000s with its associated decrease in sequencing costs [1], the number of DNA sequences increased considerably [2]. Generally, these data become publicly accessible in databases provided by projects focussing on different aspects of biological sequence information [3,4]. Ensembl [5] and NCBI [6] for instance, have a strong focus on genome annotation with the help of RNA transcript information while UniProt has a pronounced emphasis on protein-coding genes and biological function of proteins. UniProt's records are either based on manually annotated, non-redundant protein sequences (SwissProt) or on highquality computationally analysed records, which are enriched with automatic annotation (TrEMBL) [7]. Relying on accurate genome annotations and protein descriptions, Gene Ontology (GO) [8,9] categorises gene products and fits them into a computational model of biological systems. Their assignment deploys a controlled vocabulary, so-called GO terms, to link genes and gene products to biological processes, cellular components, or molecular functions.<br />
+    &gt; However, genome annotation is not standardised, and each service provider uses their own custom-built annotation pipelines. As a consequence, this often leads to ambiguity in gene names during genome annotation with different gene symbols being given to the same gene or the same gene symbol being given to different, but similar genes. Additionally, since the pre-existing wealth of sequencing information relies on model organisms like human and mouse, there is a strong bias in gene symbols towards those chosen for these species. Particularly for model species, this issue has been partially addressed, for example by the Human Genome Organisation (HUGO) Gene Nomenclature Committee (HGNC) [10], the Vertebrate Gene Nomenclature Committee (VGNC) [11], or the Chicken Gene Nomenclature Consortium [12]. However, this neither guarantees that gene names are harmonised among these consortia, nor does it keep researchers from assigning alternative gene symbols in their annotations, especially when working with non-model species.</li>
+</ul>
+<h3 id="6-computational-screening-of-phytochemicals-targeting-mutant-kras-in-colorectal-cancer">[6] Computational screening of phytochemicals targeting mutant KRAS in colorectal cancer</h3>
+<ul>
+<li>Authors: Muskan Arooj, R. Mateen, M. Javed, Muhammad Ali, Muhammad Irfan Fareed et al.</li>
+<li>Year: 2025</li>
+<li>Venue: Scientific Reports</li>
+<li>URL: https://www.semanticscholar.org/paper/2e47ff33fc8e4bd8a85a3cd322f3441bb45db205</li>
+<li>DOI: 10.1038/s41598-025-14229-z</li>
+<li>PMID: 40770256</li>
+<li>PMCID: 12329011</li>
+<li>Citations: 2</li>
+<li>Summary: This study focused on the identification of potential phytochemicals that can inhibit the KRAS protein from being overexpressed in CRC using the anticancer medication fruquintinib, which has been authorized by the FDA.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.691)<br />
+    &gt; For the structure retrieval of the KRAS gene, which is overexpressed in CRC, the Universal Protein Resource (UniProt) (https://www.uniprot.org/) database was first consulted for detailed functional information. UniProt provides extensive data on proteins and their functional annotations 19 . The KRAS gene encoding GTPase protein consisting of 189 amino acids with a molecular weight of approximately 21.6 kDa was recovered from the Protein Data Bank (PDB) using the RCSB-PDB ID: 7SCW, which has a resolution of 1.98 Å. The Protein Data Bank (PDB) ( https://doi.org/10.2210/pdb7SCW/pdb) is a crucial resource for studying the 3D structures, aiding research and education in many fields 20 .</li>
+</ul>
+<h3 id="7-proteosushi-a-software-tool-to-biologically-annotate-and-quantify-modification-specific-peptide-centric-proteomics-datasets">[7] ProteoSushi: a software tool to biologically annotate and quantify modification-specific, peptide-centric proteomics datasets</h3>
+<ul>
+<li>Authors: Robert W Seymour, S. van der Post, A. Mooradian, Jason M. Held</li>
+<li>Year: 2020</li>
+<li>Venue: bioRxiv</li>
+<li>URL: https://www.semanticscholar.org/paper/9bdbfae251dfa48820f40c01f12a1ee25fcdf57e</li>
+<li>DOI: 10.1101/2020.11.24.395921</li>
+<li>PMID: 34056901</li>
+<li>Citations: 6</li>
+<li>Summary: ProteoSushi is a software tool tailored to the analysis of each modified site in peptide-centric proteomic datasets that is compatible with any post-translational modification or chemical label, and streamlines peptides-centric data processing and knowledge mining of large modification-specific proteomics datasets.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.687)<br />
+    &gt; ProteoSushi assigns each peptide to all proteins with a matching sequence in the userprovided FASTA proteome using the amino acid sequence of each modified peptide. Leucines and isoleucines, which are isobaric and can't be distinguished through mass spectrometry, are considered equivalent. Proteins in UniProt reference proteome are not equally likely studied and characterized resulting in a wide range of annotation quality and depth. Therefore, ProteoSushi compares the UniProt annotation scores of all matched proteins and annotates the peptide with the available information of those with the highest score (Supp. Fig. S1). This approach minimizes over-annotation and prioritizes assignment to better characterized proteins. This is especially useful for species that are not annotated well. The primary gene name assigned to the UniProt ID is used to assign the gene, and the modified residue(s) of the peptide are assigned to the amino acid number in the UniProt amino acid sequence.<br />
+    &gt; ProteoSushi provides an option for a user-input list of gene names to prioritize identification to a specific subset of candidate proteins. Potential applications of this include organelle or protein complex enrichment prior to PTM enrichment, such as mitochondrial fractionation followed by enrichment for lysine acetylation 4 . In this case, the user can input a list of mitochondrial genes and ProteoSushi will prioritize assignment of peptides to these genes instead of cytoplasmic proteins that may have sequence homology. The ProteoSushi output indicates that the assigned proteins are in the target list to simplify follow-up analysis.<br />
+    &gt; To compare how proteins and genes are assigned by ProteoSushi versus typical proteincentric database search software, the data output from MaxQuant were compared before and after ProteoSushi processing. A publicly available proteomic dataset that enriched and quantified the reversible oxidation of ~4,000 cysteines 29 was used for evaluation.</li>
+</ul>
+<h3 id="8-the-thermus-thermophilus-dead-box-protein-hera-is-a-general-rna-binding-protein-and-plays-a-key-role-in-trna-metabolism">[8] The Thermus thermophilus DEAD-box protein Hera is a general RNA binding protein and plays a key role in tRNA metabolism</h3>
+<ul>
+<li>Authors: Pascal Donsbach, Brian A. Yee, Dione L Sánchez-Hevia, J. Berenguer, S. Aigner et al.</li>
+<li>Year: 2020</li>
+<li>Venue: RNA</li>
+<li>URL: https://www.semanticscholar.org/paper/533f89524b50f1df6146e8665eed9512b23e1a5c</li>
+<li>DOI: 10.1261/rna.075580.120</li>
+<li>PMID: 32669294</li>
+<li>PMCID: 7566566</li>
+<li>Citations: 3</li>
+<li>Summary: Gene ontology analysis reveals an enrichment of genes related to translation, including mRNAs of ribosomal proteins, tRNAs, tRNA ligases, and t RNA-modifying enzymes, consistent with a key role of Hera in ribosome and tRNA metabolism.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.683)<br />
+    &gt; However, the peaks were in different positions within the gene in the four individual experiments performed (Fig. 6), and no specific binding site within the mRNA could be identified from the data.<br />
+    &gt; Among the genes identified were numerous genes related to protein biosynthesis (tRNAs, tRNA-aminoacyl synthetases, tRNA-modifying enzymes, ribosomal proteins). As an example, genes for ribosomal proteins were highly represented with 18 out of the 22 genes (82%) for small ribosomal proteins, (12 after cold shock, 55%), and 31 out of 34 genes (91%) for large ribosomal subunit proteins (22 after cold shock, 65%). Other protein families represented were chaperones (e.g., dnaK, dnaJ, grpE, but not dafA, groES, groEL, clpB), cold-shock and general stress proteins (TT_RS08235, _09210; hsp22, hsp30; uspA), topoisomerase genes (gyrA, gyrB, topA), genes for transporters and their subunits (often both the gene for the substrate-bind-ing protein and for the permease, for example, branchedchain amino acid ABC transporter, TT_RS01115 and _01120), and genes related to sugar-and cell wall metabolism and cell division, as well as CRISPR-related genes. In many cases, genes for all subunits of protein complexes (e.g., genes for cytochrome c oxidase subunits I and II; clpA, clpX coding for the ClpAX protease) were present.<br />
+    &gt; A systematic gene ontology analysis using the DAVID server 6.7 (https://david-d.ncifcrf.gov/home.jsp) (Huang da et al. 2009a,b) with the consolidated gene lists for Hera1/Hera2, and Hera3/Hera4, translated into UniProt accession numbers, revealed three annotation clusters with significant enrichment (Supplemental Table 4a,b).</li>
+</ul>
+<h3 id="9-discovering-and-summarizing-relationships-between-chemicals-genes-proteins-and-diseases-in-pubchem">[9] Discovering and Summarizing Relationships Between Chemicals, Genes, Proteins, and Diseases in PubChem</h3>
+<ul>
+<li>Authors: L. Zaslavsky, Tiejun Cheng, A. Gindulyte, Siqian He, Sunghwan Kim et al.</li>
+<li>Year: 2021</li>
+<li>Venue: Frontiers in Research Metrics and Analytics</li>
+<li>URL: https://www.semanticscholar.org/paper/57b86aef9aae576c2ae4199c0b74971f4c195211</li>
+<li>DOI: 10.3389/frma.2021.689059</li>
+<li>PMID: 34322655</li>
+<li>PMCID: 8311438</li>
+<li>Citations: 23</li>
+<li>Influential citations: 1</li>
+<li>Summary: The literature knowledge panels developed and implemented in PubChem help to uncover and summarize important relationships between chemicals, genes, proteins, and diseases by analyzing co-occurrences of terms in biomedical literature abstracts.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.681)<br />
+    &gt; We decided to prioritize human genes and proteins. The following strategy has been implemented to resolve gene and protein text entities to the most reasonable gene, protein, or enzyme symbol (corresponding to human, when possible):<br />
+    &gt; -Try to find a match among Human Genome Organization (HUGO) Gene Nomenclature Committee (HGNC) names (Braschi et al., 2019;HUGO, 2021);<br />
+    &gt; -Try to find a match among names in The IUPHAR/BPS Guide to Pharmacology (Armstrong et al., 2020; IUPHAR/BPS, 2021); -Try to find matches among names in UniProt (Bateman et al., 2017); -Otherwise, try to match to an enzyme name and resolve to an EC number (Bairoch, 2000;Expassy, 2021).<br />
+    &gt; In general, it is very difficult and often impossible to distinguish the name of a gene from the name of the protein encoded by that gene. Therefore, gene and protein names are not strictly distinguished from each other but considered as one category. Therefore, the annotations considered in this study can be grouped into three categories: chemicals, genes/proteins, and diseases.</li>
+</ul>
+<h3 id="10-genetools-application-for-functional-annotation-and-statistical-hypothesis-testing">[10] GeneTools – application for functional annotation and statistical hypothesis testing</h3>
+<ul>
+<li>Authors: V. Beisvåg, Frode K. R. Jünge, Hallgeir Bergum, Lars Jølsum, S. Lydersen et al.</li>
+<li>Year: 2006</li>
+<li>Venue: BMC Bioinformatics</li>
+<li>URL: https://www.semanticscholar.org/paper/1d9e0c2f67acd5bf64c659f1f3f8624325b6be8a</li>
+<li>DOI: 10.1186/1471-2105-7-470</li>
+<li>PMID: 17062145</li>
+<li>PMCID: 1630634</li>
+<li>Citations: 107</li>
+<li>Influential citations: 11</li>
+<li>Summary: GeneTools is the first "all in one" annotation tool, providing users with a rapid extraction of highly relevant gene annotation data for e.g. thousands of genes or clones at once.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.677)<br />
+    &gt; The database enables searching by gene symbols/names, GenBank accession numbers, UniGene cluster IDs, Swiss-Prot entry names and several unique clone IDs (IMAGE clone IDs, University of Iowa clone IDs, Operon oligo IDs, TAIR IDs and a subset of selected Affymetrix and Agilent IDs).<br />
+    &gt; The names and symbols of genes/proteins may be highly ambiguous [20]. We therefore recommend using primary gene IDs, like GeneBank accession numbers or specific probe IDs when querying the database. However, if gene names or symbols are used, caution is advised because only official names/symbols associated with UniProt knowledgebase will be recognized. The underlying database is updated on a weekly basis with annotation information from several external databases including UniGene, Swiss-Prot, Entrez Gene and GO. User data are submitted to the database as text files of gene reporters and analysis of the annotation data can be performed through three user interfaces: the NMC Annotation Tool, the GO Annotator Tool and eGOn. Analysis results and annotation data can be exported in various formats.</li>
+</ul>
+<h3 id="11-cronos-the-cross-reference-navigation-server">[11] CRONOS: the cross-reference navigation server</h3>
+<ul>
+<li>Authors: Brigitte Waegele, I. Dunger, G. Fobo, Corinna Montrone, H. Mewes et al.</li>
+<li>Year: 2008</li>
+<li>Venue: Bioinformatics</li>
+<li>URL: https://www.semanticscholar.org/paper/8c05b3aa0ba01c41ee97c2dc98ea7b5b14ce0e9c</li>
+<li>DOI: 10.1093/bioinformatics/btn590</li>
+<li>PMID: 19010804</li>
+<li>PMCID: 2638938</li>
+<li>Citations: 20</li>
+<li>Summary: CRONOS, a cross-reference server that contains entries from five mammalian organisms presented by major gene and protein information resources, is developed, which shows that the cross-references are highly accurate.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.677)<br />
+    &gt; In order to detect gene and protein names which are assigned to products of different genes and thus result in erroneous cross-references, dedicated lists are created for each organism separately. Organism-specific lists are necessary, since terms that are ambiguous in one organism might be explicit in another. For example, ADORA2 is an ambiguous gene name in Homo sapiens but not in mouse, and GALT in mouse but not in H.sapiens.<br />
+    &gt; In a first step, ambiguous names within the databases were extracted. If a name occurs in at least two entries describing different genes or proteins (splice variants count as one gene/protein), this particular name is marked as ambiguous and is excluded from the mapping process. In a second step, corresponding gene names occurring in the manually annotated sections of RefSeq as well as in UniProt were analyzed. Entries containing the same gene product name and having a one-to-many or many-to-many relation (e.g. one Swiss-Prot entry maps to many RefSeq entries) were scrutinized for misleading annotation. This process is done manually by inspecting additional information like sequence similarity or functional information about the involved entries. In most of the cases, the exclusion of the ambiguous gene names resulted in correct one-to-one relations.<br />
+    &gt; As statistical analysis revealed (Supplementary Material S2) that gene names with less than four letters are exceptionally error-prone, only gene names with at least four letters are kept for mapping purposes. However, gene names with less than four letters can be queried, e.g. a search for the tumor suppressor 'p53' reveals the respective entries with the official gene name 'TP53'. Organism-specific lists of ambiguous gene and protein names are available for download on the CRONOS home page.</li>
+</ul>
+<h3 id="12-inferring-direct-regulatory-targets-from-expression-and-genome-location-analyses-a-comparison-of-transcription-factor-deletion-and-overexpression">[12] Inferring direct regulatory targets from expression and genome location analyses: a comparison of transcription factor deletion and overexpression</h3>
+<ul>
+<li>Authors: L. Tang, Xiao Liu, N. Clarke</li>
+<li>Year: 2006</li>
+<li>Venue: BMC Genomics</li>
+<li>URL: https://www.semanticscholar.org/paper/5b873fca0112196e313cb29743f3323aac062a5a</li>
+<li>DOI: 10.1186/1471-2164-7-215</li>
+<li>PMID: 16923194</li>
+<li>PMCID: 1559704</li>
+<li>Citations: 26</li>
+<li>Influential citations: 2</li>
+<li>Summary: Experimental and computational criteria suggest that most genes whose expression is affected by the Leu3 genotype are unlikely to be regulated by binding of the protein, and the unusually direct nature of the perturbations investigated.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.672)<br />
+    &gt; The expression levels of nearly all the classically defined targets of Leu3 are affected by both LEU3 deletion and Leu3 over-expression. Indeed, the seven genes that comprise the pathway for branched amino acid biosynthesis are among the most strongly regulated genes under each condition (Fig 5). This suggests that the primary physiological targets can largely be identified from either deletion of the transcription factor or its overexpression. On the other hand, GO analysis and the conservation of predicted binding potential both suggest that authentic target genes can be responsive to only one of the perturbations. This is illustrated well by a set of permeases and transport proteins that are bound and regulated by Leu3. As noted above, "organic acid transport" is the second most significant functional annotation among the 54 genes that are bound and regulated (p &lt; 4e-4), with a total for four genes Leu3 targets inferred from at least one combination of ChIP and expression analyses Figure 3 Leu3 targets inferred from at least one combination of ChIP and expression analyses. Genes are grouped according to the combinations of experiments that support the identification of the as a Leu3 target. Shaded portions of columns identify the genes that are significantly bound or regulated under the indicated experimental condition (low or high activity). The two columns labeled "GO" show the genes whose Gene Ontology process annotations are enriched at the indicated confidence levels (1e-3 or 1e-8). Annotations are shown for all genes found with GO annotations enriched with p-value better than 0.05. If more than one annotation was enriched, the most significant annotation is shown. The GO annotation "branched chain family amino acid biosynthesis" has been abbreviated to "branched amino acid biosynthesis". Function of selected Leu3 target genes Figure 4 Function of selected Leu3 target genes. (A) Metabolic pathways in which Leu3 target genes function. Genes that are bound and regulated according to at least one combination of low or high activity expression and low or high ChIP analysis were subjected to GO process analysis, yielding 17 genes with enriched annotations.</li>
+</ul>
+<h3 id="13-grimm-genetic-stratification-for-inference-in-molecular-modeling">[13] GRIMM: Genetic stRatification for Inference in Molecular Modeling</h3>
+<ul>
+<li>Authors: Ashley Babjac, Adrienne Hoarfrost</li>
+<li>Year: 2026</li>
+<li>Venue: Unknown venue</li>
+<li>URL: https://www.semanticscholar.org/paper/a923e3c2800f1ce4cc937015594f74395af624a9</li>
+<li>Citations: 1</li>
+<li>Summary: GRIMM (Genetic stRatification for Inference in Molecular Modeling), a benchmark for enzyme function prediction that employs genetic stratification, enables more realistic evaluation of functional prediction models on both familiar and unseen classes and establishes a benchmark that more faithfully assesses model performance and generalizability.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.670)<br />
+    &gt; We used amino acid sequence data from the Universal Protein Resource (UniProt) UniProt Consortium [2025] and associated gene DNA coding sequences in the European Nucleotide Archive (ENA) Leinonen et al. [2010]. The UniProt database is divided into two sections: (i) UniProt/TrEMBL (which includes more sequence diversity but more annotation errors owing to homology-based annotations and error propagation Schnoes et al. [2009]) and (ii) UniProt/SwissProt (which is carefully curated and provides high confidence accurate functional annotations). For this study, we limited the data retrieved to prokaryotic organisms in SwissProt (May 2025) UniProt Consortium [2025].<br />
+    &gt; We mapped UniProt/SwissProt accession numbers to corresponding identifiers in UniRef (Universal Protein Resource Reference Clusters) UniRef50, UniRef90, and UniRef100, which define protein clusters based on amino acid sequence identity at 50, 90, and 100 percent amino acid identity respectively; and to their corresponding EMBL CDS IDs for gene coding sequences in the ENA database Leinonen et al. [2010] using ID mapping files uni [2021], Wang et al. [2021] from UniProtKB. Each EMBL CDS ID's corresponding DNA sequence was then obtained from ENA. EC numbers that were either incomplete or missing were removed from the dataset. Individual entries were created for UniProt records with more than one EMBL CDS ID in the nucleotide version of the dataset.</li>
+</ul>
+<h3 id="14-discovery-of-simple-sequence-repeat-markers-through-transcriptome-analysis-of-baccaurea-motleyana">[14] Discovery of Simple Sequence Repeat Markers through Transcriptome Analysis of Baccaurea motleyana</h3>
+<ul>
+<li>Authors: K. Nasir, Muhammad Fairuz Mohd Yusof, M. S. F. A. Razak, Siti Norsaidah Ibrahim, Mira Farzana Mohamad Moktar et al.</li>
+<li>Year: 2020</li>
+<li>Venue: Journal of Food Science and Engineering</li>
+<li>URL: https://www.semanticscholar.org/paper/f99fe2940881ec45ecbd8ba3da7f10b4fb22fc3b</li>
+<li>DOI: 10.17265/2159-5828/2020.02.001</li>
+<li>Summary: Baccaurea motleyana (rambai) is underutilized fruits that are native to Malaysia, Indonesia and Thailand and used for simple sequence repeat (SSR) analysis by MIcroSAtellite (MISA).</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.663)<br />
+    &gt; To get comprehensive gene function of rambai genes, gene annotation to seven databases, namely National Center for Biotechnology Information (NCBI) non-redundant protein sequences (NR), NCBI nucleotide sequences (NT), Kyoto Encyclopedia of Genes and Genome Ortholog (KO), SwissProt, Protein family (Pfam), Gene Ontology (GO) and Cluster of Orthologous Groups (KOG), was used as reference.<br />
+    &gt; The NCBI non-redundant protein sequences (NR), include protein sequence information from GenBank, Protein Data Bank (PDB), SwissProt, Protein Information Resource (PIR) and Protein Research Foundation (PRF). The NCBI nucleotide sequences (NT) are the nucleotide sequence database that includes nucleotide sequence from GenBank of the European Bioinformatics Institute (EMBL) and DNA Data Bank of Japan (DDBJ). KEGG is a database resource for understanding high-level functions and utilities of the biological system, such as cell, organism and ecosystem, from molecular-level information, especially for large-scale molecular datasets generated by genome sequencing and other high-throughput experimental technologies. KEGG is an established Cluster of Orthologous (KO) annotation system that can accomplish the function annotation of the genome/transcriptome of a newly sequenced species. SwissProt is a manual annotated and reviewed protein sequence database that has a high-quality protein sequence database from experimental results, computed features and scientific conclusions. Pfam is comprehensive collection of protein domains and families, represented as multiple sequence alignments and as profile of hidden Markov models. Many proteins are composed of structural domains, and the protein sequence of a specific structural domain possesses a certain degree of conservative property. GO is the established standard for the functional annotation of gene products and controlled vocabulary used to classify the functional attributes of gene products of a biological process, a molecular function and a cellular component.</li>
+</ul>
+<h3 id="15-miclique-an-algorithm-to-identify-differentially-coexpressed-disease-gene-subset-from-microarray-data">[15] MIClique: An Algorithm to Identify Differentially Coexpressed Disease Gene Subset from Microarray Data</h3>
+<ul>
+<li>Authors: Huanping Zhang, Xiaofeng Song, Huinan Wang, Xiaobai Zhang</li>
+<li>Year: 2010</li>
+<li>Venue: Journal of Biomedicine and Biotechnology</li>
+<li>URL: https://www.semanticscholar.org/paper/db76c2ba82c53c1eb0967c1196ae98ca75de22e5</li>
+<li>DOI: 10.1155/2009/642524</li>
+<li>PMID: 20169000</li>
+<li>PMCID: 2822236</li>
+<li>Citations: 18</li>
+<li>Influential citations: 1</li>
+<li>Summary: By applying the MIClique algorithm to real gene expression data, some DEC gene subsets which correlated under one experimental condition but uncorrelated under another condition are detected from the graph of colon dataset and leukemia dataset.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.659)<br />
+    &gt; Table 3 lists the Genbank accession number, the gene symbols, accession number in UniProtKB (UniProt Knowledgebase), and gene descriptions given by colon data. The UniProtKB is the central hub for the collection of information on proteins such as amino acid sequence, protein name or description, taxonomic data, and biological ontology [24]. Figure 6 depicts gene expression profiles of the eight genes in normal and disease samples. As shown in Figure 6, the profiles of these genes are highly coexpressed in normal samples (samples 1-22) while the coexpression pattern disappears in disease samples (samples 23-62).</li>
+</ul>
+<h3 id="16-mitominer-an-integrated-database-for-the-storage-and-analysis-of-mitochondrial-proteomics-data">[16] MitoMiner, an Integrated Database for the Storage and Analysis of Mitochondrial Proteomics Data</h3>
+<ul>
+<li>Authors: Anthony C. Smith, A. Robinson</li>
+<li>Year: 2009</li>
+<li>Venue: Molecular &amp; Cellular Proteomics : MCP</li>
+<li>URL: https://www.semanticscholar.org/paper/206a60d6d387688ce7f880e0dfe67af5a723c7b8</li>
+<li>DOI: 10.1074/mcp.M800373-MCP200</li>
+<li>PMID: 19208617</li>
+<li>PMCID: 2690483</li>
+<li>Citations: 84</li>
+<li>Influential citations: 7</li>
+<li>Summary: Analysis indicated that enzymes of some cytosolic metabolic pathways are regularly detected in mitochondrial proteomics experiments, suggesting that they are associated with the outside of the outer mitochondrial membrane.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.659)<br />
+    &gt; Recorded for each protein of the mass spectrometry data sets were, where available, the original protein identifier, subcellular location, sequence of identified peptides, sequence coverage, and the experimental techniques that had been used for the purification, separation, and identification of the protein. If the original protein identifier could not be mapped to a UniProt primary accession number by PIR ID or MGI, then the protein was compared with proteins in UniProt by using BLASTP (14). If there was a significant match, then the UniProt primary accession number was assigned to the protein. Those proteins without a significant match were discarded. By using the PIR ID and the MGI identifier conversion tools, the evidence of mitochondrial localization for a protein was linked to many of the UniProt entries representing it. Identifiers of proteins encoded in the mitochondrial genome of organisms were taken from the Organelle database of the European Molecular Biology Laboratory-European Bioinformatics Institute and used to annotate the appropriate proteins in MitoMiner.<br />
+    &gt; The source of protein sequences, related features, and annotation was UniProt (11). All UniProt entries were downloaded for the six species with mitochondrial localization data sets. The literature citations in each UniProt entry were retrieved from PubMed by using an InterMine parser. Additional Gene Ontology annotation on the biological process, metabolic function, and cellular component of each protein was taken from UniProt (15) and individual genome projects of M. musculus (12), Rattus norvegicus (16), Drosophila melanogaster (17), and Saccharomyces cerevisiae (18).<br />
+    &gt; Finally lists of human genes and the descriptions of their associated disease phenotypes were taken from OMIM (19), the definitions of groups of homologous proteins were taken from HomoloGene (20), and data on the reactions, enzymes, and compounds of metabolic pathways were taken from KEGG (21). The EC numbers of proteins in UniProt were used to define the cross-reference between proteins and metabolic pathways.</li>
+</ul>
+<h3 id="17-beyond-one-size-fits-all-approach-how-do-various-harvesting-strategies-shape-soil-microbial-diversity-in-larix-gmelinii-daxinganling-larch-forests-of-the-greater-khingan-mountains">[17] Beyond one-size-fits-all approach: How do various harvesting strategies shape soil microbial diversity in Larix gmelinii (Daxinganling larch) forests of the Greater Khingan Mountains?</h3>
+<ul>
+<li>Authors: Yufeng Wang, Na Ta, Hao Zhang, Min Li, Shengwei Liu et al.</li>
+<li>Year: 2025</li>
+<li>Venue: Frontiers in Microbiology</li>
+<li>URL: https://www.semanticscholar.org/paper/9a384ab790cc0a1d14a4eb83d686f6b2faf3d785</li>
+<li>DOI: 10.3389/fmicb.2025.1654005</li>
+<li>PMID: 41234741</li>
+<li>PMCID: 12604984</li>
+<li>Citations: 2</li>
+<li>Summary: This study analyzed the effects of six harvesting strategies, including primary forests (PF), shelterwood cutting (SC), clear cutting (CC), optional cutting with low intensity (OCL), optional cutting with moderate intensity (OCM), and optional cutting with high intensity (OCH), on soil microbial diversity in Daxinganling larch forests of the Greater Khingan Range. The results showed that the dominant bacterial and fungal phyla were similar across the different harvesting strategies. As the in...</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.658)<br />
+    &gt; Based on the prediction of bacterial gene function using PICRUSt2, the top 35 functions in terms of abundance and abundance information in each sample plots were selected to draw heat maps for comparison with the KEGG database. As shown in Figure 12, the relative abundance of gene functions of ABC-2 type transport system permease protein and elongation factor G was higher in the PF sample plots than in the other sample plots; the relative abundance of gene functions of the putative ABC transport system ATP-binding protein in the SC sample plots were higher than that of other sample plots; the relative abundance of acetyl-CoA C-acetyltransferase, peptide/nickel transport system substrate-binding protein, and long-chain-C-acetyltransferase, Predictive analysis of soil bacterial functions in sample plots with different harvesting strategies. The horizontal coordinate is the sample plots name, the vertical coordinate is the functional annotation information, and the clustering tree on the left side of the figure is the functional clustering tree; the value corresponding to the heat map is the Z-value obtained by normalizing the relative abundance of each row of function.<br />
+    &gt; peptide/nickel transport system substrate-binding protein, and long-chain-fatty-acid-CoA ligase in the OCL sample plots; in OCM sample plots, the relative abundance of gene function of periplasmic protein TonB, basic amino acid/polyamine antiporter, APA family, serine/threonine protein kinase, bacterial, putative ABC transport system permease protein, and thioredoxin reductase were higher than in the other sample plots; and in the OCH sample plots, the relative abundance of branched-chain amino acid transport system substrate-binding protein, glutathione S-transferase, iron complex outer membrane receptor protein, methyl-accepting chemotaxis protein were higher. The relative abundance of the gene functions of the biopolymer transport protein ExbD and the uncharacterized protein was higher in the CC sample plots than in the other sample plots.</li>
+</ul>
+<h3 id="18-prediction-of-horizontally-and-widely-transferred-genes-in-prokaryotes">[18] Prediction of Horizontally and Widely Transferred Genes in Prokaryotes</h3>
+<ul>
+<li>Authors: Yoji Nakamura</li>
+<li>Year: 2018</li>
+<li>Venue: Evolutionary Bioinformatics Online</li>
+<li>URL: https://www.semanticscholar.org/paper/af7bde229b96609907924d1c68ea463af656efb2</li>
+<li>DOI: 10.1177/1176934318810785</li>
+<li>PMID: 30546254</li>
+<li>PMCID: 6287321</li>
+<li>Citations: 5</li>
+<li>Influential citations: 1</li>
+<li>Summary: A data-driven approach using massive sequence data may contribute to a broader understanding of HGT in prokaryotes, and predicted that six as-yet-uncharacterized genes were widely distributed HT genes, and therefore, will be interesting targets for evolutionary studies.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.656)<br />
+    &gt; Focusing on uncharacterized HT genes in the COG and KEGG databases, four gene groups (COG3209, COG1479, COG3291, and COG3791) were classified into "general function prediction only" (COG category code = R) or "function unknown" (S) according to the COG annotation. By adding two gene groups of "uncharacterized protein" (K08998 and K07062) from the KEGG annotation, a total of six were obtained as functionally ambiguous HT gene groups despite being distributed among more than 300 species. With reference to COG3209 (uncharacterized conserved protein RhaS, contains 28 RHS repeats), the genes encoded in E. coli have been suggested to be horizontally transferred from another organism. 43 Recently, RHS repeat-containing genes are reported to be involved in toxins against competitors 44 ; therefore, the genes in COG3209 could be considered as defense system genes. The functions of COG1479 (uncharacterized conserved protein, contains ParB-like and HNH nuclease domains), COG3291 (PKD repeat), and COG3791 (uncharacterized conserved protein) have yet to be examined. According to InterPro analysis, COG3791 genes have a domain of glutathione-dependent formaldehyde-activating enzyme (IPR006913); therefore, these genes might be related to formaldehyde detoxification. 45 The KO group, K08998, corresponds to COG0759 (membraneanchored protein YidD) of category M in the COG database that has previously been reported to be involved in the protein insertion process. 46 K07062 corresponds to COG1487 and is considered a toxic protein. 47 As a whole, it has to be said that the evolutionary significance of these six gene groups has not been fully realized. Conversely, these genes might be good targets for evolutionary studies in the context of HGT, providing an example of data-driven approaches from massive sequence data. 48</li>
+</ul>
+<h3 id="19-deep-sequencing-of-danish-holstein-dairy-cattle-for-variant-detection-and-insight-into-potential-loss-of-function-variants-in-protein-coding-genes">[19] Deep sequencing of Danish Holstein dairy cattle for variant detection and insight into potential loss-of-function variants in protein coding genes</h3>
+<ul>
+<li>Authors: Ashutosh Das, F. Panitz, V. R. Gregersen, C. Bendixen, L. Holm</li>
+<li>Year: 2015</li>
+<li>Venue: BMC Genomics</li>
+<li>URL: https://www.semanticscholar.org/paper/b96532e082a2c5b0f3f0fc51afc47ac2426b4904</li>
+<li>DOI: 10.1186/s12864-015-2249-y</li>
+<li>PMID: 26645365</li>
+<li>PMCID: 4673847</li>
+<li>Citations: 36</li>
+<li>Influential citations: 3</li>
+<li>Summary: Deep sequencing of Danish Holstein genomes enabled us to identify 12.1 million variants, a catalog of variants that will be a resource for future studies to understand variation underlying important phenotypes, particularly recessively inherited lethal phenotypes.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.655)<br />
+    &gt; We used NGS-SNP [25] for functional annotation of identified SNPs and indels. The details of the resulting annotation fields have been described by Grant et al. [25]. Briefly, NGS-SNP provides rich annotations for genome-wide SNP and indels in organisms for which reference sequences are available in the Ensembl database. It reports a "Model_Annotations" field with detailed comparisons of SNP/indel to an orthologous gene typically in a well-characterized species. NGS-SNP also classifies whether or not the amino acid change is deleterious based on SIFT [56] prediction. Other important fields include overlapping protein features or domains, gene ontology information, and the conservation of both the SNP site and flanking sequence compared to a well-characterized species. NGS-SNP also reports NCBI, Ensembl, and UniProt IDs for genes, transcripts, and proteins when applicable. A gene description, phenotypes linked to the gene and whether the SNP/indel is novel or known is also supplemented in the annotated field. In our analysis, NGS-SNP utilized information from Ensembl release 72 [57], dbSNP Build 133 [58], Entrez Gene [58] and UniProt release 2013_09 [59]. We incorporated Homo sapiens as the model species for sequence conservation during annotation because most of the eukaryotic genes are well characterized in human.</li>
+</ul>
+<h3 id="20-the-y-ome-defines-the-35-of-escherichia-coli-genes-that-lack-experimental-evidence-of-function">[20] The y-ome defines the 35% of Escherichia coli genes that lack experimental evidence of function</h3>
+<ul>
+<li>Authors: S. Ghatak, Zachary A. King, Anand V. Sastry, B. Palsson</li>
+<li>Year: 2019</li>
+<li>Venue: Nucleic Acids Research</li>
+<li>URL: https://www.semanticscholar.org/paper/c0336e0a70554304893a9e2d010ee30bd6872b10</li>
+<li>DOI: 10.1093/nar/gkz030</li>
+<li>PMID: 30698741</li>
+<li>PMCID: 6412132</li>
+<li>Citations: 133</li>
+<li>Influential citations: 4</li>
+<li>Summary: The misconception that a gene in E. coli whose primary name starts with ‘y’ is unannotated is resolved, and the value of the y-ome is discussed for systematic improvement ofE.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.653)<br />
+    &gt; There are several knowledge bases that represent the collected knowledge of the E. coli K-12 MG1655 genome: EcoCyc (11), EcoGene (12), UniProt (13) and RefSeq (14). Other useful knowledge bases cater to specific classes of gene products, such as the RegulonDB, which contains manually curated functional information about transcription factors in E. coli (15). Our initial review of these knowledge bases yielded conflicting information on gene function and level of annotation for many E. coli genes. Any attempt to systematically assess the function of unannotated genes must therefore draw from multiple knowledge bases and resolve these conflicts.<br />
+    &gt; Many research groups have categorized E. coli genes and proteins by annotation quality as a part of their studies. In 2009, Hu et (16). First, they identified all unannotated proteins in the K-12 W3110 and MG1655 genomes. In order for a protein-encoding gene to be considered functionally uncharacterized in their analysis, it had to meet the following criteria: (i) The gene name begins with 'y', (ii) the gene does not have a known pathway within EcoCyc and (iii) the gene does not have a functional description in Gen-ProtEC (17) (any gene with a description containing the words 'predicted', 'hypothetical', or 'conserved'). Based on these criteria, it was determined that 1431 of 4225 protein coding sequences were not functionally annotated. In 2015, Kim et al. published a database called EcoliNet that curated and predicted cofunctional gene networks for every protein coding gene in the E. coli genome (18). This study also quantified the number of uncharacterized protein coding genes in E. coli. To assess functional annotation, they used the presence of experimentally supported 'biological process' annotations in the Gene Ontology database (19). They concluded that ∼2000 protein coding genes in E. coli were not functionally annotated. The most comprehensive effort to assess the level of annotation in bacterial genomes has been Computational Bridges to Experiments (COM-BREX) (20,21).</li>
+</ul>
+<h2 id="notes">Notes</h2>
+<ul>
+<li>This provider combines <code>search_papers_by_relevance</code> with <code>snippet_search</code>.</li>
+<li>No synthesis or second-stage model call is performed.</li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>Daniel A. Johnson, S. Tetu, Katherine H. Phillippy, Joan Chen, Q. Ren et al. (2008). High-Throughput Phenotypic Characterization of Pseudomonas aeruginosa Membrane Transport Genes. PLoS Genetics. https://www.semanticscholar.org/paper/8b4d3d995613c25608cde9d7ab31cded1839768b</li>
+<li>Samuel J. Modlin, A. Elghraoui, Deepika Gunasekaran, Alyssa M Zlotnicki, N. Dillon et al. (2021). Structure-Aware Mycobacterium tuberculosis Functional Annotation Uncloaks Resistance, Metabolic, and Virulence Genes. mSystems. https://www.semanticscholar.org/paper/76ff9a62b36b32cc10e46e71ffd4dd90344e4706</li>
+<li>Megan G. Behringer, Wei-Chin Ho, Samuel F. Miller, Sarah B. Worthan, Zeer Cen et al. (2024). Trade-offs, trade-ups, and high mutational parallelism underlie microbial adaptation during extreme cycles of feast and famine. Current biology : CB. https://www.semanticscholar.org/paper/13c71a271ad81ea813516193454b0fed04b2cd2b</li>
+<li>Xi-feng Fei, Xiangtong Xie, X. Ji, Haiyan Tian, F. Sun et al. (2022). Quantitative proteomic dataset of whole protein in three melanoma samples of 92.1, 92.1-A and 92.1-B. Data in Brief. https://www.semanticscholar.org/paper/33312bb6cc2cf985d32f3a31cf4fdee6b4e17385</li>
+<li>Ralf C. Mueller, Nicolai Mallig, Jacqueline Smith, Lél Eöry, Richard I. Kuo et al. (2020). Avian Immunome DB: an example of a user-friendly interface for extracting genetic information. BMC Bioinformatics. https://www.semanticscholar.org/paper/b894d9ca8ea2d653bf1711a0c67dab71d054487c</li>
+<li>Muskan Arooj, R. Mateen, M. Javed, Muhammad Ali, Muhammad Irfan Fareed et al. (2025). Computational screening of phytochemicals targeting mutant KRAS in colorectal cancer. Scientific Reports. https://www.semanticscholar.org/paper/2e47ff33fc8e4bd8a85a3cd322f3441bb45db205</li>
+<li>Robert W Seymour, S. van der Post, A. Mooradian, Jason M. Held (2020). ProteoSushi: a software tool to biologically annotate and quantify modification-specific, peptide-centric proteomics datasets. bioRxiv. https://www.semanticscholar.org/paper/9bdbfae251dfa48820f40c01f12a1ee25fcdf57e</li>
+<li>Pascal Donsbach, Brian A. Yee, Dione L Sánchez-Hevia, J. Berenguer, S. Aigner et al. (2020). The Thermus thermophilus DEAD-box protein Hera is a general RNA binding protein and plays a key role in tRNA metabolism. RNA. https://www.semanticscholar.org/paper/533f89524b50f1df6146e8665eed9512b23e1a5c</li>
+<li>L. Zaslavsky, Tiejun Cheng, A. Gindulyte, Siqian He, Sunghwan Kim et al. (2021). Discovering and Summarizing Relationships Between Chemicals, Genes, Proteins, and Diseases in PubChem. Frontiers in Research Metrics and Analytics. https://www.semanticscholar.org/paper/57b86aef9aae576c2ae4199c0b74971f4c195211</li>
+<li>V. Beisvåg, Frode K. R. Jünge, Hallgeir Bergum, Lars Jølsum, S. Lydersen et al. (2006). GeneTools – application for functional annotation and statistical hypothesis testing. BMC Bioinformatics. https://www.semanticscholar.org/paper/1d9e0c2f67acd5bf64c659f1f3f8624325b6be8a</li>
+<li>Brigitte Waegele, I. Dunger, G. Fobo, Corinna Montrone, H. Mewes et al. (2008). CRONOS: the cross-reference navigation server. Bioinformatics. https://www.semanticscholar.org/paper/8c05b3aa0ba01c41ee97c2dc98ea7b5b14ce0e9c</li>
+<li>L. Tang, Xiao Liu, N. Clarke (2006). Inferring direct regulatory targets from expression and genome location analyses: a comparison of transcription factor deletion and overexpression. BMC Genomics. https://www.semanticscholar.org/paper/5b873fca0112196e313cb29743f3323aac062a5a</li>
+<li>Ashley Babjac, Adrienne Hoarfrost (2026). GRIMM: Genetic stRatification for Inference in Molecular Modeling. https://www.semanticscholar.org/paper/a923e3c2800f1ce4cc937015594f74395af624a9</li>
+<li>K. Nasir, Muhammad Fairuz Mohd Yusof, M. S. F. A. Razak, Siti Norsaidah Ibrahim, Mira Farzana Mohamad Moktar et al. (2020). Discovery of Simple Sequence Repeat Markers through Transcriptome Analysis of Baccaurea motleyana. Journal of Food Science and Engineering. https://www.semanticscholar.org/paper/f99fe2940881ec45ecbd8ba3da7f10b4fb22fc3b</li>
+<li>Huanping Zhang, Xiaofeng Song, Huinan Wang, Xiaobai Zhang (2010). MIClique: An Algorithm to Identify Differentially Coexpressed Disease Gene Subset from Microarray Data. Journal of Biomedicine and Biotechnology. https://www.semanticscholar.org/paper/db76c2ba82c53c1eb0967c1196ae98ca75de22e5</li>
+<li>Anthony C. Smith, A. Robinson (2009). MitoMiner, an Integrated Database for the Storage and Analysis of Mitochondrial Proteomics Data. Molecular &amp; Cellular Proteomics : MCP. https://www.semanticscholar.org/paper/206a60d6d387688ce7f880e0dfe67af5a723c7b8</li>
+<li>Yufeng Wang, Na Ta, Hao Zhang, Min Li, Shengwei Liu et al. (2025). Beyond one-size-fits-all approach: How do various harvesting strategies shape soil microbial diversity in Larix gmelinii (Daxinganling larch) forests of the Greater Khingan Mountains?. Frontiers in Microbiology. https://www.semanticscholar.org/paper/9a384ab790cc0a1d14a4eb83d686f6b2faf3d785</li>
+<li>Yoji Nakamura (2018). Prediction of Horizontally and Widely Transferred Genes in Prokaryotes. Evolutionary Bioinformatics Online. https://www.semanticscholar.org/paper/af7bde229b96609907924d1c68ea463af656efb2</li>
+<li>Ashutosh Das, F. Panitz, V. R. Gregersen, C. Bendixen, L. Holm (2015). Deep sequencing of Danish Holstein dairy cattle for variant detection and insight into potential loss-of-function variants in protein coding genes. BMC Genomics. https://www.semanticscholar.org/paper/b96532e082a2c5b0f3f0fc51afc47ac2426b4904</li>
+<li>S. Ghatak, Zachary A. King, Anand V. Sastry, B. Palsson (2019). The y-ome defines the 35% of Escherichia coli genes that lack experimental evidence of function. Nucleic Acids Research. https://www.semanticscholar.org/paper/c0336e0a70554304893a9e2d010ee30bd6872b10</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88DF9
+gene_symbol: braD
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: braD (PP_4866) encodes a predicted multi-pass inner-membrane permease component of the PP_4863-PP_4867 Bra/Liv high-affinity branched-chain amino-acid ABC uptake system. Automated annotations support valine, isoleucine, and leucine transporter activity.
+existing_annotations:
+- term:
+    id: GO:0005304
+    label: L-valine transmembrane transporter activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: enables
+  review:
+    summary: L-valine transmembrane transporter activity is consistent with the Bra/Liv branched-chain amino-acid ABC importer.
+    action: ACCEPT
+    reason: The BraD PANTHER subfamily supports a high-affinity branched-chain amino-acid transport-system permease.
+    supported_by:
+    - reference_id: file:PSEPK/braD/braD-goa.tsv
+      supporting_text: &#34;GO:0005304\tL-valine transmembrane transporter activity&#34;
+    - reference_id: file:PSEPK/braD/braD-uniprot.txt
+      supporting_text: PANTHER; PTHR11795:SF371; HIGH-AFFINITY BRANCHED-CHAIN AMINO ACID TRANSPORT SYSTEM PERMEASE PROTEIN LIVH; 1.
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: Plasma membrane localization is appropriate for this predicted inner-membrane ABC permease.
+    action: ACCEPT
+    reason: UniProt predicts this Bra/Liv permease as a cell inner-membrane multi-pass membrane protein.
+    supported_by:
+    - reference_id: file:PSEPK/braD/braD-goa.tsv
+      supporting_text: &#34;GO:0005886\tplasma membrane&#34;
+    - reference_id: file:PSEPK/braD/braD-uniprot.txt
+      supporting_text: Cell inner membrane
+- term:
+    id: GO:0015188
+    label: L-isoleucine transmembrane transporter activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: enables
+  review:
+    summary: L-isoleucine transmembrane transporter activity is consistent with the Bra/Liv branched-chain amino-acid ABC importer.
+    action: ACCEPT
+    reason: The BraD PANTHER subfamily supports a high-affinity branched-chain amino-acid transport-system permease.
+    supported_by:
+    - reference_id: file:PSEPK/braD/braD-goa.tsv
+      supporting_text: &#34;GO:0015188\tL-isoleucine transmembrane transporter activity&#34;
+    - reference_id: file:PSEPK/braD/braD-uniprot.txt
+      supporting_text: PANTHER; PTHR11795:SF371; HIGH-AFFINITY BRANCHED-CHAIN AMINO ACID TRANSPORT SYSTEM PERMEASE PROTEIN LIVH; 1.
+- term:
+    id: GO:0015190
+    label: L-leucine transmembrane transporter activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: enables
+  review:
+    summary: L-leucine transmembrane transporter activity is consistent with BraD in a Bra/Liv BCAA importer.
+    action: ACCEPT
+    reason: BraD is part of a high-affinity branched-chain amino-acid transport system, and GOA supplies the L-leucine transporter activity row.
+    supported_by:
+    - reference_id: file:PSEPK/braD/braD-goa.tsv
+      supporting_text: &#34;GO:0015190\tL-leucine transmembrane transporter activity&#34;
+    - reference_id: file:PSEPK/braD/braD-uniprot.txt
+      supporting_text: PANTHER; PTHR11795:SF371; HIGH-AFFINITY BRANCHED-CHAIN AMINO ACID TRANSPORT SYSTEM PERMEASE PROTEIN LIVH; 1.
+- term:
+    id: GO:0015192
+    label: L-phenylalanine transmembrane transporter activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: enables
+  review:
+    summary: L-phenylalanine transporter activity may reflect broad hydrophobic-amino-acid family transfer rather than the core Bra/Liv BCAA assignment.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The local product names and PANTHER subfamilies support a branched-chain amino-acid transporter; phenylalanine transport is not promoted to core without PSEPK-specific substrate evidence.
+    supported_by:
+    - reference_id: file:PSEPK/braD/braD-goa.tsv
+      supporting_text: &#34;GO:0015192\tL-phenylalanine transmembrane transporter activity&#34;
+    - reference_id: file:PSEPK/braD/braD-uniprot.txt
+      supporting_text: Full=High-affinity branched-chain amino acid transport system permease protein BraD
+- term:
+    id: GO:0015808
+    label: L-alanine transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: L-alanine transport is plausible only as broad-family transfer and is not the core Bra/Liv function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The strongest locus-level evidence supports branched-chain amino-acid uptake, not alanine transport.
+    supported_by:
+    - reference_id: file:PSEPK/braD/braD-goa.tsv
+      supporting_text: &#34;GO:0015808\tL-alanine transport&#34;
+    - reference_id: file:PSEPK/braD/braD-uniprot.txt
+      supporting_text: PANTHER; PTHR11795:SF371; HIGH-AFFINITY BRANCHED-CHAIN AMINO ACID TRANSPORT SYSTEM PERMEASE PROTEIN LIVH; 1.
+- term:
+    id: GO:0015823
+    label: phenylalanine transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: Phenylalanine transport is not supported as the core function of this Bra/Liv permease.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The review treats phenylalanine transport as a hydrophobic-amino-acid family spillover pending direct substrate evidence.
+    supported_by:
+    - reference_id: file:PSEPK/braD/braD-goa.tsv
+      supporting_text: &#34;GO:0015823\tphenylalanine transport&#34;
+    - reference_id: file:PSEPK/braD/braD-uniprot.txt
+      supporting_text: Full=High-affinity branched-chain amino acid transport system permease protein BraD
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: located_in
+  review:
+    summary: Membrane localization is true but less informative than plasma membrane for this bacterial inner-membrane permease.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The record also has a plasma-membrane annotation and UniProt predicts a cell inner-membrane multi-pass protein.
+    supported_by:
+    - reference_id: file:PSEPK/braD/braD-goa.tsv
+      supporting_text: &#34;GO:0016020\tmembrane&#34;
+    - reference_id: file:PSEPK/braD/braD-uniprot.txt
+      supporting_text: Cell inner membrane
+- term:
+    id: GO:0022857
+    label: transmembrane transporter activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Generic transmembrane transporter activity is too broad for this Bra/Liv ABC-transporter permease component.
+    action: MODIFY
+    reason: The product name and PANTHER subfamily support branched-chain amino acid transmembrane transporter activity as the better complex-level activity.
+    supported_by:
+    - reference_id: file:PSEPK/braD/braD-goa.tsv
+      supporting_text: &#34;GO:0022857\ttransmembrane transporter activity&#34;
+    - reference_id: file:PSEPK/braD/braD-uniprot.txt
+      supporting_text: Full=High-affinity branched-chain amino acid transport system permease protein BraD
+    proposed_replacement_terms:
+    - id: GO:0015658
+      label: branched-chain amino acid transmembrane transporter activity
+- term:
+    id: GO:0042941
+    label: D-alanine transmembrane transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: D-alanine transmembrane transport is not part of the core Bra/Liv branched-chain amino-acid uptake assignment.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The local evidence supports BraD as a high-affinity BCAA transporter permease; D-alanine transport is treated as over-propagated family context.
+    supported_by:
+    - reference_id: file:PSEPK/braD/braD-goa.tsv
+      supporting_text: &#34;GO:0042941\tD-alanine transmembrane transport&#34;
+    - reference_id: file:PSEPK/braD/braD-uniprot.txt
+      supporting_text: Full=High-affinity branched-chain amino acid transport system permease protein BraD
+- term:
+    id: GO:0055085
+    label: transmembrane transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Transmembrane transport is true but broad relative to the branched-chain amino-acid ABC-import context.
+    action: MODIFY
+    reason: Branched-chain amino acid transport better captures the expected substrate class for this Bra/Liv permease.
+    supported_by:
+    - reference_id: file:PSEPK/braD/braD-goa.tsv
+      supporting_text: &#34;GO:0055085\ttransmembrane transport&#34;
+    - reference_id: file:PSEPK/braD/braD-uniprot.txt
+      supporting_text: PANTHER; PTHR11795:SF371; HIGH-AFFINITY BRANCHED-CHAIN AMINO ACID TRANSPORT SYSTEM PERMEASE PROTEIN LIVH; 1.
+    proposed_replacement_terms:
+    - id: GO:0015803
+      label: branched-chain amino acid transport
+- term:
+    id: GO:1903785
+    label: L-valine transmembrane transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: L-valine transmembrane transport is consistent with the Bra/Liv BCAA uptake system.
+    action: ACCEPT
+    reason: BraD is a high-affinity branched-chain amino-acid transport-system permease.
+    supported_by:
+    - reference_id: file:PSEPK/braD/braD-goa.tsv
+      supporting_text: &#34;GO:1903785\tL-valine transmembrane transport&#34;
+    - reference_id: file:PSEPK/braD/braD-uniprot.txt
+      supporting_text: PANTHER; PTHR11795:SF371; HIGH-AFFINITY BRANCHED-CHAIN AMINO ACID TRANSPORT SYSTEM PERMEASE PROTEIN LIVH; 1.
+- term:
+    id: GO:1903806
+    label: L-isoleucine import across plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: L-isoleucine import across the plasma membrane is an appropriate substrate-specific process for this Bra/Liv importer component.
+    action: ACCEPT
+    reason: The BraD permease supports a BCAA uptake-system interpretation.
+    supported_by:
+    - reference_id: file:PSEPK/braD/braD-goa.tsv
+      supporting_text: &#34;GO:1903806\tL-isoleucine import across plasma membrane&#34;
+    - reference_id: file:PSEPK/braD/braD-uniprot.txt
+      supporting_text: Full=High-affinity branched-chain amino acid transport system permease protein BraD
+- term:
+    id: GO:0015658
+    label: branched-chain amino acid transmembrane transporter activity
+  evidence_type: IEA
+  original_reference_id: file:PSEPK/braD/braD-uniprot.txt
+  qualifier: contributes_to
+  review:
+    summary: Branched-chain amino acid transmembrane transporter activity captures the complex-level activity to which BraD contributes.
+    action: NEW
+    reason: BraD is a permease subunit of the adjacent Bra/Liv branched-chain amino-acid ABC transporter.
+    supported_by:
+    - reference_id: file:PSEPK/braD/braD-uniprot.txt
+      supporting_text: PANTHER; PTHR11795:SF371; HIGH-AFFINITY BRANCHED-CHAIN AMINO ACID TRANSPORT SYSTEM PERMEASE PROTEIN LIVH; 1.
+    - reference_id: file:PSEPK/braD/braD-deep-research-asta.md
+      supporting_text: &#39;Protein Description:** SubName: Full=High-affinity branched-chain amino acid transport system permease protein BraD&#39;
+- term:
+    id: GO:1903801
+    label: L-leucine import across plasma membrane
+  evidence_type: IEA
+  original_reference_id: file:PSEPK/braD/braD-uniprot.txt
+  qualifier: involved_in
+  review:
+    summary: L-leucine import across the plasma membrane is a useful missing process annotation for the BraD permease.
+    action: NEW
+    reason: BraD has an L-leucine transporter activity annotation within a high-affinity branched-chain amino-acid ABC transporter context.
+    supported_by:
+    - reference_id: file:PSEPK/braD/braD-goa.tsv
+      supporting_text: &#34;GO:0015190\tL-leucine transmembrane transporter activity&#34;
+    - reference_id: file:PSEPK/braD/braD-uniprot.txt
+      supporting_text: PANTHER; PTHR11795:SF371; HIGH-AFFINITY BRANCHED-CHAIN AMINO ACID TRANSPORT SYSTEM PERMEASE PROTEIN LIVH; 1.
+- term:
+    id: GO:0043190
+    label: ATP-binding cassette (ABC) transporter complex
+  evidence_type: IEA
+  original_reference_id: file:PSEPK/braD/braD-uniprot.txt
+  qualifier: part_of
+  review:
+    summary: ABC transporter complex membership is appropriate for this BraD permease.
+    action: NEW
+    reason: BraD is a permease subunit in the adjacent Bra/Liv branched-chain amino-acid ABC transporter locus.
+    supported_by:
+    - reference_id: file:PSEPK/braD/braD-uniprot.txt
+      supporting_text: Full=High-affinity branched-chain amino acid transport system permease protein BraD
+    - reference_id: file:PSEPK/braD/braD-deep-research-asta.md
+      supporting_text: &#39;Protein Description:** SubName: Full=High-affinity branched-chain amino acid transport system permease protein BraD&#39;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/braD/braD-goa.tsv
+  title: QuickGO GOA annotations for braD
+  findings: []
+- id: file:PSEPK/braD/braD-uniprot.txt
+  title: UniProtKB entry for braD (Q88DF9)
+  findings:
+  - supporting_text: Full=High-affinity branched-chain amino acid transport system permease protein BraD
+- id: file:PSEPK/braD/braD-deep-research-asta.md
+  title: Asta retrieval report for braD (Q88DF9)
+  findings:
+  - supporting_text: &#39;Protein Description:** SubName: Full=High-affinity branched-chain amino acid transport system permease protein BraD&#39;
+core_functions:
+- description: Multi-pass permease component contributing to a predicted PP_4863-PP_4867 Bra/Liv branched-chain amino-acid ABC uptake system.
+  contributes_to_molecular_function:
+    id: GO:0015658
+    label: branched-chain amino acid transmembrane transporter activity
+  directly_involved_in:
+  - id: GO:1903785
+    label: L-valine transmembrane transport
+  - id: GO:1903806
+    label: L-isoleucine import across plasma membrane
+  - id: GO:1903801
+    label: L-leucine import across plasma membrane
+  locations:
+  - id: GO:0005886
+    label: plasma membrane
+  in_complex:
+    id: GO:0043190
+    label: ATP-binding cassette (ABC) transporter complex
+  supported_by:
+  - reference_id: file:PSEPK/braD/braD-goa.tsv
+    supporting_text: &#34;GO:0015190\tL-leucine transmembrane transporter activity&#34;
+  - reference_id: file:PSEPK/braD/braD-uniprot.txt
+    supporting_text: Full=High-affinity branched-chain amino acid transport system permease protein BraD
+  - reference_id: file:PSEPK/braD/braD-deep-research-asta.md
+    supporting_text: &#39;Protein Description:** SubName: Full=High-affinity branched-chain amino acid transport system permease protein BraD&#39;
+proposed_new_terms: []
+suggested_questions:
+- question: Is the PP_4863-PP_4867 Bra/Liv ABC importer functionally redundant with the PP_1137-PP_1141 LivFGMHK system, or does it differ in regulation or substrate preference for L-leucine, L-isoleucine, L-valine, alanine, or related hydrophobic amino acids?
+suggested_experiments:
+- description: Measure uptake and growth phenotypes for livF-II, braF, braE, braD, and PP_4867 mutants, alone and in combination with the PP_1137-PP_1141 liv locus, using L-leucine, L-isoleucine, L-valine, alanine, and phenylalanine as candidate substrates.
+  experiment_type: targeted transporter mutant substrate-uptake and redundancy assay
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

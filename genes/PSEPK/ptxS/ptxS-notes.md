@@ -61,3 +61,18 @@ Annotation notes:
   binding term; over-annotated/uninformative on its own.
 - GO:0006355 regulation of DNA-templated transcription (IEA) — broad parent of
   the more specific negative regulation term; over-annotated.
+
+## 2026-07-10 metabolic transcriptional regulator first pass
+
+- Batch: `projects/P_PUTIDA/batches/module_regulation_signal_transduction_small_family_metabolic_transcriptional_regulators.tsv`.
+- Main conclusion: experimentally supported PtxS 2-ketogluconate-responsive transcriptional repressor.
+- Regulated operon, effector ligand, and activation/repression direction remain unresolved unless captured in existing curated evidence.
+
+Primary provenance:
+- [file:PSEPK/ptxS/ptxS-goa.tsv "UniProtKB	Q88HH7	ptxS	enables	GO:0001217	DNA-binding transcription repressor activity	molecular_function	ECO:0000256	IEA	GO_REF:0000117	ARBA:ARBA00027659	160488	Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)	UniProt	HTH-type transcriptional regulator PtxS	20260601"]
+- [file:PSEPK/ptxS/ptxS-uniprot.txt "DE   RecName: Full=HTH-type transcriptional regulator PtxS {ECO:0000305};"]
+- [file:PSEPK/ptxS/ptxS-uniprot.txt "GN   Name=ptxS {ECO:0000303|PubMed:20581202};"]
+- [file:PSEPK/ptxS/ptxS-uniprot.txt "CC   -!- FUNCTION: Negatively regulates glucose metabolism by binding directly"]
+- [file:PSEPK/ptxS/ptxS-uniprot.txt "DR   GO; GO:0001217; F:DNA-binding transcription repressor activity; IPI:CollecTF."]
+- [file:PSEPK/ptxS/ptxS-uniprot.txt "DR   InterPro; IPR000843; HTH_LacI."]
+- [file:PSEPK/ptxS/ptxS-deep-research-asta.md "uniprot_accession: Q88HH7"]

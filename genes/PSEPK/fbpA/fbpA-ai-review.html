@@ -1,0 +1,2653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>fbpA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>fbpA</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88CI5" target="_blank" class="term-link">
+                        Q88CI5
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "fbpA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88CI5" data-a="DESCRIPTION: fbpA (PP_5196) encodes a predicted periplasmic iro..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>fbpA (PP_5196) encodes a predicted periplasmic iron(III)-binding substrate-binding component of the PP_5195-fbpA iron ABC import locus. Its iron(III) ABC-transporter product name, ferric-binding domain, iron keyword, signal peptide, and iron-utilization PANTHER subfamily support ferric/iron binding.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030288" target="_blank" class="term-link">
+                                    GO:0030288
+                                </a>
+                            </span>
+                            <span class="term-label">outer membrane-bounded periplasmic space</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CI5" data-a="GO:0030288" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Periplasmic localization is appropriate for this signal-peptide-bearing iron ABC substrate-binding protein.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The protein is a predicted periplasmic binding component with a signal peptide and ferric-binding domain.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/fbpA/fbpA-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0030288	outer membrane-bounded periplasmic space</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/fbpA/fbpA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Full=Iron(III) iron ABC transporter, periplasmic iron-binding protein</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/fbpA/fbpA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">FT   SIGNAL          1..22</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/fbpA/fbpA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">InterPro; IPR026045; Ferric-bd.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008199" target="_blank" class="term-link">
+                                    GO:0008199
+                                </a>
+                            </span>
+                            <span class="term-label">ferric iron binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:PSEPK/fbpA/fbpA-uniprot.txt
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CI5" data-a="GO:0008199" data-r="file:PSEPK/fbpA/fbpA-uniprot.txt" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ferric iron binding is the substrate-recognition role expected for this periplasmic iron ABC binding component.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The protein has a ferric-binding domain, iron keyword/product context, and a signal peptide.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/fbpA/fbpA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Full=Iron(III) iron ABC transporter, periplasmic iron-binding protein</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/fbpA/fbpA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">InterPro; IPR026045; Ferric-bd.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/fbpA/fbpA-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">Protein Description:** SubName: Full=Iron(III) iron ABC transporter, periplasmic iron-binding protein</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/fbpA/fbpA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Iron {ECO:0000256|PIRSR:PIRSR002825-1}</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/fbpA/fbpA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">IRON-UTILIZATION PERIPLASMIC PROTEIN</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/fbpA/fbpA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Belongs to the bacterial solute-binding protein 1 family.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006826" target="_blank" class="term-link">
+                                    GO:0006826
+                                </a>
+                            </span>
+                            <span class="term-label">iron ion transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:PSEPK/fbpA/fbpA-uniprot.txt
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CI5" data-a="GO:0006826" data-r="file:PSEPK/fbpA/fbpA-uniprot.txt" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Iron ion transport is the substrate-specific process for this iron ABC substrate-binding component.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The binding protein is part of a predicted iron ABC import locus.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/fbpA/fbpA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Full=Iron(III) iron ABC transporter, periplasmic iron-binding protein</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/fbpA/fbpA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">InterPro; IPR026045; Ferric-bd.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/fbpA/fbpA-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">Protein Description:** SubName: Full=Iron(III) iron ABC transporter, periplasmic iron-binding protein</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/fbpA/fbpA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Iron {ECO:0000256|PIRSR:PIRSR002825-1}</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/fbpA/fbpA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">IRON-UTILIZATION PERIPLASMIC PROTEIN</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/fbpA/fbpA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Belongs to the bacterial solute-binding protein 1 family.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043190" target="_blank" class="term-link">
+                                    GO:0043190
+                                </a>
+                            </span>
+                            <span class="term-label">ATP-binding cassette (ABC) transporter complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:PSEPK/fbpA/fbpA-uniprot.txt
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CI5" data-a="GO:0043190" data-r="file:PSEPK/fbpA/fbpA-uniprot.txt" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The binding protein should be represented as part of an ABC importer complex candidate.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The gene sits in an iron ABC transporter locus with matching permease and, for C67, ATPase components.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/fbpA/fbpA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Full=Iron(III) iron ABC transporter, periplasmic iron-binding protein</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/fbpA/fbpA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">InterPro; IPR026045; Ferric-bd.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/fbpA/fbpA-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">Protein Description:** SubName: Full=Iron(III) iron ABC transporter, periplasmic iron-binding protein</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/fbpA/fbpA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Iron {ECO:0000256|PIRSR:PIRSR002825-1}</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/fbpA/fbpA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">IRON-UTILIZATION PERIPLASMIC PROTEIN</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/fbpA/fbpA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Belongs to the bacterial solute-binding protein 1 family.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Predicted periplasmic ferric/iron-binding component of the C71 iron ABC import locus.</h3>
+                <span class="vote-buttons" data-g="Q88CI5" data-a="FUNCTION: Predicted periplasmic ferric/iron-binding componen..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008199" target="_blank" class="term-link">
+                            ferric iron binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006826" target="_blank" class="term-link">
+                                iron ion transport
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030288" target="_blank" class="term-link">
+                                outer membrane-bounded periplasmic space
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043190" target="_blank" class="term-link">
+                            ATP-binding cassette (ABC) transporter complex
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/fbpA/fbpA-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Full=Iron(III) iron ABC transporter, periplasmic iron-binding protein</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/fbpA/fbpA-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">InterPro; IPR026045; Ferric-bd.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/fbpA/fbpA-deep-research-asta.md
+
+                        </span>
+
+                        <div class="finding-text">Protein Description:** SubName: Full=Iron(III) iron ABC transporter, periplasmic iron-binding protein</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/fbpA/fbpA-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Iron {ECO:0000256|PIRSR:PIRSR002825-1}</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/fbpA/fbpA-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">IRON-UTILIZATION PERIPLASMIC PROTEIN</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/fbpA/fbpA-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Belongs to the bacterial solute-binding protein 1 family.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/fbpA/fbpA-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO GOA annotations for fbpA</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/fbpA/fbpA-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for fbpA (Q88CI5)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"Full=Iron(III) iron ABC transporter, periplasmic iron-binding protein"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/fbpA/fbpA-deep-research-asta.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Asta retrieval report for fbpA (Q88CI5)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"Protein Description:** SubName: Full=Iron(III) iron ABC transporter, periplasmic iron-binding protein"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_4881/PP_4881-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for PP_4881 (Q88DE5)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"Full=Iron ABC transporter, periplasmic iron-binding protein"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_4882/PP_4882-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for PP_4882 (Q88DE4)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"Full=Iron ABC transporter, permease protein"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_5135/PP_5135-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for PP_5135 (Q88CP5)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"Full=ABC transporter, periplasmic binding protein"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_5136/PP_5136-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for PP_5136 (Q88CP4)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"Full=ABC transporter, permease protein"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/fbpC/fbpC-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for fbpC (Q88CP3)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"Full=Ferric iron ABC transporter, ATP-binding protein"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_5195/PP_5195-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for PP_5195 (Q88CI6)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"Full=Iron ABC transporter, permease protein"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What ATP-binding component partners with the partial C71 iron ABC import locus, and is the substrate ferric iron, ferric-chelate, or another iron complex?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88CI5" data-a="Q: What ATP-binding component partners with the parti..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Measure iron uptake and growth phenotypes for the matched transporter deletion mutants under iron limitation, then complement the full locus to resolve substrate specificity and missing-partner assignments.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: targeted ABC-transporter mutant uptake and growth assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88CI5" data-a="EXPERIMENT: Measure iron uptake and growth phenotypes for the ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Asta</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(fbpA-deep-research-asta.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88CI5" data-a="DEEP_RESEARCH: Asta" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Asta Literature Retrieval: Gene Research for Functional Annotation ⚠️ CRITICAL: Gene/Protein Identification Context BEFORE YOU BEGIN RESEARCH: Y...</span>
+
+
+                    <span class="report-badge">Asta</span>
+
+
+                    <span class="report-badge">Asta Scientific Corpus Retrieval</span>
+
+
+                    <span class="report-badge">19 citations</span>
+
+
+
+                    <span class="report-meta-text">2026-07-08T21:17:23.030020</span>
+
+
+
+                </div>
+
+
+                <h1 id="asta-literature-retrieval-gene-research-for-functional-annotation-critical-geneprotein-identification-context-before-you-begin-research-y">Asta Literature Retrieval: Gene Research for Functional Annotation ⚠️ CRITICAL: Gene/Protein Identification Context BEFORE YOU BEGIN RESEARCH: Y...</h1>
+<p>This report is retrieval-only and is generated directly from Asta results.</p>
+<ul>
+<li>Papers retrieved: 19</li>
+<li>Snippets retrieved: 20</li>
+</ul>
+<h2 id="relevant-papers">Relevant Papers</h2>
+<h3 id="1-phylogeny-and-putative-virulence-gene-analysis-of-bartonella-bovis">[1] Phylogeny and putative virulence gene analysis of Bartonella bovis</h3>
+<ul>
+<li>Authors: S. Tay, K. Kho, S. Lye, Y. Ngeow</li>
+<li>Year: 2017</li>
+<li>Venue: The Journal of Veterinary Medical Science</li>
+<li>URL: https://www.semanticscholar.org/paper/38591b9d494453f8e363495d635019d59267129c</li>
+<li>DOI: 10.1292/jvms.17-0448</li>
+<li>PMID: 29311425</li>
+<li>PMCID: 5938196</li>
+<li>Citations: 8</li>
+<li>Summary: The phylogenetic trees generated from the genome-wide comparison of orthologous genes exhibited a topology almost similar to that of the tree generated from SNP-based comparison, indicating a high concordance in the nucleotide and amino acid sequences of Bartonella spp.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.794)<br />
+    &gt; Several genes encoding protein translocation across the cytoplasmic membrane, ABC transporters, cation transporters and Uni-Sym-and Antiporters are annotated in BbUM genome (Table 2). Various components of iron acquisition metabolism including iron compound ABC uptake transporter substrate-binding proteins PiuA and PiuC, hemin transport protein HmuS, periplasmic hemin-binding protein, ABC-type hemin transport system, ATPase component, electron transfer flavoprotein, beta subunit, ferric siderophore transport system, periplasmic binding protein TonB, TonB-dependent hemin, and ferrichrome receptor are also annotated in the BbUM genome.<br />
+    &gt; Since flagella-like structure was observed under electron microscopy (Fig. 1), the presence of flagellin gene in BbUM genome was investigated. Based on RAST analysis, 50 genes associated with flagellar motility were annotated under the motility and chemotaxis category (Table 2). The genes included flaA, flgB, flgC, flgD, flgE, flgF, flgG, flgH, flgI, flgK, flgL, flhA, flhB, fliE, fliF, fliG, fliI, fliL, fliM, fliP, fliQ, fliR, motA and motB. Additionally, the genes for flagellar protein FlgJ and flagellar hook-associated switch protein (FliN) were also annotated. Two flagellin genes (labelled as flaA sequence types 1 and 2) sharing the highest sequence similarities (60.6 and 73.0% nucleotide similarity, respectively) with that of B. bacilliformis, and 59.8 and 73.6% nucleotide similarity, respectively, with that of B. clarridgeiae, were retrieved for further analysis.</li>
+</ul>
+<h3 id="2-analysis-of-iron-and-iron-interacting-protein-dynamics-during-t-cell-activation">[2] Analysis of Iron and Iron-Interacting Protein Dynamics During T-Cell Activation</h3>
+<ul>
+<li>Authors: Megan R. Teh, Joe N. Frost, A. Armitage, H. Drakesmith</li>
+<li>Year: 2021</li>
+<li>Venue: Frontiers in Immunology</li>
+<li>URL: https://www.semanticscholar.org/paper/912bf84469a61cdc9db3bb47a2104a7bbbcfa4c5</li>
+<li>DOI: 10.3389/fimmu.2021.714613</li>
+<li>PMID: 34880854</li>
+<li>PMCID: 8647206</li>
+<li>Citations: 46</li>
+<li>Influential citations: 2</li>
+<li>Summary: This work identified iron-interacting proteins in CD4+ and CD8+ T-cell proteomes that were differentially expressed during activation, suggesting that pathways enriched with such proteins, including histone demethylation, may be impaired by iron deficiency.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.779)<br />
+    &gt; Using the Uniprot IDs of human iron interacting proteins provided by Andreini et al, corresponding standard human gene names were identified using the Uniprot mapping tool (https://www.uniprot.org/uploadlists/) (16). To curate an equivalent list of mouse iron interacting protein homologues, the list of human iron interacting genes was input into the Ensembl BioMart tool (http://useast.ensembl.org/biomart/ martview/893cea99357a57529ab65ce92c12e306) selecting for comparison to the Ensembl Genes 100 database, Human genes (GRCh38.p13) dataset (Supplementary File 1) (17). Filtering was completed by gene name using an external reference ID list and selecting for the attributes: gene stable ID, gene name, mouse gene stable ID, mouse gene name and gene description. This method was able to identify mouse homologues for the majority of human iron interacting proteins (349/398, 88%). In cases where gene matches were not identified by Ensembl, manual verification was completed and several more matches were identified (8 proteins). Some human iron interacting proteins were found to have no mouse homologues (23 proteins, ex//KDM4E, SCD5, NOX5, etc.) or poor gene annotation limited the identification of matches (18 proteins, ex//CYP2C, FADS2P1, DKFZp686G0638). To obtain further cofactor information regarding protein to iron atom stoichiometry, the Uniprot database was manually searched using the cofactor terms: 4Fe-4S, 3Fe-3S, 2Fe-2S, heme, Fe2+, Fe3+. Retrieved cofactor information was manually added to the list of iron interacting information Notably, the iron interacting protein list does not include proteins that indirectly interact with iron such as TFRC which interacts with iron via intermediate contact with Tf. The resulting list of mouse iron interacting proteins is relatively comprehensive but likely does not include the complete set of iron interacting proteins.</li>
+</ul>
+<h3 id="3-the-fur-like-regulatory-protein-map3773c-modulates-key-metabolic-pathways-in-mycobacterium-avium-subsp-paratuberculosis-under-in-vitro-iron-starvation">[3] The Fur-like regulatory protein MAP3773c modulates key metabolic pathways in Mycobacterium avium subsp. paratuberculosis under in-vitro iron starvation</h3>
+<ul>
+<li>Authors: Sajani Thapa, Govardhan Rathnaiah, D. Zinniel, R. Barletta, J. Bannantine et al.</li>
+<li>Year: 2024</li>
+<li>Venue: Scientific Reports</li>
+<li>URL: https://www.semanticscholar.org/paper/fc291356ba58778e38db3feb0c0c687b3db85b78</li>
+<li>DOI: 10.1038/s41598-024-59691-3</li>
+<li>PMID: 38637716</li>
+<li>PMCID: 11026511</li>
+<li>Citations: 2</li>
+<li>Summary: Pathway analysis revealed that the MAP3773c knockout has an impairment in Pan and Coenzyme A (CoA) biosynthesis pathways suggesting that the absence of those pathways likely affect overall metabolic processes and cellular functions, which have consequences on MAP survival and pathogenesis.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.773)<br />
+    &gt; ΔMAP3773c strain upregulated genes involved in the transport of cholesterol and lipid at 30 min post-iron starvation ≥ 3.0-fold (Supplementary Information 2). A total of nine genes involved in lipid transport were identified from network analysis (Fig. 5d). MCE genes upregulated by ΔMAP3773c are MAP0765, MAP2111c, MAP2113c, MAP2114c, MAP2116c, MAP2190, MAP2191, MAP2192, and MAP2117c (ABC transporter permease) which have been proposed to play roles in lipid transport (Fig. 5d). www.nature.com/scientificreports/ ΔMAP3773c upregulated ATP-binding cassette (ABC) type metal transporters genes, MAP3774c (metal ABC transporter permease), MAP3775c (ATP-binding cassette domain-containing protein) and MAP3776c (zinc ABC transporter substrate-binding protein) at 30 min iron stress. MAP3173c (ABC type transporter, mptF) gene was also upregulated. Putative siderophore synthesis genes (MAP3743-MAP4745) were also upregulated in ΔMAP3773c at 30 min post-iron starvation. Similarly, MAP0487c, a putative zinc ABC transporter, transmembrane protein (ZnuB) was upregulated in ΔMAP3773c strain at 30 min post-iron starvation. MAP3737, a PE family protein expression was upregulated at 30 min post iron starvation in ΔMAP3773c strain. MAP3092, an iron siderophore ABC transporter substrate-binding protein (FecB) was upregulated at 30 min post-iron starvation. MAP3092 has 99% identity with FecB protein of Mycobacterium avium subsp avium, which is potentially involved in iron transport 21 .</li>
+</ul>
+<h3 id="4-phase-variation-in-myxococcus-xanthus-yields-cells-specialized-for-iron-sequestration">[4] Phase Variation in Myxococcus xanthus Yields Cells Specialized for Iron Sequestration</h3>
+<ul>
+<li>Authors: K. Dziewanowska, M. Settles, Samuel S. Hunter, Ingrid Linquist, Faye D. Schilkey et al.</li>
+<li>Year: 2014</li>
+<li>Venue: PLoS ONE</li>
+<li>URL: https://www.semanticscholar.org/paper/6d7d24a81c82f114458ab6480622f9fe6394a09d</li>
+<li>DOI: 10.1371/journal.pone.0095189</li>
+<li>PMID: 24733297</li>
+<li>PMCID: 3986340</li>
+<li>Citations: 14</li>
+<li>Summary: A consequence of phase variation is that yellow cells shift from producing antibiotic and pigment to producing components involved in acquisition of iron, which may increase fitness during periods of iron limitation.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.753)<br />
+    &gt; The species name for M. xanthus is from the Latin word for yellow, the color of the compound DKxanthene. Loss of pigment Fig. 1. Tan strains activate pathways dedicated to acquisition of iron. Many of the genes whose expression is increased significantly in the tan strains comprise the siderophore production and transport, hemin transport, and proteins that provide energy for transport of iron-binding compounds. A partial list of components produced in tan cells is shown in this cartoon. The blue/purple circles represent the siderophore myxochelin pathway (MXAN_3639-3647) [39,40]. Myxochelin (mxc) is shown as a yellow star that binds Fe 3+ when exported. MxcNFe 3+ may be imported by a FepA-like protein (candidate is MXAN_6911; dark green shape), located in the outer membrane [41]. Light green shapes represent the ferric siderophore ABC transporter genes (permease and MXAN_0684-0687 in membrane); brown cylinders represent periplasmic energy transduction TonB proteins (MXAN_0276, MXAN0820, and 6485) that may energize the outer membrane proteins (dashed lines). Red/orange icons represent hemin transporters (MXAN_1318-1321). Not shown are RhtX/FptX siderophore transporter (MXAN_5357), iron ABC transporters (MXAN_0770-0772), iron compound ABC transporter, and a periplasmic iron compound binding protein, FeNABC (MXAN_6000). Search Tool for the Retrieval of Interacting Genes/Proteins (STRING) software [42] predicts MXAN_3639 (putative iron-chelator utilization protein in the myxochelin operon) interacts with the ferric siderophore ABC transporter permease (MXAN_0685, 0686).</li>
+</ul>
+<h3 id="5-structure-aware-mycobacterium-tuberculosis-functional-annotation-uncloaks-resistance-metabolic-and-virulence-genes">[5] Structure-Aware Mycobacterium tuberculosis Functional Annotation Uncloaks Resistance, Metabolic, and Virulence Genes</h3>
+<ul>
+<li>Authors: Samuel J. Modlin, A. Elghraoui, Deepika Gunasekaran, Alyssa M Zlotnicki, N. Dillon et al.</li>
+<li>Year: 2021</li>
+<li>Venue: mSystems</li>
+<li>URL: https://www.semanticscholar.org/paper/76ff9a62b36b32cc10e46e71ffd4dd90344e4706</li>
+<li>DOI: 10.1128/mSystems.00673-21</li>
+<li>PMID: 34726489</li>
+<li>PMCID: 8562490</li>
+<li>Citations: 15</li>
+<li>Summary: This work systematically updates the functional genome annotation of Mycobacterium tuberculosis virulent type strain H37Rv and identifies hundreds of high-confidence candidates for mechanisms of antibiotic resistance, virulence factors, and basic metabolism and other functions key in clinical and basic tuberculosis research.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.751)<br />
+    &gt; 3. Fig. S2B -match/mismatch colours mixed up? (I think match should be teal and mismatch -red?) 4. Line 162-163: Rv1430 is in UniProt (EC 3.1.1.-) and has been present in Uniprot since version 45 of the gene record: https://www.uniprot.org/uniprot/L7N697. I presume you had conducted your literature analysis before the UniProt entry was updated to include the EC code, so maybe you can add the dates when the data was retrieved from UniProt and other databases you used in the Materials and Methods section? 5. Supplementary text, p. 9, first paragraph. I believe that an unrelated fragment of text was copy-pasted into the second sentence of the paragraph ("Many mutations that altered bacterial clearance...") 6. Supplementary text, p. 12, final paragraph. It should be Rv1191, not Rv1191c. Could you also add a short explanation why you believe it should be classified as a cathepsin (what protein did you transfer this annotation from)?<br />
+    &gt; Reviewer #3 (Comments for the Author):<br />
+    &gt; In this manuscript, Modlin et al., attempt to tackle the problem of assigning functions to ~1700 hypothetical and/or underannotated genes in the Mycobacterium tuberculosis H37Rv (Mtb) genome. Rapid and accurate annotation of microbial genomes is indeed a very critical and under appreciated part of microbial ecophysiology. This step is especially crucial for pathogenic organisms such as Mtb where accurate functional annotation of these hypothetical proteins could unravel mechanisms which could act as drug targets. The authors employed a two-pronged strategy to define a set of these unannotated or under-annotated genes and to then provide possible functions for many of these genes. First, they undertook a large-scale manual curation of literature to assign functions (including EC numbers for enzymatic functions) to ~575 genes.</li>
+</ul>
+<h3 id="6-complete-genome-sequence-and-analysis-of-alcaligenes-faecalis-strain-mc250-a-new-potential-plant-bioinoculant">[6] Complete genome sequence and analysis of Alcaligenes faecalis strain Mc250, a new potential plant bioinoculant</h3>
+<ul>
+<li>Authors: É. B. Felestrino, A. B. Sanchez, W. L. Caneschi, Camila G. C. Lemes, R. A. Assis et al.</li>
+<li>Year: 2020</li>
+<li>Venue: PLoS ONE</li>
+<li>URL: https://www.semanticscholar.org/paper/ac9a470bb9ade3a30a9c9bcde25e3822256cbab2</li>
+<li>DOI: 10.1371/journal.pone.0241546</li>
+<li>PMID: 33151992</li>
+<li>PMCID: 7643998</li>
+<li>Citations: 14</li>
+<li>Summary: The complete genome of Alcaligenes faecalis strain Mc250 (Mc250), a bacterium isolated from the roots of Mimosa calodendron, an endemic plant growing in ferruginous rupestrian grasslands in Minas Gerais State, Brazil, is presented and reveals biotechnological potential for the Mc250 strain.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.751)<br />
+    &gt; We found 12 genes associated with siderophore biosynthesis. These genes are: ybdZ, and immediately downstream, entCEBA, followed by entS, the gene that encodes a siderophore carrier protein; fes, a gene encoding for enterobactin esterase; entF (synthesis component, serine activating enzyme); and the transport system of this compound to the medium (fepAGDCB) (S2B Fig) . Eleven genes associated with iron acquisition were also found. Among them four copies of pitADC genes (two of which are complete and in tandem), which correspond respectively to subunits of iron-binding, ATP-binding, and permease proteins of an ABC transporter system. We also found the ABC transport system of ferrichrome/iron (III) dicitrate (fhu/fec), plus a gene for the receptor for hemin (hemR), two copies of the tonB gene, which codes for a periplasmic protein involved with transport of iron-chelated siderophores, a gene coding for a protein that utilizes heme groups (hutX), and two genes coding for paraquat-inducible proteins (parAB).</li>
+</ul>
+<h3 id="7-lmpd-lipid-maps-proteome-database">[7] LMPD: LIPID MAPS proteome database</h3>
+<ul>
+<li>Authors: Dawn Cotter, A. Maer, C. Guda, Brian Saunders, S. Subramaniam</li>
+<li>Year: 2005</li>
+<li>Venue: Nucleic Acids Research</li>
+<li>URL: https://www.semanticscholar.org/paper/265c37b45326b7927e396484751e84e4aeff92d5</li>
+<li>DOI: 10.1093/nar/gkj122</li>
+<li>PMID: 16381922</li>
+<li>PMCID: 1347484</li>
+<li>Citations: 92</li>
+<li>Influential citations: 2</li>
+<li>Summary: The initial release of the LIPID MAPS Proteome Database contains 2959 records, representing human and mouse proteins involved in lipid metabolism, and this LMPD protein list was enhanced with annotations from UniProt, EntrezGene, ENZYME, GO, KEGG and other public resources.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.746)<br />
+    &gt; For each record selected from the results summary, all LMPD data relevant to that protein are displayed, with external database IDs linked to their respective resources.<br />
+    &gt; Annotations are organized by category: Record Overview, Gene/GO/KEGG Information, UniProt Annotations, and Related Proteins. The record overview contains LMPD_ID, species, description, gene symbols, lipid categories, EC number, molecular weight, sequence length and protein sequence. Gene information includes Entrez Gene ID, chromosome, map location, primary name, primary symbol and alternate names and symbols; Gene Ontology (GO) IDs and descriptions, and KEGG pathway IDs and descriptions. UniProt annotations include primary accession number, entry name and comments such as catalytic activity, enzyme regulation, function and similarity. For related proteins and splice variants, we display source database, database ID, sequence length, and title.</li>
+<li>Snippet 2 (score: 0.710)<br />
+    &gt; Protein annotations were primarily obtained from UniProt (7) and include UniProt accession, UniProt entry name, domain information and Swiss-Prot (8) comments such as function, catalytic activity, subcellular location and similarity. Accession numbers were used to link to various public databases and collect available information for each protein. From NCBI EntrezGene (8) we collected gene information, such as Gene ID, alternate names/synonyms and symbols, chromosomal mapping and cross-references to other databases.<br />
+    &gt; The 2959 proteins comprising the LMPD protein list correspond to 2300 unique genes. We also gathered all the GO and KEGG annotations, not just the lipid-specific ones, using Gene IDs and UniProt accessions. Other protein records with sequences that are (i) identical with the ones in our list, (ii) splice variants of those or (iii) related (from the same gene/locus) were gathered using EntrezGene and an in-house generated non-redundant protein sequence database compiled from the most well-known public protein sequence databases such as Swiss-Prot, Trembl and GenBank (9).</li>
+</ul>
+<h3 id="8-phosphositeplus-a-comprehensive-resource-for-investigating-the-structure-and-function-of-experimentally-determined-post-translational-modifications-in-man-and-mouse">[8] PhosphoSitePlus: a comprehensive resource for investigating the structure and function of experimentally determined post-translational modifications in man and mouse</h3>
+<ul>
+<li>Authors: P. Hornbeck, J. Kornhauser, S. Tkachev, Bin Zhang, E. Skrzypek et al.</li>
+<li>Year: 2011</li>
+<li>Venue: Nucleic Acids Research</li>
+<li>URL: https://www.semanticscholar.org/paper/93e4acf4ba3bca1b379ae8292e73dddb344abd90</li>
+<li>DOI: 10.1093/nar/gkr1122</li>
+<li>PMID: 22135298</li>
+<li>PMCID: 3245126</li>
+<li>Citations: 1606</li>
+<li>Influential citations: 155</li>
+<li>Summary: PhosphoSitePlus (http://www.phosphosite.org) is an open, comprehensive, manually curated and interactive resource for studying experimentally observed post-translational modifications, primarily of human and mouse proteins. It encompasses 1 30 000 non-redundant modification sites, primarily phosphorylation, ubiquitinylation and acetylation. The interface is designed for clarity and ease of navigation. From the home page, users can launch simple or complex searches and browse high-throughput d...</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.743)<br />
+    &gt; Accession numbers from UniPROT KB, NCBI and Ensembl (24)(25)(26), as well as gene symbols from HGNC (27), are curated for all proteins when possible. Basic protein descriptions include information parsed from UniPROT KB (24), and may include additional information from the literature. Descriptions are updated in bulk occasionally. Gene Ontology (28) annotations are parsed from NCBI (25). Editors assign protein types.</li>
+</ul>
+<h3 id="9-meiosisonline-a-manually-curated-database-for-tracking-and-predicting-genes-associated-with-meiosis">[9] MeiosisOnline: A Manually Curated Database for Tracking and Predicting Genes Associated With Meiosis</h3>
+<ul>
+<li>Authors: Xiaohua Jiang, Daren Zhao, Asim Ali, Bo Xu, Wei Liu et al.</li>
+<li>Year: 2021</li>
+<li>Venue: Frontiers in Cell and Developmental Biology</li>
+<li>URL: https://www.semanticscholar.org/paper/aeb08368a5540685473578345739bb569103bd46</li>
+<li>DOI: 10.3389/fcell.2021.673073</li>
+<li>PMID: 34485275</li>
+<li>PMCID: 8415030</li>
+<li>Citations: 6</li>
+<li>Summary: The developed MeiosisOnline provides the most updated and detailed information of experimental verified and predicted genes in meiosis, and will greatly help researchers in studying meiosis in an easy and efficient way.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.742)<br />
+    &gt; Annotation information for each gene in MeiosisOnline contains "basic information, " "function annotation and classification, " "protein-protein interaction (PPI) and gene expression."<br />
+    &gt; (1) Basic information: gene name/synonyms, nucleotide sequences, etc., were extracted from GenBank3 and UniProt Knowledgebase.4 (2) Function annotation and classification: detailed functional information is also manually collected from literature reports. (i) Which meiotic stage is the gene involved? (ii) Did the gene function in one sex or both sexes? (iii) Whether deletion or mutation of the gene in model organism has a phenotype in fertility? (iv) Which protein complex of the gene is involved? (v) The cellular location and expression pattern in tissues or cell lines.<br />
+    &gt; (vi) Experimental methods used for functional analysis.<br />
+    &gt; (vii) The information of related literature and figures for illustrating the function of protein/gene. (viii) Gene ontology annotation for collected genes.<br />
+    &gt; (3) Protein-protein interaction and gene expression: both verified and predicted PPI information were provided. Gene expression pattern in reproductive system was also provided graphically.</li>
+</ul>
+<h3 id="10-analysis-of-the-global-ocean-sampling-gos-project-for-trends-in-iron-uptake-by-surface-ocean-microbes">[10] Analysis of the Global Ocean Sampling (GOS) Project for Trends in Iron Uptake by Surface Ocean Microbes</h3>
+<ul>
+<li>Authors: E. Toulza, A. Tagliabue, S. Blain, G. Piganeau</li>
+<li>Year: 2012</li>
+<li>Venue: PLoS ONE</li>
+<li>URL: https://www.semanticscholar.org/paper/ef1537c5ee75f378034c8891dd1253ef40fbd488</li>
+<li>DOI: 10.1371/journal.pone.0030931</li>
+<li>PMID: 22363520</li>
+<li>PMCID: 3281889</li>
+<li>Citations: 79</li>
+<li>Influential citations: 3</li>
+<li>Summary: A database of 2319 sequences, corresponding to 140 gene families of iron metabolism with a large phylogenetic spread, is built to explore the microbial strategies of iron acquisition in the ocean's bacterial community, showing significant quantitative and qualitative variations in iron metabolism pathways.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.742)<br />
+    &gt; We selected genes involved in iron metabolisms from the literature in cases where the protein product had been characterized or where the function of the protein could be inferred by sequence analysis. In this way, we identified 140 genes specifically involved in iron metabolism. We assigned these genes to 10 ironrelated metabolic pathways, summarized in Table 1. A maximal phylogenetic coverage for each gene was achieved by retrieving all available bacterial sequences using the NCBI search tool with the gene names as a query. All 9917 annotations and protein sequences were manually inspected to discard irrelevant or incomplete protein sequences. To discard redundant sequences from the same genus, we randomly selected one full-size sequence per gene per available genus, resulting in 1753 remaining sequences. Additionally, we screened the annotations of the protein sequences from the Moore Microbial Genome database (marine bacteria isolates) for genes involved in iron metabolism (http://www.moore.org/microgenome/) and retrieved 566 genes. After manual inspection of these sequences, 191 putative ABC iron transporters could not be assigned to any one of the previous pathways, and therefore constituted the unspecified iron transport category (TR). We thus obtained a dataset of 2319 sequences belonging to 11 phyla (Actinobacteria, alphaproteobacteria, Bacteroidetes, betaproteobacteria, Cyanobacteria, deltaproteobacteria, Deinococcus-thermus, Firmicutes, gammaproteobacteria, Spirochetes, epsilonproteobacteria) (Table S1). The 140 gene families with at least two sequences were aligned and processed to estimate an identity and coverage threshold within each gene family. These thresholds estimations are needed because many proteins involved in different pathways could share sequence similarities, like ABC transporters of different iron-related pathways. We found that 65% amino-acid identity over a minimum length of 100 amino acids (or 80% of query length coverage) corresponded to 96% of correct orthologous gene assignment and 100% of correct pathway assignment (Table S2). Our criteria are stringent and we therefore probably underestimated the number of matches, but this enables a robust analysis of the different proportion of each iron-related pathway between sites.</li>
+</ul>
+<h3 id="11-iron-dependent-gene-expression-in-actinomyces-oris">[11] Iron-dependent gene expression in Actinomyces oris</h3>
+<ul>
+<li>Authors: Matthew P. Mulè, D. Giacalone, Kayla Lawlor, A. Golden, C. Cook et al.</li>
+<li>Year: 2015</li>
+<li>Venue: Journal of Oral Microbiology</li>
+<li>URL: https://www.semanticscholar.org/paper/511fb8327ad6a1f9275b289753acc48e3f630253</li>
+<li>DOI: 10.3402/jom.v7.29800</li>
+<li>PMID: 26685151</li>
+<li>PMCID: 4684579</li>
+<li>Citations: 4</li>
+<li>Summary: Clinical isolates of Actinomyces spp.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.737)<br />
+    &gt; We identified genes that were likely to be involved in iron acquisition by examining the genome of A. oris, which is available via the Bioinformatics Resources for Oral Pathogens (BROP). At the time of this publication, BROP refers to A. oris MG1 as A. naeslundii MG1.<br />
+    &gt; As outlined here, sequence analyses revealed that there are over a dozen genes that may be involved in iron acquisition. Two of these genes identified, fetA and sidD, are located in operons with a high degree of sequence similarity (!98%) to transporters involved in iron uptake (Fig. 2). The sidC gene encodes a predicted 37 kDa, ironÁ siderophore ABC transporter substrate-binding protein, whose periplasmic component is 99% identical to ironÁ siderophore ABC transporter substrate-binding protein from A. viscosus. The sidD gene likely encodes the ironÁ siderophore ATP-binding protein of the ABC transporter component containing an ATP-binding site and the ABC transporter signature motif. The SidD protein is 95% identical to the iron dicitrate ABC transporter ATPbinding protein from A. viscosus (accession number WP_009406982.1; Fig. 2a). The first gene in the fetA (anae_c_1_8278) operon encodes a predicted 32 kDa protein with 98% identity and 99% similarity to a predicted A. oris high-affinity iron transporter (accession number WP_010612841.1; Fig. 2b) with 65% identity and 78% similarity to predicted ferrous iron permease EfeU from Propionibacterium acidipropionici ATCC 4875 (accession number 0WP_015071892.1). The second gene in the operon fetB (anae_c_1_8283) encodes a 46.8 kDa protein with 99% similarity and 99% identity to a predicted peptidase M75 from A. oris.</li>
+</ul>
+<h3 id="12-the-surface-proteome-of-bovine-unsexed-and-sexed-spermatozoa">[12] The Surface Proteome of Bovine Unsexed and Sexed Spermatozoa</h3>
+<ul>
+<li>Authors: P. Pinto-Pinho, Joana Quelhas, Francis Impens, Sara Dufour, Delphi Van Haver et al.</li>
+<li>Year: 2025</li>
+<li>Venue: Animals : an Open Access Journal from MDPI</li>
+<li>URL: https://www.semanticscholar.org/paper/66496158140e8f55a2c2ca8965bd298300ce9ab0</li>
+<li>DOI: 10.3390/ani15040484</li>
+<li>PMID: 40002966</li>
+<li>PMCID: 11852025</li>
+<li>Citations: 2</li>
+<li>Summary: Differences in surface proteins between X- and Y-chromosome-bearing bovine spermatozoa are explored to identify potential targets for sperm sexing by LC-MS/MS analysis, with 5 transmembrane proteins showing promise as markers for X-sperm.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.730)<br />
+    &gt; The protein sequences were functionally annotated by combining information retrieved from the UniProt database ( [25], accessed on 9 June 2022) and one-to-one fast orthology assignments using the eggNOG-mapper v.2.1.7 tool ( [26], accessed on 9 June 2022), as described in [27]. Briefly, the gene name, protein name, length, Gene Ontology (GO) IDs, and chromosome associated with each protein entry were obtained from UniProt using the retrieve/ID mapping tool. Additionally, gene names, descriptions, and experimentally validated GO IDs were obtained from eggNOG, with consideration given to a taxonomic scope auto-adjusted per query, a minimum hit bit-score of 60, and thresholds of 80% for identity, minimum query coverage, and minimum subject coverage.<br />
+    &gt; Out of the 130 detected proteins, 71 (54.6%) had information manually verified by UniProt curators (Supplementary Spreadsheet S1.5). Utilizing the eggNOG-mapper v2.1.7 tool, a total of 122 entries were scanned (Supplementary Spreadsheet S1.6). By combining data from both tools, a total of 123 proteins were characterized with a gene name, and 127 had GO information. However, 2 proteins still lacked information on a descrip-tion, protein, gene, and preferred names. Figure 1 provides a summary of the functional annotation results.<br />
+    &gt; tool, a total of 122 entries were scanned (Supplementary Spreadsheet S1.6). By combining data from both tools, a total of 123 proteins were characterized with a gene name, and 127 had GO information. However, 2 proteins still lacked information on a description, protein, gene, and preferred names. Figure 1 provides a summary of the functional annotation results.</li>
+</ul>
+<h3 id="13-tn6553-a-tn7-family-transposon-encoding-putative-iron-uptake-functions-found-in-acinetobacter">[13] Tn6553, a Tn7-family transposon encoding putative iron uptake functions found in Acinetobacter</h3>
+<ul>
+<li>Authors: Mehrad Hamidian</li>
+<li>Year: 2022</li>
+<li>Venue: Archives of Microbiology</li>
+<li>URL: https://www.semanticscholar.org/paper/6d6f853f0140f0a7fa3cc147e7b80ea7ea112793</li>
+<li>DOI: 10.1007/s00203-022-03291-0</li>
+<li>PMID: 36289115</li>
+<li>PMCID: 9605922</li>
+<li>Citations: 1</li>
+<li>Summary: Another Tn7-type transposon (named Tn6553) is described, which contains a set of iron utilisation genes with a transposition module related to Tn 7 and is important in the context of dissemination of virulence genes amongst Acinetobacter strains.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.725)<br />
+    &gt; Tn6553 encodes a set of functions required for iron uptake. It contains several genes such as irtAB, bauD-CEBA and fur, which mainly encode proteins predicted to be involved in ferrichrome uptake and transmembrane transport (Fig. 1a), which are distantly related to Escherichia coli ferrichrome-iron receptor (Coulton et al. 1983). The irtAB genes encode putative ABC-type multidrug transport systems (ATPase and permease component) belonging to the MdiB superfamily (Protein family accession number COG1132). The bauDCE genes encode putative iron chelate uptake ABC transporter family permease subunit (ferric acinetobactin ABC transporter), while bauB predicted to encode a siderophore-binding periplasmic lipoprotein and bauA a TonB-dependent siderophore protein (Fig. 1a). Tn6553 also carries a fur gene encoding an Fe2 + (or Zn2 +) uptake transcriptional regulation protein (Protein family accession number COG0732), which is in fact a putative master transcriptional regulator of the ironresponsive genes. Notably, the iron uptake proteins encoded by Tn6553 are distantly related to the siderophore systems (with amino acid identities ranging from 20-30%) that we recently described in A. baumannii in different Tn7-family transposons (Hamidian and Hall 2021). However, whether this operon functions as a siderophore system remains to be experimentally examined.<br />
+    &gt; A recent study reported that A. baumannii DS002 (Gen-Bank accession number CP027704.2) contains a novel siderophore system present in a genomic island that encodes 30 genes/orfs including four (n = 4) genes encoding putative transposases TnsBC1C2E, 13 gene encoding putative iron acquisition functions, and the 13 reading frames coding for proteins of unknown functions (Yakkala et al. 2019).</li>
+</ul>
+<h3 id="14-avian-immunome-db-an-example-of-a-user-friendly-interface-for-extracting-genetic-information">[14] Avian Immunome DB: an example of a user-friendly interface for extracting genetic information</h3>
+<ul>
+<li>Authors: Ralf C. Mueller, Nicolai Mallig, Jacqueline Smith, Lél Eöry, Richard I. Kuo et al.</li>
+<li>Year: 2020</li>
+<li>Venue: BMC Bioinformatics</li>
+<li>URL: https://www.semanticscholar.org/paper/b894d9ca8ea2d653bf1711a0c67dab71d054487c</li>
+<li>DOI: 10.1186/s12859-020-03764-3</li>
+<li>PMID: 33176685</li>
+<li>PMCID: 7661159</li>
+<li>Citations: 6</li>
+<li>Summary: The Avian Immunome DB (Avimm) for easy gene property extraction as exemplified by avian immune genes is presented and described, which contains 1170 distinct avian immune genes with canonical gene symbols and 612 synonyms across 363 bird species.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.724)<br />
+    &gt; Ever since the advent of commercial next-generation sequencing platforms in the early 2000s with its associated decrease in sequencing costs [1], the number of DNA sequences increased considerably [2]. Generally, these data become publicly accessible in databases provided by projects focussing on different aspects of biological sequence information [3,4]. Ensembl [5] and NCBI [6] for instance, have a strong focus on genome annotation with the help of RNA transcript information while UniProt has a pronounced emphasis on protein-coding genes and biological function of proteins. UniProt's records are either based on manually annotated, non-redundant protein sequences (SwissProt) or on highquality computationally analysed records, which are enriched with automatic annotation (TrEMBL) [7]. Relying on accurate genome annotations and protein descriptions, Gene Ontology (GO) [8,9] categorises gene products and fits them into a computational model of biological systems. Their assignment deploys a controlled vocabulary, so-called GO terms, to link genes and gene products to biological processes, cellular components, or molecular functions.<br />
+    &gt; However, genome annotation is not standardised, and each service provider uses their own custom-built annotation pipelines. As a consequence, this often leads to ambiguity in gene names during genome annotation with different gene symbols being given to the same gene or the same gene symbol being given to different, but similar genes. Additionally, since the pre-existing wealth of sequencing information relies on model organisms like human and mouse, there is a strong bias in gene symbols towards those chosen for these species. Particularly for model species, this issue has been partially addressed, for example by the Human Genome Organisation (HUGO) Gene Nomenclature Committee (HGNC) [10], the Vertebrate Gene Nomenclature Committee (VGNC) [11], or the Chicken Gene Nomenclature Consortium [12]. However, this neither guarantees that gene names are harmonised among these consortia, nor does it keep researchers from assigning alternative gene symbols in their annotations, especially when working with non-model species.</li>
+</ul>
+<h3 id="15-characterization-of-a-novel-root-associated-diazotrophic-rare-pgpr-taxa-aquabacter-pokkalii-sp-nov-isolated-from-pokkali-rice-new-insights-into-the-plant-associated-lifestyle-and-brackish-adaptation">[15] Characterization of a novel root-associated diazotrophic rare PGPR taxa, Aquabacter pokkalii sp. nov., isolated from pokkali rice: new insights into the plant-associated lifestyle and brackish adaptation</h3>
+<ul>
+<li>Authors: V. S. Sunithakumari, Rahul Ravikumar Menon, Gayathri G. Suresh, R. Krishnan, N. Rameshkumar</li>
+<li>Year: 2024</li>
+<li>Venue: BMC Genomics</li>
+<li>URL: https://www.semanticscholar.org/paper/7b6d113f0e2717352b20e31091b586b3ec2f0753</li>
+<li>DOI: 10.1186/s12864-024-10332-z</li>
+<li>PMID: 38684959</li>
+<li>PMCID: 11059613</li>
+<li>Citations: 4</li>
+<li>Summary: A better understanding is provided of a marine-adapted PGPR strain L1I39^T that may perform a substantial role in host growth and health in nitrogen-poor brackish environments.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.722)<br />
+    &gt; In addition to examining the genome for sulfur and phosphate assimilation, we also identified several potential genes involved in the assimilation of nitrogen, including genes coding for ammonium transporters, reductases for nitrate and nitrite, regulators that sense nitrogen status, glutamate dehydrogenase, and a functional glutamine synthetase/glutamate synthase (GS/GOGAT) system as listed in (Table S18). In addition, the L1I39 T genome possesses genes coding for the uptake and hydrolysis of urea, including a urease operon (ureABCEFGD) and the urea transport systems (urtEDC and urtBA) and a functional urea carboxylase/allophanate hydrolyase pathway, suggesting its ability to degrade urea into ammonia (Table S19).<br />
+    &gt; Iron acquisition The L1I39 T genome lacks genes that participate in the biosynthesis and secretion of siderophores. In support, we experimentally prove that L1I39 T is negative for siderophore production (data not shown). However, the L1I39 T contains dedicated transport systems to capture and uptake external iron, including TonB-dependent siderophore receptor proteins, siderophore-interacting proteins, iron ABC transport substrate-binding proteins, iron ABC transport permease, iron ABC transport ATP-binding proteins, ferric hydroxamate ABC transport permease (fhuB), and siderophoreiron reductase (fhuF). Importantly, these genes are organized into different gene clusters (Table S20).<br />
+    &gt; Further investigations revealed genes encoding for ferrochelatase (hemH), TonB-dependent hemoglobin/transferrin/lactoferrin family proteins, biliverdin-producing heme oxygenase, heme ABC transporter-ATP binding protein, and hemin uptake protein (hemP), responsible for acquiring host iron. Also, genes coding for iron storage proteins that include ferritin, bacterioferritin (bfr), and two copies of ferritin-like domain-containing proteins and fur-type iron response transcriptional regulator (three copies) were present.</li>
+</ul>
+<h3 id="16-trade-offs-trade-ups-and-high-mutational-parallelism-underlie-microbial-adaptation-during-extreme-cycles-of-feast-and-famine">[16] Trade-offs, trade-ups, and high mutational parallelism underlie microbial adaptation during extreme cycles of feast and famine</h3>
+<ul>
+<li>Authors: Megan G. Behringer, Wei-Chin Ho, Samuel F. Miller, Sarah B. Worthan, Zeer Cen et al.</li>
+<li>Year: 2024</li>
+<li>Venue: Current biology : CB</li>
+<li>URL: https://www.semanticscholar.org/paper/13c71a271ad81ea813516193454b0fed04b2cd2b</li>
+<li>DOI: 10.1016/j.cub.2024.02.040</li>
+<li>PMID: 38460514</li>
+<li>PMCID: 11066936</li>
+<li>Citations: 18</li>
+<li>Summary: It is found that evolution in response to extreme feast/famine is characterized by narrow adaptive trajectories with high mutational parallelism and notable mutational order, which demonstrate how microbes can navigate the adaptive landscapes of regularly fluctuating conditions and ultimately follow mutational trajectories that confer benefits across diverse environments.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.722)<br />
+    &gt; Genes overrepresented for nonsynonymous and structural mutations were classified into functional groups based on the functional annotation table constructed with DAVID v.2023q3 91,92 (Table S4). We established the following rules for generalizing genes into functional groups: Chaperone: genes that encode proteins that perform chaperone or chaperonin-like activities (Uniprot Keyword: KW-0143); Envelope: Genes that encode proteins involved in the maintenance of the cell-envelope such as phospholipid biosynthesis (GO-BP: 0008654) and peptidoglycan biosynthesis (GO-BP: 0000270); Metabolism: Genes that encode proteins involved in general metabolic functions, such as purine metabolism (KEGG: eco00230), amino acid metabolism (KEGG: eco00470, eco00330); or TCA Cycle (KEGG: eco00020); Regulators: Genes that encode proteins directly involved in transcription (GO-BP: 0031564; Uniprot Keyword: KW-0804), translation (GO-BP:0006412, GO-BP:0006413; Uniprot Keyword: KW-0689), or the regulation of transcription (GO-BP: 0006355, GO-BP:2000143, GO-BP:0006353, GO-BP: GO:0045893; Uniprot Keyword: KW-0805); and Transport: Genes that encode proteins involved in transport: such as ABC transporters (Interpro: PR017871), MFS transporters (Interpro: IPR011701); symporters (Interpro: IPR023954, IPR001204, IPR001734, IPR023025, IPR004840), or Antiporters (Interpro: IPR004771). A combination of resources were used to determine if a parallel mutation arose in a functional region of a protein including, EcoCyc, 96 UniProt, 97 and the primary literature (see supplemental bibliography).</li>
+</ul>
+<h3 id="17-network-pharmacology-based-strategy-to-investigate-the-pharmacological-mechanisms-of-ginkgo-biloba-extract-for-aging">[17] Network Pharmacology-Based Strategy to Investigate the Pharmacological Mechanisms of Ginkgo biloba Extract for Aging</h3>
+<ul>
+<li>Authors: Yanfei Liu, Yue Liu, Wantong Zhang, Mingyue Sun, Weiliang Weng et al.</li>
+<li>Year: 2020</li>
+<li>Venue: Evidence-based Complementary and Alternative Medicine : eCAM</li>
+<li>URL: https://www.semanticscholar.org/paper/fadeff691eb41dff82e019cc3d38b846fdc605c4</li>
+<li>DOI: 10.1155/2020/8508491</li>
+<li>PMID: 32802136</li>
+<li>PMCID: 7403930</li>
+<li>Citations: 8</li>
+<li>Summary: The study found that flavonoids (quercetin, luteolin, and kaempferol) and beta-sitosterol and the top eight candidate targets, namely, PTGS2, PPARG, DPP4, GSK3B, CCNA2, AR, MAPK14, and ESR1, were selected as the main therapeutic targets of EGb.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.714)<br />
+    &gt; e validated target proteins of the active components were obtained from the TCMSP database. e target protein name of the active ingredient was converted to the standard target gene name through the UniProt Knowledge Base (UniProtKB, http://www. uniprot.org/). e UniProtKB is the central hub for the collection of functional information on proteins, with accurate, consistent, and rich annotation. e target protein names were inputted into UniProtKB, with the organism restricted to "Homo sapiens," eventually gaining the official symbol.</li>
+</ul>
+<h3 id="18-microbial-iron-management-mechanisms-in-extremely-acidic-environments-comparative-genomics-evidence-for-diversity-and-versatility">[18] Microbial iron management mechanisms in extremely acidic environments: comparative genomics evidence for diversity and versatility</h3>
+<ul>
+<li>Authors: H. Osorio, Verónica Martínez, Pamela A. Nieto, D. Holmes, Raquel Quatrini</li>
+<li>Year: 2008</li>
+<li>Venue: BMC Microbiology</li>
+<li>URL: https://www.semanticscholar.org/paper/6205c573e90929f186c4d6f1eead426d238e53f8</li>
+<li>DOI: 10.1186/1471-2180-8-203</li>
+<li>PMID: 19025650</li>
+<li>PMCID: 2631029</li>
+<li>Citations: 60</li>
+<li>Influential citations: 3</li>
+<li>Summary: Silico analyses of the genomes of acidophilic bacteria are beginning to tease apart the mechanisms that mediate iron uptake and homeostasis in low pH environments, and initial models pinpoint significant differences in abundance and diversity of iron management mechanisms between Leptospirilla and Acidithiobacilli.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.714)<br />
+    &gt; Taxonomically restricted genes are of special interest because they are expected to play a role in defining exclusive ecological adaptations to particular niches [44]. We predict a genomic island containing a gene cluster associated with iron metabolism in A. ferrooxidans that may be an exclusive system of physiological/ecological significance for the bioleaching consortia. The FepA2-FecA4 TonB-dependent Fe(III) transport system comprises a 13 gene cluster (Figure 7) that resides within a predicted genomic island containing 69 genes that is absent from the genomes of A. thiooxidans and A. caldus. The predicted protein products encoded by the 13 gene cluster include two OMRs with different predicted siderophore affinity, a TonB system and two contiguous partially complete high affinity metal ABC transporter systems (Figure 7, Additional file 1). These two ABC transporters include three high affinity periplasmic solute-binding proteins that differ in size, sequence and ligand specificity (Figure 7). Two of these have predicted affinity for Fe(III) siderophores and one for molybdate. The most similar orthologs to the Mo-binding protein of A. ferrooxidans are found in several nitrogen-fixing bacteria. Interestingly, nitrogen fixation is performed by an enzymatic complex made up of a Fe/Moprotein (the dinitrogenase) and a Fe-protein (the dinitrogenase reductase) [45]. The association of a gene predicted to encode ModA-like periplasmic binding protein with affinity for molybdate with genes predicted to be involved in siderophore uptake suggests that the gene cluster might be a bifunctional ABC transporter system, destined to cover the requirements of both Fe and Mo essential metabolic cofactors.<br />
+    &gt; Adjacent to the proposed 13 gene Fe-Mo transport cluster is a region of 44 genes predicted to be involved in nitrogen fixation including the full set of nif genes required for nitrogenase assembly and maturation [13].</li>
+</ul>
+<h3 id="19-tell-me-if-you-prefer-bovine-or-poultry-sectors-and-ill-tell-you-who-you-are-characterization-of-salmonella-enterica-subsp-enterica-serovar-mbandaka-in-france">[19] Tell me if you prefer bovine or poultry sectors and I’ll tell you who you are: Characterization of Salmonella enterica subsp. enterica serovar Mbandaka in France</h3>
+<ul>
+<li>Authors: Madeleine De sousa Violante, V. Michel, Karol Romero, L. Bonifait, L. Baugé et al.</li>
+<li>Year: 2023</li>
+<li>Venue: Frontiers in Microbiology</li>
+<li>URL: https://www.semanticscholar.org/paper/070b499b75818eb8ebbc0dc765efdf2c3cca932c</li>
+<li>DOI: 10.3389/fmicb.2023.1130891</li>
+<li>PMID: 37089562</li>
+<li>PMCID: 10116068</li>
+<li>Citations: 8</li>
+<li>Summary: All strains present resistance determinants including heavy metals and biocides that could explain the ability of this serovar to survive and persist in the environment, within herds, and in food processing plants.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.709)<br />
+    &gt; The Salmonella iron transporter gene cluster sitABCD, coding for a periplasmic ATP-binding-protein, previously identified in S. Typhimurium (Kehres et al., 2002) was also identified in all genomes. Interestingly, in line with iron cytoplasm starvation, the entB gene coding for the Escherichia coli catecholate siderophore enterobactin (Pakarian and Pawelek, 2016) was identified in all genomes with 80% identity (data not showed), such as the fepCG genes that code for ferric enterobactin transport ATP-binding proteins.<br />
+    &gt; Several heavy metal resistance genes were identified. Genes implied in cobalt/magnesium resistance (corABCD), gold resistance (gesABC and golST), arsenic (pstB), and copper (cuiD and cueP) resistances were found in all genomes. The merCRT genes implied in mercury resistance were also found in only one strain isolated from poultry (S18LNR1211). This last strain also presents the tetracycline, sulphonamide, and aminoglycoside resistance genes tetAB, sul1, and ant3-D, ' respectively (Supplementary Table 2, "MEGAResV2" tab).</li>
+</ul>
+<h2 id="notes">Notes</h2>
+<ul>
+<li>This provider combines <code>search_papers_by_relevance</code> with <code>snippet_search</code>.</li>
+<li>No synthesis or second-stage model call is performed.</li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>S. Tay, K. Kho, S. Lye, Y. Ngeow (2017). Phylogeny and putative virulence gene analysis of Bartonella bovis. The Journal of Veterinary Medical Science. https://www.semanticscholar.org/paper/38591b9d494453f8e363495d635019d59267129c</li>
+<li>Megan R. Teh, Joe N. Frost, A. Armitage, H. Drakesmith (2021). Analysis of Iron and Iron-Interacting Protein Dynamics During T-Cell Activation. Frontiers in Immunology. https://www.semanticscholar.org/paper/912bf84469a61cdc9db3bb47a2104a7bbbcfa4c5</li>
+<li>Sajani Thapa, Govardhan Rathnaiah, D. Zinniel, R. Barletta, J. Bannantine et al. (2024). The Fur-like regulatory protein MAP3773c modulates key metabolic pathways in Mycobacterium avium subsp. paratuberculosis under in-vitro iron starvation. Scientific Reports. https://www.semanticscholar.org/paper/fc291356ba58778e38db3feb0c0c687b3db85b78</li>
+<li>K. Dziewanowska, M. Settles, Samuel S. Hunter, Ingrid Linquist, Faye D. Schilkey et al. (2014). Phase Variation in Myxococcus xanthus Yields Cells Specialized for Iron Sequestration. PLoS ONE. https://www.semanticscholar.org/paper/6d7d24a81c82f114458ab6480622f9fe6394a09d</li>
+<li>Samuel J. Modlin, A. Elghraoui, Deepika Gunasekaran, Alyssa M Zlotnicki, N. Dillon et al. (2021). Structure-Aware Mycobacterium tuberculosis Functional Annotation Uncloaks Resistance, Metabolic, and Virulence Genes. mSystems. https://www.semanticscholar.org/paper/76ff9a62b36b32cc10e46e71ffd4dd90344e4706</li>
+<li>É. B. Felestrino, A. B. Sanchez, W. L. Caneschi, Camila G. C. Lemes, R. A. Assis et al. (2020). Complete genome sequence and analysis of Alcaligenes faecalis strain Mc250, a new potential plant bioinoculant. PLoS ONE. https://www.semanticscholar.org/paper/ac9a470bb9ade3a30a9c9bcde25e3822256cbab2</li>
+<li>Dawn Cotter, A. Maer, C. Guda, Brian Saunders, S. Subramaniam (2005). LMPD: LIPID MAPS proteome database. Nucleic Acids Research. https://www.semanticscholar.org/paper/265c37b45326b7927e396484751e84e4aeff92d5</li>
+<li>P. Hornbeck, J. Kornhauser, S. Tkachev, Bin Zhang, E. Skrzypek et al. (2011). PhosphoSitePlus: a comprehensive resource for investigating the structure and function of experimentally determined post-translational modifications in man and mouse. Nucleic Acids Research. https://www.semanticscholar.org/paper/93e4acf4ba3bca1b379ae8292e73dddb344abd90</li>
+<li>Xiaohua Jiang, Daren Zhao, Asim Ali, Bo Xu, Wei Liu et al. (2021). MeiosisOnline: A Manually Curated Database for Tracking and Predicting Genes Associated With Meiosis. Frontiers in Cell and Developmental Biology. https://www.semanticscholar.org/paper/aeb08368a5540685473578345739bb569103bd46</li>
+<li>E. Toulza, A. Tagliabue, S. Blain, G. Piganeau (2012). Analysis of the Global Ocean Sampling (GOS) Project for Trends in Iron Uptake by Surface Ocean Microbes. PLoS ONE. https://www.semanticscholar.org/paper/ef1537c5ee75f378034c8891dd1253ef40fbd488</li>
+<li>Matthew P. Mulè, D. Giacalone, Kayla Lawlor, A. Golden, C. Cook et al. (2015). Iron-dependent gene expression in Actinomyces oris. Journal of Oral Microbiology. https://www.semanticscholar.org/paper/511fb8327ad6a1f9275b289753acc48e3f630253</li>
+<li>P. Pinto-Pinho, Joana Quelhas, Francis Impens, Sara Dufour, Delphi Van Haver et al. (2025). The Surface Proteome of Bovine Unsexed and Sexed Spermatozoa. Animals : an Open Access Journal from MDPI. https://www.semanticscholar.org/paper/66496158140e8f55a2c2ca8965bd298300ce9ab0</li>
+<li>Mehrad Hamidian (2022). Tn6553, a Tn7-family transposon encoding putative iron uptake functions found in Acinetobacter. Archives of Microbiology. https://www.semanticscholar.org/paper/6d6f853f0140f0a7fa3cc147e7b80ea7ea112793</li>
+<li>Ralf C. Mueller, Nicolai Mallig, Jacqueline Smith, Lél Eöry, Richard I. Kuo et al. (2020). Avian Immunome DB: an example of a user-friendly interface for extracting genetic information. BMC Bioinformatics. https://www.semanticscholar.org/paper/b894d9ca8ea2d653bf1711a0c67dab71d054487c</li>
+<li>V. S. Sunithakumari, Rahul Ravikumar Menon, Gayathri G. Suresh, R. Krishnan, N. Rameshkumar (2024). Characterization of a novel root-associated diazotrophic rare PGPR taxa, Aquabacter pokkalii sp. nov., isolated from pokkali rice: new insights into the plant-associated lifestyle and brackish adaptation. BMC Genomics. https://www.semanticscholar.org/paper/7b6d113f0e2717352b20e31091b586b3ec2f0753</li>
+<li>Megan G. Behringer, Wei-Chin Ho, Samuel F. Miller, Sarah B. Worthan, Zeer Cen et al. (2024). Trade-offs, trade-ups, and high mutational parallelism underlie microbial adaptation during extreme cycles of feast and famine. Current biology : CB. https://www.semanticscholar.org/paper/13c71a271ad81ea813516193454b0fed04b2cd2b</li>
+<li>Yanfei Liu, Yue Liu, Wantong Zhang, Mingyue Sun, Weiliang Weng et al. (2020). Network Pharmacology-Based Strategy to Investigate the Pharmacological Mechanisms of Ginkgo biloba Extract for Aging. Evidence-based Complementary and Alternative Medicine : eCAM. https://www.semanticscholar.org/paper/fadeff691eb41dff82e019cc3d38b846fdc605c4</li>
+<li>H. Osorio, Verónica Martínez, Pamela A. Nieto, D. Holmes, Raquel Quatrini (2008). Microbial iron management mechanisms in extremely acidic environments: comparative genomics evidence for diversity and versatility. BMC Microbiology. https://www.semanticscholar.org/paper/6205c573e90929f186c4d6f1eead426d238e53f8</li>
+<li>Madeleine De sousa Violante, V. Michel, Karol Romero, L. Bonifait, L. Baugé et al. (2023). Tell me if you prefer bovine or poultry sectors and I’ll tell you who you are: Characterization of Salmonella enterica subsp. enterica serovar Mbandaka in France. Frontiers in Microbiology. https://www.semanticscholar.org/paper/070b499b75818eb8ebbc0dc765efdf2c3cca932c</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88CI5
+gene_symbol: fbpA
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: fbpA (PP_5196) encodes a predicted periplasmic iron(III)-binding substrate-binding
+  component of the PP_5195-fbpA iron ABC import locus. Its iron(III) ABC-transporter product
+  name, ferric-binding domain, iron keyword, signal peptide, and iron-utilization PANTHER
+  subfamily support ferric/iron binding.
+existing_annotations:
+- term:
+    id: GO:0030288
+    label: outer membrane-bounded periplasmic space
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: located_in
+  review:
+    summary: Periplasmic localization is appropriate for this signal-peptide-bearing iron
+      ABC substrate-binding protein.
+    action: ACCEPT
+    reason: The protein is a predicted periplasmic binding component with a signal peptide
+      and ferric-binding domain.
+    supported_by:
+    - reference_id: file:PSEPK/fbpA/fbpA-goa.tsv
+      supporting_text: &#34;GO:0030288\touter membrane-bounded periplasmic space&#34;
+    - reference_id: file:PSEPK/fbpA/fbpA-uniprot.txt
+      supporting_text: Full=Iron(III) iron ABC transporter, periplasmic iron-binding protein
+    - reference_id: file:PSEPK/fbpA/fbpA-uniprot.txt
+      supporting_text: FT   SIGNAL          1..22
+    - reference_id: file:PSEPK/fbpA/fbpA-uniprot.txt
+      supporting_text: InterPro; IPR026045; Ferric-bd.
+- term:
+    id: GO:0008199
+    label: ferric iron binding
+  evidence_type: IEA
+  original_reference_id: file:PSEPK/fbpA/fbpA-uniprot.txt
+  qualifier: enables
+  review:
+    summary: Ferric iron binding is the substrate-recognition role expected for this periplasmic
+      iron ABC binding component.
+    action: NEW
+    reason: The protein has a ferric-binding domain, iron keyword/product context, and a signal
+      peptide.
+    supported_by: &amp;id001
+    - reference_id: file:PSEPK/fbpA/fbpA-uniprot.txt
+      supporting_text: Full=Iron(III) iron ABC transporter, periplasmic iron-binding protein
+    - reference_id: file:PSEPK/fbpA/fbpA-uniprot.txt
+      supporting_text: InterPro; IPR026045; Ferric-bd.
+    - reference_id: file:PSEPK/fbpA/fbpA-deep-research-asta.md
+      supporting_text: &#39;Protein Description:** SubName: Full=Iron(III) iron ABC transporter,
+        periplasmic iron-binding protein&#39;
+    - reference_id: file:PSEPK/fbpA/fbpA-uniprot.txt
+      supporting_text: Iron {ECO:0000256|PIRSR:PIRSR002825-1}
+    - reference_id: file:PSEPK/fbpA/fbpA-uniprot.txt
+      supporting_text: IRON-UTILIZATION PERIPLASMIC PROTEIN
+    - reference_id: file:PSEPK/fbpA/fbpA-uniprot.txt
+      supporting_text: Belongs to the bacterial solute-binding protein 1 family.
+- term:
+    id: GO:0006826
+    label: iron ion transport
+  evidence_type: IEA
+  original_reference_id: file:PSEPK/fbpA/fbpA-uniprot.txt
+  qualifier: involved_in
+  review:
+    summary: Iron ion transport is the substrate-specific process for this iron ABC substrate-binding
+      component.
+    action: NEW
+    reason: The binding protein is part of a predicted iron ABC import locus.
+    supported_by: *id001
+- term:
+    id: GO:0043190
+    label: ATP-binding cassette (ABC) transporter complex
+  evidence_type: IEA
+  original_reference_id: file:PSEPK/fbpA/fbpA-uniprot.txt
+  qualifier: part_of
+  review:
+    summary: The binding protein should be represented as part of an ABC importer complex
+      candidate.
+    action: NEW
+    reason: The gene sits in an iron ABC transporter locus with matching permease and, for
+      C67, ATPase components.
+    supported_by: *id001
+references:
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: file:PSEPK/fbpA/fbpA-goa.tsv
+  title: QuickGO GOA annotations for fbpA
+  findings: []
+- id: file:PSEPK/fbpA/fbpA-uniprot.txt
+  title: UniProtKB entry for fbpA (Q88CI5)
+  findings:
+  - supporting_text: Full=Iron(III) iron ABC transporter, periplasmic iron-binding protein
+- id: file:PSEPK/fbpA/fbpA-deep-research-asta.md
+  title: Asta retrieval report for fbpA (Q88CI5)
+  findings:
+  - supporting_text: &#39;Protein Description:** SubName: Full=Iron(III) iron ABC transporter,
+      periplasmic iron-binding protein&#39;
+- id: file:PSEPK/PP_4881/PP_4881-uniprot.txt
+  title: UniProtKB entry for PP_4881 (Q88DE5)
+  findings:
+  - supporting_text: Full=Iron ABC transporter, periplasmic iron-binding protein
+- id: file:PSEPK/PP_4882/PP_4882-uniprot.txt
+  title: UniProtKB entry for PP_4882 (Q88DE4)
+  findings:
+  - supporting_text: Full=Iron ABC transporter, permease protein
+- id: file:PSEPK/PP_5135/PP_5135-uniprot.txt
+  title: UniProtKB entry for PP_5135 (Q88CP5)
+  findings:
+  - supporting_text: Full=ABC transporter, periplasmic binding protein
+- id: file:PSEPK/PP_5136/PP_5136-uniprot.txt
+  title: UniProtKB entry for PP_5136 (Q88CP4)
+  findings:
+  - supporting_text: Full=ABC transporter, permease protein
+- id: file:PSEPK/fbpC/fbpC-uniprot.txt
+  title: UniProtKB entry for fbpC (Q88CP3)
+  findings:
+  - supporting_text: Full=Ferric iron ABC transporter, ATP-binding protein
+- id: file:PSEPK/PP_5195/PP_5195-uniprot.txt
+  title: UniProtKB entry for PP_5195 (Q88CI6)
+  findings:
+  - supporting_text: Full=Iron ABC transporter, permease protein
+core_functions:
+- description: Predicted periplasmic ferric/iron-binding component of the C71 iron ABC import
+    locus.
+  molecular_function:
+    id: GO:0008199
+    label: ferric iron binding
+  directly_involved_in:
+  - id: GO:0006826
+    label: iron ion transport
+  locations:
+  - id: GO:0030288
+    label: outer membrane-bounded periplasmic space
+  in_complex:
+    id: GO:0043190
+    label: ATP-binding cassette (ABC) transporter complex
+  supported_by:
+  - reference_id: file:PSEPK/fbpA/fbpA-uniprot.txt
+    supporting_text: Full=Iron(III) iron ABC transporter, periplasmic iron-binding protein
+  - reference_id: file:PSEPK/fbpA/fbpA-uniprot.txt
+    supporting_text: InterPro; IPR026045; Ferric-bd.
+  - reference_id: file:PSEPK/fbpA/fbpA-deep-research-asta.md
+    supporting_text: &#39;Protein Description:** SubName: Full=Iron(III) iron ABC transporter,
+      periplasmic iron-binding protein&#39;
+  - reference_id: file:PSEPK/fbpA/fbpA-uniprot.txt
+    supporting_text: Iron {ECO:0000256|PIRSR:PIRSR002825-1}
+  - reference_id: file:PSEPK/fbpA/fbpA-uniprot.txt
+    supporting_text: IRON-UTILIZATION PERIPLASMIC PROTEIN
+  - reference_id: file:PSEPK/fbpA/fbpA-uniprot.txt
+    supporting_text: Belongs to the bacterial solute-binding protein 1 family.
+proposed_new_terms: []
+suggested_questions:
+- question: What ATP-binding component partners with the partial C71 iron ABC import locus,
+    and is the substrate ferric iron, ferric-chelate, or another iron complex?
+suggested_experiments:
+- description: Measure iron uptake and growth phenotypes for the matched transporter deletion
+    mutants under iron limitation, then complement the full locus to resolve substrate specificity
+    and missing-partner assignments.
+  experiment_type: targeted ABC-transporter mutant uptake and growth assay
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

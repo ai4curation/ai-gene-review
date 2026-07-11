@@ -1,0 +1,2712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>rpoA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>rpoA</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88QL1" target="_blank" class="term-link">
+                        Q88QL1
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "rpoA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88QL1" data-a="DESCRIPTION: rpoA encodes the alpha subunit of the Pseudomonas ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>rpoA encodes the alpha subunit of the Pseudomonas putida KT2440 DNA-directed RNA polymerase core enzyme. The alpha subunits dimerize, help assemble the alpha2-beta-beta-prime-omega catalytic core, support basal transcription, and provide contacts for transcriptional regulators and upstream promoter elements.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003677" target="_blank" class="term-link">
+                                    GO:0003677
+                                </a>
+                            </span>
+                            <span class="term-label">DNA binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QL1" data-a="GO:0003677" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DNA binding is retained for rpoA because the alpha subunit participates in promoter/upstream-element contacts within bacterial RNAP.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt describes the alpha C-terminal domain as interacting with transcriptional regulators and upstream promoter elements, and GOA assigns DNA binding from UniRule/InterPro evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/rpoA/rpoA-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0003677	DNA binding</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/rpoA/rpoA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">the C-terminal domain is involved in interaction</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/rpoA/rpoA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">with transcriptional regulators and with upstream promoter elements.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003899" target="_blank" class="term-link">
+                                    GO:0003899
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-directed RNA polymerase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QL1" data-a="GO:0003899" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DNA-directed RNA polymerase activity is accepted as the complex-level core activity to which rpoA contributes.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The rpoA product is a core RNAP subunit; UniProt states that the enzyme catalyzes DNA-to-RNA transcription using ribonucleoside triphosphates and records the EC 2.7.7.6 reaction.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/rpoA/rpoA-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0003899	DNA-directed RNA polymerase activity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/rpoA/rpoA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DNA-dependent RNA polymerase catalyzes the transcription of</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/rpoA/rpoA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=RNA(n) + a ribonucleoside 5&#39;-triphosphate = RNA(n+1) +</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/rpoA/rpoA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">The RNAP catalytic core consists of 2 alpha, 1</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/rpoA/rpoA-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">uniprot_accession: Q88QL1</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QL1" data-a="GO:0005737" data-r="GO_REF:0000117" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasm is retained as bacterial localization context but is not the most informative functional annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Bacterial chromosomal transcription occurs in the cytoplasm, but the core curation signal for rpoA is RNAP complex function and transcription.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/rpoA/rpoA-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0005737	cytoplasm</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/rpoA/rpoA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">The RNAP catalytic core consists of 2 alpha, 1</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006351" target="_blank" class="term-link">
+                                    GO:0006351
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-templated transcription</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QL1" data-a="GO:0006351" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DNA-templated transcription is accepted as the biological process mediated by the RNAP core enzyme containing rpoA.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt states that RNA polymerase transcribes DNA into RNA, and the alpha subunit is part of the core and holoenzyme that initiates transcription with sigma factor.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/rpoA/rpoA-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0006351	DNA-templated transcription</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/rpoA/rpoA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DNA-dependent RNA polymerase catalyzes the transcription of</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/rpoA/rpoA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">the holoenzyme is formed, which can initiate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034062" target="_blank" class="term-link">
+                                    GO:0034062
+                                </a>
+                            </span>
+                            <span class="term-label">5&#39;-3&#39; RNA polymerase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000116
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QL1" data-a="GO:0034062" data-r="GO_REF:0000116" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The Rhea-derived 5&#39;-3&#39; RNA polymerase activity is correct but should be represented by the more specific DNA-directed RNA polymerase term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The substrate-template context is DNA-directed transcription by bacterial RNAP; GO:0003899 captures the same reaction more specifically for rpoA.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003899" target="_blank" class="term-link">
+                                    DNA-directed RNA polymerase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/rpoA/rpoA-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0034062	5&#39;-3&#39; RNA polymerase activity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/rpoA/rpoA-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0003899	DNA-directed RNA polymerase activity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/rpoA/rpoA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=RNA(n) + a ribonucleoside 5&#39;-triphosphate = RNA(n+1) +</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046983" target="_blank" class="term-link">
+                                    GO:0046983
+                                </a>
+                            </span>
+                            <span class="term-label">protein dimerization activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QL1" data-a="GO:0046983" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Alpha-subunit dimerization is retained as assembly context for the RNAP core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt explicitly describes rpoA as a homodimer, but the main curated role is assembly and function of the RNAP core rather than dimerization as an independent endpoint.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/rpoA/rpoA-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0046983	protein dimerization activity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/rpoA/rpoA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- SUBUNIT: Homodimer.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000428" target="_blank" class="term-link">
+                                    GO:0000428
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-directed RNA polymerase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:PSEPK/rpoA/rpoA-uniprot.txt
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QL1" data-a="GO:0000428" data-r="file:PSEPK/rpoA/rpoA-uniprot.txt" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> rpoA should be explicitly connected to the DNA-directed RNA polymerase complex.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The fetched GOA table lacks the complex term, but UniProt records GO:0000428 and describes the alpha2-beta-beta-prime-omega RNAP catalytic core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/rpoA/rpoA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   GO; GO:0000428; C:DNA-directed RNA polymerase complex; IEA:UniProtKB-KW.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/rpoA/rpoA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">The RNAP catalytic core consists of 2 alpha, 1</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>rpoA forms the alpha subunit dimer of the bacterial RNAP core and contributes to DNA-directed RNA polymerase activity during DNA-templated transcription.</h3>
+                <span class="vote-buttons" data-g="Q88QL1" data-a="FUNCTION: rpoA forms the alpha subunit dimer of the bacteria..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006351" target="_blank" class="term-link">
+                                DNA-templated transcription
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000428" target="_blank" class="term-link">
+                            DNA-directed RNA polymerase complex
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/rpoA/rpoA-goa.tsv
+
+                        </span>
+
+                        <div class="finding-text">GO:0003899	DNA-directed RNA polymerase activity</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/rpoA/rpoA-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">The RNAP catalytic core consists of 2 alpha, 1</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/rpoA/rpoA-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">DNA-dependent RNA polymerase catalyzes the transcription of</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/rpoA/rpoA-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">the N-terminal domain is essential for RNAP assembly and basal</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/rpoA/rpoA-deep-research-asta.md
+
+                        </span>
+
+                        <div class="finding-text">uniprot_accession: Q88QL1</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000116.md" target="_blank" class="term-link">
+                            GO_REF:0000116
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic Gene Ontology annotation based on Rhea mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/rpoA/rpoA-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO GOA annotations for rpoA</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/rpoA/rpoA-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for rpoA (Q88QL1)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt provides the RNAP alpha-subunit identity, catalytic-core membership, and DNA-directed RNA polymerase reaction context used for this first-pass review.</div>
+
+                        <div class="finding-text">"DE   RecName: Full=DNA-directed RNA polymerase subunit alpha"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"DNA-dependent RNA polymerase catalyzes the transcription of"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"The RNAP catalytic core consists of 2 alpha, 1"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"CC   -!- SUBUNIT: Homodimer."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/rpoA/rpoA-deep-research-asta.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Asta retrieval report for rpoA (Q88QL1)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Asta retrieval confirmed the target identity and was used as lightweight first-pass context.</div>
+
+                        <div class="finding-text">"uniprot_accession: Q88QL1"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Asta</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(rpoA-deep-research-asta.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88QL1" data-a="DEEP_RESEARCH: Asta" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Asta Literature Retrieval: Gene Research for Functional Annotation ⚠️ CRITICAL: Gene/Protein Identification Context BEFORE YOU BEGIN RESEARCH: Y...</span>
+
+
+                    <span class="report-badge">Asta</span>
+
+
+                    <span class="report-badge">Asta Scientific Corpus Retrieval</span>
+
+
+                    <span class="report-badge">20 citations</span>
+
+
+
+                    <span class="report-meta-text">2026-07-08T23:16:59.003097</span>
+
+
+
+                </div>
+
+
+                <h1 id="asta-literature-retrieval-gene-research-for-functional-annotation-critical-geneprotein-identification-context-before-you-begin-research-y">Asta Literature Retrieval: Gene Research for Functional Annotation ⚠️ CRITICAL: Gene/Protein Identification Context BEFORE YOU BEGIN RESEARCH: Y...</h1>
+<p>This report is retrieval-only and is generated directly from Asta results.</p>
+<ul>
+<li>Papers retrieved: 20</li>
+<li>Snippets retrieved: 20</li>
+</ul>
+<h2 id="relevant-papers">Relevant Papers</h2>
+<h3 id="1-avian-immunome-db-an-example-of-a-user-friendly-interface-for-extracting-genetic-information">[1] Avian Immunome DB: an example of a user-friendly interface for extracting genetic information</h3>
+<ul>
+<li>Authors: Ralf C. Mueller, Nicolai Mallig, Jacqueline Smith, Lél Eöry, Richard I. Kuo et al.</li>
+<li>Year: 2020</li>
+<li>Venue: BMC Bioinformatics</li>
+<li>URL: https://www.semanticscholar.org/paper/b894d9ca8ea2d653bf1711a0c67dab71d054487c</li>
+<li>DOI: 10.1186/s12859-020-03764-3</li>
+<li>PMID: 33176685</li>
+<li>PMCID: 7661159</li>
+<li>Citations: 6</li>
+<li>Summary: The Avian Immunome DB (Avimm) for easy gene property extraction as exemplified by avian immune genes is presented and described, which contains 1170 distinct avian immune genes with canonical gene symbols and 612 synonyms across 363 bird species.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.798)<br />
+    &gt; Ever since the advent of commercial next-generation sequencing platforms in the early 2000s with its associated decrease in sequencing costs [1], the number of DNA sequences increased considerably [2]. Generally, these data become publicly accessible in databases provided by projects focussing on different aspects of biological sequence information [3,4]. Ensembl [5] and NCBI [6] for instance, have a strong focus on genome annotation with the help of RNA transcript information while UniProt has a pronounced emphasis on protein-coding genes and biological function of proteins. UniProt's records are either based on manually annotated, non-redundant protein sequences (SwissProt) or on highquality computationally analysed records, which are enriched with automatic annotation (TrEMBL) [7]. Relying on accurate genome annotations and protein descriptions, Gene Ontology (GO) [8,9] categorises gene products and fits them into a computational model of biological systems. Their assignment deploys a controlled vocabulary, so-called GO terms, to link genes and gene products to biological processes, cellular components, or molecular functions.<br />
+    &gt; However, genome annotation is not standardised, and each service provider uses their own custom-built annotation pipelines. As a consequence, this often leads to ambiguity in gene names during genome annotation with different gene symbols being given to the same gene or the same gene symbol being given to different, but similar genes. Additionally, since the pre-existing wealth of sequencing information relies on model organisms like human and mouse, there is a strong bias in gene symbols towards those chosen for these species. Particularly for model species, this issue has been partially addressed, for example by the Human Genome Organisation (HUGO) Gene Nomenclature Committee (HGNC) [10], the Vertebrate Gene Nomenclature Committee (VGNC) [11], or the Chicken Gene Nomenclature Consortium [12]. However, this neither guarantees that gene names are harmonised among these consortia, nor does it keep researchers from assigning alternative gene symbols in their annotations, especially when working with non-model species.</li>
+</ul>
+<h3 id="2-cellphonedb-inferring-cellcell-communication-from-combined-expression-of-multi-subunit-ligandreceptor-complexes">[2] CellPhoneDB: inferring cell–cell communication from combined expression of multi-subunit ligand–receptor complexes</h3>
+<ul>
+<li>Authors: M. Efremova, Miquel Vento-Tormo, S. Teichmann, R. Vento-Tormo</li>
+<li>Year: 2020</li>
+<li>Venue: Nature Protocols</li>
+<li>URL: https://www.semanticscholar.org/paper/6a3b3e4a2eebc3fad3b03ee6d8228264247abbc8</li>
+<li>DOI: 10.1038/s41596-020-0292-x</li>
+<li>PMID: 32103204</li>
+<li>Citations: 2772</li>
+<li>Influential citations: 298</li>
+<li>Summary: The structure and content of CellPhoneDB is outlined, procedures for inferring cell–cell communication networks from single-cell RNA sequencing data are provided and a practical step-by-step guide to help implement the protocol is presented.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.714)<br />
+    &gt; CellPhoneDB stores ligand-receptor interactions, as well as other properties of the interacting partners, including their subunit architecture and gene and protein identifiers. To create the content of the database, four main .csv data files are required: gene_input.csv, protein_input.csv, complex_input.csv and interaction_input.csv (Fig. 4).<br />
+    &gt; gene_input Mandatory fields are 'gene_name', 'uniprot', 'hgnc_symbol' and 'ensembl'. This file is critical for establishing the link between the scRNA-seq data and the interaction pairs stored at the protein level. It includes the following gene and protein identifiers: (i) gene name ('gene_name'), (ii) UniProt identifier ('uniprot'), (iii) HUGO Nomenclature Committee (HGNC) symbol ('hgnc_symbol') and (iv) gene Ensembl identifier (ENSG) ('ensembl'). To create this file, lists of linked proteins and gene identifiers are downloaded from UniProt and merged using gene names. Several rules need to be considered when merging the files • UniProt annotation prevails over the gene Ensembl annotation when the same gene Ensembl identifier points toward different UniProt identifiers. • UniProt and Ensembl lists are also merged by their UniProt identifier, but this information is used only when the UniProt or Ensembl identifier is missing in the original list merged by gene name. • If the same gene name points toward different HGNC symbols, only the HGNC symbol matching the gene name annotation is considered. • Only one HLA isoform is considered in our interaction analysis, and it is stored in a manually HLA-curated list of genes, named HLA_curated.<br />
+    &gt; protein_input Mandatory fields are 'uniprot' and 'protein_name'.</li>
+</ul>
+<h3 id="3-protein-function-assignment-through-mining-cross-species-protein-protein-interactions">[3] Protein Function Assignment through Mining Cross-Species Protein-Protein Interactions</h3>
+<ul>
+<li>Authors: Xue-wen Chen, Mei Liu, R. Ward</li>
+<li>Year: 2008</li>
+<li>Venue: PLoS ONE</li>
+<li>URL: https://www.semanticscholar.org/paper/5bfd767ec716a9c335dfac22da1895e2c5045650</li>
+<li>DOI: 10.1371/journal.pone.0001562</li>
+<li>PMID: 18253506</li>
+<li>PMCID: 2216687</li>
+<li>Citations: 28</li>
+<li>Summary: It is demonstrated that for proteins that are characterized by GO, the CSIDOP may predict extra functions, which is attractive as a protein normally executes a variety of functions in different processes and its current GO annotation may be incomplete.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.703)<br />
+    &gt; Importantly, the CSIDOP predicted functional annotations for 181 H. sapiens proteins that are not currently described in the GO database. Some of these novel annotations can be supported with evidence provided by QuickGO, a web browser of gene ontology data maintained by the European Bioinformatics Institute [37]. For instance, the gene FHL1, four and a half LIM domains protein [Swiss-Prot: Q13642], was identified by the CSIDOP to participate in metal ion binding (GO:0046872) and zinc ion binding (GO:0008270). The metal ion binding annotation was found in QuickGO which was inferred from UniProt keywords. The zinc ion binding term was found by both the UniProt keywords and in InterPro [34], which is a database of protein families, domains and functional sites in which identifiable features found in known proteins can be applied to unknown protein sequences. Many novel functional annotations are supported by evidences found in their orthologous protein annotations. Orthologous proteins are generally believed to have similar functions, and the orthologs can be obtained from Inparanoid [31]. For example, the H. sapiens gene POLA2, DNA polymerase subunit alpha B [Swiss-Prot: Q14181], was predicted by CSIDOP to exhibit alpha DNA polymerase activity (GO:0003889). Orthologs of POLA2 found by Inparanoid include: POL12 [ORF: YBL035C; SGD:S000000131] in S. cerevisiae, POLA2 [RGD:621817] in R. norvegicus, and CG5923 [FlyBase: FBgn0005696] in D. melanogaster. All three orthologs were associated with the alpha DNA polymerase activity (GO:0003889).</li>
+</ul>
+<h3 id="4-structure-aware-mycobacterium-tuberculosis-functional-annotation-uncloaks-resistance-metabolic-and-virulence-genes">[4] Structure-Aware Mycobacterium tuberculosis Functional Annotation Uncloaks Resistance, Metabolic, and Virulence Genes</h3>
+<ul>
+<li>Authors: Samuel J. Modlin, A. Elghraoui, Deepika Gunasekaran, Alyssa M Zlotnicki, N. Dillon et al.</li>
+<li>Year: 2021</li>
+<li>Venue: mSystems</li>
+<li>URL: https://www.semanticscholar.org/paper/76ff9a62b36b32cc10e46e71ffd4dd90344e4706</li>
+<li>DOI: 10.1128/mSystems.00673-21</li>
+<li>PMID: 34726489</li>
+<li>PMCID: 8562490</li>
+<li>Citations: 15</li>
+<li>Summary: This work systematically updates the functional genome annotation of Mycobacterium tuberculosis virulent type strain H37Rv and identifies hundreds of high-confidence candidates for mechanisms of antibiotic resistance, virulence factors, and basic metabolism and other functions key in clinical and basic tuberculosis research.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.698)<br />
+    &gt; 3. Fig. S2B -match/mismatch colours mixed up? (I think match should be teal and mismatch -red?) 4. Line 162-163: Rv1430 is in UniProt (EC 3.1.1.-) and has been present in Uniprot since version 45 of the gene record: https://www.uniprot.org/uniprot/L7N697. I presume you had conducted your literature analysis before the UniProt entry was updated to include the EC code, so maybe you can add the dates when the data was retrieved from UniProt and other databases you used in the Materials and Methods section? 5. Supplementary text, p. 9, first paragraph. I believe that an unrelated fragment of text was copy-pasted into the second sentence of the paragraph ("Many mutations that altered bacterial clearance...") 6. Supplementary text, p. 12, final paragraph. It should be Rv1191, not Rv1191c. Could you also add a short explanation why you believe it should be classified as a cathepsin (what protein did you transfer this annotation from)?<br />
+    &gt; Reviewer #3 (Comments for the Author):<br />
+    &gt; In this manuscript, Modlin et al., attempt to tackle the problem of assigning functions to ~1700 hypothetical and/or underannotated genes in the Mycobacterium tuberculosis H37Rv (Mtb) genome. Rapid and accurate annotation of microbial genomes is indeed a very critical and under appreciated part of microbial ecophysiology. This step is especially crucial for pathogenic organisms such as Mtb where accurate functional annotation of these hypothetical proteins could unravel mechanisms which could act as drug targets. The authors employed a two-pronged strategy to define a set of these unannotated or under-annotated genes and to then provide possible functions for many of these genes. First, they undertook a large-scale manual curation of literature to assign functions (including EC numbers for enzymatic functions) to ~575 genes.</li>
+</ul>
+<h3 id="5-cronos-the-cross-reference-navigation-server">[5] CRONOS: the cross-reference navigation server</h3>
+<ul>
+<li>Authors: Brigitte Waegele, I. Dunger, G. Fobo, Corinna Montrone, H. Mewes et al.</li>
+<li>Year: 2008</li>
+<li>Venue: Bioinformatics</li>
+<li>URL: https://www.semanticscholar.org/paper/8c05b3aa0ba01c41ee97c2dc98ea7b5b14ce0e9c</li>
+<li>DOI: 10.1093/bioinformatics/btn590</li>
+<li>PMID: 19010804</li>
+<li>PMCID: 2638938</li>
+<li>Citations: 20</li>
+<li>Summary: CRONOS, a cross-reference server that contains entries from five mammalian organisms presented by major gene and protein information resources, is developed, which shows that the cross-references are highly accurate.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.686)<br />
+    &gt; In order to detect gene and protein names which are assigned to products of different genes and thus result in erroneous cross-references, dedicated lists are created for each organism separately. Organism-specific lists are necessary, since terms that are ambiguous in one organism might be explicit in another. For example, ADORA2 is an ambiguous gene name in Homo sapiens but not in mouse, and GALT in mouse but not in H.sapiens.<br />
+    &gt; In a first step, ambiguous names within the databases were extracted. If a name occurs in at least two entries describing different genes or proteins (splice variants count as one gene/protein), this particular name is marked as ambiguous and is excluded from the mapping process. In a second step, corresponding gene names occurring in the manually annotated sections of RefSeq as well as in UniProt were analyzed. Entries containing the same gene product name and having a one-to-many or many-to-many relation (e.g. one Swiss-Prot entry maps to many RefSeq entries) were scrutinized for misleading annotation. This process is done manually by inspecting additional information like sequence similarity or functional information about the involved entries. In most of the cases, the exclusion of the ambiguous gene names resulted in correct one-to-one relations.<br />
+    &gt; As statistical analysis revealed (Supplementary Material S2) that gene names with less than four letters are exceptionally error-prone, only gene names with at least four letters are kept for mapping purposes. However, gene names with less than four letters can be queried, e.g. a search for the tumor suppressor 'p53' reveals the respective entries with the official gene name 'TP53'. Organism-specific lists of ambiguous gene and protein names are available for download on the CRONOS home page.</li>
+</ul>
+<h3 id="6-whats-in-a-gene-name-automated-refinement-of-gene-name-dictionaries">[6] What’s in a gene name? Automated refinement of gene name dictionaries</h3>
+<ul>
+<li>Authors: J. Hakenberg</li>
+<li>Year: 2007</li>
+<li>Venue: BioNLP@ACL</li>
+<li>URL: https://www.semanticscholar.org/paper/bd98f9090b9c03fcb93ef51510d01d3fd059ba73</li>
+<li>DOI: 10.3115/1572392.1572419</li>
+<li>Citations: 11</li>
+<li>Summary: An approach to automatically analyze dictionaries to discover how names are composed and which variations typically occur, which can easily be included in existing approaches, and provide valuable insights into the biomedical sub-language.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.674)<br />
+    &gt; Some errors could be accounted to ranges or enumerations of gene names ("SMADs 1, 5 and 8"), others to not far enough reaching analyses: for detecting "SMAD8", we only had the synonyms "SMAD8A", "SMAD8B", and "SMAD9" for the correct gene in the dictionary (all are synonyms for the same gene, according to Entrez Gene). It should thus have been learned that the letter "A" can be left out (similar to "1", see rule no. 8 in Table 3.) Another undetected example is "G(olf) alpha" (GNAL, 2774). Rules to restrict either of the synonyms -Guanine nucleotide-binding protein G(olf), alpha subunit -guanine nucleotide binding protein (G protein), alpha stimulating activity polypeptide, olfactory type -Adenylate cyclase-stimulating G alpha protein, olfactory type -Guanine nucleotide-binding protein, alpha-subunit, olfactory type to this mentioning in text could have been deduced as follows:<br />
+    &gt; (1) Learn in another gene: description before "protein" can be left out ⇒ "G(olf), alpha subunit" could be a name of its own.<br />
+    &gt; (2) Learn in this or another gene: "alpha subunit" can be expressed as "alpha" (or "subunit" skipped) ⇒ "G(olf) alpha" could be a name.<br />
+    &gt; We see that most orthographical and morphological variations (Greek symbols/English words, singular/plural forms, capitalization) can be integrated quite easily in matching techniques. The general knowledge about such variations is far-reaching and can be applied to most domains. In contrast, structural and lexical variations are much harder to pinpoint and express in general ways; mostly, such possible variations are specific to a sub-domain and thus present the main challenge for our method.<br />
+    &gt; The ideas discussed in this paper originated from work on the aforementioned BioCreAtIvE 2 task. In that work, we used manually designed rules to generate variations of gene names.</li>
+</ul>
+<h3 id="7-the-usda-ars-ag100pest-initiative-high-quality-genome-assemblies-for-agricultural-pest-arthropod-research">[7] The USDA-ARS Ag100Pest Initiative: High-Quality Genome Assemblies for Agricultural Pest Arthropod Research</h3>
+<ul>
+<li>Authors: Anna K. Childers, S. Geib, S. Sim, Monica F. Poelchau, B. Coates et al.</li>
+<li>Year: 2021</li>
+<li>Venue: Insects</li>
+<li>URL: https://www.semanticscholar.org/paper/a33d31da6f5aee18501cfc2332ff50d5b7f23508</li>
+<li>DOI: 10.3390/insects12070626</li>
+<li>PMID: 34357286</li>
+<li>PMCID: 8307976</li>
+<li>Citations: 41</li>
+<li>Influential citations: 2</li>
+<li>Summary: It is shown that the Ag100Pest Initiative will greatly expand the diversity of publicly available arthropod genome assemblies and demonstrate the high quality of preliminary contig assemblies, which should help other researchers attain similarly high-quality assemblies.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.669)<br />
+    &gt; Structural annotation refers to the prediction of gene structures on a genome assembly, including the positions of transcripts, exons, introns, coding sequences, and other features [49]. Functional annotation provides information about the gene's biological role(s), for example, gene ontologies [50], pathways, functional domains, and names. Model organism databases can manually assign biological function to genes by accumulating evidence from the scientific literature and structuring it in human and machine-readable formats. In contrast, for non-model organisms such as those in the Ag100Pest Initiative, most, if not all, functional annotation is performed computationally, as (1) gene function in very few genes have been established experimentally for these non-model species, and (2) the capacity for literature-based curation of gene function does not yet exist for these species.<br />
+    &gt; Most of the genome assemblies generated by the Ag100Pest project are being annotated using the NCBI eukaryotic annotation pipeline [51]. This pipeline relies on Gnomon [52] for gene prediction and uses genome assembly, RNA sequencing (RNA-Seq) alignments, transcripts, and protein alignments as inputs. The resulting gene predictions are given an accession number and made publicly available. Gene names are assigned based on homology to proteins in SwissProt [53,54]. The NCBI eukaryotic annotation pipeline requires both the genome assembly and associated RNA-Seq evidence to be publicly available in the NCBI's GenBank and Sequence Read Archive, respectively (SRA; see [55]). In the event that an Ag100Pest species lacks sufficient RNA-Seq evidence in SRA, additional data will be generated, as appropriate, and submitted to aid with NCBI gene structure prediction and annotation.<br />
+    &gt; NCBI does not currently generate additional functional annotations. Proteins deposited in GenBank or generated by RefSeq should eventually be functionally annotated by UniProt [53].</li>
+</ul>
+<h3 id="8-genetools-application-for-functional-annotation-and-statistical-hypothesis-testing">[8] GeneTools – application for functional annotation and statistical hypothesis testing</h3>
+<ul>
+<li>Authors: V. Beisvåg, Frode K. R. Jünge, Hallgeir Bergum, Lars Jølsum, S. Lydersen et al.</li>
+<li>Year: 2006</li>
+<li>Venue: BMC Bioinformatics</li>
+<li>URL: https://www.semanticscholar.org/paper/1d9e0c2f67acd5bf64c659f1f3f8624325b6be8a</li>
+<li>DOI: 10.1186/1471-2105-7-470</li>
+<li>PMID: 17062145</li>
+<li>PMCID: 1630634</li>
+<li>Citations: 107</li>
+<li>Influential citations: 11</li>
+<li>Summary: GeneTools is the first "all in one" annotation tool, providing users with a rapid extraction of highly relevant gene annotation data for e.g. thousands of genes or clones at once.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.666)<br />
+    &gt; The database enables searching by gene symbols/names, GenBank accession numbers, UniGene cluster IDs, Swiss-Prot entry names and several unique clone IDs (IMAGE clone IDs, University of Iowa clone IDs, Operon oligo IDs, TAIR IDs and a subset of selected Affymetrix and Agilent IDs).<br />
+    &gt; The names and symbols of genes/proteins may be highly ambiguous [20]. We therefore recommend using primary gene IDs, like GeneBank accession numbers or specific probe IDs when querying the database. However, if gene names or symbols are used, caution is advised because only official names/symbols associated with UniProt knowledgebase will be recognized. The underlying database is updated on a weekly basis with annotation information from several external databases including UniGene, Swiss-Prot, Entrez Gene and GO. User data are submitted to the database as text files of gene reporters and analysis of the annotation data can be performed through three user interfaces: the NMC Annotation Tool, the GO Annotator Tool and eGOn. Analysis results and annotation data can be exported in various formats.</li>
+</ul>
+<h3 id="9-rm2target-v20-an-updated-database-for-the-target-genes-of-writers-erasers-and-readers-of-rna-modifications">[9] RM2Target v2.0: an updated database for the target genes of writers, erasers, and readers of RNA modifications</h3>
+<ul>
+<li>Authors: Xiaoqiong Bao, Qi Jiang, Weixuan Chen, Huiqin Li, Xuan Li et al.</li>
+<li>Year: 2025</li>
+<li>Venue: Nucleic Acids Research</li>
+<li>URL: https://www.semanticscholar.org/paper/15dbf5509222f17a624912633aa05cc9183fcc70</li>
+<li>DOI: 10.1093/nar/gkaf1206</li>
+<li>PMID: 41206768</li>
+<li>PMCID: 12807602</li>
+<li>Citations: 3</li>
+<li>Summary: The new RM2Target v2.0 will serve as a foundational resource for exploring RNA epitranscriptomic regulation, enabling investigations into cross-talk among modifications, underlying molecular mechanisms, and disease connections, thereby facilitating both basic research and translational applications in RNA epigenetics.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.654)<br />
+    &gt; To obtain basic information on WERs and their target genes, such as official gene symbols, gene IDs, gene types, and genomic locations, gene annotations were downloaded from the GENCODE project [ 44 ] for human and mouse, and from NCBI [ 45 ] and Ensembl [ 46 ] for the other species. Genomic locations were extracted from the corresponding GTF annotation files. Gene symbols were primarily standardized based on the NCBI Gene database [ 45 ] for mRNAs and lncRNAs, GtR-NAdb [ 47 ] for tRNAs, miRbase [ 48 ] for microRNAs, and cir-cBase [ 49 ] for circRNAs. Deprecated or substituted versions of genes were filtered out. The LiftOver [ 50 ] program was employed to convert and unify genomic coordinates across different genome assembly versions.<br />
+    &gt; The functional descriptions of WERs were compiled based on the UniProt database [ 51 ] and further supplemented with evidence from relevant publications, with particular emphasis on their functions as RNA modification regulatory proteins.</li>
+</ul>
+<h3 id="10-qsproteome-a-community-driven-interactive-platform-for-large-scale-exploration-and-evaluation-of-predicted-protein-complex-structures">[10] QSProteome: a community-driven interactive platform for large-scale exploration and evaluation of predicted protein complex structures</h3>
+<ul>
+<li>Authors: E. Catoiu, Delina Kambo, Brianna Rodriguez, Krista Vear, Ziheng Wang et al.</li>
+<li>Year: 2025</li>
+<li>Venue: Nucleic Acids Research</li>
+<li>URL: https://www.semanticscholar.org/paper/2c49a023253438e981c68ee677a6a25d3152da48</li>
+<li>DOI: 10.1093/nar/gkaf1099</li>
+<li>PMID: 41163446</li>
+<li>PMCID: 12807603</li>
+<li>Summary: To promote iterative refinement, QSProteome includes a gamified re-curation workflow that transitions users from training modules into live curation, enabling the community-led assessment of 1547 ABC transporter complexes.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.652)<br />
+    &gt; Interpreting predicted structures requires more than 3D coordinates-biological relevance hinges on understanding function, interactions, and known complex formation. QSProteome integrates data from UniProt, ComplexPortal, and STRING to provide functional context for every uploaded model [ 13 -15 ].<br />
+    &gt; At the sequence level, QSProteome retrieves UniProt annotations for each modeled subunit, including gene names, protein function, ligand interactions, and cofactors [ 13 , 22 ]. This information is particularly useful for homo-oligomeric proteins, whose oligomerization state is often unknown and therefore missing from curated complex-level databases. In such cases, gene-level annotations still provide important functional context and reveal well-defined biological roles. Annotated sequence features-such as transmembrane domains-can be directly highlighted on the structure in the Mol * viewer (Fig. 5 A and B).<br />
+    &gt; At the complex level, QSProteome integrates data from ComplexPortal, displaying complex names, functions, and biological roles for models that match or overlap with known assemblies (Fig. 5 D). If no direct match is found, QSProteome generates a composite summary from the UniProt annotations of individual subunits.<br />
+    &gt; To assess protein-protein interactions, each model page includes an interactive STRING network (Fig. 5 C). This visualization combines experimental evidence and computational predictions to evaluate whether the modeled subunits are likely to form a biologically relevant complex. Users can examine connection confidence, supporting evidence, and interaction types directly within the embedded viewer.<br />
+    &gt; By embedding rich biological annotations alongside structural models, QSProteome ensures that users can evaluate both structural integrity and biological relevance. This layered context supports expert interpretation and broadens accessibility to non-specialists seeking functionally meaningful models.</li>
+</ul>
+<h3 id="11-discovering-and-summarizing-relationships-between-chemicals-genes-proteins-and-diseases-in-pubchem">[11] Discovering and Summarizing Relationships Between Chemicals, Genes, Proteins, and Diseases in PubChem</h3>
+<ul>
+<li>Authors: L. Zaslavsky, Tiejun Cheng, A. Gindulyte, Siqian He, Sunghwan Kim et al.</li>
+<li>Year: 2021</li>
+<li>Venue: Frontiers in Research Metrics and Analytics</li>
+<li>URL: https://www.semanticscholar.org/paper/57b86aef9aae576c2ae4199c0b74971f4c195211</li>
+<li>DOI: 10.3389/frma.2021.689059</li>
+<li>PMID: 34322655</li>
+<li>PMCID: 8311438</li>
+<li>Citations: 23</li>
+<li>Influential citations: 1</li>
+<li>Summary: The literature knowledge panels developed and implemented in PubChem help to uncover and summarize important relationships between chemicals, genes, proteins, and diseases by analyzing co-occurrences of terms in biomedical literature abstracts.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.651)<br />
+    &gt; We decided to prioritize human genes and proteins. The following strategy has been implemented to resolve gene and protein text entities to the most reasonable gene, protein, or enzyme symbol (corresponding to human, when possible):<br />
+    &gt; -Try to find a match among Human Genome Organization (HUGO) Gene Nomenclature Committee (HGNC) names (Braschi et al., 2019;HUGO, 2021);<br />
+    &gt; -Try to find a match among names in The IUPHAR/BPS Guide to Pharmacology (Armstrong et al., 2020; IUPHAR/BPS, 2021); -Try to find matches among names in UniProt (Bateman et al., 2017); -Otherwise, try to match to an enzyme name and resolve to an EC number (Bairoch, 2000;Expassy, 2021).<br />
+    &gt; In general, it is very difficult and often impossible to distinguish the name of a gene from the name of the protein encoded by that gene. Therefore, gene and protein names are not strictly distinguished from each other but considered as one category. Therefore, the annotations considered in this study can be grouped into three categories: chemicals, genes/proteins, and diseases.</li>
+</ul>
+<h3 id="12-metadata-standard-and-data-exchange-specifications-to-describe-model-and-integrate-complex-and-diverse-high-throughput-screening-data-from-the-library-of-integrated-network-based-cellular-signatures-lincs">[12] Metadata Standard and Data Exchange Specifications to Describe, Model, and Integrate Complex and Diverse High-Throughput Screening Data from the Library of Integrated Network-based Cellular Signatures (LINCS)</h3>
+<ul>
+<li>Authors: U. Vempati, Caty Chung, Christopher Mader, Amar Koleti, Nakul Datar et al.</li>
+<li>Year: 2014</li>
+<li>Venue: Journal of Biomolecular Screening</li>
+<li>URL: https://www.semanticscholar.org/paper/91af493a67a83d599ad00f4da275e8eadd165b5e</li>
+<li>DOI: 10.1177/1087057114522514</li>
+<li>PMID: 24518066</li>
+<li>Citations: 83</li>
+<li>Influential citations: 3</li>
+<li>Summary: The National Institutes of Health Library of Integrated Network-based Cellular Signatures (LINCS) program is generating extensive multidimensional data sets, including biochemical, genome-wide transcriptional, and phenotypic cellular response signatures to a variety of small-molecule and genetic perturbations with the goal of creating a sustainable, widely applicable, and readily accessible systems biology knowledge resource. Integration and analysis of diverse LINCS data sets depend on the a...</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.646)<br />
+    &gt; Although this is a fairly obvious requirement, it is not trivial to implement because a protein reagent expressed recombinantly is typically not the exact same entity or in the same state as its corresponding assay participant in a living cell (e.g., kinase domain binding assay vs. corresponding kinase occurring in a specific cell line used for a growth inhibition assay). In this first version of metadata standards, we take a rudimentary approach. We use the UniProt accession and approved Gene symbol (NCBI Gene) and accession number to identify and reference proteins and their coding genes, respectively. Although we recognize limitations, for the purpose of our current simple use cases, this is sufficient. Linking protein and gene identifiers in addition is relevant to integrate RNAi reagent gene targets (see below). The recommended explicit fields for proteins include a standardized name, both for the protein and the gene that encodes it; source of protein (e.g., chemically synthesized, purified from natural source, recombinantly expressed); protein modifications (e.g., mutations, posttranslational modification); protein purity; subunit information for components of a protein complex; and isoform information (derived from either alternative promoter usage, alternative splicing, alternative translation initiation, or frame shifting). We are currently working on a formal description of proteins that will allow ambiguity (more-or less-specific definition of proteins), because in some cases, the exact entity and state of a protein reagent or model system participant is not definitively known (full length, functional domain, exact sequence, mutation, phosphorylation state, etc.).<br />
+    &gt; Inhibitory RNAs (siRNA, shRNA). RNA interference is a standard methodology to transiently knock down gene expression in living cells. This can be achieved using different types of small RNA molecules, including siRNA, shRNA, and miRNA. Information that is relevant to identify and describe these perturbations include probe ID, name, source/provider, target gene symbol and accession number, sequence of the probe, and modifications to the probe (e.g., chemical modification) if any are specified.<br />
+    &gt; Antibody Reagents.</li>
+</ul>
+<h3 id="13-mapping-protein-interactions-between-dengue-virus-and-its-human-and-insect-hosts">[13] Mapping Protein Interactions between Dengue Virus and Its Human and Insect Hosts</h3>
+<ul>
+<li>Authors: J. Doolittle, S. Gomez</li>
+<li>Year: 2011</li>
+<li>Venue: PLoS Neglected Tropical Diseases</li>
+<li>URL: https://www.semanticscholar.org/paper/baff9e82a73e77a021118c0910a5874568cd60b3</li>
+<li>DOI: 10.1371/journal.pntd.0000954</li>
+<li>PMID: 21358811</li>
+<li>PMCID: 3039688</li>
+<li>Citations: 97</li>
+<li>Influential citations: 2</li>
+<li>Summary: Dengue virus manipulates cellular processes to its advantage through specific interactions with the host's protein interaction network, and the interaction networks presented here provide a set of hypothesis for further experimental investigation into the DENV life cycle as well as potential therapeutic targets.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.642)<br />
+    &gt; Figure S1 GO term enrichment of A. aegypti proteins based on data from Guo et al. [13]. (A) Enriched GO biological process terms. (B) Enriched GO molecular function terms. Light blue bars represent terms for A. aegypti targets, and pink is for terms from DENV-similar proteins. When more than ten terms were enriched for a set of proteins, only the ten most signicant terms are shown. Bonferroni corrected p-values were transformed by -log10. The following abbreviations are used: "translation factor nucleic acid bind" is "translation factor activity nucleic acid binding," and "macromolecular subunit organiz" is "macromolecular complex subunit organization." Found at: doi:10.1371/journal.pntd.0000954.s001 (1.39 MB TIF)  Table S3 Predicted interactions between DENV2 and human after the CC Filter. Columns include the the DENV protein's Entrez Protein accession or PDB code, Uniprot accession, and name; the DENV-similar protein's PDB code, Uniprot accession, Entrez Gene ID, and Symbol; the target protein's Uniprot accession, Entrez Gene ID, and Symbol; if the target is a known host factor; and if the predicted interaction was already known in the literature. Found at: doi:10.1371/journal.pntd.0000954.s005 (3.01 MB TXT) Table S4 Predicted interactions between DENV2 and A. aegypti after the CC Filter. Columns include the the DENV protein's Entrez Protein accession or PDB code, Uniprot accession, and name; the DENV-similar protein's PDB code, Uniprot accession, Entrez Gene ID, and Symbol; the D. melanogaster target protein's FlyBase gene number, and Symbol; the A. aegypti target protein's VectorBase protein ID, and Uniprot accession; and if the target is a known host factor. Found at: doi:10.1371/journal.pntd.0000954.s006</li>
+</ul>
+<h3 id="14-the-protein-naming-utility-a-rules-database-for-protein-nomenclature">[14] The Protein Naming Utility: a rules database for protein nomenclature</h3>
+<ul>
+<li>Authors: Johannes Goll, R. Montgomery, L. Brinkac, S. Schobel, D. Harkins et al.</li>
+<li>Year: 2009</li>
+<li>Venue: Nucleic Acids Research</li>
+<li>URL: https://www.semanticscholar.org/paper/dad2c69d04a5a3abdeda129612d52a7849531c09</li>
+<li>DOI: 10.1093/nar/gkp958</li>
+<li>PMID: 20007151</li>
+<li>PMCID: 2808875</li>
+<li>Citations: 8</li>
+<li>Summary: The Protein Naming Utility (PNU) is a web-based database for storing and applying naming rules to identify and correct syntactically incorrect protein names, or to replace synonyms with their preferred name.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.642)<br />
+    &gt; During the annotation phase of a typical modern genomics project, functional names are assigned to identified genes and proteins in an automated or semiautomated fashion. Ideally, before such names are submitted to public sequence databases, they should be manually reviewed by experts to ensure that they are consistent, syntactically correct and unambiguous. However, with the scale of genomic data produced by next-generation sequencing technology and with increasingly automated functional annotation processes, the manual correction of names is no longer feasible. This issue is further complicated by the prevalence of ambiguous names resulting from the lack of interspecies naming conventions (1). New proteins are often named based on homology to existing proteins and many existing proteins have syntactically incorrect or ambiguous names, producing transitive annotation errors. Consequently, poor-quality names have proliferated in both public databases and the scientific literature.<br />
+    &gt; The need for consistent and unambiguous names has led to the development of a number of conventions for naming genes and proteins [UniProt protein nomenclature (2), HUGO human gene name nomenclature (3) and various other model organism databases (4)(5)(6)(7)]. In addition, the biological text mining community has created dictionaries to resolve gene/protein synonyms to improve the identification of genes and proteins in scientific articles (1,8).<br />
+    &gt; The Broad Institute has developed BioNames, a tool to resolve these difficulties using collections of hard-coded regular expressions (https://sourceforge.net/projects/ microbiomeutil). Here, we present our solution to this problem in the form of the Protein Naming Utility (PNU), a web-based database to store and apply customizable sets of naming rules to correct and standardize gene and protein names within an annotated genome or metagenome. The database provides an intuitive web interface that allows users to create and maintain their own naming rules and organize these rules in projects that can be shared with the community.</li>
+</ul>
+<h3 id="15-flybase-establishing-a-gene-group-resource-for-drosophila-melanogaster">[15] FlyBase: establishing a Gene Group resource for Drosophila melanogaster</h3>
+<ul>
+<li>Authors: H. Attrill, K. Falls, J. Goodman, G. Millburn, Giulia Antonazzo et al.</li>
+<li>Year: 2015</li>
+<li>Venue: Nucleic Acids Research</li>
+<li>URL: https://www.semanticscholar.org/paper/0d58fdc5f1dfcb2910f7cc003338a82ef827f85c</li>
+<li>DOI: 10.1093/nar/gkv1046</li>
+<li>PMID: 26467478</li>
+<li>PMCID: 4702782</li>
+<li>Citations: 326</li>
+<li>Influential citations: 28</li>
+<li>Summary: FlyBase (flybase.org), the MOD for Drosophila melanogaster, has established a ‘Gene Group’ resource: high-quality sets of genes derived from the published literature and organized into individual report pages, to enable researchers with diverse backgrounds and interests to easily view and analyse acknowledged D. melanogsaster gene sets and compare them with those of other species.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.641)<br />
+    &gt; Given the wealth of post-genomic data, it should be straightforward to query a biological database and obtain a robust list of genes related by the shared attributes of their products, such as actins, protein kinases or subunits of the proteasome. However, this is often not the case. For evolutionary-related genes, BLAST (1) or domain-based searches may yield a good preliminary list, but without further analysis, particularly when inferring function from se-quence, it is hard to distinguish false positives. Additionally, there may be false negatives because a gene may be somewhat atypical or fails to score above a given threshold. Gene Ontology (GO) annotations can be used to search for gene products that are related by common biological attributes, but annotation is not exhaustive and expressing features that pertain to sequence does not fall within its scope (2,3).<br />
+    &gt; An alternative approach to finding related genes (at least in species with well-characterized genomes such as humans and model organisms) can be to search for gene symbols that share a common prefix. This can be effective for databases such as WormBase (4) or the HUGO Gene Nomenclature Committee (HGNC) (5) that assign unifying and systematic gene symbols to nematode and human genes, respectively, based on shared structures, functions or phenotypes. However, this strategy is not generally applicable to Drosophila melanogaster genes in FlyBase (6) as these are traditionally named on a gene-by-gene basis by the authors who first publish on the gene, often reflecting a specific mutant phenotype.<br />
+    &gt; A third method for acquiring a set of related genes is to directly consult relevant research or review articles. The advantage of this approach is that the list is compiled directly from an expert and peer-reviewed source, and as such will be robust and clearly attributable. However, it can be time-consuming to seek out and then extract a set of genes from individual publications (or, often, their supplementary data) and lists obtained in this manner are inherently uncoupled from the relevant species database, meaning that the listed gene symbols/IDs may become stale over time.<br />
+    &gt; Several databases have addressed these issues by providing explicit sets of related genes.</li>
+</ul>
+<h3 id="16-panther-version-7-improved-phylogenetic-trees-orthologs-and-collaboration-with-the-gene-ontology-consortium">[16] PANTHER version 7: improved phylogenetic trees, orthologs and collaboration with the Gene Ontology Consortium</h3>
+<ul>
+<li>Authors: H. Mi, Q. Dong, A. Muruganujan, P. Gaudet, S. Lewis et al.</li>
+<li>Year: 2009</li>
+<li>Venue: Nucleic Acids Research</li>
+<li>URL: https://www.semanticscholar.org/paper/27d942d4ae218d0f0f8d784f745e5324e067eea5</li>
+<li>DOI: 10.1093/nar/gkp1019</li>
+<li>PMID: 20015972</li>
+<li>PMCID: 2808919</li>
+<li>Citations: 606</li>
+<li>Influential citations: 58</li>
+<li>Summary: Protein Analysis THrough Evolutionary Relationships (PANTHER) is a comprehensive software system for inferring the functions of genes based on their evolutionary relationships, resulting in an increasing number of curated functional annotations.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.641)<br />
+    &gt; In this example, the ancestral gene annotation allows us to infer 'cellular response to UV' for all least-diverged orthologs of NEDD4/RSP5 in animals and fungi. Note that different function annotations are inferred to have arisen in different ancestral genes (annotated nodes at left); this results in different inferred annotations across the genes in the family (blue bars indicating gene annotations at right). For instance, all genes in the tree can be inferred to have 'ubiquitin-protein ligase activity', while only a few genes (tetrapod orthologs of human NEDD4 and NEDD4L) can be inferred to have 'sodium channel regulatory activity' (as their targets, specific epithelial sodium channel subunits, apparently evolved first in tetrapods, not shown).<br />
+    &gt; FlyBase (15) were supported; for proteins only RefSeq (24) or FlyBase identifiers. In PANTHER 7, we now also support identifiers from Ensembl (23), model organism databases, the International Protein Index (IPI) (25) and UniProt (18). All of these identifiers are obtained through the mapping files provided by UniProt (ftp://ftp.uniprot.org/pub/databases/uniprot/ current_release/knowledgebase/idmapping/).<br />
+    &gt; Pathway diagrams using SBGN PANTHER 7 has adopted the Systems Biology Graphical Notation (SBGN) standard (26) for the 165 pathway diagrams currently available on the PANTHER website. This standard was recently released at http://sbgn.org and provides a consistent semantics for symbols used in pathway diagrams.</li>
+</ul>
+<h3 id="17-resa3-a-web-tool-for-resampling-analysis-of-arbitrary-annotations">[17] ResA3: A Web Tool for Resampling Analysis of Arbitrary Annotations</h3>
+<ul>
+<li>Authors: A. Ruhs, F. Cemic, T. Braun, M. Krüger</li>
+<li>Year: 2013</li>
+<li>Venue: PLoS ONE</li>
+<li>URL: https://www.semanticscholar.org/paper/81d8d1bc8cf5b02d9e7027a010f6dedc6be55b38</li>
+<li>DOI: 10.1371/journal.pone.0053743</li>
+<li>PMID: 23382850</li>
+<li>PMCID: 3557297</li>
+<li>Citations: 6</li>
+<li>Summary: ResA3 (Resampling Analysis of Arbitrary Annotations, short: ResA) is a novel tool to facilitate the analysis of enrichment and regulation of annotations deposited in various online resources such as KEGG, Gene Ontology and Pfam or any kind of classification.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.639)<br />
+    &gt; Datasets can be inserted or uploaded to the web interface (Figure 2b). Data must be tab separated and formatted as shown in Figure 3A. They could include gene symbols and UniProt identifiers, which are used for the Gene Ontology annotation feature. To annotate a dataset which contains gene symbols and/ or UniProt identifiers, the appropriate organism can be set (Figure 2d) and the user can choose between full or slim GO annotation (Figure 2e) and full or experimental evidence (Figure 2f). The annotation is based on the gene and UniProt identifiers provided by UniProt-GOA and will be updated monthly.<br />
+    &gt; It is essential that the first column contains the experimental value (log fold-change, isotope incorporation, intensity, etc.). Titles of the annotation columns are used to discriminate between different types of annotation in the results. If a pasted dataset already contains annotations such as KEGG and Pfam, these terms must reside in tab separated and titled columns (Figure 3A and online help). Annotations need to be located in the last columns. Importantly, semi-colons must separate multiple identifiers or terms in one column. For example, multiple identifiers are common for protein groups of mass spectrometric data and annotation will be done for all entries. Similarly, multiple terms are also common with Gene Ontology as one gene can be associated with several compartments at the same time and any of these terms will be treated independently. When columns of annotation are provided, the correct number of columns must be set in the respective spin-box in the web interface (Figure 2c). The dataset used in the example analysis already contains three annotation columns (KEGG, Pfam and InterPro) and is available on the web site of the tool as tab separated text file and Excel file (Figure 2a).<br />
+    &gt; Regulation or the enrichment based on various statistics (estimators) can be tested depending on the focus of the analysis (Figure 2g). The number of resamplings R can be set in the range from 500 to 10,000 (Figure 2h).</li>
+</ul>
+<h3 id="18-ontogene-in-biocreative-ii">[18] OntoGene in BioCreative II</h3>
+<ul>
+<li>Authors: Fabio Rinaldi, T. Kappeler, K. Kaljurand, Gerold Schneider, Manfred Klenner et al.</li>
+<li>Year: 2007</li>
+<li>Venue: Genome Biology</li>
+<li>URL: https://www.semanticscholar.org/paper/ffcbf659129388203ce458ce1b25e5449e9594e7</li>
+<li>DOI: 10.1186/gb-2008-9-s2-s13</li>
+<li>PMID: 18834491</li>
+<li>PMCID: 2559984</li>
+<li>Citations: 78</li>
+<li>Influential citations: 1</li>
+<li>Summary: This report describes approaches taken within the scope of the second BioCreative competition in order to solve two aspects of this problem: detection of novel protein interactions reported in scientific articles, and detection of the experimental method that was used to confirm the interaction.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.639)<br />
+    &gt; It is well known that protein names are highly ambiguous [45,46]. Researchers working in specific subcommunities tend to develop their own nomenclature, resulting in multiple names for the same protein. Acronyms and abbreviations further complicate the picture. Simply being able to recognize a protein name as such is just a starting point. The name needs then to be unambiguously qualified, by referring to an entry in a standard protein database, such as UniProt http:// www.expasy.org/sprot/ [47].<br />
+    &gt; In order for that to happen, the disambiguation must occur at two levels: interspecies (to which specific organisms does the protein mention refer?) and intraspecies (within a given organism, which specific protein is meant?). For example, a protein mentioned in text as eIF4E could refer to a large number of different proteins. A search in the Swiss-Prot section of UniProt (the manually curated section) delivers 46 possible matches. However, if the term appears contextually with the mention of a specific organism, like in the sentence 'The Cap-binding protein eIF4E promotes folding of a functional domain of yeast translation initiation factor eIF4G1' (PubMed: 10409688), then it is reasonable to assume that the name refers to a specific organism (yeast), thus restricting the possible matches in UniProt to the following two: EAP1_YEAST (eIF4E-associated protein 1) and IF4E_YEAST (eukaryotic translation initiation factor 4E). For the task of protein annotation, we have adopted a high-recall, low-precision term annotation approach, followed by very strict disambiguation steps, which gradually increase precision (at some expense for recall).<br />
+    &gt; UniProt contains for each protein a list of frequently used synonyms, as well as the name and synonyms of its encoding gene. We have built a database that maps the synonyms to the protein identifier. We have further enriched such a list using morpho-syntactic rules that generate variants of the synonyms. Starting from the subset of UniProt delivered by the BioCreative organizers (which contained 228,</li>
+</ul>
+<h3 id="19-pangenome-of-acinetobacter-baumannii-uncovers-two-groups-of-genomes-one-of-them-with-genes-involved-in-crisprcas-defence-systems-associated-with-the-absence-of-plasmids-and-exclusive-genes-for-biofilm-formation">[19] Pangenome of Acinetobacter baumannii uncovers two groups of genomes, one of them with genes involved in CRISPR/Cas defence systems associated with the absence of plasmids and exclusive genes for biofilm formation</h3>
+<ul>
+<li>Authors: Eugenio L Mangas, Alejandro Rubio, R. Álvarez-Marín, Gema Labrador-Herrera, J. Pachón et al.</li>
+<li>Year: 2019</li>
+<li>Venue: Microbial Genomics</li>
+<li>URL: https://www.semanticscholar.org/paper/ccdc06e24b4cff1ddca5e537c65e5f14c5f017b3</li>
+<li>DOI: 10.1099/mgen.0.000309</li>
+<li>PMID: 31626589</li>
+<li>PMCID: 6927304</li>
+<li>Citations: 64</li>
+<li>Influential citations: 2</li>
+<li>Summary: A genomics analysis of almost 2500 strains found two different groups of genomes found based on the number of shared genes, one of which rarely has plasmids, and bears clustered regularly interspaced short palindromic repeat (CRISPR) sequences, in addition to CRISPR-associated genes (cas genes) or restriction-modification system genes.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.637)<br />
+    &gt; To homogenize the genome annotation, the sequences of all genomes were analysed using the same protocol. The proteinencoding genes were predicted using Prokka version 1.13 [24], and the predicted protein sequences were functionally annotated using Sma3s v2 and UniProt taxonomic division bacteria 2019_01 as a reference database [25,55].<br />
+    &gt; To annotate specific genes, GO (gene ontology) terms and UniProt keywords assigned by Sma3s were used. To find genes associated with CRISPR systems, protein sequences coming</li>
+</ul>
+<h3 id="20-in-silico-identification-of-drosophila-melanogaster-genes-encoding-rna-polymerase-subunits">[20] In silico identification of Drosophila melanogaster genes encoding RNA polymerase subunits</h3>
+<ul>
+<li>Authors: Steven J. Marygold, N. Alic, D. Gilmour, S. Grewal</li>
+<li>Year: 2020</li>
+<li>Venue: microPublication Biology</li>
+<li>URL: https://www.semanticscholar.org/paper/f36d156f10506a0218b65026bb8f0ea0629ff4be</li>
+<li>DOI: 10.17912/micropub.biology.000320</li>
+<li>PMID: 33274328</li>
+<li>PMCID: 7704258</li>
+<li>Citations: 8</li>
+<li>Influential citations: 2</li>
+<li>Summary: Three highly conserved, multisubunit RNA polymerase (RNAP) enzymes, RNAPs I, II, and III, transcribe the eukaryotic nuclear genome and several Drosophila melanogaster RNAP subunits have been isolated and characterized.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.636)<br />
+    &gt; Table 1. Genes encoding RNA polymerase subunits of Drosophila melanogaster: RNAP: RNA polymerase to which the subunit encoded by each gene belongs; New symbol: proposed symbol for the Drosophila gene; CG number: gene 10/20/2020 Open Access model annotation ID; Synonyms: notable synonyms/previous symbols of the Drosophila gene; Refs: reference(s) identifying/characterizing the Drosophila gene/protein with respect to its RNAP function: 1) Hamilton et al.. 1993, 2) Knackmuss et al.. 1997, 3) Kontermann et al.. 1989, 4) Seifarth et al.. 1991, 5) Greenleaf et al.. 1980, 6) Searles et al.. 1982, 7) Greenleaf 1983, 8) Biggs et al.. 1985, 9) Jokerst et al.. 1989, 10) Falkenburg et al.. 1987, 11) Muratoglu et al.. 2003 , 12) Pankotai et al.. 2010, 13) Harrison et al.. 1992 , 14) Liu et al.. 1993, 15) Jishage et al.. 2018, 16) Filer et al.. 2017, 17) Fernández-Moreno et al.. 2009; S. cerevisiae/H. sapiens ortholog: the yeast/human ortholog of the Drosophila gene, with the percentage amino acid identity between the encoded proteins given in square brackets (highest identity given if multiple orthologs/isoforms). Note that aligning POLR2A/RPB1 sequences without their C-terminal domain repeat regions does not alter their % identity appreciably (data not shown). Yeast and human symbols reflect official nomenclature used at SGD (Cherry et al.. 2012) and the HGNC (Braschi et al.. 2019), respectively, with popular alternative nomenclature (e.g. Griesenbeck et al.. 2017) given in round brackets. Description Three highly conserved, multisubunit RNA polymerase (RNAP) enzymes, RNAPs I, II, and III, transcribe the eukaryotic nuclear</li>
+</ul>
+<h2 id="notes">Notes</h2>
+<ul>
+<li>This provider combines <code>search_papers_by_relevance</code> with <code>snippet_search</code>.</li>
+<li>No synthesis or second-stage model call is performed.</li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>Ralf C. Mueller, Nicolai Mallig, Jacqueline Smith, Lél Eöry, Richard I. Kuo et al. (2020). Avian Immunome DB: an example of a user-friendly interface for extracting genetic information. BMC Bioinformatics. https://www.semanticscholar.org/paper/b894d9ca8ea2d653bf1711a0c67dab71d054487c</li>
+<li>M. Efremova, Miquel Vento-Tormo, S. Teichmann, R. Vento-Tormo (2020). CellPhoneDB: inferring cell–cell communication from combined expression of multi-subunit ligand–receptor complexes. Nature Protocols. https://www.semanticscholar.org/paper/6a3b3e4a2eebc3fad3b03ee6d8228264247abbc8</li>
+<li>Xue-wen Chen, Mei Liu, R. Ward (2008). Protein Function Assignment through Mining Cross-Species Protein-Protein Interactions. PLoS ONE. https://www.semanticscholar.org/paper/5bfd767ec716a9c335dfac22da1895e2c5045650</li>
+<li>Samuel J. Modlin, A. Elghraoui, Deepika Gunasekaran, Alyssa M Zlotnicki, N. Dillon et al. (2021). Structure-Aware Mycobacterium tuberculosis Functional Annotation Uncloaks Resistance, Metabolic, and Virulence Genes. mSystems. https://www.semanticscholar.org/paper/76ff9a62b36b32cc10e46e71ffd4dd90344e4706</li>
+<li>Brigitte Waegele, I. Dunger, G. Fobo, Corinna Montrone, H. Mewes et al. (2008). CRONOS: the cross-reference navigation server. Bioinformatics. https://www.semanticscholar.org/paper/8c05b3aa0ba01c41ee97c2dc98ea7b5b14ce0e9c</li>
+<li>J. Hakenberg (2007). What’s in a gene name? Automated refinement of gene name dictionaries. BioNLP@ACL. https://www.semanticscholar.org/paper/bd98f9090b9c03fcb93ef51510d01d3fd059ba73</li>
+<li>Anna K. Childers, S. Geib, S. Sim, Monica F. Poelchau, B. Coates et al. (2021). The USDA-ARS Ag100Pest Initiative: High-Quality Genome Assemblies for Agricultural Pest Arthropod Research. Insects. https://www.semanticscholar.org/paper/a33d31da6f5aee18501cfc2332ff50d5b7f23508</li>
+<li>V. Beisvåg, Frode K. R. Jünge, Hallgeir Bergum, Lars Jølsum, S. Lydersen et al. (2006). GeneTools – application for functional annotation and statistical hypothesis testing. BMC Bioinformatics. https://www.semanticscholar.org/paper/1d9e0c2f67acd5bf64c659f1f3f8624325b6be8a</li>
+<li>Xiaoqiong Bao, Qi Jiang, Weixuan Chen, Huiqin Li, Xuan Li et al. (2025). RM2Target v2.0: an updated database for the target genes of writers, erasers, and readers of RNA modifications. Nucleic Acids Research. https://www.semanticscholar.org/paper/15dbf5509222f17a624912633aa05cc9183fcc70</li>
+<li>E. Catoiu, Delina Kambo, Brianna Rodriguez, Krista Vear, Ziheng Wang et al. (2025). QSProteome: a community-driven interactive platform for large-scale exploration and evaluation of predicted protein complex structures. Nucleic Acids Research. https://www.semanticscholar.org/paper/2c49a023253438e981c68ee677a6a25d3152da48</li>
+<li>L. Zaslavsky, Tiejun Cheng, A. Gindulyte, Siqian He, Sunghwan Kim et al. (2021). Discovering and Summarizing Relationships Between Chemicals, Genes, Proteins, and Diseases in PubChem. Frontiers in Research Metrics and Analytics. https://www.semanticscholar.org/paper/57b86aef9aae576c2ae4199c0b74971f4c195211</li>
+<li>U. Vempati, Caty Chung, Christopher Mader, Amar Koleti, Nakul Datar et al. (2014). Metadata Standard and Data Exchange Specifications to Describe, Model, and Integrate Complex and Diverse High-Throughput Screening Data from the Library of Integrated Network-based Cellular Signatures (LINCS). Journal of Biomolecular Screening. https://www.semanticscholar.org/paper/91af493a67a83d599ad00f4da275e8eadd165b5e</li>
+<li>J. Doolittle, S. Gomez (2011). Mapping Protein Interactions between Dengue Virus and Its Human and Insect Hosts. PLoS Neglected Tropical Diseases. https://www.semanticscholar.org/paper/baff9e82a73e77a021118c0910a5874568cd60b3</li>
+<li>Johannes Goll, R. Montgomery, L. Brinkac, S. Schobel, D. Harkins et al. (2009). The Protein Naming Utility: a rules database for protein nomenclature. Nucleic Acids Research. https://www.semanticscholar.org/paper/dad2c69d04a5a3abdeda129612d52a7849531c09</li>
+<li>H. Attrill, K. Falls, J. Goodman, G. Millburn, Giulia Antonazzo et al. (2015). FlyBase: establishing a Gene Group resource for Drosophila melanogaster. Nucleic Acids Research. https://www.semanticscholar.org/paper/0d58fdc5f1dfcb2910f7cc003338a82ef827f85c</li>
+<li>H. Mi, Q. Dong, A. Muruganujan, P. Gaudet, S. Lewis et al. (2009). PANTHER version 7: improved phylogenetic trees, orthologs and collaboration with the Gene Ontology Consortium. Nucleic Acids Research. https://www.semanticscholar.org/paper/27d942d4ae218d0f0f8d784f745e5324e067eea5</li>
+<li>A. Ruhs, F. Cemic, T. Braun, M. Krüger (2013). ResA3: A Web Tool for Resampling Analysis of Arbitrary Annotations. PLoS ONE. https://www.semanticscholar.org/paper/81d8d1bc8cf5b02d9e7027a010f6dedc6be55b38</li>
+<li>Fabio Rinaldi, T. Kappeler, K. Kaljurand, Gerold Schneider, Manfred Klenner et al. (2007). OntoGene in BioCreative II. Genome Biology. https://www.semanticscholar.org/paper/ffcbf659129388203ce458ce1b25e5449e9594e7</li>
+<li>Eugenio L Mangas, Alejandro Rubio, R. Álvarez-Marín, Gema Labrador-Herrera, J. Pachón et al. (2019). Pangenome of Acinetobacter baumannii uncovers two groups of genomes, one of them with genes involved in CRISPR/Cas defence systems associated with the absence of plasmids and exclusive genes for biofilm formation. Microbial Genomics. https://www.semanticscholar.org/paper/ccdc06e24b4cff1ddca5e537c65e5f14c5f017b3</li>
+<li>Steven J. Marygold, N. Alic, D. Gilmour, S. Grewal (2020). In silico identification of Drosophila melanogaster genes encoding RNA polymerase subunits. microPublication Biology. https://www.semanticscholar.org/paper/f36d156f10506a0218b65026bb8f0ea0629ff4be</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88QL1
+gene_symbol: rpoA
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: rpoA encodes the alpha subunit of the Pseudomonas putida KT2440 DNA-directed RNA polymerase core enzyme. The alpha subunits dimerize, help assemble the alpha2-beta-beta-prime-omega catalytic core, support basal transcription, and provide contacts for transcriptional regulators and upstream promoter elements.
+existing_annotations:
+- term:
+    id: GO:0003677
+    label: DNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: DNA binding is retained for rpoA because the alpha subunit participates in promoter/upstream-element contacts within bacterial RNAP.
+    action: ACCEPT
+    reason: UniProt describes the alpha C-terminal domain as interacting with transcriptional regulators and upstream promoter elements, and GOA assigns DNA binding from UniRule/InterPro evidence.
+    supported_by:
+    - reference_id: file:PSEPK/rpoA/rpoA-goa.tsv
+      supporting_text: &#34;GO:0003677\tDNA binding&#34;
+    - reference_id: file:PSEPK/rpoA/rpoA-uniprot.txt
+      supporting_text: &#34;the C-terminal domain is involved in interaction&#34;
+    - reference_id: file:PSEPK/rpoA/rpoA-uniprot.txt
+      supporting_text: &#34;with transcriptional regulators and with upstream promoter elements.&#34;
+- term:
+    id: GO:0003899
+    label: DNA-directed RNA polymerase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: DNA-directed RNA polymerase activity is accepted as the complex-level core activity to which rpoA contributes.
+    action: ACCEPT
+    reason: The rpoA product is a core RNAP subunit; UniProt states that the enzyme catalyzes DNA-to-RNA transcription using ribonucleoside triphosphates and records the EC 2.7.7.6 reaction.
+    supported_by:
+    - &amp;rpoa_go_rnap
+      reference_id: file:PSEPK/rpoA/rpoA-goa.tsv
+      supporting_text: &#34;GO:0003899\tDNA-directed RNA polymerase activity&#34;
+    - &amp;rpoa_function
+      reference_id: file:PSEPK/rpoA/rpoA-uniprot.txt
+      supporting_text: &#34;DNA-dependent RNA polymerase catalyzes the transcription of&#34;
+    - &amp;rpoa_reaction
+      reference_id: file:PSEPK/rpoA/rpoA-uniprot.txt
+      supporting_text: &#34;Reaction=RNA(n) + a ribonucleoside 5&#39;-triphosphate = RNA(n+1) +&#34;
+    - &amp;rpoa_subunit
+      reference_id: file:PSEPK/rpoA/rpoA-uniprot.txt
+      supporting_text: &#34;The RNAP catalytic core consists of 2 alpha, 1&#34;
+    - &amp;rpoa_asta_identity
+      reference_id: file:PSEPK/rpoA/rpoA-deep-research-asta.md
+      supporting_text: &#34;uniprot_accession: Q88QL1&#34;
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: located_in
+  review:
+    summary: Cytoplasm is retained as bacterial localization context but is not the most informative functional annotation.
+    action: KEEP_AS_NON_CORE
+    reason: Bacterial chromosomal transcription occurs in the cytoplasm, but the core curation signal for rpoA is RNAP complex function and transcription.
+    supported_by:
+    - reference_id: file:PSEPK/rpoA/rpoA-goa.tsv
+      supporting_text: &#34;GO:0005737\tcytoplasm&#34;
+    - *rpoa_subunit
+- term:
+    id: GO:0006351
+    label: DNA-templated transcription
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: DNA-templated transcription is accepted as the biological process mediated by the RNAP core enzyme containing rpoA.
+    action: ACCEPT
+    reason: UniProt states that RNA polymerase transcribes DNA into RNA, and the alpha subunit is part of the core and holoenzyme that initiates transcription with sigma factor.
+    supported_by:
+    - reference_id: file:PSEPK/rpoA/rpoA-goa.tsv
+      supporting_text: &#34;GO:0006351\tDNA-templated transcription&#34;
+    - *rpoa_function
+    - reference_id: file:PSEPK/rpoA/rpoA-uniprot.txt
+      supporting_text: &#34;the holoenzyme is formed, which can initiate&#34;
+- term:
+    id: GO:0034062
+    label: 5&#39;-3&#39; RNA polymerase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000116
+  qualifier: enables
+  review:
+    summary: The Rhea-derived 5&#39;-3&#39; RNA polymerase activity is correct but should be represented by the more specific DNA-directed RNA polymerase term.
+    action: MODIFY
+    reason: The substrate-template context is DNA-directed transcription by bacterial RNAP; GO:0003899 captures the same reaction more specifically for rpoA.
+    proposed_replacement_terms:
+    - id: GO:0003899
+      label: DNA-directed RNA polymerase activity
+    supported_by:
+    - reference_id: file:PSEPK/rpoA/rpoA-goa.tsv
+      supporting_text: &#34;GO:0034062\t5&#39;-3&#39; RNA polymerase activity&#34;
+    - *rpoa_go_rnap
+    - *rpoa_reaction
+- term:
+    id: GO:0046983
+    label: protein dimerization activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Alpha-subunit dimerization is retained as assembly context for the RNAP core.
+    action: KEEP_AS_NON_CORE
+    reason: UniProt explicitly describes rpoA as a homodimer, but the main curated role is assembly and function of the RNAP core rather than dimerization as an independent endpoint.
+    supported_by:
+    - reference_id: file:PSEPK/rpoA/rpoA-goa.tsv
+      supporting_text: &#34;GO:0046983\tprotein dimerization activity&#34;
+    - reference_id: file:PSEPK/rpoA/rpoA-uniprot.txt
+      supporting_text: &#34;CC   -!- SUBUNIT: Homodimer.&#34;
+- term:
+    id: GO:0000428
+    label: DNA-directed RNA polymerase complex
+  evidence_type: IEA
+  original_reference_id: file:PSEPK/rpoA/rpoA-uniprot.txt
+  qualifier: part_of
+  review:
+    summary: rpoA should be explicitly connected to the DNA-directed RNA polymerase complex.
+    action: NEW
+    reason: The fetched GOA table lacks the complex term, but UniProt records GO:0000428 and describes the alpha2-beta-beta-prime-omega RNAP catalytic core.
+    supported_by:
+    - reference_id: file:PSEPK/rpoA/rpoA-uniprot.txt
+      supporting_text: &#34;DR   GO; GO:0000428; C:DNA-directed RNA polymerase complex; IEA:UniProtKB-KW.&#34;
+    - *rpoa_subunit
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000116
+  title: Automatic Gene Ontology annotation based on Rhea mapping
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/rpoA/rpoA-goa.tsv
+  title: QuickGO GOA annotations for rpoA
+  findings: []
+- id: file:PSEPK/rpoA/rpoA-uniprot.txt
+  title: UniProtKB entry for rpoA (Q88QL1)
+  findings:
+  - statement: UniProt provides the RNAP alpha-subunit identity, catalytic-core membership, and DNA-directed RNA polymerase reaction context used for this first-pass review.
+    supporting_text: &#34;DE   RecName: Full=DNA-directed RNA polymerase subunit alpha&#34;
+  - supporting_text: &#34;DNA-dependent RNA polymerase catalyzes the transcription of&#34;
+  - supporting_text: &#34;The RNAP catalytic core consists of 2 alpha, 1&#34;
+  - supporting_text: &#34;CC   -!- SUBUNIT: Homodimer.&#34;
+- id: file:PSEPK/rpoA/rpoA-deep-research-asta.md
+  title: Asta retrieval report for rpoA (Q88QL1)
+  findings:
+  - statement: Asta retrieval confirmed the target identity and was used as lightweight first-pass context.
+    supporting_text: &#34;uniprot_accession: Q88QL1&#34;
+core_functions:
+- description: rpoA forms the alpha subunit dimer of the bacterial RNAP core and contributes to DNA-directed RNA polymerase activity during DNA-templated transcription.
+  contributes_to_molecular_function:
+    id: GO:0003899
+    label: DNA-directed RNA polymerase activity
+  directly_involved_in:
+  - id: GO:0006351
+    label: DNA-templated transcription
+  in_complex:
+    id: GO:0000428
+    label: DNA-directed RNA polymerase complex
+  supported_by:
+  - *rpoa_go_rnap
+  - reference_id: file:PSEPK/rpoA/rpoA-uniprot.txt
+    supporting_text: &#34;The RNAP catalytic core consists of 2 alpha, 1&#34;
+  - *rpoa_function
+  - reference_id: file:PSEPK/rpoA/rpoA-uniprot.txt
+    supporting_text: &#34;the N-terminal domain is essential for RNAP assembly and basal&#34;
+  - *rpoa_asta_identity
+proposed_new_terms: []
+suggested_questions: []
+suggested_experiments: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

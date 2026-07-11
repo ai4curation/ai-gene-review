@@ -17,15 +17,15 @@ autolink_gene_symbols: false
 
 ## Required Workflow
 
-- [ ] Curate or update the species-neutral module.
-- [ ] Run module-level Falcon deep research.
-- [ ] Run module + pathway + PSEPK Falcon deep research.
+- [x] Curate or update the species-neutral module.
+- [x] Run module-level Falcon deep research.
+- [x] Run module + pathway + PSEPK Falcon deep research.
 - [x] Fetch all selected genes with `just fetch-gene PSEPK <gene>`.
 - [x] Run Asta deep research for selected genes.
 - [x] Curate each selected gene review.
 - [x] Validate module and gene reviews.
 - [x] Open one PR for this module/pathway: [PR #1874](https://github.com/ai4curation/ai-gene-review/pull/1874).
-- [ ] Shepherd PR through review, CI, and merge readiness.
+- [x] Shepherd PR through review, CI, and merge readiness.
 
 ## Candidate Genes
 
@@ -63,3 +63,7 @@ autolink_gene_symbols: false
 ## Notes
 
 Generated UTC: 2026-07-06T03:48:55.229299+00:00
+
+2026-07-11 PDT status sync: species-neutral module curation, generic Falcon
+module research, PSEPK module+pathway Falcon research, and PR shepherding are
+complete. PR #1874 has merged.

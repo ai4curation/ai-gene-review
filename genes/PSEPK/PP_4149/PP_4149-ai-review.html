@@ -1,0 +1,3370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PP_4149 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PP_4149</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88FE8" target="_blank" class="term-link">
+                        Q88FE8
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PP_4149";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88FE8" data-a="DESCRIPTION: PP_4149 encodes a predicted YejE-like multi-pass i..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PP_4149 encodes a predicted YejE-like multi-pass inner-membrane permease of the PP_4146-PP_4150 Yej/Dpp-like peptide ABC import candidate. Its MetI-like permease domain, YejE-like PANTHER subfamily assignment, and membrane localization support a peptide-transporter channel role with PP_4148 and YejF.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FE8" data-a="GO:0005886" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Plasma membrane localization is appropriate for this multi-pass bacterial inner-membrane ABC permease.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt predicts a cell-inner-membrane permease with multiple transmembrane helices.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4149/PP_4149-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0005886	plasma membrane</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4149/PP_4149-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Cell inner membrane</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4149/PP_4149-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">InterPro; IPR000515; MetI-like.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4149/PP_4149-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">Protein Description:** SubName: Full=Inner membrane ABC transporter permease protein</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FE8" data-a="GO:0016020" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Membrane localization is correct but less specific than plasma membrane for this bacterial inner-membrane permease.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The plasma membrane annotation and UniProt cell-inner-membrane placement are the more informative retained locations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4149/PP_4149-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0016020	membrane</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4149/PP_4149-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Cell inner membrane</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4149/PP_4149-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Full=Inner membrane ABC transporter permease protein</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042884" target="_blank" class="term-link">
+                                    GO:0042884
+                                </a>
+                            </span>
+                            <span class="term-label">microcin transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FE8" data-a="GO:0042884" data-r="GO_REF:0000118" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Microcin transport is plausible Yej-family context but should not be treated as the core PSEPK transporter function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The Yej-family permease context supports peptide transport; direct PSEPK evidence for microcin C transport is not available in this first-pass evidence set.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4149/PP_4149-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0042884	microcin transport</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4149/PP_4149-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Full=Inner membrane ABC transporter permease protein</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4149/PP_4149-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">Protein Description:** SubName: Full=Inner membrane ABC transporter permease protein</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4149/PP_4149-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">InterPro; IPR000515; MetI-like.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4149/PP_4149-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Cell inner membrane</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4149/PP_4149-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Belongs to the binding-protein-dependent transport system</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4149/PP_4149-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">INNER MEMBRANE ABC TRANSPORTER PERMEASE PROTEIN YEJE</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/yejF/yejF-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Part of the ABC transporter DppABCDF involved in the uptake</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4148/PP_4148-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Full=Oligopeptide transport system permease protein YejB</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043190" target="_blank" class="term-link">
+                                    GO:0043190
+                                </a>
+                            </span>
+                            <span class="term-label">ATP-binding cassette (ABC) transporter complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FE8" data-a="GO:0043190" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ABC transporter complex membership is appropriate for this peptide-import permease component.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The protein is a binding-protein-dependent ABC transporter permease in a local peptide-import candidate locus.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4149/PP_4149-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0043190	ATP-binding cassette (ABC) transporter complex</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4149/PP_4149-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Full=Inner membrane ABC transporter permease protein</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4149/PP_4149-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">Protein Description:** SubName: Full=Inner membrane ABC transporter permease protein</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4149/PP_4149-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">InterPro; IPR000515; MetI-like.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4149/PP_4149-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Cell inner membrane</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4149/PP_4149-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Belongs to the binding-protein-dependent transport system</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4149/PP_4149-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">INNER MEMBRANE ABC TRANSPORTER PERMEASE PROTEIN YEJE</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/yejF/yejF-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Part of the ABC transporter DppABCDF involved in the uptake</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4148/PP_4148-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Full=Oligopeptide transport system permease protein YejB</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0055085" target="_blank" class="term-link">
+                                    GO:0055085
+                                </a>
+                            </span>
+                            <span class="term-label">transmembrane transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FE8" data-a="GO:0055085" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Transmembrane transport is true but broad relative to peptide transport for this permease.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The protein is best represented as contributing to peptide transmembrane transporter activity in an ABC import system.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4149/PP_4149-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0055085	transmembrane transport</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4149/PP_4149-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Full=Inner membrane ABC transporter permease protein</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4149/PP_4149-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">Protein Description:** SubName: Full=Inner membrane ABC transporter permease protein</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4149/PP_4149-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">InterPro; IPR000515; MetI-like.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4149/PP_4149-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Cell inner membrane</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4149/PP_4149-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Belongs to the binding-protein-dependent transport system</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4149/PP_4149-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">INNER MEMBRANE ABC TRANSPORTER PERMEASE PROTEIN YEJE</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/yejF/yejF-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Part of the ABC transporter DppABCDF involved in the uptake</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4148/PP_4148-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Full=Oligopeptide transport system permease protein YejB</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1904680" target="_blank" class="term-link">
+                                    GO:1904680
+                                </a>
+                            </span>
+                            <span class="term-label">peptide transmembrane transporter activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:PSEPK/PP_4149/PP_4149-uniprot.txt
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FE8" data-a="GO:1904680" data-r="file:PSEPK/PP_4149/PP_4149-uniprot.txt" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PP_4149 should be represented as contributing the membrane channel to peptide transmembrane transporter activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The protein is a MetI-like multi-pass ABC permease in a Yej/Dpp-like peptide import candidate locus.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4149/PP_4149-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Full=Inner membrane ABC transporter permease protein</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4149/PP_4149-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">Protein Description:** SubName: Full=Inner membrane ABC transporter permease protein</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4149/PP_4149-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">InterPro; IPR000515; MetI-like.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4149/PP_4149-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Cell inner membrane</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4149/PP_4149-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Belongs to the binding-protein-dependent transport system</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4149/PP_4149-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">INNER MEMBRANE ABC TRANSPORTER PERMEASE PROTEIN YEJE</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/yejF/yejF-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Part of the ABC transporter DppABCDF involved in the uptake</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4148/PP_4148-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Full=Oligopeptide transport system permease protein YejB</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015833" target="_blank" class="term-link">
+                                    GO:0015833
+                                </a>
+                            </span>
+                            <span class="term-label">peptide transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:PSEPK/PP_4149/PP_4149-uniprot.txt
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FE8" data-a="GO:0015833" data-r="file:PSEPK/PP_4149/PP_4149-uniprot.txt" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PP_4149 should be represented in peptide transport.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The permease product, peptide transport keyword/family context, and local binding-protein components support peptide ABC import.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4149/PP_4149-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Full=Inner membrane ABC transporter permease protein</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4149/PP_4149-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">Protein Description:** SubName: Full=Inner membrane ABC transporter permease protein</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4149/PP_4149-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">InterPro; IPR000515; MetI-like.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4149/PP_4149-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Cell inner membrane</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4149/PP_4149-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Belongs to the binding-protein-dependent transport system</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4149/PP_4149-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">INNER MEMBRANE ABC TRANSPORTER PERMEASE PROTEIN YEJE</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/yejF/yejF-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Part of the ABC transporter DppABCDF involved in the uptake</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4148/PP_4148-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Full=Oligopeptide transport system permease protein YejB</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Predicted multi-pass membrane permease component of the C54 Yej/Dpp-like peptide ABC import candidate.</h3>
+                <span class="vote-buttons" data-g="Q88FE8" data-a="FUNCTION: Predicted multi-pass membrane permease component o..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015833" target="_blank" class="term-link">
+                                peptide transport
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043190" target="_blank" class="term-link">
+                            ATP-binding cassette (ABC) transporter complex
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_4149/PP_4149-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Full=Inner membrane ABC transporter permease protein</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_4149/PP_4149-deep-research-asta.md
+
+                        </span>
+
+                        <div class="finding-text">Protein Description:** SubName: Full=Inner membrane ABC transporter permease protein</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_4149/PP_4149-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">InterPro; IPR000515; MetI-like.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_4149/PP_4149-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Cell inner membrane</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_4149/PP_4149-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Belongs to the binding-protein-dependent transport system</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_4149/PP_4149-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">INNER MEMBRANE ABC TRANSPORTER PERMEASE PROTEIN YEJE</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/yejF/yejF-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Part of the ABC transporter DppABCDF involved in the uptake</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_4148/PP_4148-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Full=Oligopeptide transport system permease protein YejB</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_4149/PP_4149-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO GOA annotations for PP_4149</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_4149/PP_4149-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for PP_4149 (Q88FE8)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"Full=Inner membrane ABC transporter permease protein"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_4149/PP_4149-deep-research-asta.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Asta retrieval report for PP_4149 (Q88FE8)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"Protein Description:** SubName: Full=Inner membrane ABC transporter permease protein"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_3076/PP_3076-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for PP_3076 (Q88IC3)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"Full=ABC transporter permease protein"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_3077/PP_3077-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for PP_3077 (Q88IC2)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"Full=Oligopeptide transport system permease protein YejB"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_3078/PP_3078-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for PP_3078 (Q88IC1)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"Full=ABC transporter, periplasmic binding protein"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_4146/PP_4146-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for PP_4146 (Q88FF1)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"Full=Peptide ABC transporter, periplamic peptide-binding protein"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/yejA/yejA-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for yejA (Q88FF0)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"Full=Microcin C transporter-periplasmic binding protein"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_4148/PP_4148-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for PP_4148 (Q88FE9)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"Full=Oligopeptide transport system permease protein YejB"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/yejF/yejF-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for yejF (Q88FE7)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"Full=ABC-type dipeptide transporter"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/dppA-IV/dppA-IV-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for dppA-IV (Q88C98)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"Full=Periplasmic dipeptide transport protein"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does the PP_4146-PP_4150 Yej/Dpp-like locus primarily import nutritional peptides, toxic peptides such as microcin/phaseolotoxin-like substrates, or both?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88FE8" data-a="Q: Does the PP_4146-PP_4150 Yej/Dpp-like locus primar..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Measure uptake and growth phenotypes for PP_4146/yejA/PP_4148/PP_4149/yejF mutants with representative dipeptides, tripeptides, and toxic peptide analogs.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: targeted Yej/Dpp-like peptide transporter mutant uptake/growth assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88FE8" data-a="EXPERIMENT: Measure uptake and growth phenotypes for PP_4146/y..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Asta</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PP_4149-deep-research-asta.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88FE8" data-a="DEEP_RESEARCH: Asta" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Asta Literature Retrieval: Gene Research for Functional Annotation ⚠️ CRITICAL: Gene/Protein Identification Context BEFORE YOU BEGIN RESEARCH: Y...</span>
+
+
+                    <span class="report-badge">Asta</span>
+
+
+                    <span class="report-badge">Asta Scientific Corpus Retrieval</span>
+
+
+                    <span class="report-badge">19 citations</span>
+
+
+
+                    <span class="report-meta-text">2026-07-08T21:34:20.653644</span>
+
+
+
+                </div>
+
+
+                <h1 id="asta-literature-retrieval-gene-research-for-functional-annotation-critical-geneprotein-identification-context-before-you-begin-research-y">Asta Literature Retrieval: Gene Research for Functional Annotation ⚠️ CRITICAL: Gene/Protein Identification Context BEFORE YOU BEGIN RESEARCH: Y...</h1>
+<p>This report is retrieval-only and is generated directly from Asta results.</p>
+<ul>
+<li>Papers retrieved: 19</li>
+<li>Snippets retrieved: 20</li>
+</ul>
+<h2 id="relevant-papers">Relevant Papers</h2>
+<h3 id="1-structure-aware-mycobacterium-tuberculosis-functional-annotation-uncloaks-resistance-metabolic-and-virulence-genes">[1] Structure-Aware Mycobacterium tuberculosis Functional Annotation Uncloaks Resistance, Metabolic, and Virulence Genes</h3>
+<ul>
+<li>Authors: Samuel J. Modlin, A. Elghraoui, Deepika Gunasekaran, Alyssa M Zlotnicki, N. Dillon et al.</li>
+<li>Year: 2021</li>
+<li>Venue: mSystems</li>
+<li>URL: https://www.semanticscholar.org/paper/76ff9a62b36b32cc10e46e71ffd4dd90344e4706</li>
+<li>DOI: 10.1128/mSystems.00673-21</li>
+<li>PMID: 34726489</li>
+<li>PMCID: 8562490</li>
+<li>Citations: 15</li>
+<li>Summary: This work systematically updates the functional genome annotation of Mycobacterium tuberculosis virulent type strain H37Rv and identifies hundreds of high-confidence candidates for mechanisms of antibiotic resistance, virulence factors, and basic metabolism and other functions key in clinical and basic tuberculosis research.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.797)<br />
+    &gt; 3. Fig. S2B -match/mismatch colours mixed up? (I think match should be teal and mismatch -red?) 4. Line 162-163: Rv1430 is in UniProt (EC 3.1.1.-) and has been present in Uniprot since version 45 of the gene record: https://www.uniprot.org/uniprot/L7N697. I presume you had conducted your literature analysis before the UniProt entry was updated to include the EC code, so maybe you can add the dates when the data was retrieved from UniProt and other databases you used in the Materials and Methods section? 5. Supplementary text, p. 9, first paragraph. I believe that an unrelated fragment of text was copy-pasted into the second sentence of the paragraph ("Many mutations that altered bacterial clearance...") 6. Supplementary text, p. 12, final paragraph. It should be Rv1191, not Rv1191c. Could you also add a short explanation why you believe it should be classified as a cathepsin (what protein did you transfer this annotation from)?<br />
+    &gt; Reviewer #3 (Comments for the Author):<br />
+    &gt; In this manuscript, Modlin et al., attempt to tackle the problem of assigning functions to ~1700 hypothetical and/or underannotated genes in the Mycobacterium tuberculosis H37Rv (Mtb) genome. Rapid and accurate annotation of microbial genomes is indeed a very critical and under appreciated part of microbial ecophysiology. This step is especially crucial for pathogenic organisms such as Mtb where accurate functional annotation of these hypothetical proteins could unravel mechanisms which could act as drug targets. The authors employed a two-pronged strategy to define a set of these unannotated or under-annotated genes and to then provide possible functions for many of these genes. First, they undertook a large-scale manual curation of literature to assign functions (including EC numbers for enzymatic functions) to ~575 genes.</li>
+<li>Snippet 2 (score: 0.717)<br />
+    &gt; (I think match should be teal and mismatch -red?)<br />
+    &gt; The legend was previously mismatched with the labels. This has been corrected in the new uploaded figure . 4. Line 162-163: Rv1430 is in UniProt (EC 3.1.1.-) and has been present in Uniprot since version 45 of the gene record: https://www.uniprot.org/uniprot/L7N697. I presume you had conducted your literature analysis before the UniProt entry was updated to include the EC code, so maybe you can add the dates when the data was retrieved from UniProt and other databases you used in the Materials and Methods section?<br />
+    &gt; The reviewer's presumption is correct; we had stated the date of data retrieval in the caption of Table 1, but we agree it should instead be stated centrally in the Methods. We have now added it to the Methods section as well, for clarity (Lines 696-700) 5. Supplementary text, p. 9, first paragraph. I believe that an unrelated fragment of text was copypasted into the second sentence of the paragraph ("Many mutations that altered bacterial clearance...")<br />
+    &gt; We thank the reviewer for catching this accidental insertion. We have now removed the spurious fragment.<br />
+    &gt; 6. Supplementary text, p. 12, final paragraph. It should be Rv1191, not Rv1191c. Could you also add a short explanation why you believe it should be classified as a cathepsin (what protein did you transfer this annotation from)?<br />
+    &gt; We have removed this speculation in the revised submission.<br />
+    &gt; Reviewer #3 (Comments for the Author):<br />
+    &gt; In this manuscript, Modlin et al., attempt to tackle the problem of assigning functions to ~1700 hypothetical and/or under-annotated genes in the Mycobacterium tuberculosis H37Rv (Mtb) genome. Rapid and accurate annotation of microbial genomes is indeed a very critical and under appreciated part of microbial ecophysiology. This step is especially crucial for pathogenic organisms such as Mtb where accurate functional annotation of these hypothetical proteins could unravel mechanisms which could act as drug targets.</li>
+</ul>
+<h3 id="2-deep-annotation-of-protein-function-across-diverse-bacteria-from-mutant-phenotypes">[2] Deep Annotation of Protein Function across Diverse Bacteria from Mutant Phenotypes</h3>
+<ul>
+<li>Authors: M. Price, Kelly M. Wetmore, R. J. Waters, Mark Callaghan, J. Ray et al.</li>
+<li>Year: 2016</li>
+<li>Venue: bioRxiv</li>
+<li>URL: https://www.semanticscholar.org/paper/b8766e12e04d726ab4f4a5d1c7e2a12d9ea2a64d</li>
+<li>DOI: 10.1101/072470</li>
+<li>Citations: 28</li>
+<li>Influential citations: 1</li>
+<li>Summary: This study demonstrates the utility and scalability of high-throughput genetics for large-scale annotation of bacterial proteins and provides a vast compendium of experimentally-determined protein functions across diverse bacteria.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.792)<br />
+    &gt; (2) "Hypothetical" includes proteins containing the annotation description "hypothetical protein", "unknown function", "uncharacterized", or if the entire description matched "TIGRnnnnn family protein" or "membrane protein". (3) Proteins were considered to have "vague" annotations if the gene description contained "family", "domain protein", "related protein", "transporter related", or if the entire description matched common non-specific annotations ("abc transporter atp-binding protein", "abc transporter permease", "abc transporter substrate-binding protein", "abc transporter", "acetyltransferase", "alpha/beta hydrolase", "aminohydrolase", "aminotransferase", "atpase", "dehydrogenase", "dna-binding protein", "fad-dependent oxidoreductase", "gcn5-related n-acetyltransferase", "histidine kinase", "hydrolase" "lipoprotein", "membrane protein", "methyltransferase", "mfs transporter", "oxidoreductase", "permease", "porin", "predicted dna-binding transcriptional regulator", "predicted membrane protein", "probable transmembrane protein", "putative membrane protein", "response regulator receiver protein", "rnd transporter", "sam-dependent methyltransferase", "sensor histidine kinase", "serine/threonine protein kinase", "signal peptide protein", "signal transduction histidine kinase", "tonb-dependent receptor", "transcriptional regulator", "transcriptional regulators", or "transporter"). The remaining proteins were considered to have "other detailed" annotations. To identify a subset of the proteins annotated as "hypothetical" or "vague" that do not belong to any characterized families, we relied on Pfam and TIGRFAM.</li>
+</ul>
+<h3 id="3-lmpd-lipid-maps-proteome-database">[3] LMPD: LIPID MAPS proteome database</h3>
+<ul>
+<li>Authors: Dawn Cotter, A. Maer, C. Guda, Brian Saunders, S. Subramaniam</li>
+<li>Year: 2005</li>
+<li>Venue: Nucleic Acids Research</li>
+<li>URL: https://www.semanticscholar.org/paper/265c37b45326b7927e396484751e84e4aeff92d5</li>
+<li>DOI: 10.1093/nar/gkj122</li>
+<li>PMID: 16381922</li>
+<li>PMCID: 1347484</li>
+<li>Citations: 92</li>
+<li>Influential citations: 2</li>
+<li>Summary: The initial release of the LIPID MAPS Proteome Database contains 2959 records, representing human and mouse proteins involved in lipid metabolism, and this LMPD protein list was enhanced with annotations from UniProt, EntrezGene, ENZYME, GO, KEGG and other public resources.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.785)<br />
+    &gt; For each record selected from the results summary, all LMPD data relevant to that protein are displayed, with external database IDs linked to their respective resources.<br />
+    &gt; Annotations are organized by category: Record Overview, Gene/GO/KEGG Information, UniProt Annotations, and Related Proteins. The record overview contains LMPD_ID, species, description, gene symbols, lipid categories, EC number, molecular weight, sequence length and protein sequence. Gene information includes Entrez Gene ID, chromosome, map location, primary name, primary symbol and alternate names and symbols; Gene Ontology (GO) IDs and descriptions, and KEGG pathway IDs and descriptions. UniProt annotations include primary accession number, entry name and comments such as catalytic activity, enzyme regulation, function and similarity. For related proteins and splice variants, we display source database, database ID, sequence length, and title.</li>
+</ul>
+<h3 id="4-trade-offs-trade-ups-and-high-mutational-parallelism-underlie-microbial-adaptation-during-extreme-cycles-of-feast-and-famine">[4] Trade-offs, trade-ups, and high mutational parallelism underlie microbial adaptation during extreme cycles of feast and famine</h3>
+<ul>
+<li>Authors: Megan G. Behringer, Wei-Chin Ho, Samuel F. Miller, Sarah B. Worthan, Zeer Cen et al.</li>
+<li>Year: 2024</li>
+<li>Venue: Current biology : CB</li>
+<li>URL: https://www.semanticscholar.org/paper/13c71a271ad81ea813516193454b0fed04b2cd2b</li>
+<li>DOI: 10.1016/j.cub.2024.02.040</li>
+<li>PMID: 38460514</li>
+<li>PMCID: 11066936</li>
+<li>Citations: 18</li>
+<li>Summary: It is found that evolution in response to extreme feast/famine is characterized by narrow adaptive trajectories with high mutational parallelism and notable mutational order, which demonstrate how microbes can navigate the adaptive landscapes of regularly fluctuating conditions and ultimately follow mutational trajectories that confer benefits across diverse environments.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.771)<br />
+    &gt; Genes overrepresented for nonsynonymous and structural mutations were classified into functional groups based on the functional annotation table constructed with DAVID v.2023q3 91,92 (Table S4). We established the following rules for generalizing genes into functional groups: Chaperone: genes that encode proteins that perform chaperone or chaperonin-like activities (Uniprot Keyword: KW-0143); Envelope: Genes that encode proteins involved in the maintenance of the cell-envelope such as phospholipid biosynthesis (GO-BP: 0008654) and peptidoglycan biosynthesis (GO-BP: 0000270); Metabolism: Genes that encode proteins involved in general metabolic functions, such as purine metabolism (KEGG: eco00230), amino acid metabolism (KEGG: eco00470, eco00330); or TCA Cycle (KEGG: eco00020); Regulators: Genes that encode proteins directly involved in transcription (GO-BP: 0031564; Uniprot Keyword: KW-0804), translation (GO-BP:0006412, GO-BP:0006413; Uniprot Keyword: KW-0689), or the regulation of transcription (GO-BP: 0006355, GO-BP:2000143, GO-BP:0006353, GO-BP: GO:0045893; Uniprot Keyword: KW-0805); and Transport: Genes that encode proteins involved in transport: such as ABC transporters (Interpro: PR017871), MFS transporters (Interpro: IPR011701); symporters (Interpro: IPR023954, IPR001204, IPR001734, IPR023025, IPR004840), or Antiporters (Interpro: IPR004771). A combination of resources were used to determine if a parallel mutation arose in a functional region of a protein including, EcoCyc, 96 UniProt, 97 and the primary literature (see supplemental bibliography).</li>
+</ul>
+<h3 id="5-genomic-and-proteomic-characterization-of-the-deltamethrin-degrading-bacterium-paracoccus-sp-p-2">[5] Genomic and Proteomic Characterization of the Deltamethrin-Degrading Bacterium Paracoccus sp. P-2</h3>
+<ul>
+<li>Authors: Qing Li, Yawei Zhang, Xianfeng Ren, Qingguo Meng, Baocheng Xu et al.</li>
+<li>Year: 2025</li>
+<li>Venue: Microorganisms</li>
+<li>URL: https://www.semanticscholar.org/paper/74c0d94a67b8f801f8322fe976457dfd4c3fd76c</li>
+<li>DOI: 10.3390/microorganisms13112481</li>
+<li>PMID: 41304166</li>
+<li>PMCID: 12654547</li>
+<li>Summary: This study elucidates the impact of deltamethrin on bacterial metabolism and its degradation mechanism by Paracoccus sp.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.764)<br />
+    &gt; To obtain comprehensive gene function information, we performed gene function annotation using eight major databases, including UniProt [23], KEGG [24] and KEGG Pathway, GO [25], Pfam [26], COG [27], TIGERfams [28], RefSeq, and NR. The predicted gene sequences were aligned against functional databases such as COG, KEGG, UniProt, and RefSeq using BLAST+ (Version: 2.11.0+), resulting in the gene function annotation outcomes. The statistical results of the annotations are shown in Table S2. Among the top 20 domains annotated based on Pfam, we observed that genes belonging to "ABC transporters" were the most abundant (Figure 2A). As we know, ABC transporters comprise a large superfamily of proteins that facilitate the translocation of a diverse array of substrates, including ions and macromolecules, across cellular membranes through ATP binding and hydrolysis. Furthermore, these transporters are also critically involved in the cellular uptake and efflux of numerous organic pollutants [29,30]. These results suggest that the abundance of ABC transporter genes provides Paracoccus sp. P-2 with a significant capacity for deltamethrin transport. As shown in Figure 2B, the genes annotated by KEGG are divided into 5 major categories and 23 minor subcategories. Among them, the subcategory with the largest number of genes is metabolic pathways, which include amino acid metabolism, carbohydrate metabolism, energy metabolism, metabolism of cofactors and vitamins, among others. The abundance of genes related to metabolic pathways provides the fundamental basis for the survival and deltamethrin degradation capability of Paracoccus sp. P-2. It is worth noting that a substantial number (254) of membrane transporter genes have been annotated in the genome of Paracoccus sp. P-2. Pollutants are often adsorbed onto the microbial membrane surface and subsequently internalized into the cells-a process in which membrane transporter proteins play a crucial role [31]. This abundance of transporter genes highlights the strain's strong capacity for pollutant transport.</li>
+</ul>
+<h3 id="6-whole-genome-sequence-and-manual-annotation-of-clostridium-autoethanogenum-an-industrially-relevant-bacterium">[6] Whole genome sequence and manual annotation of Clostridium autoethanogenum, an industrially relevant bacterium</h3>
+<ul>
+<li>Authors: Christopher M. Humphreys, Samantha McLean, Sarah Schatschneider, Thomas Millat, A. Henstra et al.</li>
+<li>Year: 2015</li>
+<li>Venue: BMC Genomics</li>
+<li>URL: https://www.semanticscholar.org/paper/8960e4d28fe195cb11cf0274c2dbd5952eefbef1</li>
+<li>DOI: 10.1186/s12864-015-2287-5</li>
+<li>PMID: 26692227</li>
+<li>PMCID: 4687164</li>
+<li>Citations: 69</li>
+<li>Influential citations: 2</li>
+<li>Summary: A revised manually curated full genome sequence for Clostridium autoethanogenum DSM10061 is presented, which provides reliable information for genome-scale models that rely heavily on the accuracy of annotation, and represents an important step towards the manipulation and metabolic modelling of this industrially relevant acetogen.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.759)<br />
+    &gt; Sequence similarity analyses were accomplished using blastx [26] against the NCBI non-redundant database on protein level [32], the Swissprot database [33,34] and KEGG [35]. Additionally, manual gene annotation was performed using PRIAM [36], Motif Scan [37], Prosite  [38], BRENDA [39,40], UniProt/SwissProt [34], Inter-ProScan [41], and Pfam [42] databases. One example of how our manual annotation differed from that of the automated pipeline used by Brown et al. can be found in the case of CLAU_3519 (CAETHG_3609). Here the automated pipeline from the Brown et al. finished genome assigned this gene product as a hypothetical protein, however when the sequence was aligned using BLASTP as part of our manual curation all other proteins with &gt;75 % identity were named sodium ABC transporter. Upon further inspection in Pfam, one large ABC-2 family transporter protein domain was found (E-value 6.8e-31). Similar searches of UniProt and KEGG databases agreed with Pfam, therefore we annotated this gene product as an ABC-2 family transporter. The correction of the previously short-called homopolymer reads through our sequencing efforts gave a fully annotated finished sequence of C. autoethanogenum without the erroneous frame-shift containing annotations which had occurred previously. Using these tools we were able to manually curate the entire genome to ensure that the automated annotation was correct and to insert additional information where required, as well as implementing a standardised protein product naming system as recommend by the NCBI guidelines [43] for ease of identification of genes with related functions. As a consequence of the automated and subsequent manual curation, we have found 482 instances across the genome where genes previously identified as 'hypothetical protein' have either been assigned a specific function, or have been named through identification of conserved domains based on sequence similarity.</li>
+</ul>
+<h3 id="7-phosphositeplus-a-comprehensive-resource-for-investigating-the-structure-and-function-of-experimentally-determined-post-translational-modifications-in-man-and-mouse">[7] PhosphoSitePlus: a comprehensive resource for investigating the structure and function of experimentally determined post-translational modifications in man and mouse</h3>
+<ul>
+<li>Authors: P. Hornbeck, J. Kornhauser, S. Tkachev, Bin Zhang, E. Skrzypek et al.</li>
+<li>Year: 2011</li>
+<li>Venue: Nucleic Acids Research</li>
+<li>URL: https://www.semanticscholar.org/paper/93e4acf4ba3bca1b379ae8292e73dddb344abd90</li>
+<li>DOI: 10.1093/nar/gkr1122</li>
+<li>PMID: 22135298</li>
+<li>PMCID: 3245126</li>
+<li>Citations: 1606</li>
+<li>Influential citations: 155</li>
+<li>Summary: PhosphoSitePlus (http://www.phosphosite.org) is an open, comprehensive, manually curated and interactive resource for studying experimentally observed post-translational modifications, primarily of human and mouse proteins. It encompasses 1 30 000 non-redundant modification sites, primarily phosphorylation, ubiquitinylation and acetylation. The interface is designed for clarity and ease of navigation. From the home page, users can launch simple or complex searches and browse high-throughput d...</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.746)<br />
+    &gt; Accession numbers from UniPROT KB, NCBI and Ensembl (24)(25)(26), as well as gene symbols from HGNC (27), are curated for all proteins when possible. Basic protein descriptions include information parsed from UniPROT KB (24), and may include additional information from the literature. Descriptions are updated in bulk occasionally. Gene Ontology (28) annotations are parsed from NCBI (25). Editors assign protein types.</li>
+</ul>
+<h3 id="8-predicted-transmembrane-proteins-with-homology-to-mefa-are-not-responsible-for-complementing-mefa-deletion-in-the-mefamsrd-macrolide-efflux-system-in-streptococcus-pneumoniae">[8] Predicted transmembrane proteins with homology to Mef(A) are not responsible for complementing mef(A) deletion in the mef(A)–msr(D) macrolide efflux system in Streptococcus pneumoniae</h3>
+<ul>
+<li>Authors: Valeria Fox, Francesco Santoro, G. Pozzi, F. Iannelli</li>
+<li>Year: 2021</li>
+<li>Venue: BMC Research Notes</li>
+<li>URL: https://www.semanticscholar.org/paper/4f78acee7559d5e406bacad91d5982d9f3244ea3</li>
+<li>DOI: 10.1186/s13104-021-05856-6</li>
+<li>PMID: 34823574</li>
+<li>PMCID: 8620141</li>
+<li>Citations: 10</li>
+<li>Summary: To identify candidate genes likely involved in complementation of mef( A) deletion, the Mef(A) amino acid sequence was used as probe for database searching and identified 3 putative candidates in the S. pneumoniae R6 genome, namely spr0971, spr1023 and spr1932.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.745)<br />
+    &gt; The 405-aa Mef(A) sequence (GenBank accession no. AAT72347) was used as a query to conduct a BLAST homology search of S. pneumoniae R6 genome. Homology analysis revealed the presence of three genes coding for proteins with a significant homology (e-value &lt; 0.001) to Mef(A): (i) spr0971 (GenBank accession number NP_ 358565.1); (ii) spr1023 (GenBank accession number NP_ 358617.1); (iii) spr1932 (GenBank accession number NP_ 359523.1). The spr0971 gene, annotated as "ABC transporter membrane-spanning permease-macrolide efflux", codes for a 403 aa protein displaying 23% identity to Mef(A). The spr1023 gene, annotated as "macrolide ABC transporter permease", codes for a 392 aa protein with 24% identity to Mef(A). The spr1932 gene, annotated as "hypothetical protein", codes for a 415 aa protein with 21% identity to Mef(A). Analysis of the transmembrane domains of all deduced amino acid products predicted the presence of up to 12 transmembrane helices.</li>
+</ul>
+<h3 id="9-predicted-transmembrane-proteins-with-homology-to-mefa-are-not-responsible-for-complementing-mefa-deletion-in-the-mefamsrd-macrolide-efflux-system-in-streptococcus-pneumoniae">[9] Predicted transmembrane proteins with homology to Mef(A) are not responsible for complementing mef(A) deletion in the mef(A)–msr(D) macrolide efflux system in Streptococcus pneumoniae</h3>
+<ul>
+<li>Authors: Valeria Fox, Francesco Santoro, G. Pozzi, F. Iannelli</li>
+<li>Year: 2021</li>
+<li>Venue: BMC Research Notes</li>
+<li>URL: https://www.semanticscholar.org/paper/f30df2b539544c70ac0c1f373b0235d4e92d7687</li>
+<li>DOI: 10.1186/s13104-021-05856-6</li>
+<li>Summary: In streptococci, the type M resistance to macrolides is due to the mef(A)–msr(D) efflux transport system of the ATP-Binding cassette (ABC) superfamily, where it is proposed that mef(A) codes for the transmembrane channel and msr(D) for the two ATP-binding domains. Phage ϕ1207.3 of Streptococcus pyogenes, carrying the mef(A)–msr(D) gene pair, is able to transfer the macrolide efflux phenotype to Streptococcus pneumoniae. Deletion of mef(A) in pneumococcal ϕ1207.3-carrying strains did not affec...</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.745)<br />
+    &gt; The 405-aa Mef(A) sequence (GenBank accession no. AAT72347) was used as a query to conduct a BLAST homology search of S. pneumoniae R6 genome. Homology analysis revealed the presence of three genes coding for proteins with a significant homology (e-value &lt; 0.001) to Mef(A): (i) spr0971 (GenBank accession number NP_ 358565.1); (ii) spr1023 (GenBank accession number NP_ 358617.1); (iii) spr1932 (GenBank accession number NP_ 359523.1). The spr0971 gene, annotated as "ABC transporter membrane-spanning permease-macrolide efflux", codes for a 403 aa protein displaying 23% identity to Mef(A). The spr1023 gene, annotated as "macrolide ABC transporter permease", codes for a 392 aa protein with 24% identity to Mef(A). The spr1932 gene, annotated as "hypothetical protein", codes for a 415 aa protein with 21% identity to Mef(A). Analysis of the transmembrane domains of all deduced amino acid products predicted the presence of up to 12 transmembrane helices.</li>
+</ul>
+<h3 id="10-the-thermus-thermophilus-dead-box-protein-hera-is-a-general-rna-binding-protein-and-plays-a-key-role-in-trna-metabolism">[10] The Thermus thermophilus DEAD-box protein Hera is a general RNA binding protein and plays a key role in tRNA metabolism</h3>
+<ul>
+<li>Authors: Pascal Donsbach, Brian A. Yee, Dione L Sánchez-Hevia, J. Berenguer, S. Aigner et al.</li>
+<li>Year: 2020</li>
+<li>Venue: RNA</li>
+<li>URL: https://www.semanticscholar.org/paper/533f89524b50f1df6146e8665eed9512b23e1a5c</li>
+<li>DOI: 10.1261/rna.075580.120</li>
+<li>PMID: 32669294</li>
+<li>PMCID: 7566566</li>
+<li>Citations: 3</li>
+<li>Summary: Gene ontology analysis reveals an enrichment of genes related to translation, including mRNAs of ribosomal proteins, tRNAs, tRNA ligases, and t RNA-modifying enzymes, consistent with a key role of Hera in ribosome and tRNA metabolism.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.736)<br />
+    &gt; However, the peaks were in different positions within the gene in the four individual experiments performed (Fig. 6), and no specific binding site within the mRNA could be identified from the data.<br />
+    &gt; Among the genes identified were numerous genes related to protein biosynthesis (tRNAs, tRNA-aminoacyl synthetases, tRNA-modifying enzymes, ribosomal proteins). As an example, genes for ribosomal proteins were highly represented with 18 out of the 22 genes (82%) for small ribosomal proteins, (12 after cold shock, 55%), and 31 out of 34 genes (91%) for large ribosomal subunit proteins (22 after cold shock, 65%). Other protein families represented were chaperones (e.g., dnaK, dnaJ, grpE, but not dafA, groES, groEL, clpB), cold-shock and general stress proteins (TT_RS08235, _09210; hsp22, hsp30; uspA), topoisomerase genes (gyrA, gyrB, topA), genes for transporters and their subunits (often both the gene for the substrate-bind-ing protein and for the permease, for example, branchedchain amino acid ABC transporter, TT_RS01115 and _01120), and genes related to sugar-and cell wall metabolism and cell division, as well as CRISPR-related genes. In many cases, genes for all subunits of protein complexes (e.g., genes for cytochrome c oxidase subunits I and II; clpA, clpX coding for the ClpAX protease) were present.<br />
+    &gt; A systematic gene ontology analysis using the DAVID server 6.7 (https://david-d.ncifcrf.gov/home.jsp) (Huang da et al. 2009a,b) with the consolidated gene lists for Hera1/Hera2, and Hera3/Hera4, translated into UniProt accession numbers, revealed three annotation clusters with significant enrichment (Supplemental Table 4a,b).</li>
+</ul>
+<h3 id="11-avian-immunome-db-an-example-of-a-user-friendly-interface-for-extracting-genetic-information">[11] Avian Immunome DB: an example of a user-friendly interface for extracting genetic information</h3>
+<ul>
+<li>Authors: Ralf C. Mueller, Nicolai Mallig, Jacqueline Smith, Lél Eöry, Richard I. Kuo et al.</li>
+<li>Year: 2020</li>
+<li>Venue: BMC Bioinformatics</li>
+<li>URL: https://www.semanticscholar.org/paper/b894d9ca8ea2d653bf1711a0c67dab71d054487c</li>
+<li>DOI: 10.1186/s12859-020-03764-3</li>
+<li>PMID: 33176685</li>
+<li>PMCID: 7661159</li>
+<li>Citations: 6</li>
+<li>Summary: The Avian Immunome DB (Avimm) for easy gene property extraction as exemplified by avian immune genes is presented and described, which contains 1170 distinct avian immune genes with canonical gene symbols and 612 synonyms across 363 bird species.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.733)<br />
+    &gt; Ever since the advent of commercial next-generation sequencing platforms in the early 2000s with its associated decrease in sequencing costs [1], the number of DNA sequences increased considerably [2]. Generally, these data become publicly accessible in databases provided by projects focussing on different aspects of biological sequence information [3,4]. Ensembl [5] and NCBI [6] for instance, have a strong focus on genome annotation with the help of RNA transcript information while UniProt has a pronounced emphasis on protein-coding genes and biological function of proteins. UniProt's records are either based on manually annotated, non-redundant protein sequences (SwissProt) or on highquality computationally analysed records, which are enriched with automatic annotation (TrEMBL) [7]. Relying on accurate genome annotations and protein descriptions, Gene Ontology (GO) [8,9] categorises gene products and fits them into a computational model of biological systems. Their assignment deploys a controlled vocabulary, so-called GO terms, to link genes and gene products to biological processes, cellular components, or molecular functions.<br />
+    &gt; However, genome annotation is not standardised, and each service provider uses their own custom-built annotation pipelines. As a consequence, this often leads to ambiguity in gene names during genome annotation with different gene symbols being given to the same gene or the same gene symbol being given to different, but similar genes. Additionally, since the pre-existing wealth of sequencing information relies on model organisms like human and mouse, there is a strong bias in gene symbols towards those chosen for these species. Particularly for model species, this issue has been partially addressed, for example by the Human Genome Organisation (HUGO) Gene Nomenclature Committee (HGNC) [10], the Vertebrate Gene Nomenclature Committee (VGNC) [11], or the Chicken Gene Nomenclature Consortium [12]. However, this neither guarantees that gene names are harmonised among these consortia, nor does it keep researchers from assigning alternative gene symbols in their annotations, especially when working with non-model species.</li>
+</ul>
+<h3 id="12-the-surface-proteome-of-bovine-unsexed-and-sexed-spermatozoa">[12] The Surface Proteome of Bovine Unsexed and Sexed Spermatozoa</h3>
+<ul>
+<li>Authors: P. Pinto-Pinho, Joana Quelhas, Francis Impens, Sara Dufour, Delphi Van Haver et al.</li>
+<li>Year: 2025</li>
+<li>Venue: Animals : an Open Access Journal from MDPI</li>
+<li>URL: https://www.semanticscholar.org/paper/66496158140e8f55a2c2ca8965bd298300ce9ab0</li>
+<li>DOI: 10.3390/ani15040484</li>
+<li>PMID: 40002966</li>
+<li>PMCID: 11852025</li>
+<li>Citations: 2</li>
+<li>Summary: Differences in surface proteins between X- and Y-chromosome-bearing bovine spermatozoa are explored to identify potential targets for sperm sexing by LC-MS/MS analysis, with 5 transmembrane proteins showing promise as markers for X-sperm.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.733)<br />
+    &gt; The protein sequences were functionally annotated by combining information retrieved from the UniProt database ( [25], accessed on 9 June 2022) and one-to-one fast orthology assignments using the eggNOG-mapper v.2.1.7 tool ( [26], accessed on 9 June 2022), as described in [27]. Briefly, the gene name, protein name, length, Gene Ontology (GO) IDs, and chromosome associated with each protein entry were obtained from UniProt using the retrieve/ID mapping tool. Additionally, gene names, descriptions, and experimentally validated GO IDs were obtained from eggNOG, with consideration given to a taxonomic scope auto-adjusted per query, a minimum hit bit-score of 60, and thresholds of 80% for identity, minimum query coverage, and minimum subject coverage.<br />
+    &gt; Out of the 130 detected proteins, 71 (54.6%) had information manually verified by UniProt curators (Supplementary Spreadsheet S1.5). Utilizing the eggNOG-mapper v2.1.7 tool, a total of 122 entries were scanned (Supplementary Spreadsheet S1.6). By combining data from both tools, a total of 123 proteins were characterized with a gene name, and 127 had GO information. However, 2 proteins still lacked information on a descrip-tion, protein, gene, and preferred names. Figure 1 provides a summary of the functional annotation results.<br />
+    &gt; tool, a total of 122 entries were scanned (Supplementary Spreadsheet S1.6). By combining data from both tools, a total of 123 proteins were characterized with a gene name, and 127 had GO information. However, 2 proteins still lacked information on a description, protein, gene, and preferred names. Figure 1 provides a summary of the functional annotation results.</li>
+</ul>
+<h3 id="13-construction-of-an-ortholog-database-using-the-semantic-web-technology-for-integrative-analysis-of-genomic-data">[13] Construction of an Ortholog Database Using the Semantic Web Technology for Integrative Analysis of Genomic Data</h3>
+<ul>
+<li>Authors: H. Chiba, Hiroyo Nishide, I. Uchiyama</li>
+<li>Year: 2015</li>
+<li>Venue: PLoS ONE</li>
+<li>URL: https://www.semanticscholar.org/paper/7cc805575c642aa8efdc1204383a7662965fbb60</li>
+<li>DOI: 10.1371/journal.pone.0122802</li>
+<li>PMID: 25875762</li>
+<li>PMCID: 4395280</li>
+<li>Citations: 14</li>
+<li>Summary: The ortholog database using the Semantic Web technology can contribute to biological knowledge discovery through integrative data analysis and examples demonstrate that the ortholog information described in RDF can be used to link various biological data such as taxonomy information and Gene Ontology.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.732)<br />
+    &gt; A typical use of an ortholog database is transferring functional annotations from known genes in model organisms to genes of unknown function in other organisms, on the basis of the conjecture that orthologs are usually functionally conserved. To demonstrate such an application in our database, we showed a query to retrieve ortholog information of a specified protein.<br />
+    &gt; Here, we specified a UniProt ID to obtain ortholog information. For describing functional categories of genes, we used Gene Ontology (GO) [24]. The UniProt GO Annotation (UniProt-GOA) database [25] (http://www.ebi.ac.uk/GOA) provides GO term assignment to proteins with evidence codes (http://www.geneontology.org/GO.evidence.shtml). We created an ontology for GO annotation (GOA-O, Table 1, http://purl.jp/bio/11/goa) and described UniProt-GOA data in RDF using it (Table 2). If some model organisms have experimentally verified GO annotations, we can transfer such a validated annotation to orthologs of other organisms.</li>
+</ul>
+<h3 id="14-network-pharmacology-based-strategy-to-investigate-the-pharmacological-mechanisms-of-ginkgo-biloba-extract-for-aging">[14] Network Pharmacology-Based Strategy to Investigate the Pharmacological Mechanisms of Ginkgo biloba Extract for Aging</h3>
+<ul>
+<li>Authors: Yanfei Liu, Yue Liu, Wantong Zhang, Mingyue Sun, Weiliang Weng et al.</li>
+<li>Year: 2020</li>
+<li>Venue: Evidence-based Complementary and Alternative Medicine : eCAM</li>
+<li>URL: https://www.semanticscholar.org/paper/fadeff691eb41dff82e019cc3d38b846fdc605c4</li>
+<li>DOI: 10.1155/2020/8508491</li>
+<li>PMID: 32802136</li>
+<li>PMCID: 7403930</li>
+<li>Citations: 8</li>
+<li>Summary: The study found that flavonoids (quercetin, luteolin, and kaempferol) and beta-sitosterol and the top eight candidate targets, namely, PTGS2, PPARG, DPP4, GSK3B, CCNA2, AR, MAPK14, and ESR1, were selected as the main therapeutic targets of EGb.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.729)<br />
+    &gt; e validated target proteins of the active components were obtained from the TCMSP database. e target protein name of the active ingredient was converted to the standard target gene name through the UniProt Knowledge Base (UniProtKB, http://www. uniprot.org/). e UniProtKB is the central hub for the collection of functional information on proteins, with accurate, consistent, and rich annotation. e target protein names were inputted into UniProtKB, with the organism restricted to "Homo sapiens," eventually gaining the official symbol.</li>
+</ul>
+<h3 id="15-genome-wide-identification-of-conditionally-essential-genes-supporting-streptococcus-suis-growth-in-serum-and-cerebrospinal-fluid">[15] Genome-wide Identification of conditionally essential genes supporting Streptococcus suis growth in serum and cerebrospinal fluid</h3>
+<ul>
+<li>Authors: Maria Juanpere-Borràs, Tiantong Zhao, Jos Boekhorst, Blanca Fernandez-Ciruelos, Rajrita Sanyal et al.</li>
+<li>Year: 2025</li>
+<li>Venue: Virulence</li>
+<li>URL: https://www.semanticscholar.org/paper/400884affc80cbd5eef1e69b6961748a60a5b400</li>
+<li>DOI: 10.1080/21505594.2025.2600145</li>
+<li>PMID: 41396007</li>
+<li>PMCID: 12707516</li>
+<li>Citations: 1</li>
+<li>Summary: Using Tn-Seq coupled with Nanopore sequencing to identify conditionally essential genes for growth of S. suis provides new insights into the genetic requirements for S. suis survival in host-like environments and a deeper understanding of its ability to adapt to distinct physiological niches.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.724)<br />
+    &gt; Gene SSU_RS04755 has been predicted to encode a basic membrane family protein (BMP), a transmembrane component of specific ABC transporters. Growth curve experiments did not reveal a significant reduction in the growth rate of our ΔSSU_RS04755 mutant. The operon genes with SSU_RS04755 were predicted to encode an ATPbinding protein and a permease which are typical components of an ABC transporter. Both predicted ATPbinding protein and permease encoding genes appeared as CEGs in our Tn-seq results (Table 1). The protein sequence associated with SSU_RS04755 shares significant identity with lipoproteins that are components of nucleoside ABC transporters in Gram-positive bacteria (see above), suggesting that SSU_RS04755 and its operon genes may encode an ABC transporter complex involved in nucleoside transport. To investigate the possible functional equivalence of SSU_RS04755 operon genes with ABC transporters, we performed amino acid sequence alignments of SSU_RS04755 with PnrA and TmpC, which are homologous nucleoside binding lipoproteins from S. pneumoniae and Treponema pallidum (T. pallidum) respectively [49,50]. Using the crystal structure of PnrA binding to adenosine [49], we confirmed that all but one (T70) of the specific amino acids involved in adenosine binding by PnrA were conserved in SSU_RS04755 (Figure 5(c)).<br />
+    &gt; To verify if the structural positions of these amino acids were conserved, we performed a structural prediction (see methods) of the predicted S. suis lipoprotein SSU_RS04755 and aligned it to the structure of PnrA (ID 6y9U in Protein Data Bank (PDB). We confirmed that all amino acids involved in the adenosine binding are located at the same position in both protein structures.</li>
+</ul>
+<h3 id="16-mutant-phenotypes-for-thousands-of-bacterial-genes-of-unknown-function">[16] Mutant phenotypes for thousands of bacterial genes of unknown function</h3>
+<ul>
+<li>Authors: M. Price, Kelly M. Wetmore, R. J. Waters, Mark Callaghan, J. Ray et al.</li>
+<li>Year: 2018</li>
+<li>Venue: Nature</li>
+<li>URL: https://www.semanticscholar.org/paper/4b6ee340afd8e9397f37832af37a8897315c0e5b</li>
+<li>DOI: 10.1038/s41586-018-0124-0</li>
+<li>PMID: 29769716</li>
+<li>Citations: 529</li>
+<li>Influential citations: 19</li>
+<li>Summary: A large-scale mutagenesis screen identifies mutant phenotypes for over 11,000 protein-coding genes in bacteria that had previously not been assigned a specific function, demonstrating the scalability of microbial genetics and its utility for improving gene annotations.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.723)<br />
+    &gt; Classification of how informative annotations are. To assess the existing computational annotations for the 32 genomes, we classified all of their proteins into one of four groups: detailed TIGR role, hypothetical, vague, or other detailed.<br />
+    &gt; (1) 'Detailed TIGR role' includes proteins that belong to a TIGRFAM role other than 'Unclassified' , 'Unknown function' , or 'Hypothetical proteins' and had a subrole other than 'Unknown substrate' , 'Two-component systems' , 'Role category not yet assigned' , 'Other' , 'General' , 'Enzymes of unknown specificity' , 'Domain' , or 'Conserved' . (2) 'Hypothetical' includes proteins whose annotation contained the phrase 'hypothetical protein' , 'unknown function' , 'uncharacterized' , or if the entire description matched 'TIGRnnnnn family protein' or 'membrane protein' .<br />
+    &gt; (3) Proteins were considered to have 'vague' annotations if the gene description contained 'family' , 'domain protein' , 'related protein' , 'transporter related' , or if the entire description matched common non-specific annotations ('abc transporter atp-binding protein' , 'abc transporter permease' , 'abc transporter substrate-binding Extended Data Fig. 2 | Phenotypes versus types of genes. We categorized proteins in our data set by their type of annotation or by whether they have homologues in the same genome ('paralogues'). For each category, we show the fraction of genes that have statistically significant phenotypes, and more specifically the fractions that have strong phenotypes (|fitness| &gt; 2 and statistically significant) or are significantly detrimental to fitness (fitness &gt; 0). Genes with high or moderate similarity to another gene in the same genome (paralogues with alignment score above 30% of the self-alignment score) were less likely to have a phenotype (25% versus 32%, P &lt; 10 −15 , Fisher's exact test), which is likely to reflect genetic redundancy.<br />
+    &gt; Extended Data Fig. 3 | Known DNA repair genes are important for cisplatin resistance.</li>
+</ul>
+<h3 id="17-protein-localization-analysis-of-essential-genes-in-prokaryotes">[17] Protein Localization Analysis of Essential Genes in Prokaryotes</h3>
+<ul>
+<li>Authors: Chong Peng, Feng Gao</li>
+<li>Year: 2014</li>
+<li>Venue: Scientific Reports</li>
+<li>URL: https://www.semanticscholar.org/paper/69181762648fd77a085b2f93618a71b43b62cf76</li>
+<li>DOI: 10.1038/srep06001</li>
+<li>PMID: 25105358</li>
+<li>PMCID: 4126397</li>
+<li>Citations: 27</li>
+<li>Summary: A comprehensive protein localization analysis of essential genes in 27 prokaryotes including 24 bacteria, 2 mycoplasmas and 1 archaeon has been performed and shows that proteins encoded by essential genes are enriched in internal location sites, while exist in cell envelope with a lower proportion compared with non-essential ones.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.717)<br />
+    &gt; Bioinformatics Databases. DEG is a database of essential genes (http://www. essentialgene.org/). The newly released DEG 10 has been developed to accommodate the quantitative and qualitative advancements brought by the progressive identification methods. Currently available records of both essential and nonessential genes among a wide range of organisms can be downloaded from DEG 10, making it possible to compare the two different types of genes in many aspects 21 .<br />
+    &gt; 27 prokaryotic organisms including 24 bacteria, 2 mycoplasmas and Methanococcus maripaludis S2, the only record of the Archaea domain were selected to analyze the protein localization and GO distribution of the essential and nonessential genes. There are 31 bacterial records corresponding to 27 organisms in the database in total and 26 sets of data were selected in the current study. Streptococcus pneumonia was not chosen for the lack of non-essential genes. Since the essential genes were not genome-widely identified, it's not reasonable to regard the complementary set of essential genes as non-essential genes in Streptococcus pneumonia 29,30 . In the case of multiple records for one organism, the one with the most convincing experimental methods was chosen. The non-essential genes in Methanococcus maripaludis S2 and 13 bacteria such as Escherichia coli MG1655 are obtained based on the original literatures, while non-essential genes in other 12 organisms such as Bacillus subtilis 168 are the complementary set of essential genes. The information of the organisms used in the current study are displayed in Table 1.<br />
+    &gt; The three model genomes' subcellular location information and the Gene Ontology (GO) terms used for the analysis in the current study were downloaded from the Universal Protein Resource (UniProt; http://www.uniprot.org). Maintained by the UniProt Consortium, UniProt is committed to providing biologists with a comprehensive, high-quality and freely accessible resource of protein sequences and functional annotation 27 . Among the wealth of annotation data, detailed GO annotation statements are included.</li>
+</ul>
+<h3 id="18-combining-of-transcriptome-and-metabolome-analyses-for-understanding-the-utilization-and-metabolic-pathways-of-xylooligosaccharide-in-bifidobacterium-adolescentis-atcc-15703">[18] Combining of transcriptome and metabolome analyses for understanding the utilization and metabolic pathways of Xylo‐oligosaccharide in Bifidobacterium adolescentis ATCC 15703</h3>
+<ul>
+<li>Authors: Jian Yang, Qilong Tang, Lei Xu, Zhijiang Li, Yongqiang Ma et al.</li>
+<li>Year: 2019</li>
+<li>Venue: Food Science &amp; Nutrition</li>
+<li>URL: https://www.semanticscholar.org/paper/a1dc16e9f5c2615024cf1c7cb6bc2e2d3a63a626</li>
+<li>DOI: 10.1002/fsn3.1194</li>
+<li>PMID: 31762999</li>
+<li>PMCID: 6848847</li>
+<li>Citations: 28</li>
+<li>Influential citations: 1</li>
+<li>Summary: The transcriptome analysis showed that XOS could enhance genes, including ABC transporters, galactosidase, xylosid enzyme, glucosidases, and amylase, which were involved in transport and metabolism of carbohydrate compared with xylose, which contributed to the optimization of XOS probiotic effects as a food additive.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.715)<br />
+    &gt; From the RNA-seq analysis data, it can be seen that over 99% of the reads were aligned to encoding regions of the B. adolescentis.<br />
+    &gt; Genes were assigned to 25 functional groups, which were annotated in COG database (Figure 2). Among these classifications, the largest group was amino acid transport and metabolism (191, 13.45%), followed by carbohydrate transport and metabolism (160, 11.27%) and general function prediction (151, 10.63%).<br />
+    &gt; A total number of 302 DEGs were identified for B. adolescentis grown on xylose and XOS, including 158 upregulated genes and 144 downregulated genes (Figure 3). The top 10 upregulated genes and 10 downregulated genes of xylose and XOS treatments are presented in Table 2. Four genes of the top 10 upregulated genes encode ABC and MFS transporters. Among the remaining genes, two genes encode hsp20/alpha crystallin family protein and ATP-dependent chaperone ClpB, two genes encode RNA polymerase sigma factor and death-on-curing protein, other two genes encode enzyme proteins belonging to multiple sugar-binding transport system permease and shikimate kinase. Five genes of the top 10 downregulated genes encode structure protein, including penicillin-binding protein, von willebrand factor type A domain protein, fhiA protein, arginine repressor DUF4956, domain-containing protein, three genes are associated with membrane transport, including peptide ABC transporter ATP-binding protein, ABC transporter permease, and membrane spanning polysaccharide biosynthesis protein, while two genes encode O-antigen polymerase and hypothetical protein.</li>
+</ul>
+<h3 id="19-phyletic-profiling-with-cliques-of-orthologs-is-enhanced-by-signatures-of-paralogy-relationships">[19] Phyletic Profiling with Cliques of Orthologs Is Enhanced by Signatures of Paralogy Relationships</h3>
+<ul>
+<li>Authors: N. Skunca, Matko Bosnjak, A. Kriško, P. Panov, S. Džeroski et al.</li>
+<li>Year: 2013</li>
+<li>Venue: PLoS Computational Biology</li>
+<li>URL: https://www.semanticscholar.org/paper/1510cd0e087650323cdf75ea132e6fcbc4d7e852</li>
+<li>DOI: 10.1371/journal.pcbi.1002852</li>
+<li>PMID: 23308060</li>
+<li>PMCID: 3536626</li>
+<li>Citations: 41</li>
+<li>Influential citations: 2</li>
+<li>Summary: A novel model for computational annotation that refines two established concepts: annotation based on homology and annotations based on phyletic profiling is introduced, which will contribute to making experimental validation of computational predictions more approachable, both in cost and time.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.710)<br />
+    &gt; In addition to the systematic experimental verification of novel annotations in three GO categories as described above, here we highlight individual predictions for which we found supporting evidence in the publicly available databases. This information was not available to the classifiers at the time when the models were constructed. The following examples are for E. coli K12, as this is by far the best-studied model prokaryote [21].<br />
+    &gt; We predict genes hypC and hybG to have ''nickel cation binding.'' These genes had no GO terms assigned in the 07-02-2012 UniProt-GOA release (http://www.uniprot.org/uniprot/ P0AAM3 and http://www.uniprot.org/uniprot/P0AAM7), and we therefore considered them unannotated. In the meantime, hypC was annotated with ''metal ion binding'' using experimental evidence: this is a parent GO term of our prediction. Moreover, when examining the literature, we found evidence that these two genes are involved in the biosynthesis of the [NiFe] cluster [22].<br />
+    &gt; Another prediction is for gltL: we predicted it is annotated with ''ATP-binding cassette (ABC) transporter complex.'' In line with our predictions, PortEco, a portal that includes information from 14 different E. coli data resources [23], labels the gene as ''ATPbinding component of ABC superfamily.'' Note that more general electronic GO annotations were available for this gene, e.g. ''ATP binding,'' ''ATPase activity,'' and ''ATP catabolic process'' (http://www.uniprot.org/uniprot/P0AAG3).<br />
+    &gt; A similar prediction of a more detailed function is for ybgI, where we predict GO terms from both BP and MF ontologies. This gene is known to be a conserved metal-binding protein [24], having an electronic GO annotation ''metal ion binding''; we predict it is annotated with the BP GO term ''Mo-molybdopterin cofactor metabolic process.''</li>
+</ul>
+<h2 id="notes">Notes</h2>
+<ul>
+<li>This provider combines <code>search_papers_by_relevance</code> with <code>snippet_search</code>.</li>
+<li>No synthesis or second-stage model call is performed.</li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>Samuel J. Modlin, A. Elghraoui, Deepika Gunasekaran, Alyssa M Zlotnicki, N. Dillon et al. (2021). Structure-Aware Mycobacterium tuberculosis Functional Annotation Uncloaks Resistance, Metabolic, and Virulence Genes. mSystems. https://www.semanticscholar.org/paper/76ff9a62b36b32cc10e46e71ffd4dd90344e4706</li>
+<li>M. Price, Kelly M. Wetmore, R. J. Waters, Mark Callaghan, J. Ray et al. (2016). Deep Annotation of Protein Function across Diverse Bacteria from Mutant Phenotypes. bioRxiv. https://www.semanticscholar.org/paper/b8766e12e04d726ab4f4a5d1c7e2a12d9ea2a64d</li>
+<li>Dawn Cotter, A. Maer, C. Guda, Brian Saunders, S. Subramaniam (2005). LMPD: LIPID MAPS proteome database. Nucleic Acids Research. https://www.semanticscholar.org/paper/265c37b45326b7927e396484751e84e4aeff92d5</li>
+<li>Megan G. Behringer, Wei-Chin Ho, Samuel F. Miller, Sarah B. Worthan, Zeer Cen et al. (2024). Trade-offs, trade-ups, and high mutational parallelism underlie microbial adaptation during extreme cycles of feast and famine. Current biology : CB. https://www.semanticscholar.org/paper/13c71a271ad81ea813516193454b0fed04b2cd2b</li>
+<li>Qing Li, Yawei Zhang, Xianfeng Ren, Qingguo Meng, Baocheng Xu et al. (2025). Genomic and Proteomic Characterization of the Deltamethrin-Degrading Bacterium Paracoccus sp. P-2. Microorganisms. https://www.semanticscholar.org/paper/74c0d94a67b8f801f8322fe976457dfd4c3fd76c</li>
+<li>Christopher M. Humphreys, Samantha McLean, Sarah Schatschneider, Thomas Millat, A. Henstra et al. (2015). Whole genome sequence and manual annotation of Clostridium autoethanogenum, an industrially relevant bacterium. BMC Genomics. https://www.semanticscholar.org/paper/8960e4d28fe195cb11cf0274c2dbd5952eefbef1</li>
+<li>P. Hornbeck, J. Kornhauser, S. Tkachev, Bin Zhang, E. Skrzypek et al. (2011). PhosphoSitePlus: a comprehensive resource for investigating the structure and function of experimentally determined post-translational modifications in man and mouse. Nucleic Acids Research. https://www.semanticscholar.org/paper/93e4acf4ba3bca1b379ae8292e73dddb344abd90</li>
+<li>Valeria Fox, Francesco Santoro, G. Pozzi, F. Iannelli (2021). Predicted transmembrane proteins with homology to Mef(A) are not responsible for complementing mef(A) deletion in the mef(A)–msr(D) macrolide efflux system in Streptococcus pneumoniae. BMC Research Notes. https://www.semanticscholar.org/paper/4f78acee7559d5e406bacad91d5982d9f3244ea3</li>
+<li>Valeria Fox, Francesco Santoro, G. Pozzi, F. Iannelli (2021). Predicted transmembrane proteins with homology to Mef(A) are not responsible for complementing mef(A) deletion in the mef(A)–msr(D) macrolide efflux system in Streptococcus pneumoniae. BMC Research Notes. https://www.semanticscholar.org/paper/f30df2b539544c70ac0c1f373b0235d4e92d7687</li>
+<li>Pascal Donsbach, Brian A. Yee, Dione L Sánchez-Hevia, J. Berenguer, S. Aigner et al. (2020). The Thermus thermophilus DEAD-box protein Hera is a general RNA binding protein and plays a key role in tRNA metabolism. RNA. https://www.semanticscholar.org/paper/533f89524b50f1df6146e8665eed9512b23e1a5c</li>
+<li>Ralf C. Mueller, Nicolai Mallig, Jacqueline Smith, Lél Eöry, Richard I. Kuo et al. (2020). Avian Immunome DB: an example of a user-friendly interface for extracting genetic information. BMC Bioinformatics. https://www.semanticscholar.org/paper/b894d9ca8ea2d653bf1711a0c67dab71d054487c</li>
+<li>P. Pinto-Pinho, Joana Quelhas, Francis Impens, Sara Dufour, Delphi Van Haver et al. (2025). The Surface Proteome of Bovine Unsexed and Sexed Spermatozoa. Animals : an Open Access Journal from MDPI. https://www.semanticscholar.org/paper/66496158140e8f55a2c2ca8965bd298300ce9ab0</li>
+<li>H. Chiba, Hiroyo Nishide, I. Uchiyama (2015). Construction of an Ortholog Database Using the Semantic Web Technology for Integrative Analysis of Genomic Data. PLoS ONE. https://www.semanticscholar.org/paper/7cc805575c642aa8efdc1204383a7662965fbb60</li>
+<li>Yanfei Liu, Yue Liu, Wantong Zhang, Mingyue Sun, Weiliang Weng et al. (2020). Network Pharmacology-Based Strategy to Investigate the Pharmacological Mechanisms of Ginkgo biloba Extract for Aging. Evidence-based Complementary and Alternative Medicine : eCAM. https://www.semanticscholar.org/paper/fadeff691eb41dff82e019cc3d38b846fdc605c4</li>
+<li>Maria Juanpere-Borràs, Tiantong Zhao, Jos Boekhorst, Blanca Fernandez-Ciruelos, Rajrita Sanyal et al. (2025). Genome-wide Identification of conditionally essential genes supporting Streptococcus suis growth in serum and cerebrospinal fluid. Virulence. https://www.semanticscholar.org/paper/400884affc80cbd5eef1e69b6961748a60a5b400</li>
+<li>M. Price, Kelly M. Wetmore, R. J. Waters, Mark Callaghan, J. Ray et al. (2018). Mutant phenotypes for thousands of bacterial genes of unknown function. Nature. https://www.semanticscholar.org/paper/4b6ee340afd8e9397f37832af37a8897315c0e5b</li>
+<li>Chong Peng, Feng Gao (2014). Protein Localization Analysis of Essential Genes in Prokaryotes. Scientific Reports. https://www.semanticscholar.org/paper/69181762648fd77a085b2f93618a71b43b62cf76</li>
+<li>Jian Yang, Qilong Tang, Lei Xu, Zhijiang Li, Yongqiang Ma et al. (2019). Combining of transcriptome and metabolome analyses for understanding the utilization and metabolic pathways of Xylo‐oligosaccharide in Bifidobacterium adolescentis ATCC 15703. Food Science &amp; Nutrition. https://www.semanticscholar.org/paper/a1dc16e9f5c2615024cf1c7cb6bc2e2d3a63a626</li>
+<li>N. Skunca, Matko Bosnjak, A. Kriško, P. Panov, S. Džeroski et al. (2013). Phyletic Profiling with Cliques of Orthologs Is Enhanced by Signatures of Paralogy Relationships. PLoS Computational Biology. https://www.semanticscholar.org/paper/1510cd0e087650323cdf75ea132e6fcbc4d7e852</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88FE8
+gene_symbol: PP_4149
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: PP_4149 encodes a predicted YejE-like multi-pass inner-membrane permease of the PP_4146-PP_4150 Yej/Dpp-like peptide ABC import candidate. Its MetI-like permease domain, YejE-like PANTHER subfamily assignment, and membrane localization support a peptide-transporter channel role with PP_4148 and YejF.
+existing_annotations:
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: Plasma membrane localization is appropriate for this multi-pass bacterial inner-membrane ABC permease.
+    action: ACCEPT
+    reason: UniProt predicts a cell-inner-membrane permease with multiple transmembrane helices.
+    supported_by:
+    - reference_id: file:PSEPK/PP_4149/PP_4149-goa.tsv
+      supporting_text: &#34;GO:0005886\tplasma membrane&#34;
+    - reference_id: file:PSEPK/PP_4149/PP_4149-uniprot.txt
+      supporting_text: Cell inner membrane
+    - reference_id: file:PSEPK/PP_4149/PP_4149-uniprot.txt
+      supporting_text: InterPro; IPR000515; MetI-like.
+    - reference_id: file:PSEPK/PP_4149/PP_4149-deep-research-asta.md
+      supporting_text: &#39;Protein Description:** SubName: Full=Inner membrane ABC transporter permease protein&#39;
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: Membrane localization is correct but less specific than plasma membrane for this bacterial inner-membrane permease.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The plasma membrane annotation and UniProt cell-inner-membrane placement are the more informative retained locations.
+    supported_by:
+    - reference_id: file:PSEPK/PP_4149/PP_4149-goa.tsv
+      supporting_text: &#34;GO:0016020\tmembrane&#34;
+    - reference_id: file:PSEPK/PP_4149/PP_4149-uniprot.txt
+      supporting_text: Cell inner membrane
+    - reference_id: file:PSEPK/PP_4149/PP_4149-uniprot.txt
+      supporting_text: Full=Inner membrane ABC transporter permease protein
+- term:
+    id: GO:0042884
+    label: microcin transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: Microcin transport is plausible Yej-family context but should not be treated as the core PSEPK transporter function.
+    action: KEEP_AS_NON_CORE
+    reason: The Yej-family permease context supports peptide transport; direct PSEPK evidence for microcin C transport is not available in this first-pass evidence set.
+    supported_by:
+    - reference_id: file:PSEPK/PP_4149/PP_4149-goa.tsv
+      supporting_text: &#34;GO:0042884\tmicrocin transport&#34;
+    - reference_id: file:PSEPK/PP_4149/PP_4149-uniprot.txt
+      supporting_text: Full=Inner membrane ABC transporter permease protein
+    - reference_id: file:PSEPK/PP_4149/PP_4149-deep-research-asta.md
+      supporting_text: &#39;Protein Description:** SubName: Full=Inner membrane ABC transporter permease protein&#39;
+    - reference_id: file:PSEPK/PP_4149/PP_4149-uniprot.txt
+      supporting_text: InterPro; IPR000515; MetI-like.
+    - reference_id: file:PSEPK/PP_4149/PP_4149-uniprot.txt
+      supporting_text: Cell inner membrane
+    - reference_id: file:PSEPK/PP_4149/PP_4149-uniprot.txt
+      supporting_text: Belongs to the binding-protein-dependent transport system
+    - reference_id: file:PSEPK/PP_4149/PP_4149-uniprot.txt
+      supporting_text: INNER MEMBRANE ABC TRANSPORTER PERMEASE PROTEIN YEJE
+    - reference_id: file:PSEPK/yejF/yejF-uniprot.txt
+      supporting_text: Part of the ABC transporter DppABCDF involved in the uptake
+    - reference_id: file:PSEPK/PP_4148/PP_4148-uniprot.txt
+      supporting_text: Full=Oligopeptide transport system permease protein YejB
+- term:
+    id: GO:0043190
+    label: ATP-binding cassette (ABC) transporter complex
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: part_of
+  review:
+    summary: ABC transporter complex membership is appropriate for this peptide-import permease component.
+    action: ACCEPT
+    reason: The protein is a binding-protein-dependent ABC transporter permease in a local peptide-import candidate locus.
+    supported_by:
+    - reference_id: file:PSEPK/PP_4149/PP_4149-goa.tsv
+      supporting_text: &#34;GO:0043190\tATP-binding cassette (ABC) transporter complex&#34;
+    - reference_id: file:PSEPK/PP_4149/PP_4149-uniprot.txt
+      supporting_text: Full=Inner membrane ABC transporter permease protein
+    - reference_id: file:PSEPK/PP_4149/PP_4149-deep-research-asta.md
+      supporting_text: &#39;Protein Description:** SubName: Full=Inner membrane ABC transporter permease protein&#39;
+    - reference_id: file:PSEPK/PP_4149/PP_4149-uniprot.txt
+      supporting_text: InterPro; IPR000515; MetI-like.
+    - reference_id: file:PSEPK/PP_4149/PP_4149-uniprot.txt
+      supporting_text: Cell inner membrane
+    - reference_id: file:PSEPK/PP_4149/PP_4149-uniprot.txt
+      supporting_text: Belongs to the binding-protein-dependent transport system
+    - reference_id: file:PSEPK/PP_4149/PP_4149-uniprot.txt
+      supporting_text: INNER MEMBRANE ABC TRANSPORTER PERMEASE PROTEIN YEJE
+    - reference_id: file:PSEPK/yejF/yejF-uniprot.txt
+      supporting_text: Part of the ABC transporter DppABCDF involved in the uptake
+    - reference_id: file:PSEPK/PP_4148/PP_4148-uniprot.txt
+      supporting_text: Full=Oligopeptide transport system permease protein YejB
+- term:
+    id: GO:0055085
+    label: transmembrane transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: Transmembrane transport is true but broad relative to peptide transport for this permease.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The protein is best represented as contributing to peptide transmembrane transporter activity in an ABC import system.
+    supported_by:
+    - reference_id: file:PSEPK/PP_4149/PP_4149-goa.tsv
+      supporting_text: &#34;GO:0055085\ttransmembrane transport&#34;
+    - reference_id: file:PSEPK/PP_4149/PP_4149-uniprot.txt
+      supporting_text: Full=Inner membrane ABC transporter permease protein
+    - reference_id: file:PSEPK/PP_4149/PP_4149-deep-research-asta.md
+      supporting_text: &#39;Protein Description:** SubName: Full=Inner membrane ABC transporter permease protein&#39;
+    - reference_id: file:PSEPK/PP_4149/PP_4149-uniprot.txt
+      supporting_text: InterPro; IPR000515; MetI-like.
+    - reference_id: file:PSEPK/PP_4149/PP_4149-uniprot.txt
+      supporting_text: Cell inner membrane
+    - reference_id: file:PSEPK/PP_4149/PP_4149-uniprot.txt
+      supporting_text: Belongs to the binding-protein-dependent transport system
+    - reference_id: file:PSEPK/PP_4149/PP_4149-uniprot.txt
+      supporting_text: INNER MEMBRANE ABC TRANSPORTER PERMEASE PROTEIN YEJE
+    - reference_id: file:PSEPK/yejF/yejF-uniprot.txt
+      supporting_text: Part of the ABC transporter DppABCDF involved in the uptake
+    - reference_id: file:PSEPK/PP_4148/PP_4148-uniprot.txt
+      supporting_text: Full=Oligopeptide transport system permease protein YejB
+- term:
+    id: GO:1904680
+    label: peptide transmembrane transporter activity
+  evidence_type: IEA
+  original_reference_id: file:PSEPK/PP_4149/PP_4149-uniprot.txt
+  qualifier: contributes_to
+  review:
+    summary: PP_4149 should be represented as contributing the membrane channel to peptide transmembrane transporter activity.
+    action: NEW
+    reason: The protein is a MetI-like multi-pass ABC permease in a Yej/Dpp-like peptide import candidate locus.
+    supported_by: &amp;id001
+    - reference_id: file:PSEPK/PP_4149/PP_4149-uniprot.txt
+      supporting_text: Full=Inner membrane ABC transporter permease protein
+    - reference_id: file:PSEPK/PP_4149/PP_4149-deep-research-asta.md
+      supporting_text: &#39;Protein Description:** SubName: Full=Inner membrane ABC transporter permease protein&#39;
+    - reference_id: file:PSEPK/PP_4149/PP_4149-uniprot.txt
+      supporting_text: InterPro; IPR000515; MetI-like.
+    - reference_id: file:PSEPK/PP_4149/PP_4149-uniprot.txt
+      supporting_text: Cell inner membrane
+    - reference_id: file:PSEPK/PP_4149/PP_4149-uniprot.txt
+      supporting_text: Belongs to the binding-protein-dependent transport system
+    - reference_id: file:PSEPK/PP_4149/PP_4149-uniprot.txt
+      supporting_text: INNER MEMBRANE ABC TRANSPORTER PERMEASE PROTEIN YEJE
+    - reference_id: file:PSEPK/yejF/yejF-uniprot.txt
+      supporting_text: Part of the ABC transporter DppABCDF involved in the uptake
+    - reference_id: file:PSEPK/PP_4148/PP_4148-uniprot.txt
+      supporting_text: Full=Oligopeptide transport system permease protein YejB
+- term:
+    id: GO:0015833
+    label: peptide transport
+  evidence_type: IEA
+  original_reference_id: file:PSEPK/PP_4149/PP_4149-uniprot.txt
+  qualifier: involved_in
+  review:
+    summary: PP_4149 should be represented in peptide transport.
+    action: NEW
+    reason: The permease product, peptide transport keyword/family context, and local binding-protein components support peptide ABC import.
+    supported_by: *id001
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt
+  findings: []
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/PP_4149/PP_4149-goa.tsv
+  title: QuickGO GOA annotations for PP_4149
+  findings: []
+- id: file:PSEPK/PP_4149/PP_4149-uniprot.txt
+  title: UniProtKB entry for PP_4149 (Q88FE8)
+  findings:
+  - supporting_text: Full=Inner membrane ABC transporter permease protein
+- id: file:PSEPK/PP_4149/PP_4149-deep-research-asta.md
+  title: Asta retrieval report for PP_4149 (Q88FE8)
+  findings:
+  - supporting_text: &#39;Protein Description:** SubName: Full=Inner membrane ABC transporter permease protein&#39;
+- id: file:PSEPK/PP_3076/PP_3076-uniprot.txt
+  title: UniProtKB entry for PP_3076 (Q88IC3)
+  findings:
+  - supporting_text: Full=ABC transporter permease protein
+- id: file:PSEPK/PP_3077/PP_3077-uniprot.txt
+  title: UniProtKB entry for PP_3077 (Q88IC2)
+  findings:
+  - supporting_text: Full=Oligopeptide transport system permease protein YejB
+- id: file:PSEPK/PP_3078/PP_3078-uniprot.txt
+  title: UniProtKB entry for PP_3078 (Q88IC1)
+  findings:
+  - supporting_text: Full=ABC transporter, periplasmic binding protein
+- id: file:PSEPK/PP_4146/PP_4146-uniprot.txt
+  title: UniProtKB entry for PP_4146 (Q88FF1)
+  findings:
+  - supporting_text: Full=Peptide ABC transporter, periplamic peptide-binding protein
+- id: file:PSEPK/yejA/yejA-uniprot.txt
+  title: UniProtKB entry for yejA (Q88FF0)
+  findings:
+  - supporting_text: Full=Microcin C transporter-periplasmic binding protein
+- id: file:PSEPK/PP_4148/PP_4148-uniprot.txt
+  title: UniProtKB entry for PP_4148 (Q88FE9)
+  findings:
+  - supporting_text: Full=Oligopeptide transport system permease protein YejB
+- id: file:PSEPK/yejF/yejF-uniprot.txt
+  title: UniProtKB entry for yejF (Q88FE7)
+  findings:
+  - supporting_text: Full=ABC-type dipeptide transporter
+- id: file:PSEPK/dppA-IV/dppA-IV-uniprot.txt
+  title: UniProtKB entry for dppA-IV (Q88C98)
+  findings:
+  - supporting_text: Full=Periplasmic dipeptide transport protein
+core_functions:
+- description: Predicted multi-pass membrane permease component of the C54 Yej/Dpp-like peptide ABC import candidate.
+  contributes_to_molecular_function:
+    id: GO:1904680
+    label: peptide transmembrane transporter activity
+  directly_involved_in:
+  - id: GO:0015833
+    label: peptide transport
+  locations:
+  - id: GO:0005886
+    label: plasma membrane
+  in_complex:
+    id: GO:0043190
+    label: ATP-binding cassette (ABC) transporter complex
+  supported_by:
+  - reference_id: file:PSEPK/PP_4149/PP_4149-uniprot.txt
+    supporting_text: Full=Inner membrane ABC transporter permease protein
+  - reference_id: file:PSEPK/PP_4149/PP_4149-deep-research-asta.md
+    supporting_text: &#39;Protein Description:** SubName: Full=Inner membrane ABC transporter permease protein&#39;
+  - reference_id: file:PSEPK/PP_4149/PP_4149-uniprot.txt
+    supporting_text: InterPro; IPR000515; MetI-like.
+  - reference_id: file:PSEPK/PP_4149/PP_4149-uniprot.txt
+    supporting_text: Cell inner membrane
+  - reference_id: file:PSEPK/PP_4149/PP_4149-uniprot.txt
+    supporting_text: Belongs to the binding-protein-dependent transport system
+  - reference_id: file:PSEPK/PP_4149/PP_4149-uniprot.txt
+    supporting_text: INNER MEMBRANE ABC TRANSPORTER PERMEASE PROTEIN YEJE
+  - reference_id: file:PSEPK/yejF/yejF-uniprot.txt
+    supporting_text: Part of the ABC transporter DppABCDF involved in the uptake
+  - reference_id: file:PSEPK/PP_4148/PP_4148-uniprot.txt
+    supporting_text: Full=Oligopeptide transport system permease protein YejB
+proposed_new_terms: []
+suggested_questions:
+- question: Does the PP_4146-PP_4150 Yej/Dpp-like locus primarily import nutritional peptides, toxic peptides such as microcin/phaseolotoxin-like substrates, or both?
+suggested_experiments:
+- description: Measure uptake and growth phenotypes for PP_4146/yejA/PP_4148/PP_4149/yejF mutants with representative dipeptides, tripeptides, and toxic peptide analogs.
+  experiment_type: targeted Yej/Dpp-like peptide transporter mutant uptake/growth assay
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

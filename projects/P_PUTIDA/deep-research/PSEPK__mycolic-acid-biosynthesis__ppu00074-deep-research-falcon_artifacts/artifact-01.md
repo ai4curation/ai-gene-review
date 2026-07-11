@@ -1,0 +1,18 @@
+| Pathway Step | Key Enzyme(s) in Mycobacteria | EC Number(s) | Present in *P. putida* KT2440? | Status |
+|---|---|---|---|---|
+| Malonyl-CoA formation | AccABCD / acyl-CoA carboxylase components | EC 6.4.1.2, EC 6.4.1.3 | Yes, but as general fatty acid biosynthesis precursor supply rather than mycolate-specific metabolism (pqac-00000013, pqac-00000016) | covered_for_general_FAS_only; not_expected_in_target_taxon for mycolic acid pathway |
+| Malonyl-CoA:ACP transacylase | MtFabD / FabD | EC 2.3.1.39 | Yes; PP_1913/fabD is a general FAS-II malonyl-CoA:ACP transacylase, not evidence of mycolate synthesis (pqac-00000006, pqac-00000008, pqac-00000011) | covered_for_general_FAS_only; not_expected_in_target_taxon for mycolic acid pathway |
+| FAS-I de novo synthesis | Fas | EC 2.3.1.85 | No; *P. putida* uses discrete FAS-II enzymes rather than mycobacterial FAS-I (pqac-00000009, pqac-00000016) | not_expected_in_target_taxon |
+| FAS-II meromycolate elongation core | KasA, KasB, MabA, InhA, HadABC | EC 2.3.1.41; EC 1.1.1.100; EC 1.3.1.9; EC 4.2.1.- | No orthologous mycolate-system core detected; *P. putida* has non-orthologous FabB/FabF/FabA/FabZ for general FAS-II, not KasA/KasB meromycolate elongation (pqac-00000008, pqac-00000011, pqac-00000016, pqac-00000017) | not_expected_in_target_taxon |
+| FAS-I to FAS-II bridge | mtFabH | EC 2.3.1.180 | No mycobacterial-type bridge enzyme expected; *P. putida* initiation differs and can rely on FabB/FabH-family FAS-II initiation only (pqac-00000008, pqac-00000010, pqac-00000017) | not_expected_in_target_taxon |
+| Meromycolate chain modification - cyclopropanation | CmaA1, CmaA2, PcaA, MmaA2 | EC 2.1.1.- | No; these are mycolic-acid modification enzymes of Corynebacteriales (pqac-00000012, pqac-00000014) | not_expected_in_target_taxon |
+| Meromycolate modification - methoxylation/keto groups | MmaA4 / Hma | EC 2.1.1.- / oxygenation-associated | No; no mycolate oxygenation machinery expected in *P. putida* (pqac-00000012) | not_expected_in_target_taxon |
+| Meromycolate activation | FadD32 | EC 6.2.1.- | No; required for activation of meromycolate prior to condensation in mycobacteria (pqac-00000008) | not_expected_in_target_taxon |
+| Alpha-branch carboxylation | AccD4-containing acyl-CoA carboxylase | EC 6.4.1.- | No mycolate-specific AccD4 function expected; generic carboxylases in *P. putida* do not imply this step (pqac-00000008, pqac-00000013) | not_expected_in_target_taxon |
+| Claisen condensation | Pks13 | EC 2.3.1.- | No; hallmark mycolic acid condensase absent and not expected outside Corynebacteriales (pqac-00000008, pqac-00000012) | not_expected_in_target_taxon |
+| Mycolate reduction | CmrA | EC 1.1.1.- | No evidence in *P. putida*; downstream of Pks13 and therefore not expected when the pathway core is absent (pqac-00000008) | not_expected_in_target_taxon |
+| Mycolate transfer to cell wall | Ag85 complex, MmpL3 | EC 2.3.1.- / transporter | No; *P. putida* has a Gram-negative outer membrane with LPS rather than a mycolyl-arabinogalactan cell wall (pqac-00000003, pqac-00000004, pqac-00000016) | not_expected_in_target_taxon |
+| PPTase activation of Pks13 | PptT | EC 2.7.8.- | No mycolate-specific PPTase expected; PP_1183/EntD is an NRPS/siderophore PPTase and does not support mycolate synthesis (pqac-00000007) | not_expected_in_target_taxon |
+
+
+*Table: This table maps canonical mycolic acid biosynthesis steps from mycobacteria onto *Pseudomonas putida* KT2440. It shows that only generic fatty acid precursor steps are present, while all mycolic acid-specific steps are absent and should be treated as not expected in this taxon.*

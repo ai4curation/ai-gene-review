@@ -1,0 +1,436 @@
+---
+provider: asta
+model: Asta Scientific Corpus Retrieval
+cached: false
+start_time: '2026-07-10T21:17:38.513028'
+end_time: '2026-07-10T21:17:45.481578'
+duration_seconds: 6.97
+template_file: templates/gene_research_go_focused.md
+template_variables:
+  organism: PSEPK
+  gene_id: yajR
+  gene_symbol: yajR
+  uniprot_accession: Q88QK6
+  protein_description: 'RecName: Full=Major facilitator superfamily (MFS) profile
+    domain-containing protein {ECO:0000259|PROSITE:PS50850};'
+  gene_info: Name=yajR {ECO:0000313|EMBL:AAN66114.1}; OrderedLocusNames=PP_0484 {ECO:0000313|EMBL:AAN66114.1};
+  organism_full: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB
+    11950 / KT2440).
+  protein_family: Not specified in UniProt
+  protein_domains: MFS. (IPR011701); MFS_dom. (IPR020846); MFS_trans_sf. (IPR036259);
+    MFS_Transporters. (IPR050171); YajR_YAM. (IPR054152)
+provider_config:
+  timeout: null
+  max_retries: 3
+  parameters:
+    allowed_domains: []
+    query_char_limit: 500
+    paper_limit: 50
+    snippet_limit: 20
+    snippet_paper_limit: 50
+    restrict_snippets_to_papers: false
+    paper_fields: title,abstract,authors,year,url,venue,journal,tldr,publicationDate,citationCount,influentialCitationCount,externalIds
+    publication_date_range: ''
+    venues: ''
+    inserted_before: ''
+citation_count: 20
+---
+
+## Question
+
+# Gene Research for Functional Annotation
+
+## ⚠️ CRITICAL: Gene/Protein Identification Context
+
+**BEFORE YOU BEGIN RESEARCH:** You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.
+
+### Target Gene/Protein Identity (from UniProt):
+- **UniProt Accession:** Q88QK6
+- **Protein Description:** RecName: Full=Major facilitator superfamily (MFS) profile domain-containing protein {ECO:0000259|PROSITE:PS50850};
+- **Gene Information:** Name=yajR {ECO:0000313|EMBL:AAN66114.1}; OrderedLocusNames=PP_0484 {ECO:0000313|EMBL:AAN66114.1};
+- **Organism (full):** Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).
+- **Protein Family:** Not specified in UniProt
+- **Key Domains:** MFS. (IPR011701); MFS_dom. (IPR020846); MFS_trans_sf. (IPR036259); MFS_Transporters. (IPR050171); YajR_YAM. (IPR054152)
+
+### MANDATORY VERIFICATION STEPS:
+
+1. **Check if the gene symbol "yajR" matches the protein description above**
+2. **Verify the organism is correct:** Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).
+3. **Check if protein family/domains align with what you find in literature**
+4. **If you find literature for a DIFFERENT gene with the same or similar symbol, STOP**
+
+### If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:
+
+**DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.** Instead:
+- State clearly: "The gene symbol 'yajR' is ambiguous or literature is limited for this specific protein"
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")
+- Describe the protein based ONLY on the UniProt information provided above
+- Suggest that the protein function can be inferred from domain/family information
+
+### Research Target:
+
+Please provide a comprehensive research report on the gene **yajR** (gene ID: yajR, UniProt: Q88QK6) in PSEPK.
+
+The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.
+
+You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.
+
+We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.
+
+We are interested in where in or outside the cell the gene product carries out its function.
+
+We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.
+
+Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.
+
+## Output
+
+# Asta Literature Retrieval: Gene Research for Functional Annotation ⚠️ CRITICAL: Gene/Protein Identification Context BEFORE YOU BEGIN RESEARCH: Y...
+
+This report is retrieval-only and is generated directly from Asta results.
+
+- Papers retrieved: 20
+- Snippets retrieved: 20
+
+## Relevant Papers
+
+### [1] Avian Immunome DB: an example of a user-friendly interface for extracting genetic information
+- Authors: Ralf C. Mueller, Nicolai Mallig, Jacqueline Smith, Lél Eöry, Richard I. Kuo et al.
+- Year: 2020
+- Venue: BMC Bioinformatics
+- URL: https://www.semanticscholar.org/paper/b894d9ca8ea2d653bf1711a0c67dab71d054487c
+- DOI: 10.1186/s12859-020-03764-3
+- PMID: 33176685
+- PMCID: 7661159
+- Citations: 6
+- Summary: The Avian Immunome DB (Avimm) for easy gene property extraction as exemplified by avian immune genes is presented and described, which contains 1170 distinct avian immune genes with canonical gene symbols and 612 synonyms across 363 bird species.
+- Evidence snippets:
+  - Snippet 1 (score: 0.752)
+    > Ever since the advent of commercial next-generation sequencing platforms in the early 2000s with its associated decrease in sequencing costs [1], the number of DNA sequences increased considerably [2]. Generally, these data become publicly accessible in databases provided by projects focussing on different aspects of biological sequence information [3,4]. Ensembl [5] and NCBI [6] for instance, have a strong focus on genome annotation with the help of RNA transcript information while UniProt has a pronounced emphasis on protein-coding genes and biological function of proteins. UniProt's records are either based on manually annotated, non-redundant protein sequences (SwissProt) or on highquality computationally analysed records, which are enriched with automatic annotation (TrEMBL) [7]. Relying on accurate genome annotations and protein descriptions, Gene Ontology (GO) [8,9] categorises gene products and fits them into a computational model of biological systems. Their assignment deploys a controlled vocabulary, so-called GO terms, to link genes and gene products to biological processes, cellular components, or molecular functions.
+    > However, genome annotation is not standardised, and each service provider uses their own custom-built annotation pipelines. As a consequence, this often leads to ambiguity in gene names during genome annotation with different gene symbols being given to the same gene or the same gene symbol being given to different, but similar genes. Additionally, since the pre-existing wealth of sequencing information relies on model organisms like human and mouse, there is a strong bias in gene symbols towards those chosen for these species. Particularly for model species, this issue has been partially addressed, for example by the Human Genome Organisation (HUGO) Gene Nomenclature Committee (HGNC) [10], the Vertebrate Gene Nomenclature Committee (VGNC) [11], or the Chicken Gene Nomenclature Consortium [12]. However, this neither guarantees that gene names are harmonised among these consortia, nor does it keep researchers from assigning alternative gene symbols in their annotations, especially when working with non-model species.
+
+### [2] LMPD: LIPID MAPS proteome database
+- Authors: Dawn Cotter, A. Maer, C. Guda, Brian Saunders, S. Subramaniam
+- Year: 2005
+- Venue: Nucleic Acids Research
+- URL: https://www.semanticscholar.org/paper/265c37b45326b7927e396484751e84e4aeff92d5
+- DOI: 10.1093/nar/gkj122
+- PMID: 16381922
+- PMCID: 1347484
+- Citations: 92
+- Influential citations: 2
+- Summary: The initial release of the LIPID MAPS Proteome Database contains 2959 records, representing human and mouse proteins involved in lipid metabolism, and this LMPD protein list was enhanced with annotations from UniProt, EntrezGene, ENZYME, GO, KEGG and other public resources.
+- Evidence snippets:
+  - Snippet 1 (score: 0.739)
+    > For each record selected from the results summary, all LMPD data relevant to that protein are displayed, with external database IDs linked to their respective resources.
+    > Annotations are organized by category: Record Overview, Gene/GO/KEGG Information, UniProt Annotations, and Related Proteins. The record overview contains LMPD_ID, species, description, gene symbols, lipid categories, EC number, molecular weight, sequence length and protein sequence. Gene information includes Entrez Gene ID, chromosome, map location, primary name, primary symbol and alternate names and symbols; Gene Ontology (GO) IDs and descriptions, and KEGG pathway IDs and descriptions. UniProt annotations include primary accession number, entry name and comments such as catalytic activity, enzyme regulation, function and similarity. For related proteins and splice variants, we display source database, database ID, sequence length, and title.
+
+### [3] CRONOS: the cross-reference navigation server
+- Authors: Brigitte Waegele, I. Dunger, G. Fobo, Corinna Montrone, H. Mewes et al.
+- Year: 2008
+- Venue: Bioinformatics
+- URL: https://www.semanticscholar.org/paper/8c05b3aa0ba01c41ee97c2dc98ea7b5b14ce0e9c
+- DOI: 10.1093/bioinformatics/btn590
+- PMID: 19010804
+- PMCID: 2638938
+- Citations: 20
+- Summary: CRONOS, a cross-reference server that contains entries from five mammalian organisms presented by major gene and protein information resources, is developed, which shows that the cross-references are highly accurate.
+- Evidence snippets:
+  - Snippet 1 (score: 0.734)
+    > In order to detect gene and protein names which are assigned to products of different genes and thus result in erroneous cross-references, dedicated lists are created for each organism separately. Organism-specific lists are necessary, since terms that are ambiguous in one organism might be explicit in another. For example, ADORA2 is an ambiguous gene name in Homo sapiens but not in mouse, and GALT in mouse but not in H.sapiens.
+    > In a first step, ambiguous names within the databases were extracted. If a name occurs in at least two entries describing different genes or proteins (splice variants count as one gene/protein), this particular name is marked as ambiguous and is excluded from the mapping process. In a second step, corresponding gene names occurring in the manually annotated sections of RefSeq as well as in UniProt were analyzed. Entries containing the same gene product name and having a one-to-many or many-to-many relation (e.g. one Swiss-Prot entry maps to many RefSeq entries) were scrutinized for misleading annotation. This process is done manually by inspecting additional information like sequence similarity or functional information about the involved entries. In most of the cases, the exclusion of the ambiguous gene names resulted in correct one-to-one relations.
+    > As statistical analysis revealed (Supplementary Material S2) that gene names with less than four letters are exceptionally error-prone, only gene names with at least four letters are kept for mapping purposes. However, gene names with less than four letters can be queried, e.g. a search for the tumor suppressor 'p53' reveals the respective entries with the official gene name 'TP53'. Organism-specific lists of ambiguous gene and protein names are available for download on the CRONOS home page.
+
+### [4] Structure-Aware Mycobacterium tuberculosis Functional Annotation Uncloaks Resistance, Metabolic, and Virulence Genes
+- Authors: Samuel J. Modlin, A. Elghraoui, Deepika Gunasekaran, Alyssa M Zlotnicki, N. Dillon et al.
+- Year: 2021
+- Venue: mSystems
+- URL: https://www.semanticscholar.org/paper/76ff9a62b36b32cc10e46e71ffd4dd90344e4706
+- DOI: 10.1128/mSystems.00673-21
+- PMID: 34726489
+- PMCID: 8562490
+- Citations: 15
+- Summary: This work systematically updates the functional genome annotation of Mycobacterium tuberculosis virulent type strain H37Rv and identifies hundreds of high-confidence candidates for mechanisms of antibiotic resistance, virulence factors, and basic metabolism and other functions key in clinical and basic tuberculosis research.
+- Evidence snippets:
+  - Snippet 1 (score: 0.732)
+    > 3. Fig. S2B -match/mismatch colours mixed up? (I think match should be teal and mismatch -red?) 4. Line 162-163: Rv1430 is in UniProt (EC 3.1.1.-) and has been present in Uniprot since version 45 of the gene record: https://www.uniprot.org/uniprot/L7N697. I presume you had conducted your literature analysis before the UniProt entry was updated to include the EC code, so maybe you can add the dates when the data was retrieved from UniProt and other databases you used in the Materials and Methods section? 5. Supplementary text, p. 9, first paragraph. I believe that an unrelated fragment of text was copy-pasted into the second sentence of the paragraph ("Many mutations that altered bacterial clearance...") 6. Supplementary text, p. 12, final paragraph. It should be Rv1191, not Rv1191c. Could you also add a short explanation why you believe it should be classified as a cathepsin (what protein did you transfer this annotation from)?
+    > Reviewer #3 (Comments for the Author):
+    > In this manuscript, Modlin et al., attempt to tackle the problem of assigning functions to ~1700 hypothetical and/or underannotated genes in the Mycobacterium tuberculosis H37Rv (Mtb) genome. Rapid and accurate annotation of microbial genomes is indeed a very critical and under appreciated part of microbial ecophysiology. This step is especially crucial for pathogenic organisms such as Mtb where accurate functional annotation of these hypothetical proteins could unravel mechanisms which could act as drug targets. The authors employed a two-pronged strategy to define a set of these unannotated or under-annotated genes and to then provide possible functions for many of these genes. First, they undertook a large-scale manual curation of literature to assign functions (including EC numbers for enzymatic functions) to ~575 genes.
+
+### [5] WP-MOD: A multi-omics and taxonomy database for woody plants
+- Authors: Qi Wang, Shaoxuan Luo, Yixiang Yang, Yawen Bai, Junrong Wei et al.
+- Year: 2025
+- Venue: Plant Communications
+- URL: https://www.semanticscholar.org/paper/d1b842c8bb68f37fb6798e5ed6a16bb2c6fc526e
+- DOI: 10.1016/j.xplc.2025.101290
+- PMID: 39987466
+- PMCID: 12010388
+- Citations: 2
+- Summary: The WP-MOD integrates extensive taxonomic information and multi-omics data from 373 species across 35 orders and provides a centralized resource for the analysis and exploration of woody plant biology.
+- Evidence snippets:
+  - Snippet 1 (score: 0.714)
+    > The Gene Structure section provides a visual representation of the gene's exon-intron organization, along with sequence annotations. Users can explore specific loci and sequence alignments, allowing for an in-depth understanding of gene architecture. The tool enables easy navigation through genomic regions and facilitates functional genomic studies.
+    > D. Gene Annotation (eg: Amborella trichopoda, Amtri01G0000100.1)
+    > The Gene Annotation page displays functional annotations generated using InterProScan27 (v5.24), providing insights into the protein family, domains, repeats, and Gene Ontology (GO) terms associated with a given gene. This analysis helps users understand the potential functions and biological roles of the gene's protein product.
+    > Users can explore detailed domain signatures, homologous superfamilies, and GO term predictions, including biological processes and molecular functions linked to the annotated protein. The interactive visualization allows filtering by entry type, status, per-residue features, and domain relationships, making it easier to analyze functional elements within the protein sequence. The results include Protein ID, best hit in Arabidopsis (Ath), BLAST e-value, description, and options to retrieve gene, mRNA, CDS, and protein sequences. This tool helps researchers explore regulatory proteins involved in gene expression, facilitating functional genomics and comparative studies.
+
+### [6] Molecular mechanisms underlying response to influenza in grey seals (Halichoerus grypus), a potential wild reservoir
+- Authors: Christina M McCosker, E. Unal, Alayna K Gigliotti, Wendy B Puryear, Jonathan A. Runstadler et al.
+- Year: 2025
+- Venue: Molecular ecology
+- URL: https://www.semanticscholar.org/paper/bebb135aae1c1182d098fce839c9a3df0cfb2b21
+- DOI: 10.1111/mec.70012
+- PMID: 40613337
+- PMCID: 12288799
+- Citations: 3
+- Summary: It is hypothesized that the combination of down‐ and up‐regulated immune gene expression may prevent overstimulation of the immune response, acting as an adaptation in grey seals to resist IAV‐associated mortality.
+- Evidence snippets:
+  - Snippet 1 (score: 0.713)
+    > Top hits were required to have a percent query coverage (QC) ≥ 80 to be used for annotating transcripts. A subsequent blastx search against the Swiss-Prot database (downloaded from NCBI 07/02/2021) for transcripts without a sufficient hit was conducted using the parameters max_target_seqs 2, max_hsps 1, e-value 0.001 and qcov_hsp_perc 80. Genes without a published gene symbol (named 'LOC' + Gene ID in NCBI's database) were assigned a UniProt gene symbol based on the protein annotation listed in the RefSeq entries, when possible. Ultimately, a list of transcript identifiers and gene symbols were compiled into a transcript-to-gene map for subsequent analyses.
+    > To further facilitate analyses of gene functions, additional steps were taken to identify the putative function of genes annotated with a symbol that began with 'LOC'. First 'LOC' genes with a protein-coding gene description in NCBI's database were manually assigned the appropriate gene symbol. Transcript sequences of remaining 'LOC' genes were queried through a blastn search against NCBI's nucleotide database (parameters: max target seq = 2, max hsps = 1, evalue = 0.01, perc identity = 90). Results from the blastn search were filtered to exclude hits with query coverage < 90 and hits that included vague terms (e.g., 'uncharacterized', 'genome assembly' and 'chromosome'). Gene symbols were extracted from the first hit for each transcript and assigned as the identity of that gene for genes with only a single transcript with hits or with consistent hits across transcripts. For genes with multiple transcripts that matched different gene symbols, the annotation was manually determined based on the number of transcripts for each gene symbol hit and query coverage/% identity values. For any 'LOC' genes that were identified as a gene already present in the dataset, gene counts were concatenated for further analysis.
+
+### [7] Mitotic Spindle Proteomics in Chinese Hamster Ovary Cells
+- Authors: Mary Kate Bonner, D. Poole, Tao Xu, Ali Sarkeshik, J. Yates et al.
+- Year: 2011
+- Venue: PLoS ONE
+- URL: https://www.semanticscholar.org/paper/8a46e242e657489c1933c76e06a37618f7d1901f
+- DOI: 10.1371/journal.pone.0020489
+- PMID: 21647379
+- PMCID: 3103581
+- Citations: 51
+- Influential citations: 3
+- Summary: This work reports the first proteomic study of the mitotic spindle from Chinese Hamster Ovary (CHO) cells and identifies proteins that are unique to the CHO spindle.
+- Evidence snippets:
+  - Snippet 1 (score: 0.711)
+    > The lists of proteins used for the comparison contain more items than listed previously due to expansion out of gene clusters, for example, to allow the updating and comparison of current HGNC gene symbols. These lists of proteins were compared in Microsoft Excel 2011 using PivotTable.
+    > The protein set for the CHO midbody was derived from the accession numbers in Table S1 and Table S2 from Skop et al. [9]. Original accession numbers were updated to more recent UniProt accessions (2/2010), and duplicates from different species or different protein isoforms were removed. The unique UniProt accessions were mapped to gene names using UniProt KB Unimart, UniProt dataset [82], and these gene names were confirmed manually as HGNC symbols using HGNC, with ambiguities checked using BLASTP of the sequence corresponding to the original accession number. Accessions that didn't map successfully in Unimart were manually analyzed using BLASTP against the human RefSeq protein set using sequences from the original accessions, combined with TreeFam.org data for the non-human UniProt accessions. HGNC symbols were updated again on 12/14/2010 before comparison with this paper's protein set.
+    > The protein set for the HeLa spindle proteome is derived from the 1121 accession numbers in Sauer et al. supplementary table 1 column 2 [17]. Updating the 1116 UniProt accession numbers and 5 IPI accession numbers from 795 rows required several steps. Most proteins were updated to current UniProt accessions using UniProt retrieve. Duplicates were removed. Sequences for the IPI accession numbers and 16 defunct UniProt accession numbers were recovered from other sources on the web, and BLASTP against the human RefSeq protein set with a cutoff of at least 90% identity was used to update some of these accessions. The unique current UniProt accessions were mapped to HGNC symbols using UniProt ID mapping to HGNC IDs. Biomart, database Ensembl Genes 60, dataset GRCh37.p2 [http://uswest.ensembl.org/biomart/martview/]
+
+### [8] xHMMER3x2: Utilizing HMMER3’s speed and HMMER2’s sensitivity and specificity in the glocal alignment mode for improved large-scale protein domain annotation
+- Authors: Choon-Kong Yap, B. Eisenhaber, F. Eisenhaber, W. Wong
+- Year: 2016
+- Venue: Biology Direct
+- URL: https://www.semanticscholar.org/paper/3917d42970bb4572b152bba81aae0c0a2b3b3341
+- DOI: 10.1186/s13062-016-0163-0
+- PMID: 27894340
+- PMCID: 5126834
+- Citations: 5
+- Influential citations: 1
+- Summary: The xHMMER3x2 workflow allows large-scale domain annotation speed to be drastically improved over HMMER2 without compromising for domain-detection with regard to sensitivity and sequence-to-domain alignment incompleteness.
+- Evidence snippets:
+  - Snippet 1 (score: 0.709)
+    > Over the past decade, the OMICs frenzy from arrays to sequencing has swarmed genomic research with voluminous amount of data and elucidated lists of candidate genes/ proteins. Yet, many of these genes/proteins remained not well-understood in relation to the observed phenotype. The major gap to our full understanding stems from our lack in complete gene/protein functions which, in turn, impedes researchers from assembling the sets of biomolecular mechanisms that can sufficiently explain the observed phenotype in these OMICs experiments; the knowledge of gene/protein functions is a premise necessary for delivering the big promises in personalized medicine.
+    > Despite so, experimental characterization of gene/protein function still receives insufficient attention nowadays. This can be attested by the dwindling number of characterized genes/proteins reported over the past decade. Sadly, one can expect this number to continue to grow at a slow rate.
+    > On this basis, the only viable approach is to computationally transfer function annotation of the well-studied gene/ protein sequences to the less-studied or novel ones for functional hints. Implicitly, this entails that these in-silico function annotations must always be kept consistent regardless of the revisions made to function annotation databases or associated software tools used during the computations.
+
+### [9] Revisiting the Plasmodium falciparum druggable genome using predicted structures and data mining
+- Authors: Karla P. Godinez-Macias, Daisy Chen, J. L. Wallis, Miles G. Siegel, Anna Adam et al.
+- Year: 2024
+- Venue: Research Square
+- URL: https://www.semanticscholar.org/paper/795b2985fdc3cf1cfbd5fda1b3c0502eb4dfe866
+- DOI: 10.21203/rs.3.rs-5412515/v1
+- PMID: 39649165
+- PMCID: 11623766
+- Citations: 3
+- Summary: This study systematically assessed the Plasmodium falciparum genome for proteins amenable to target-based drug discovery, identifying 867 candidate targets with evidence of small molecule binding and blood stage essentiality and implements a generalizable framework for systematically evaluating and prioritizing novel pathogenic disease targets.
+- Evidence snippets:
+  - Snippet 1 (score: 0.703)
+    > List of genes and genomic features (GFF) for Plasmodium falciparum 3D7 genome (PlasmoDB release 66) was downloaded and protein coding genes were extracted along with their gene annotations and genomic location. Additional genomic annotations were obtained by querying PlasmoDB to extract UniProt and Entrez ID(s), ortholog group (OrthoMCL), protein features (CDS and protein length, molecular weight, isoelectric point), domain annotations (InterPro, PFam, Superfamily), number of transmembrane (TM) domains, and enzyme commission (EC) numbers. Gene function (Gene Ontology; components, functions and processes) was extracted by either PlasmoDB or by querying the InterPro ID under InterPro2GO mapping tool from EMBL-EBI services. Gene essentiality data was obtained for P.
+    > falciparum 29 and P. berghei 30,31 parasites that were mapped to their falciparum ortholog using OrthoMCL orthology group IDs. Protein Data Bank (PDB) IDs of crystal structures were obtained by searching either gene symbols, UniProt IDs associated with each gene, or by typing "Plasmodium" in the PDB website search box. A report with gene identi er, organism, accession number, method for structure determination and publication information was extracted for the search hits.
+    > Mapping genes to associated literature publications A download from the NCBI FTP site was performed for gene2pubmed.gz (version 2024-02-21) containing taxonomy ID, gene ID (Entrez) and PubMed ID. Gene IDs were mapped to the P. falciparum 3D7 annotation set, and PMIDs matching the criteria were extracted. To include literature references associated with gene symbols, we queried each gene symbol in PubMed using the Eutils 81 efetch function from NCBI; additional information for each publication was obtained pragmatically using the same tool, retrieving title, authors and DOI (digital object identi er).
+
+### [10] Chromosome-level genome assembly and annotation of the endangered plant Primula kwangtungensis (Primulaceae)
+- Authors: Tongjian Liu, Yun Xiao, Xing Wu, Sheng Chen, Sisi Chen et al.
+- Year: 2026
+- Venue: Scientific Data
+- URL: https://www.semanticscholar.org/paper/4081bfb0b59ada46834336bcd2441772e0e381e1
+- DOI: 10.1038/s41597-025-06529-w
+- PMID: 41484115
+- PMCID: 12891695
+- Summary: This assembly provides crucial data for understanding species diversity mechanisms in the Nanling region and the comparative genomics studies among Primulaceae, and offers essential genetic resources for biodiversity research and aids in developing conservation strategies for rare and endangered plant species.
+- Evidence snippets:
+  - Snippet 1 (score: 0.701)
+    > Functional annotation of protein-coding genes was performed using two methods. InterProScan v5.66-98 55 , which integrates multiple public databases including Pfam, PRINTS, PANTHER, ProSite Profiles, and SMART, was used to identify conserved amino acid sequences, motifs, and domains. This resulted in the annotation of 27,596 genes, accounting for 87.01% of the predicted protein-coding genes. Additionally, eggNOG-mapper v2.0.0 56 was used to align predicted genes against the eggNOG database, which includes various databases such as GO, KEGG (KEGG_EC, KEGG_Pathway, KEGG_Knum), and Pfam_domain. This led to the functional annotation of 26,008 genes, representing 82.00% of the predicted protein-coding genes. We also established a local RefSeq database (updated 2025-05-05) and conducted MMseq2 searches to align P. kwangtungensis protein sequences against the RefSeq database. The top hits were retained after applying filtering thresholds of E-value < 0.001 and sequence similarity < 50%. In total, 30,912 genes were annotated across all databases, covering 97.46% of the predicted protein-coding genes (Table 2). Fig. 5 Frequency distribution of each identified functional class in eukaryotic orthologous groups (KOG) annotation.
+    > The protein-coding genes of P. kwangtungensis were compared with the KOG (EuKaryotic Orthologous Groups) and COG (Cluster of Orthologous Groups) databases 57 . KOG identifies protein sequences with similar functions through comparative analysis of complete genomes and forms superfamilies, each constituting a KOG category 58 . After removing redundant and low-similarity sequences (filtering parameter: 1e-5) 59 , 27,119 genes (85.56%) were annotated in KOG and 9,580 genes (30.21%) in COG. Further functional classification of protein isoforms using the KOG database helps elucidate the functional characteristics of P. kwangtungensis genes (Fig. 5).
+
+### [11] Telomere-to-telomere genome assembly of Phoxinus lagowskii
+- Authors: Yanfeng Zhou, Chunhai Chen, Di’an Fang, Chenhe Wang, Yajuan Peng et al.
+- Year: 2025
+- Venue: Scientific Data
+- URL: https://www.semanticscholar.org/paper/23f573aff23769df3b733d508b46f721cadb94ac
+- DOI: 10.1038/s41597-025-05367-0
+- PMID: 40533492
+- PMCID: 12177035
+- Citations: 1
+- Summary: A T2T (Telomere-to-telomere) genome for P. lagowskii with chromosome-level is reported, serving as an invaluable resource for studies in evolution, comparative genomics, fish breeding applications, and ecological research.
+- Evidence snippets:
+  - Snippet 1 (score: 0.699)
+    > The gene set of 24,610 genes were functionally annotated using diamond v0.8.23
+    > with an E-value threshold of 1E-5 based on the five databases including NR (NCBI nonredundant protein), TrEMB (http://www.uniprot.org), KOG 42 , KEEG (Kyoto Encyclopedia of Genes and Genomes, http://www. genome.jp/kegg/), Swiss-Prot (http://www.gpmaw.com/html/swiss-prot.html). The protein motifs and domains were identified using the InterProScan with InterPro 93.0 43 . The GO Ontology (GO) was classified from the results of InterProScan 44 . The annotation of 24,599 predicted genes (99.96%) out of the total 24,610 genes can be found by at least one database (Fig. 3b and Table 6). Of these functional proteins, 19,367 genes (~78.7%) were supported by five databases (Fig. 3a).
+
+### [12] RM2Target v2.0: an updated database for the target genes of writers, erasers, and readers of RNA modifications
+- Authors: Xiaoqiong Bao, Qi Jiang, Weixuan Chen, Huiqin Li, Xuan Li et al.
+- Year: 2025
+- Venue: Nucleic Acids Research
+- URL: https://www.semanticscholar.org/paper/15dbf5509222f17a624912633aa05cc9183fcc70
+- DOI: 10.1093/nar/gkaf1206
+- PMID: 41206768
+- PMCID: 12807602
+- Citations: 3
+- Summary: The new RM2Target v2.0 will serve as a foundational resource for exploring RNA epitranscriptomic regulation, enabling investigations into cross-talk among modifications, underlying molecular mechanisms, and disease connections, thereby facilitating both basic research and translational applications in RNA epigenetics.
+- Evidence snippets:
+  - Snippet 1 (score: 0.697)
+    > To obtain basic information on WERs and their target genes, such as official gene symbols, gene IDs, gene types, and genomic locations, gene annotations were downloaded from the GENCODE project [ 44 ] for human and mouse, and from NCBI [ 45 ] and Ensembl [ 46 ] for the other species. Genomic locations were extracted from the corresponding GTF annotation files. Gene symbols were primarily standardized based on the NCBI Gene database [ 45 ] for mRNAs and lncRNAs, GtR-NAdb [ 47 ] for tRNAs, miRbase [ 48 ] for microRNAs, and cir-cBase [ 49 ] for circRNAs. Deprecated or substituted versions of genes were filtered out. The LiftOver [ 50 ] program was employed to convert and unify genomic coordinates across different genome assembly versions.
+    > The functional descriptions of WERs were compiled based on the UniProt database [ 51 ] and further supplemented with evidence from relevant publications, with particular emphasis on their functions as RNA modification regulatory proteins.
+
+### [13] Trade-offs, trade-ups, and high mutational parallelism underlie microbial adaptation during extreme cycles of feast and famine
+- Authors: Megan G. Behringer, Wei-Chin Ho, Samuel F. Miller, Sarah B. Worthan, Zeer Cen et al.
+- Year: 2024
+- Venue: Current biology : CB
+- URL: https://www.semanticscholar.org/paper/13c71a271ad81ea813516193454b0fed04b2cd2b
+- DOI: 10.1016/j.cub.2024.02.040
+- PMID: 38460514
+- PMCID: 11066936
+- Citations: 18
+- Summary: It is found that evolution in response to extreme feast/famine is characterized by narrow adaptive trajectories with high mutational parallelism and notable mutational order, which demonstrate how microbes can navigate the adaptive landscapes of regularly fluctuating conditions and ultimately follow mutational trajectories that confer benefits across diverse environments.
+- Evidence snippets:
+  - Snippet 1 (score: 0.697)
+    > Genes overrepresented for nonsynonymous and structural mutations were classified into functional groups based on the functional annotation table constructed with DAVID v.2023q3 91,92 (Table S4). We established the following rules for generalizing genes into functional groups: Chaperone: genes that encode proteins that perform chaperone or chaperonin-like activities (Uniprot Keyword: KW-0143); Envelope: Genes that encode proteins involved in the maintenance of the cell-envelope such as phospholipid biosynthesis (GO-BP: 0008654) and peptidoglycan biosynthesis (GO-BP: 0000270); Metabolism: Genes that encode proteins involved in general metabolic functions, such as purine metabolism (KEGG: eco00230), amino acid metabolism (KEGG: eco00470, eco00330); or TCA Cycle (KEGG: eco00020); Regulators: Genes that encode proteins directly involved in transcription (GO-BP: 0031564; Uniprot Keyword: KW-0804), translation (GO-BP:0006412, GO-BP:0006413; Uniprot Keyword: KW-0689), or the regulation of transcription (GO-BP: 0006355, GO-BP:2000143, GO-BP:0006353, GO-BP: GO:0045893; Uniprot Keyword: KW-0805); and Transport: Genes that encode proteins involved in transport: such as ABC transporters (Interpro: PR017871), MFS transporters (Interpro: IPR011701); symporters (Interpro: IPR023954, IPR001204, IPR001734, IPR023025, IPR004840), or Antiporters (Interpro: IPR004771). A combination of resources were used to determine if a parallel mutation arose in a functional region of a protein including, EcoCyc, 96 UniProt, 97 and the primary literature (see supplemental bibliography).
+
+### [14] Quantitative proteomic dataset of whole protein in three melanoma samples of 92.1, 92.1-A and 92.1-B
+- Authors: Xi-feng Fei, Xiangtong Xie, X. Ji, Haiyan Tian, F. Sun et al.
+- Year: 2022
+- Venue: Data in Brief
+- URL: https://www.semanticscholar.org/paper/33312bb6cc2cf985d32f3a31cf4fdee6b4e17385
+- DOI: 10.1016/j.dib.2022.108592
+- PMID: 36164296
+- PMCID: 9508510
+- Citations: 2
+- Influential citations: 1
+- Summary: Covering differential proteomes of three cell lines in a pairwise model, the data could be used to further screen the kinesins that play a vital role in regulating the growth of UM.
+- Evidence snippets:
+  - Snippet 1 (score: 0.696)
+    > 2.8.1. Annotation methods 2.8.1.1. Functional annotation. UniProt-GOA database was utilized to retrieve Gene Ontology (GO) annotation proteome. First, the identified protein identity was converted to UniProt identity and then mapped to GO identity based on the protein identity. When the identified protein was not annotated by UniProt-GOA, the functional annotation of that protein was conducted using the InterProScan software according to the amino acid sequence alignment approach. All proteins were then classified into 3 groups: molecular function, cellular component and biological process.
+
+### [15] Next Generation Sequencing and Transcriptome Analysis Predicts Biosynthetic Pathway of Sennosides from Senna (Cassia angustifolia Vahl.), a Non-Model Plant with Potent Laxative Properties
+- Authors: Nagaraja Reddy Rama Reddy, Rucha Harishbhai Mehta, Palak Soni, Jayanti Makasana, N. Gajbhiye et al.
+- Year: 2015
+- Venue: PLoS ONE
+- URL: https://www.semanticscholar.org/paper/fec6263b90f9cd765752bdb1be3d162872f2e64e
+- DOI: 10.1371/journal.pone.0129422
+- PMID: 26098898
+- PMCID: 4476680
+- Citations: 81
+- Influential citations: 3
+- Summary: A set of putative genes involved in various secondary metabolite pathways, especially those related to the synthesis of sennosides are identified which will serve as an important platform for public information about gene expression, genomics, and functional genomics in senna.
+- Evidence snippets:
+  - Snippet 1 (score: 0.695)
+    > Further the assembled transcript contigs were validated using CLC Genomics workbench (CLC Bio, Boston, MA 02108 USA) by mapping high quality reads back to the assembled transcript contigs. ORF-Predictor [57], an online tool, was used on default parameters to identify the coding DNA sequences (CDS) from assembled transcript contigs. GC counts of transcripts was determined using a custom-made perl script.
+    > Functional annotations. The functional annotation was performed by aligning coding DNA sequence (CDS) to NCBI 'green plant database (txid 33090)' database using basic local alignment search tool (BLASTX) [58] with an E-value threshold of 1e -06 and GO assignments were used to classify the functions of the predicted CDS. The GO mapping also provided ontology of defined terms representing gene product properties which were grouped into three main domains: biological process (BP), molecular function (MF) and cellular component (CC). GO mapping was carried out in order to retrieve GO terms for all the BLASTX functionally annotated CDS. The GO mapping used defined criteria to retrieve GO terms for annotated CDS which included use of BLASTX result accession IDs to retrieve gene names or symbols, UniProt IDs and direct search in the dbxref table of GO database. Identified gene names or symbols were then searched in the species specific entries of the gene-product tables of GO database. UniProt IDs made use of protein information resource (PIR) which includes protein sequence database (PSD), UniProt, SwissProt, TrEMBL, RefSeq, GenPept, and PDB databases. Gene Ontology analysis helps in specifying all the annotated nodes comprising of GO functional groups. CDS were compared against the COG (Clusters of Orthologous Groups) database for the analysis of phylogenetically widespread domain families. CDS were compared against Pfam database for higher-level groupings of related protein families, known as clans and the identification of domains that occurs within proteins. BLASTX was used against uniprot-swissprot database with cut-off e-value 1e-6 to annotate predicted CDS against protein.
+
+### [16] Construction of an Ortholog Database Using the Semantic Web Technology for Integrative Analysis of Genomic Data
+- Authors: H. Chiba, Hiroyo Nishide, I. Uchiyama
+- Year: 2015
+- Venue: PLoS ONE
+- URL: https://www.semanticscholar.org/paper/7cc805575c642aa8efdc1204383a7662965fbb60
+- DOI: 10.1371/journal.pone.0122802
+- PMID: 25875762
+- PMCID: 4395280
+- Citations: 14
+- Summary: The ortholog database using the Semantic Web technology can contribute to biological knowledge discovery through integrative data analysis and examples demonstrate that the ortholog information described in RDF can be used to link various biological data such as taxonomy information and Gene Ontology.
+- Evidence snippets:
+  - Snippet 1 (score: 0.694)
+    > A typical use of an ortholog database is transferring functional annotations from known genes in model organisms to genes of unknown function in other organisms, on the basis of the conjecture that orthologs are usually functionally conserved. To demonstrate such an application in our database, we showed a query to retrieve ortholog information of a specified protein.
+    > Here, we specified a UniProt ID to obtain ortholog information. For describing functional categories of genes, we used Gene Ontology (GO) [24]. The UniProt GO Annotation (UniProt-GOA) database [25] (http://www.ebi.ac.uk/GOA) provides GO term assignment to proteins with evidence codes (http://www.geneontology.org/GO.evidence.shtml). We created an ontology for GO annotation (GOA-O, Table 1, http://purl.jp/bio/11/goa) and described UniProt-GOA data in RDF using it (Table 2). If some model organisms have experimentally verified GO annotations, we can transfer such a validated annotation to orthologs of other organisms.
+
+### [17] Functional annotation of parasitic worm genomes, by assigning protein names and GO terms
+- Authors: Avril Coghlan, M. Berriman
+- Year: 2018
+- Venue: Unknown venue
+- URL: https://www.semanticscholar.org/paper/583c74a2e225dbff5fca04d36298e5b690491e82
+- DOI: 10.1038/protex.2018.055
+- Citations: 1
+- Summary: A computational pipeline for assigning protein names and GO terms to predicted proteins in parasitic worm (nematode and platyhelminth) genomes, which transfers names and Go terms from orthologues in other species.
+- Evidence snippets:
+  - Snippet 1 (score: 0.692)
+    > Given a set of predicted protein-coding genes for a newly sequenced genome, functional annotation involves assigning putative functions to the predicted genes. Two ways in which this can be done are assigning protein names and Gene Ontology (GO;Gene Ontology Consortium, 2010) terms to the predicted proteins. Here we describe a computational pipeline for assigning protein names and GO terms to predicted proteins in parasitic worm (nematode and platyhelminth) genomes, which transfers names and GO terms from orthologues in other species.
+    > When assigning protein names, UniProt protein naming rules (www.uniprot.org/docs/nameprot) are followed where possible. This recommends that a good and stable name for a protein is "as neutral as possible"; that a protein name "should be, as far as possible, unique and attributed to all orthologs"; and a protein name "should not contain a specific characteristic of the protein, and in particular it should not reflect the function or role of the protein, nor its subcellular location, its domain structure, its tissue specificity, its molecular weight or its species of origin".
+    > In our protocol, a protein name is assigned to each predicted protein based on curated names in UniProt (Bairoch & Apweiler, 2000) for human, zebrafish, Drosophila melanogaster, Caenorhabditis elegans, and Schistosoma mansoni orthologues identified from a database of gene families (e.g. built using Ensembl Compara; Vilella et al. 2009), or (if no information is found from orthologues) based on InterPro (Hunter et al. 2012) domains. Figure 1 shows an example of using our protein naming pipeline for four Strongyloides ratti genes that belong to the tubulin polyglutamylase family (underlined in pink), where four different protein names were assigned to them (in pink), based on names of their C. elegans or human orthologues.
+    > Since each of the S. ratti genes belonged to a different subfamily of the tubulin polyglutamylase family, they were assigned different names.
+
+### [18] A customized Web portal for the genome of the ctenophore Mnemiopsis leidyi
+- Authors: R. Moreland, A. Nguyen, Joseph F. Ryan, Joseph F. Ryan, C. Schnitzler et al.
+- Year: 2014
+- Venue: BMC Genomics
+- URL: https://www.semanticscholar.org/paper/327b13b7b70d702a34b70b6ef01188d8167601d8
+- DOI: 10.1186/1471-2164-15-316
+- PMID: 24773765
+- PMCID: 4234515
+- Citations: 41
+- Summary: This sequencing effort has produced the first set of whole-genome sequencing data on any ctenophore species and is amongst the first wave of projects to sequence an animal genome de novo solely using next-generation sequencing technologies.
+- Evidence snippets:
+  - Snippet 1 (score: 0.690)
+    > In an effort to engage the collective expertise of the scientific community, we have implemented a collaborative wiki (MediaWiki version 1.19.11) for the Mnemiopsis gene complement. The Mnemiopsis Gene Wiki is accessible from the left sidebar of most pages and is searchable either by selecting a Mnemiopsis gene identifier (e.g., ML00011a) from the drop-down menu or by manually entering an identifier in the appropriate search box. Users can also access these pages by clicking on a gene in the 2.2 track of the genome browser. Each record in the Gene Wiki represents a single Mnemiopsis gene and provides the following annotation: nucleotide and protein sequences, coding exonic genomic coordinates, pre-computed BLAST hits from numerous organisms displaying the top hits for each protein, the top non-self BLAST hit to Mnemiopsis, Pfam-A domains, Gene Ontology (GO) functional annotations, human disease genes from Online Mendelian Inheritance in Man (OMIM), and a table of ortholog clusters formed by phylogenetically informed clustering methods [4] (Figure 5). In addition, controlled editable sections have been included that permit (and encourage) the scientific community to provide further gene annotation for isoforms, in situ images, references, and other notes for each gene. Users interested in supplementing our gene model annotation at the Mnemiopsis Gene Wiki pages must first create an account and log in prior to submitting their contributions. In-house subject matter expert data curators are notified by e-mail following the creation of a new user account or an edit to an existing Gene Wiki record. Any content changes or additions to the Gene Wiki are thoroughly evaluated by these data curators and are made public subject to their approval.
+    > Pre-compiled BLAST hits are enumerated in tabular form. Each Mnemiopsis protein was compared to the UniProt and NCBI non-redundant protein databases (nr) using BLASTP. The results display the hit number, the accession numbers, E-values, and brief descriptions of the top four hits (lowest E-values). Accession numbers are linked to relevant corresponding entries at UniProt and GenBank.
+
+### [19] Revisiting the Plasmodium falciparum druggable genome using predicted structures and data mining
+- Authors: Karla P. Godinez-Macias, Daisy Chen, J. L. Wallis, Miles G. Siegel, Anna Adam et al.
+- Year: 2025
+- Venue: npj Drug Discovery
+- URL: https://www.semanticscholar.org/paper/000083b7bd96cff5b3d1891b00ad332eed7d9add
+- DOI: 10.1038/s44386-025-00006-5
+- PMID: 40066064
+- PMCID: 11892419
+- Citations: 4
+- Summary: This study systematically assessed the Plasmodium falciparum genome and identified 867 candidate protein targets with evidence of small-molecule binding and blood-stage essentiality, providing a genome-wide data resource for P. falciparum and implements a generalizable framework for systematically evaluating and prioritizing novel pathogenic disease targets.
+- Evidence snippets:
+  - Snippet 1 (score: 0.690)
+    > List of genes and genomic features (GFF) for Plasmodium falciparum 3D7 genome (PlasmoDB release 66) was downloaded and protein-coding genes were extracted along with their gene annotations and genomic location. Additional genomic annotations were obtained by querying PlasmoDB to extract UniProt and Entrez ID(s), ortholog group (OrthoMCL), protein features (CDS and protein length, molecular weight, isoelectric point), domain annotations (InterPro, Pfam, and Superfamily), number of transmembrane (TM) domains, and enzyme commission (EC) numbers. Gene function (Gene Ontology components, functions, and processes) was extracted either from PlasmoDB or by querying the InterPro ID with the InterPro2GO mapping tool from EMBL-EBI. Gene essentiality data was obtained for P. falciparum 20 and P. berghei 21,22 parasites mapped to their falciparum orthologs using OrthoMCL orthology group IDs. Protein Data Bank (PDB) IDs of crystal structures were obtained by searching either gene symbols, UniProt IDs associated with each gene, or the term "Plasmodium". A report with gene identifier, organism, accession number, method for structure determination and publication information was extracted for the search hits.
+    > Mapping genes to associated literature publications A download from the NCBI FTP site was performed for gene2pubmed.gz (version 2024-02-21) containing taxonomy ID, gene ID (Entrez) and PubMed ID information. Gene IDs were mapped to the P. falciparum 3D7 annotation set, and corresponding PMIDs were extracted. To include literature references associated with gene symbols, we queried each symbol in PubMed using the Eutils 77 efetch function from NCBI; additional information for each publication was obtained pragmatically using the same tool, namely title, authors and digital object identifier (DOI). Literature references from gene nomenclature extraction were manually reviewed and filtered for unrelated records (e.g., same name but different meaning across organisms/diseases).
+
+### [20] The mRNA-bound proteome of the human malaria parasite Plasmodium falciparum
+- Authors: E. Bunnik, G. Batugedara, Anita Saraf, J. Prudhomme, L. Florens et al.
+- Year: 2016
+- Venue: Genome Biology
+- URL: https://www.semanticscholar.org/paper/f3eda16f7a2760619a7727b38fc2fc6738858040
+- DOI: 10.1186/s13059-016-1014-0
+- PMID: 27381095
+- PMCID: 4933991
+- Citations: 93
+- Influential citations: 5
+- Summary: The results provide the most complete comparative genomics and experimental analysis of mRBPs in P. falciparum and identify and characterize mRNA-binding proteins (mRBPs) that encompass a relatively large proportion of the parasite proteome as compared to other eukaryotes.
+- Evidence snippets:
+  - Snippet 1 (score: 0.689)
+    > It is possible that the current gene annotation is incorrect and that these genes were mislabeled as "RNA binding." Out of all 64 manually added genes, nine genes contained weak to very weak RBDs (median E-value = 0.041), of which five were strongly related to the gene annotation. Diversification of these genes in P. falciparum may have precluded identification of these domains in our HMM search.
+    > The type of molecule that the candidate RBP interacts with was determined based on existing annotations and known functions of homologs in other species. If this information was not available, the type of molecule was predicted based on the nature of the RNA-binding domain (RBD). Proteins for which no information was available were categorized as "non-RNA."
+    > To calculate the percentage of sequences from groups of organisms in the HMM seed, the HMM seed file (Pfam version 27.0) was downloaded, filtered for the 372 mRNAbinding domains used in this study, and parsed for UniProt accession numbers. The source organism of each sequence was then retrieved using the retrieve/ID mapping tool on the UniProt website (http://www.uniprot.org/ uploadlists/) and matched to the corresponding Pfam domain. For each domain, the percentage of sequences derived from each group at the third level of the taxonomic lineage was determined.
+    > In each organism, a variety of proteins that are unlikely to be involved in RNA metabolism were identified in the HMM search. However, manually curating these protein lists would introduce a bias, since not all genomes have been annotated to the same extent. Therefore, to make a fair comparison between organisms, we included all mRBD-containing proteins in our subsequent analysis, irrespective of their annotation. To correct for differences in genome size, RBD abundance was expressed as the number of RBDs per 10,000 genes. Pfam domains that were present in at least one out of 11 organisms (n = 353) were clustered based on their relative abundance across organisms using the k-means clustering algorithm with a maximum of 1000 iterations in R v2.7.0 [70].
+
+## Notes
+
+- This provider combines `search_papers_by_relevance` with `snippet_search`.
+- No synthesis or second-stage model call is performed.
+
+## Citations
+
+1. Ralf C. Mueller, Nicolai Mallig, Jacqueline Smith, Lél Eöry, Richard I. Kuo et al. (2020). Avian Immunome DB: an example of a user-friendly interface for extracting genetic information. BMC Bioinformatics. https://www.semanticscholar.org/paper/b894d9ca8ea2d653bf1711a0c67dab71d054487c
+2. Dawn Cotter, A. Maer, C. Guda, Brian Saunders, S. Subramaniam (2005). LMPD: LIPID MAPS proteome database. Nucleic Acids Research. https://www.semanticscholar.org/paper/265c37b45326b7927e396484751e84e4aeff92d5
+3. Brigitte Waegele, I. Dunger, G. Fobo, Corinna Montrone, H. Mewes et al. (2008). CRONOS: the cross-reference navigation server. Bioinformatics. https://www.semanticscholar.org/paper/8c05b3aa0ba01c41ee97c2dc98ea7b5b14ce0e9c
+4. Samuel J. Modlin, A. Elghraoui, Deepika Gunasekaran, Alyssa M Zlotnicki, N. Dillon et al. (2021). Structure-Aware Mycobacterium tuberculosis Functional Annotation Uncloaks Resistance, Metabolic, and Virulence Genes. mSystems. https://www.semanticscholar.org/paper/76ff9a62b36b32cc10e46e71ffd4dd90344e4706
+5. Qi Wang, Shaoxuan Luo, Yixiang Yang, Yawen Bai, Junrong Wei et al. (2025). WP-MOD: A multi-omics and taxonomy database for woody plants. Plant Communications. https://www.semanticscholar.org/paper/d1b842c8bb68f37fb6798e5ed6a16bb2c6fc526e
+6. Christina M McCosker, E. Unal, Alayna K Gigliotti, Wendy B Puryear, Jonathan A. Runstadler et al. (2025). Molecular mechanisms underlying response to influenza in grey seals (Halichoerus grypus), a potential wild reservoir. Molecular ecology. https://www.semanticscholar.org/paper/bebb135aae1c1182d098fce839c9a3df0cfb2b21
+7. Mary Kate Bonner, D. Poole, Tao Xu, Ali Sarkeshik, J. Yates et al. (2011). Mitotic Spindle Proteomics in Chinese Hamster Ovary Cells. PLoS ONE. https://www.semanticscholar.org/paper/8a46e242e657489c1933c76e06a37618f7d1901f
+8. Choon-Kong Yap, B. Eisenhaber, F. Eisenhaber, W. Wong (2016). xHMMER3x2: Utilizing HMMER3’s speed and HMMER2’s sensitivity and specificity in the glocal alignment mode for improved large-scale protein domain annotation. Biology Direct. https://www.semanticscholar.org/paper/3917d42970bb4572b152bba81aae0c0a2b3b3341
+9. Karla P. Godinez-Macias, Daisy Chen, J. L. Wallis, Miles G. Siegel, Anna Adam et al. (2024). Revisiting the Plasmodium falciparum druggable genome using predicted structures and data mining. Research Square. https://www.semanticscholar.org/paper/795b2985fdc3cf1cfbd5fda1b3c0502eb4dfe866
+10. Tongjian Liu, Yun Xiao, Xing Wu, Sheng Chen, Sisi Chen et al. (2026). Chromosome-level genome assembly and annotation of the endangered plant Primula kwangtungensis (Primulaceae). Scientific Data. https://www.semanticscholar.org/paper/4081bfb0b59ada46834336bcd2441772e0e381e1
+11. Yanfeng Zhou, Chunhai Chen, Di’an Fang, Chenhe Wang, Yajuan Peng et al. (2025). Telomere-to-telomere genome assembly of Phoxinus lagowskii. Scientific Data. https://www.semanticscholar.org/paper/23f573aff23769df3b733d508b46f721cadb94ac
+12. Xiaoqiong Bao, Qi Jiang, Weixuan Chen, Huiqin Li, Xuan Li et al. (2025). RM2Target v2.0: an updated database for the target genes of writers, erasers, and readers of RNA modifications. Nucleic Acids Research. https://www.semanticscholar.org/paper/15dbf5509222f17a624912633aa05cc9183fcc70
+13. Megan G. Behringer, Wei-Chin Ho, Samuel F. Miller, Sarah B. Worthan, Zeer Cen et al. (2024). Trade-offs, trade-ups, and high mutational parallelism underlie microbial adaptation during extreme cycles of feast and famine. Current biology : CB. https://www.semanticscholar.org/paper/13c71a271ad81ea813516193454b0fed04b2cd2b
+14. Xi-feng Fei, Xiangtong Xie, X. Ji, Haiyan Tian, F. Sun et al. (2022). Quantitative proteomic dataset of whole protein in three melanoma samples of 92.1, 92.1-A and 92.1-B. Data in Brief. https://www.semanticscholar.org/paper/33312bb6cc2cf985d32f3a31cf4fdee6b4e17385
+15. Nagaraja Reddy Rama Reddy, Rucha Harishbhai Mehta, Palak Soni, Jayanti Makasana, N. Gajbhiye et al. (2015). Next Generation Sequencing and Transcriptome Analysis Predicts Biosynthetic Pathway of Sennosides from Senna (Cassia angustifolia Vahl.), a Non-Model Plant with Potent Laxative Properties. PLoS ONE. https://www.semanticscholar.org/paper/fec6263b90f9cd765752bdb1be3d162872f2e64e
+16. H. Chiba, Hiroyo Nishide, I. Uchiyama (2015). Construction of an Ortholog Database Using the Semantic Web Technology for Integrative Analysis of Genomic Data. PLoS ONE. https://www.semanticscholar.org/paper/7cc805575c642aa8efdc1204383a7662965fbb60
+17. Avril Coghlan, M. Berriman (2018). Functional annotation of parasitic worm genomes, by assigning protein names and GO terms. https://www.semanticscholar.org/paper/583c74a2e225dbff5fca04d36298e5b690491e82
+18. R. Moreland, A. Nguyen, Joseph F. Ryan, Joseph F. Ryan, C. Schnitzler et al. (2014). A customized Web portal for the genome of the ctenophore Mnemiopsis leidyi. BMC Genomics. https://www.semanticscholar.org/paper/327b13b7b70d702a34b70b6ef01188d8167601d8
+19. Karla P. Godinez-Macias, Daisy Chen, J. L. Wallis, Miles G. Siegel, Anna Adam et al. (2025). Revisiting the Plasmodium falciparum druggable genome using predicted structures and data mining. npj Drug Discovery. https://www.semanticscholar.org/paper/000083b7bd96cff5b3d1891b00ad332eed7d9add
+20. E. Bunnik, G. Batugedara, Anita Saraf, J. Prudhomme, L. Florens et al. (2016). The mRNA-bound proteome of the human malaria parasite Plasmodium falciparum. Genome Biology. https://www.semanticscholar.org/paper/f3eda16f7a2760619a7727b38fc2fc6738858040

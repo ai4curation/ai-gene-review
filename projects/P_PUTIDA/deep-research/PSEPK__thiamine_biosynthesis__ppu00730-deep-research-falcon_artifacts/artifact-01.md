@@ -1,0 +1,17 @@
+| Step Number | Step Name | Key Enzyme(s) | Candidate Gene(s) in KT2440 | Status | Notes |
+|---|---|---|---|---|---|
+| 1 | DXP precursor supply | Dxs | PP_0527 (dxs) | covered | Shared precursor step with the MEP/isoprenoid pathway; active DXP synthesis is supported in KT2440 by metabolic engineering studies, but this is a boundary/shared step rather than thiamine-specific catalysis (pqac-00000025, pqac-00000030) |
+| 2 | HMP-P formation | ThiC | PP_4922 (thiC) | covered | Canonical pyrimidine-branch enzyme for HMP-P synthesis; assignment is strong by conserved bacterial pathway logic and comparative genetics (pqac-00000010, pqac-00000012, pqac-00000036) |
+| 3 | HMP phosphorylation | ThiD | PP_4782 (thiD) | covered | ThiD is the expected HMP/HMP-P kinase in the de novo branch and is commonly bifunctional in bacteria (pqac-00000010, pqac-00000012) |
+| 4 | Glyoxyl imine supply | ThiO | PP_0612 (thiO) | covered | Strongest direct KT2440 evidence in the module: purified and biochemically characterized glycine oxidase that supplies the thiazole branch precursor (pqac-00000003, pqac-00000004, pqac-00000005) |
+| 5 | Sulfur transfer to thiazole branch | IscS, ThiI, ThiF, ThiS | PP_0842 (iscS), PP_5045 (thiI); ThiF not in candidate list; ThiS not in candidate list | candidate_uncertain | IscS and ThiI fit the canonical sulfur relay, but ThiF and ThiS are expected yet absent from the local candidate list; this indicates likely incomplete metadata or pathway-bucket under-capture rather than a biologically real absence (pqac-00000001, pqac-00000009, pqac-00000014, pqac-00000033) |
+| 6 | Thiazole phosphate formation | ThiG | PP_5104 (thiG) | covered | Canonical thiazole synthase; conserved assignment is strong and orthologous function is supported by comparative bacterial genetics (pqac-00000009, pqac-00000014, pqac-00000036) |
+| 7 | TMP formation | ThiE | PP_4783 (thiE) | covered | ThiE catalyzes condensation of HMP-PP and thiazole phosphate to TMP; highly conserved core step (pqac-00000010, pqac-00000036) |
+| 8 | TPP formation | ThiL | PP_0519 (thiL) | covered | Expected terminal activation step converting TMP to TPP; strong conserved bacterial assignment (pqac-00000010, pqac-00000011) |
+| S1 | Thiamine salvage | TenA-like aminopyrimidine aminohydrolase | PP_3186 | covered | Best treated as salvage/context rather than part of the minimal de novo module; supports aminopyrimidine salvage (pqac-00000023, pqac-00000024) |
+| S2 | Sulfur mobilization support | IscS, IscS-II | PP_0842 (iscS), PP_2435 (iscS-II) | boundary | Sulfur mobilization is broader than thiamine alone; iscS is credible support for the pathway, while iscS-II remains ambiguous for thiamine-specific participation (pqac-00000001, pqac-00000002) |
+| B1 | General nucleotide metabolism | Adenylate kinase | PP_1506 (adk) | not_expected | Housekeeping nucleotide homeostasis enzyme; not part of the thiamine diphosphate biosynthetic core (pqac-00000010) |
+| B2 | Ribosome biogenesis | RsgA | PP_4903 (rsgA) | not_expected | Ribosome biogenesis GTPase; likely KEGG map spillover/over-annotation for this module (pqac-00000023) |
+
+
+*Table: This table summarizes stepwise coverage of thiamine diphosphate biosynthesis in Pseudomonas putida KT2440, distinguishing core covered steps from uncertain sulfur-transfer components and non-core boundary genes. It is useful for module satisfiability and annotation curation.*

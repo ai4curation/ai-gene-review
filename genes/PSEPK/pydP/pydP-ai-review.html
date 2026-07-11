@@ -1,0 +1,2800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>pydP - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>pydP</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88FQ2" target="_blank" class="term-link">
+                        Q88FQ2
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "pydP";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88FQ2" data-a="DESCRIPTION: pydP encodes PydP transporter, NCS1 nucleoside tra..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>pydP encodes PydP transporter, NCS1 nucleoside transporter family, curated in the NCS1 purine-cytosine/nucleobase permeases subgroup with core nucleobase transmembrane transporter activity context.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FQ2" data-a="GO:0005886" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Plasma membrane localization is appropriate for this bacterial membrane protein.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The UniProt/GOA membrane context supports plasma or inner-membrane localization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/pydP/pydP-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0005886	plasma membrane</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/pydP/pydP-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DE   SubName: Full=PydP transporter, NCS1 nucleoside transporter family {ECO:0000313|EMBL:AAN69627.1};</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/pydP/pydP-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">- **Protein Description:** SubName: Full=PydP transporter, NCS1 nucleoside transporter family {ECO:0000313|EMBL:AAN69627.1};</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/pydP/pydP-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">- **Key Domains:** Pur-cyt_permease. (IPR001248); Uracil/uridine/allantoin_perm. (IPR045225); Transp_cyt_pur (PF02133)</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/pydP/pydP-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- SUBCELLULAR LOCATION: Membrane {ECO:0000256|ARBA:ARBA00004141}; Multi-</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015205" target="_blank" class="term-link">
+                                    GO:0015205
+                                </a>
+                            </span>
+                            <span class="term-label">nucleobase transmembrane transporter activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FQ2" data-a="GO:0015205" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> nucleobase transmembrane transporter activity is appropriate broad NCS1-family nucleobase transport context.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The purine-cytosine permease/NCS1 family evidence supports nucleobase transport, but not a narrower substrate for every paralog.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/pydP/pydP-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0015205	nucleobase transmembrane transporter activity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/pydP/pydP-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DE   SubName: Full=PydP transporter, NCS1 nucleoside transporter family {ECO:0000313|EMBL:AAN69627.1};</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/pydP/pydP-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">- **Protein Description:** SubName: Full=PydP transporter, NCS1 nucleoside transporter family {ECO:0000313|EMBL:AAN69627.1};</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/pydP/pydP-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">- **Key Domains:** Pur-cyt_permease. (IPR001248); Uracil/uridine/allantoin_perm. (IPR045225); Transp_cyt_pur (PF02133)</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/pydP/pydP-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- SUBCELLULAR LOCATION: Membrane {ECO:0000256|ARBA:ARBA00004141}; Multi-</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015851" target="_blank" class="term-link">
+                                    GO:0015851
+                                </a>
+                            </span>
+                            <span class="term-label">nucleobase transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FQ2" data-a="GO:0015851" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> nucleobase transport is appropriate broad NCS1-family nucleobase transport context.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The purine-cytosine permease/NCS1 family evidence supports nucleobase transport, but not a narrower substrate for every paralog.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/pydP/pydP-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0015851	nucleobase transport</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/pydP/pydP-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DE   SubName: Full=PydP transporter, NCS1 nucleoside transporter family {ECO:0000313|EMBL:AAN69627.1};</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/pydP/pydP-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">- **Protein Description:** SubName: Full=PydP transporter, NCS1 nucleoside transporter family {ECO:0000313|EMBL:AAN69627.1};</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/pydP/pydP-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">- **Key Domains:** Pur-cyt_permease. (IPR001248); Uracil/uridine/allantoin_perm. (IPR045225); Transp_cyt_pur (PF02133)</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/pydP/pydP-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- SUBCELLULAR LOCATION: Membrane {ECO:0000256|ARBA:ARBA00004141}; Multi-</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FQ2" data-a="GO:0016020" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic membrane localization is true but less informative than plasma membrane.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> A more specific plasma-membrane annotation is present.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/pydP/pydP-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0016020	membrane</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/pydP/pydP-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DE   SubName: Full=PydP transporter, NCS1 nucleoside transporter family {ECO:0000313|EMBL:AAN69627.1};</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/pydP/pydP-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">- **Protein Description:** SubName: Full=PydP transporter, NCS1 nucleoside transporter family {ECO:0000313|EMBL:AAN69627.1};</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/pydP/pydP-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">- **Key Domains:** Pur-cyt_permease. (IPR001248); Uracil/uridine/allantoin_perm. (IPR045225); Transp_cyt_pur (PF02133)</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/pydP/pydP-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- SUBCELLULAR LOCATION: Membrane {ECO:0000256|ARBA:ARBA00004141}; Multi-</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0022857" target="_blank" class="term-link">
+                                    GO:0022857
+                                </a>
+                            </span>
+                            <span class="term-label">transmembrane transporter activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FQ2" data-a="GO:0022857" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> transmembrane transporter activity is true but broad relative to the substrate/family-specific transporter call.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> A more informative transporter term is available for the core function.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015205" target="_blank" class="term-link">
+                                    nucleobase transmembrane transporter activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/pydP/pydP-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0022857	transmembrane transporter activity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/pydP/pydP-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DE   SubName: Full=PydP transporter, NCS1 nucleoside transporter family {ECO:0000313|EMBL:AAN69627.1};</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/pydP/pydP-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">- **Protein Description:** SubName: Full=PydP transporter, NCS1 nucleoside transporter family {ECO:0000313|EMBL:AAN69627.1};</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/pydP/pydP-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">- **Key Domains:** Pur-cyt_permease. (IPR001248); Uracil/uridine/allantoin_perm. (IPR045225); Transp_cyt_pur (PF02133)</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/pydP/pydP-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- SUBCELLULAR LOCATION: Membrane {ECO:0000256|ARBA:ARBA00004141}; Multi-</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0055085" target="_blank" class="term-link">
+                                    GO:0055085
+                                </a>
+                            </span>
+                            <span class="term-label">transmembrane transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FQ2" data-a="GO:0055085" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> transmembrane transport is true but broad relative to the substrate/family-specific transporter call.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> A more informative transporter term is available for the core function.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015205" target="_blank" class="term-link">
+                                    nucleobase transmembrane transporter activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/pydP/pydP-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0055085	transmembrane transport</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/pydP/pydP-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DE   SubName: Full=PydP transporter, NCS1 nucleoside transporter family {ECO:0000313|EMBL:AAN69627.1};</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/pydP/pydP-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">- **Protein Description:** SubName: Full=PydP transporter, NCS1 nucleoside transporter family {ECO:0000313|EMBL:AAN69627.1};</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/pydP/pydP-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">- **Key Domains:** Pur-cyt_permease. (IPR001248); Uracil/uridine/allantoin_perm. (IPR045225); Transp_cyt_pur (PF02133)</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/pydP/pydP-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- SUBCELLULAR LOCATION: Membrane {ECO:0000256|ARBA:ARBA00004141}; Multi-</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>pydP encodes PydP transporter, NCS1 nucleoside transporter family, curated in the NCS1 purine-cytosine/nucleobase permeases subgroup with core nucleobase transmembrane transporter activity context.</h3>
+                <span class="vote-buttons" data-g="Q88FQ2" data-a="FUNCTION: pydP encodes PydP transporter, NCS1 nucleoside tra..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015205" target="_blank" class="term-link">
+                            nucleobase transmembrane transporter activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015851" target="_blank" class="term-link">
+                                nucleobase transport
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/pydP/pydP-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">DE   SubName: Full=PydP transporter, NCS1 nucleoside transporter family {ECO:0000313|EMBL:AAN69627.1};</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/pydP/pydP-deep-research-asta.md
+
+                        </span>
+
+                        <div class="finding-text">- **Protein Description:** SubName: Full=PydP transporter, NCS1 nucleoside transporter family {ECO:0000313|EMBL:AAN69627.1};</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/pydP/pydP-deep-research-asta.md
+
+                        </span>
+
+                        <div class="finding-text">- **Key Domains:** Pur-cyt_permease. (IPR001248); Uracil/uridine/allantoin_perm. (IPR045225); Transp_cyt_pur (PF02133)</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/pydP/pydP-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">CC   -!- SUBCELLULAR LOCATION: Membrane {ECO:0000256|ARBA:ARBA00004141}; Multi-</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/pydP/pydP-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO GOA annotations for pydP</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/pydP/pydP-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for pydP (Q88FQ2)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"DE   SubName: Full=PydP transporter, NCS1 nucleoside transporter family {ECO:0000313|EMBL:AAN69627.1};"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/pydP/pydP-deep-research-asta.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Asta retrieval report for pydP (Q88FQ2)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"- **Protein Description:** SubName: Full=PydP transporter, NCS1 nucleoside transporter family {ECO:0000313|EMBL:AAN69627.1};"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"- **Key Domains:** Pur-cyt_permease. (IPR001248); Uracil/uridine/allantoin_perm. (IPR045225); Transp_cyt_pur (PF02133)"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What are the exact substrates, direction, and coupling mechanisms for the unresolved NCS1/Gate-domain transporter candidates?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88FQ2" data-a="Q: What are the exact substrates, direction, and coup..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Measure uptake or growth rescue for candidate gluconate, cytosine, purine/pyrimidine, nucleoside, nicotinamide-riboside, or related substrates in knockout/complement strains and heterologous expression systems.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: transport genetics and substrate uptake assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88FQ2" data-a="EXPERIMENT: Measure uptake or growth rescue for candidate gluc..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Asta</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(pydP-deep-research-asta.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88FQ2" data-a="DEEP_RESEARCH: Asta" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Asta Literature Retrieval: Gene Research for Functional Annotation ⚠️ CRITICAL: Gene/Protein Identification Context BEFORE YOU BEGIN RESEARCH: Y...</span>
+
+
+                    <span class="report-badge">Asta</span>
+
+
+                    <span class="report-badge">Asta Scientific Corpus Retrieval</span>
+
+
+                    <span class="report-badge">20 citations</span>
+
+
+
+                    <span class="report-meta-text">2026-07-11T02:49:13.750012</span>
+
+
+
+                </div>
+
+
+                <h1 id="asta-literature-retrieval-gene-research-for-functional-annotation-critical-geneprotein-identification-context-before-you-begin-research-y">Asta Literature Retrieval: Gene Research for Functional Annotation ⚠️ CRITICAL: Gene/Protein Identification Context BEFORE YOU BEGIN RESEARCH: Y...</h1>
+<p>This report is retrieval-only and is generated directly from Asta results.</p>
+<ul>
+<li>Papers retrieved: 20</li>
+<li>Snippets retrieved: 20</li>
+</ul>
+<h2 id="relevant-papers">Relevant Papers</h2>
+<h3 id="1-new-assembly-reannotation-and-analysis-of-the-entamoeba-histolytica-genome-reveal-new-genomic-features-and-protein-content-information">[1] New Assembly, Reannotation and Analysis of the Entamoeba histolytica Genome Reveal New Genomic Features and Protein Content Information</h3>
+<ul>
+<li>Authors: H. Lorenzi, D. Puiu, J. Miller, L. Brinkac, P. Amedeo et al.</li>
+<li>Year: 2010</li>
+<li>Venue: PLoS Neglected Tropical Diseases</li>
+<li>URL: https://www.semanticscholar.org/paper/740492918c8083d568473ed3576b8520db4e5005</li>
+<li>DOI: 10.1371/journal.pntd.0000716</li>
+<li>PMID: 20559563</li>
+<li>PMCID: 2886108</li>
+<li>Citations: 107</li>
+<li>Influential citations: 9</li>
+<li>Summary: This new genome annotation and analysis represents a more refined and accurate blueprint of the pathogen genome, and provides an upgraded tool as reference for the study of many important aspects of E. histolytica biology, such as genome evolution and pathogenesis.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.773)<br />
+    &gt; doi:10.1371/journal.pntd.0000716.g001<br />
+    &gt; Functional annotation assignments Gene level searches were performed against protein, domain and profile databases including JCVI in-house non-redundant protein database Panda-AllGroup.niaa, Pfam [13] and TIGRfam [14] HMMs, Prosite [15], and InterPro [16]. In addition, programs to predict membrane localization such as SignalP [17], TMHMM and TargetP [17] were run. After the working gene set had been assigned function, predicted proteins were organized into protein families as previously described [7] with the purpose of refining the annotation in the context of related genes in the genome. Predicted genes were assigned informative names and classified using Gene Ontology (GO) [18]. GO assignments were attributed automatically, based on other assignments from closely related organisms using Pfam2GO, a tool that allows automatic mapping of Pfam hits to GO assignments as well as manually by expert annotators. All assignments were reviewed manually for consistency, on a family based approach, via Manatee, a webbased genome annotation tool that can view, modify, and store annotation for prokaryotic and eukaryotic genomes. Names between OGA and NGA were compared by simple query for corresponding genes to determine the level of change and improvement. Annotation of transporter proteins was performed using TransportDB (http://www.membranetransport.org/) [19].</li>
+</ul>
+<h3 id="2-lmpd-lipid-maps-proteome-database">[2] LMPD: LIPID MAPS proteome database</h3>
+<ul>
+<li>Authors: Dawn Cotter, A. Maer, C. Guda, Brian Saunders, S. Subramaniam</li>
+<li>Year: 2005</li>
+<li>Venue: Nucleic Acids Research</li>
+<li>URL: https://www.semanticscholar.org/paper/265c37b45326b7927e396484751e84e4aeff92d5</li>
+<li>DOI: 10.1093/nar/gkj122</li>
+<li>PMID: 16381922</li>
+<li>PMCID: 1347484</li>
+<li>Citations: 92</li>
+<li>Influential citations: 2</li>
+<li>Summary: The initial release of the LIPID MAPS Proteome Database contains 2959 records, representing human and mouse proteins involved in lipid metabolism, and this LMPD protein list was enhanced with annotations from UniProt, EntrezGene, ENZYME, GO, KEGG and other public resources.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.759)<br />
+    &gt; For each record selected from the results summary, all LMPD data relevant to that protein are displayed, with external database IDs linked to their respective resources.<br />
+    &gt; Annotations are organized by category: Record Overview, Gene/GO/KEGG Information, UniProt Annotations, and Related Proteins. The record overview contains LMPD_ID, species, description, gene symbols, lipid categories, EC number, molecular weight, sequence length and protein sequence. Gene information includes Entrez Gene ID, chromosome, map location, primary name, primary symbol and alternate names and symbols; Gene Ontology (GO) IDs and descriptions, and KEGG pathway IDs and descriptions. UniProt annotations include primary accession number, entry name and comments such as catalytic activity, enzyme regulation, function and similarity. For related proteins and splice variants, we display source database, database ID, sequence length, and title.</li>
+</ul>
+<h3 id="3-whole-genome-sequence-and-manual-annotation-of-clostridium-autoethanogenum-an-industrially-relevant-bacterium">[3] Whole genome sequence and manual annotation of Clostridium autoethanogenum, an industrially relevant bacterium</h3>
+<ul>
+<li>Authors: Christopher M. Humphreys, Samantha McLean, Sarah Schatschneider, Thomas Millat, A. Henstra et al.</li>
+<li>Year: 2015</li>
+<li>Venue: BMC Genomics</li>
+<li>URL: https://www.semanticscholar.org/paper/8960e4d28fe195cb11cf0274c2dbd5952eefbef1</li>
+<li>DOI: 10.1186/s12864-015-2287-5</li>
+<li>PMID: 26692227</li>
+<li>PMCID: 4687164</li>
+<li>Citations: 69</li>
+<li>Influential citations: 2</li>
+<li>Summary: A revised manually curated full genome sequence for Clostridium autoethanogenum DSM10061 is presented, which provides reliable information for genome-scale models that rely heavily on the accuracy of annotation, and represents an important step towards the manipulation and metabolic modelling of this industrially relevant acetogen.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.758)<br />
+    &gt; Sequence similarity analyses were accomplished using blastx [26] against the NCBI non-redundant database on protein level [32], the Swissprot database [33,34] and KEGG [35]. Additionally, manual gene annotation was performed using PRIAM [36], Motif Scan [37], Prosite  [38], BRENDA [39,40], UniProt/SwissProt [34], Inter-ProScan [41], and Pfam [42] databases. One example of how our manual annotation differed from that of the automated pipeline used by Brown et al. can be found in the case of CLAU_3519 (CAETHG_3609). Here the automated pipeline from the Brown et al. finished genome assigned this gene product as a hypothetical protein, however when the sequence was aligned using BLASTP as part of our manual curation all other proteins with &gt;75 % identity were named sodium ABC transporter. Upon further inspection in Pfam, one large ABC-2 family transporter protein domain was found (E-value 6.8e-31). Similar searches of UniProt and KEGG databases agreed with Pfam, therefore we annotated this gene product as an ABC-2 family transporter. The correction of the previously short-called homopolymer reads through our sequencing efforts gave a fully annotated finished sequence of C. autoethanogenum without the erroneous frame-shift containing annotations which had occurred previously. Using these tools we were able to manually curate the entire genome to ensure that the automated annotation was correct and to insert additional information where required, as well as implementing a standardised protein product naming system as recommend by the NCBI guidelines [43] for ease of identification of genes with related functions. As a consequence of the automated and subsequent manual curation, we have found 482 instances across the genome where genes previously identified as 'hypothetical protein' have either been assigned a specific function, or have been named through identification of conserved domains based on sequence similarity.</li>
+</ul>
+<h3 id="4-phosphositeplus-a-comprehensive-resource-for-investigating-the-structure-and-function-of-experimentally-determined-post-translational-modifications-in-man-and-mouse">[4] PhosphoSitePlus: a comprehensive resource for investigating the structure and function of experimentally determined post-translational modifications in man and mouse</h3>
+<ul>
+<li>Authors: P. Hornbeck, J. Kornhauser, S. Tkachev, Bin Zhang, E. Skrzypek et al.</li>
+<li>Year: 2011</li>
+<li>Venue: Nucleic Acids Research</li>
+<li>URL: https://www.semanticscholar.org/paper/93e4acf4ba3bca1b379ae8292e73dddb344abd90</li>
+<li>DOI: 10.1093/nar/gkr1122</li>
+<li>PMID: 22135298</li>
+<li>PMCID: 3245126</li>
+<li>Citations: 1606</li>
+<li>Influential citations: 155</li>
+<li>Summary: PhosphoSitePlus (http://www.phosphosite.org) is an open, comprehensive, manually curated and interactive resource for studying experimentally observed post-translational modifications, primarily of human and mouse proteins. It encompasses 1 30 000 non-redundant modification sites, primarily phosphorylation, ubiquitinylation and acetylation. The interface is designed for clarity and ease of navigation. From the home page, users can launch simple or complex searches and browse high-throughput d...</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.736)<br />
+    &gt; Accession numbers from UniPROT KB, NCBI and Ensembl (24)(25)(26), as well as gene symbols from HGNC (27), are curated for all proteins when possible. Basic protein descriptions include information parsed from UniPROT KB (24), and may include additional information from the literature. Descriptions are updated in bulk occasionally. Gene Ontology (28) annotations are parsed from NCBI (25). Editors assign protein types.</li>
+</ul>
+<h3 id="5-structure-aware-mycobacterium-tuberculosis-functional-annotation-uncloaks-resistance-metabolic-and-virulence-genes">[5] Structure-Aware Mycobacterium tuberculosis Functional Annotation Uncloaks Resistance, Metabolic, and Virulence Genes</h3>
+<ul>
+<li>Authors: Samuel J. Modlin, A. Elghraoui, Deepika Gunasekaran, Alyssa M Zlotnicki, N. Dillon et al.</li>
+<li>Year: 2021</li>
+<li>Venue: mSystems</li>
+<li>URL: https://www.semanticscholar.org/paper/76ff9a62b36b32cc10e46e71ffd4dd90344e4706</li>
+<li>DOI: 10.1128/mSystems.00673-21</li>
+<li>PMID: 34726489</li>
+<li>PMCID: 8562490</li>
+<li>Citations: 15</li>
+<li>Summary: This work systematically updates the functional genome annotation of Mycobacterium tuberculosis virulent type strain H37Rv and identifies hundreds of high-confidence candidates for mechanisms of antibiotic resistance, virulence factors, and basic metabolism and other functions key in clinical and basic tuberculosis research.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.720)<br />
+    &gt; 3. Fig. S2B -match/mismatch colours mixed up? (I think match should be teal and mismatch -red?) 4. Line 162-163: Rv1430 is in UniProt (EC 3.1.1.-) and has been present in Uniprot since version 45 of the gene record: https://www.uniprot.org/uniprot/L7N697. I presume you had conducted your literature analysis before the UniProt entry was updated to include the EC code, so maybe you can add the dates when the data was retrieved from UniProt and other databases you used in the Materials and Methods section? 5. Supplementary text, p. 9, first paragraph. I believe that an unrelated fragment of text was copy-pasted into the second sentence of the paragraph ("Many mutations that altered bacterial clearance...") 6. Supplementary text, p. 12, final paragraph. It should be Rv1191, not Rv1191c. Could you also add a short explanation why you believe it should be classified as a cathepsin (what protein did you transfer this annotation from)?<br />
+    &gt; Reviewer #3 (Comments for the Author):<br />
+    &gt; In this manuscript, Modlin et al., attempt to tackle the problem of assigning functions to ~1700 hypothetical and/or underannotated genes in the Mycobacterium tuberculosis H37Rv (Mtb) genome. Rapid and accurate annotation of microbial genomes is indeed a very critical and under appreciated part of microbial ecophysiology. This step is especially crucial for pathogenic organisms such as Mtb where accurate functional annotation of these hypothetical proteins could unravel mechanisms which could act as drug targets. The authors employed a two-pronged strategy to define a set of these unannotated or under-annotated genes and to then provide possible functions for many of these genes. First, they undertook a large-scale manual curation of literature to assign functions (including EC numbers for enzymatic functions) to ~575 genes.</li>
+</ul>
+<h3 id="6-trade-offs-trade-ups-and-high-mutational-parallelism-underlie-microbial-adaptation-during-extreme-cycles-of-feast-and-famine">[6] Trade-offs, trade-ups, and high mutational parallelism underlie microbial adaptation during extreme cycles of feast and famine</h3>
+<ul>
+<li>Authors: Megan G. Behringer, Wei-Chin Ho, Samuel F. Miller, Sarah B. Worthan, Zeer Cen et al.</li>
+<li>Year: 2024</li>
+<li>Venue: Current biology : CB</li>
+<li>URL: https://www.semanticscholar.org/paper/13c71a271ad81ea813516193454b0fed04b2cd2b</li>
+<li>DOI: 10.1016/j.cub.2024.02.040</li>
+<li>PMID: 38460514</li>
+<li>PMCID: 11066936</li>
+<li>Citations: 18</li>
+<li>Summary: It is found that evolution in response to extreme feast/famine is characterized by narrow adaptive trajectories with high mutational parallelism and notable mutational order, which demonstrate how microbes can navigate the adaptive landscapes of regularly fluctuating conditions and ultimately follow mutational trajectories that confer benefits across diverse environments.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.720)<br />
+    &gt; Genes overrepresented for nonsynonymous and structural mutations were classified into functional groups based on the functional annotation table constructed with DAVID v.2023q3 91,92 (Table S4). We established the following rules for generalizing genes into functional groups: Chaperone: genes that encode proteins that perform chaperone or chaperonin-like activities (Uniprot Keyword: KW-0143); Envelope: Genes that encode proteins involved in the maintenance of the cell-envelope such as phospholipid biosynthesis (GO-BP: 0008654) and peptidoglycan biosynthesis (GO-BP: 0000270); Metabolism: Genes that encode proteins involved in general metabolic functions, such as purine metabolism (KEGG: eco00230), amino acid metabolism (KEGG: eco00470, eco00330); or TCA Cycle (KEGG: eco00020); Regulators: Genes that encode proteins directly involved in transcription (GO-BP: 0031564; Uniprot Keyword: KW-0804), translation (GO-BP:0006412, GO-BP:0006413; Uniprot Keyword: KW-0689), or the regulation of transcription (GO-BP: 0006355, GO-BP:2000143, GO-BP:0006353, GO-BP: GO:0045893; Uniprot Keyword: KW-0805); and Transport: Genes that encode proteins involved in transport: such as ABC transporters (Interpro: PR017871), MFS transporters (Interpro: IPR011701); symporters (Interpro: IPR023954, IPR001204, IPR001734, IPR023025, IPR004840), or Antiporters (Interpro: IPR004771). A combination of resources were used to determine if a parallel mutation arose in a functional region of a protein including, EcoCyc, 96 UniProt, 97 and the primary literature (see supplemental bibliography).</li>
+</ul>
+<h3 id="7-topology-based-identification-and-comprehensive-classification-of-four-transmembrane-helix-containing-proteins-4tms-in-the-human-genome">[7] Topology based identification and comprehensive classification of four-transmembrane helix containing proteins (4TMs) in the human genome</h3>
+<ul>
+<li>Authors: Misty M. Attwood, Arunkumar Krishnan, Valentina Pivotti, Samira Yazdi, M. S. Almén et al.</li>
+<li>Year: 2016</li>
+<li>Venue: BMC Genomics</li>
+<li>URL: https://www.semanticscholar.org/paper/268e83d5e00c4b7b210ab19c9bd873e0e50ba87e</li>
+<li>DOI: 10.1186/s12864-016-2592-7</li>
+<li>PMID: 27030248</li>
+<li>PMCID: 4815072</li>
+<li>Citations: 10</li>
+<li>Summary: This study identifies the complete 4TM complement from the latest release of the human genome and assess the 4TM structure group as a whole and functionally characterize this dataset and evaluates the resulting groups and ubiquitous functions, and furthermore describe disease and drug target involvement.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.718)<br />
+    &gt; The manual classification process included four steps, which are highlighted in Fig. 1B. Universal protein resource (Uniprot) [28] was used to access annotation information on the dataset by using the unique Ensembl protein identification associated with each protein. Uniprot is a large comprehensive repository of protein sequences with manually curated as well as automatically generated associated annotations. For each protein, the associated UniProt annotations were used in the curation process: gene name, sequence status, review status, Consensus Coding Sequence identifier, Transporter Classification number, Enzyme Commission number, Pfam domain information, Gene Ontology annotation terms, and protein family information.<br />
+    &gt; The Uniprot sequence information is derived from translated sequences that have been submitted to the International Nucleotide Sequence Database Collaboration (INSDC), which is EMBL-bank, GenBank, and DDBJ. The canonical sequence is determined from either the most prevalent, the most similar to orthologous sequences, the properties of the amino acid composition, or in lieu of nothing else, then the longest sequence. The sequence status is defined as either complete or fragment, in which the canonical sequence is missing amino acid residues, often in the initial or terminal ends. Those protein sequences identified as fragments were considered invalid proteins and culled from the dataset. To reduce falsepositive predictions from TOPCONS-single, proteins that were identified in literature or database sources as having less than or greater than four-transmembrane segments were also removed from the dataset.<br />
+    &gt; The initial gene annotation source, GenCode, has ~1050 more protein-coding gene entries than the most conservative annotation resource, the Consensus Coding Sequence dataset (CCDS) [64]. Therefore the CCDS identifier was used to assess the validity of each protein, i.e. that each has acceptable transcriptional support and recognized protein-coding annotation. Additionally, the sequence status, CCDS identifier, and sequence length were used to ensure that the predicted protein was the main (or canonical) protein product of the gene and not an isoform. There are eight predicted proteins in the dataset that do not have a CCDS identifier associated with them.</li>
+</ul>
+<h3 id="8-avian-immunome-db-an-example-of-a-user-friendly-interface-for-extracting-genetic-information">[8] Avian Immunome DB: an example of a user-friendly interface for extracting genetic information</h3>
+<ul>
+<li>Authors: Ralf C. Mueller, Nicolai Mallig, Jacqueline Smith, Lél Eöry, Richard I. Kuo et al.</li>
+<li>Year: 2020</li>
+<li>Venue: BMC Bioinformatics</li>
+<li>URL: https://www.semanticscholar.org/paper/b894d9ca8ea2d653bf1711a0c67dab71d054487c</li>
+<li>DOI: 10.1186/s12859-020-03764-3</li>
+<li>PMID: 33176685</li>
+<li>PMCID: 7661159</li>
+<li>Citations: 6</li>
+<li>Summary: The Avian Immunome DB (Avimm) for easy gene property extraction as exemplified by avian immune genes is presented and described, which contains 1170 distinct avian immune genes with canonical gene symbols and 612 synonyms across 363 bird species.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.708)<br />
+    &gt; Ever since the advent of commercial next-generation sequencing platforms in the early 2000s with its associated decrease in sequencing costs [1], the number of DNA sequences increased considerably [2]. Generally, these data become publicly accessible in databases provided by projects focussing on different aspects of biological sequence information [3,4]. Ensembl [5] and NCBI [6] for instance, have a strong focus on genome annotation with the help of RNA transcript information while UniProt has a pronounced emphasis on protein-coding genes and biological function of proteins. UniProt's records are either based on manually annotated, non-redundant protein sequences (SwissProt) or on highquality computationally analysed records, which are enriched with automatic annotation (TrEMBL) [7]. Relying on accurate genome annotations and protein descriptions, Gene Ontology (GO) [8,9] categorises gene products and fits them into a computational model of biological systems. Their assignment deploys a controlled vocabulary, so-called GO terms, to link genes and gene products to biological processes, cellular components, or molecular functions.<br />
+    &gt; However, genome annotation is not standardised, and each service provider uses their own custom-built annotation pipelines. As a consequence, this often leads to ambiguity in gene names during genome annotation with different gene symbols being given to the same gene or the same gene symbol being given to different, but similar genes. Additionally, since the pre-existing wealth of sequencing information relies on model organisms like human and mouse, there is a strong bias in gene symbols towards those chosen for these species. Particularly for model species, this issue has been partially addressed, for example by the Human Genome Organisation (HUGO) Gene Nomenclature Committee (HGNC) [10], the Vertebrate Gene Nomenclature Committee (VGNC) [11], or the Chicken Gene Nomenclature Consortium [12]. However, this neither guarantees that gene names are harmonised among these consortia, nor does it keep researchers from assigning alternative gene symbols in their annotations, especially when working with non-model species.</li>
+</ul>
+<h3 id="9-genome-wide-identification-of-conditionally-essential-genes-supporting-streptococcus-suis-growth-in-serum-and-cerebrospinal-fluid">[9] Genome-wide Identification of conditionally essential genes supporting Streptococcus suis growth in serum and cerebrospinal fluid</h3>
+<ul>
+<li>Authors: Maria Juanpere-Borràs, Tiantong Zhao, Jos Boekhorst, Blanca Fernandez-Ciruelos, Rajrita Sanyal et al.</li>
+<li>Year: 2025</li>
+<li>Venue: Virulence</li>
+<li>URL: https://www.semanticscholar.org/paper/400884affc80cbd5eef1e69b6961748a60a5b400</li>
+<li>DOI: 10.1080/21505594.2025.2600145</li>
+<li>PMID: 41396007</li>
+<li>PMCID: 12707516</li>
+<li>Citations: 1</li>
+<li>Summary: Using Tn-Seq coupled with Nanopore sequencing to identify conditionally essential genes for growth of S. suis provides new insights into the genetic requirements for S. suis survival in host-like environments and a deeper understanding of its ability to adapt to distinct physiological niches.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.703)<br />
+    &gt; Gene SSU_RS04755 has been predicted to encode a basic membrane family protein (BMP), a transmembrane component of specific ABC transporters. Growth curve experiments did not reveal a significant reduction in the growth rate of our ΔSSU_RS04755 mutant. The operon genes with SSU_RS04755 were predicted to encode an ATPbinding protein and a permease which are typical components of an ABC transporter. Both predicted ATPbinding protein and permease encoding genes appeared as CEGs in our Tn-seq results (Table 1). The protein sequence associated with SSU_RS04755 shares significant identity with lipoproteins that are components of nucleoside ABC transporters in Gram-positive bacteria (see above), suggesting that SSU_RS04755 and its operon genes may encode an ABC transporter complex involved in nucleoside transport. To investigate the possible functional equivalence of SSU_RS04755 operon genes with ABC transporters, we performed amino acid sequence alignments of SSU_RS04755 with PnrA and TmpC, which are homologous nucleoside binding lipoproteins from S. pneumoniae and Treponema pallidum (T. pallidum) respectively [49,50]. Using the crystal structure of PnrA binding to adenosine [49], we confirmed that all but one (T70) of the specific amino acids involved in adenosine binding by PnrA were conserved in SSU_RS04755 (Figure 5(c)).<br />
+    &gt; To verify if the structural positions of these amino acids were conserved, we performed a structural prediction (see methods) of the predicted S. suis lipoprotein SSU_RS04755 and aligned it to the structure of PnrA (ID 6y9U in Protein Data Bank (PDB). We confirmed that all amino acids involved in the adenosine binding are located at the same position in both protein structures.</li>
+</ul>
+<h3 id="10-functional-annotation-of-parasitic-worm-genomes-by-assigning-protein-names-and-go-terms">[10] Functional annotation of parasitic worm genomes, by assigning protein names and GO terms</h3>
+<ul>
+<li>Authors: Avril Coghlan, M. Berriman</li>
+<li>Year: 2018</li>
+<li>Venue: Unknown venue</li>
+<li>URL: https://www.semanticscholar.org/paper/583c74a2e225dbff5fca04d36298e5b690491e82</li>
+<li>DOI: 10.1038/protex.2018.055</li>
+<li>Citations: 1</li>
+<li>Summary: A computational pipeline for assigning protein names and GO terms to predicted proteins in parasitic worm (nematode and platyhelminth) genomes, which transfers names and Go terms from orthologues in other species.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.702)<br />
+    &gt; Given a set of predicted protein-coding genes for a newly sequenced genome, functional annotation involves assigning putative functions to the predicted genes. Two ways in which this can be done are assigning protein names and Gene Ontology (GO;Gene Ontology Consortium, 2010) terms to the predicted proteins. Here we describe a computational pipeline for assigning protein names and GO terms to predicted proteins in parasitic worm (nematode and platyhelminth) genomes, which transfers names and GO terms from orthologues in other species.<br />
+    &gt; When assigning protein names, UniProt protein naming rules (www.uniprot.org/docs/nameprot) are followed where possible. This recommends that a good and stable name for a protein is "as neutral as possible"; that a protein name "should be, as far as possible, unique and attributed to all orthologs"; and a protein name "should not contain a specific characteristic of the protein, and in particular it should not reflect the function or role of the protein, nor its subcellular location, its domain structure, its tissue specificity, its molecular weight or its species of origin".<br />
+    &gt; In our protocol, a protein name is assigned to each predicted protein based on curated names in UniProt (Bairoch &amp; Apweiler, 2000) for human, zebrafish, Drosophila melanogaster, Caenorhabditis elegans, and Schistosoma mansoni orthologues identified from a database of gene families (e.g. built using Ensembl Compara; Vilella et al. 2009), or (if no information is found from orthologues) based on InterPro (Hunter et al. 2012) domains. Figure 1 shows an example of using our protein naming pipeline for four Strongyloides ratti genes that belong to the tubulin polyglutamylase family (underlined in pink), where four different protein names were assigned to them (in pink), based on names of their C. elegans or human orthologues.<br />
+    &gt; Since each of the S. ratti genes belonged to a different subfamily of the tubulin polyglutamylase family, they were assigned different names.</li>
+</ul>
+<h3 id="11-next-generation-sequencing-and-transcriptome-analysis-predicts-biosynthetic-pathway-of-sennosides-from-senna-cassia-angustifolia-vahl-a-non-model-plant-with-potent-laxative-properties">[11] Next Generation Sequencing and Transcriptome Analysis Predicts Biosynthetic Pathway of Sennosides from Senna (Cassia angustifolia Vahl.), a Non-Model Plant with Potent Laxative Properties</h3>
+<ul>
+<li>Authors: Nagaraja Reddy Rama Reddy, Rucha Harishbhai Mehta, Palak Soni, Jayanti Makasana, N. Gajbhiye et al.</li>
+<li>Year: 2015</li>
+<li>Venue: PLoS ONE</li>
+<li>URL: https://www.semanticscholar.org/paper/fec6263b90f9cd765752bdb1be3d162872f2e64e</li>
+<li>DOI: 10.1371/journal.pone.0129422</li>
+<li>PMID: 26098898</li>
+<li>PMCID: 4476680</li>
+<li>Citations: 81</li>
+<li>Influential citations: 3</li>
+<li>Summary: A set of putative genes involved in various secondary metabolite pathways, especially those related to the synthesis of sennosides are identified which will serve as an important platform for public information about gene expression, genomics, and functional genomics in senna.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.691)<br />
+    &gt; Further the assembled transcript contigs were validated using CLC Genomics workbench (CLC Bio, Boston, MA 02108 USA) by mapping high quality reads back to the assembled transcript contigs. ORF-Predictor [57], an online tool, was used on default parameters to identify the coding DNA sequences (CDS) from assembled transcript contigs. GC counts of transcripts was determined using a custom-made perl script.<br />
+    &gt; Functional annotations. The functional annotation was performed by aligning coding DNA sequence (CDS) to NCBI 'green plant database (txid 33090)' database using basic local alignment search tool (BLASTX) [58] with an E-value threshold of 1e -06 and GO assignments were used to classify the functions of the predicted CDS. The GO mapping also provided ontology of defined terms representing gene product properties which were grouped into three main domains: biological process (BP), molecular function (MF) and cellular component (CC). GO mapping was carried out in order to retrieve GO terms for all the BLASTX functionally annotated CDS. The GO mapping used defined criteria to retrieve GO terms for annotated CDS which included use of BLASTX result accession IDs to retrieve gene names or symbols, UniProt IDs and direct search in the dbxref table of GO database. Identified gene names or symbols were then searched in the species specific entries of the gene-product tables of GO database. UniProt IDs made use of protein information resource (PIR) which includes protein sequence database (PSD), UniProt, SwissProt, TrEMBL, RefSeq, GenPept, and PDB databases. Gene Ontology analysis helps in specifying all the annotated nodes comprising of GO functional groups. CDS were compared against the COG (Clusters of Orthologous Groups) database for the analysis of phylogenetically widespread domain families. CDS were compared against Pfam database for higher-level groupings of related protein families, known as clans and the identification of domains that occurs within proteins. BLASTX was used against uniprot-swissprot database with cut-off e-value 1e-6 to annotate predicted CDS against protein.</li>
+</ul>
+<h3 id="12-quantification-of-cytosol-and-membrane-proteins-in-rumen-epithelium-of-sheep-with-low-or-high-ch4-emission-phenotype">[12] Quantification of cytosol and membrane proteins in rumen epithelium of sheep with low or high CH4 emission phenotype</h3>
+<ul>
+<li>Authors: J. Bond, A. Donaldson, S. Woodgate, K. Kamath, M. McKay et al.</li>
+<li>Year: 2022</li>
+<li>Venue: PLoS ONE</li>
+<li>URL: https://www.semanticscholar.org/paper/b1e6e0b34671baf1eb1ec74743f7301a52572b0b</li>
+<li>DOI: 10.1371/journal.pone.0273184</li>
+<li>PMID: 36256644</li>
+<li>PMCID: 9578583</li>
+<li>Citations: 4</li>
+<li>Influential citations: 1</li>
+<li>Summary: Background Ruminant livestock are a major contributor to Australian agricultural sector carbon emissions. Variation in methane (CH4) produced from enteric microbial fermentation of feed in the reticulo-rumen of sheep differs with different digestive functions. Method We isolated rumen epithelium enzymatically to extract membrane and cytosol proteins from sheep with high (H) and low (L) CH4 emission. Protein abundance was quantified using SWATH-mass spectrometry. Results The research found dif...</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.686)<br />
+    &gt; Protein identifications with 2 peptides and a confident protein score (P &lt;0.05) from the HpH fractionation and IDA-MS were used to assign subcellular localization. Using the top score given by WoLF PSORT [10] (www.genscript.com/wolf-psort.html) proteins were categorized into 8 locations. Membrane proteins were predicted using transmembrane helical Markov model (TMHMM) [11] (www.cbs.dtu.dk/services/TMHMM/). Proteins in the solute carrier protein (SLC) and ATP-binding cassette (ABC) transporter families were identified according to gene and protein name. We also used website gene names (www.genenames.org/data) to characterise the subcellular location of the transporter and the type of substrate they transport.<br />
+    &gt; For proteins annotated as 'uncharacterised' in figures and tables in the manuscript a BLAST protein homology search was carried out using the Ensembl or uniport accession code in uniprotKB (www.uniprot.org). The accession code page contains the sequence and a link to BLAST. BLASTp results against uniprotkb_Swissprot reference proteomes and an identity sequence match of &gt;95.5% to human, bovine (cattle) or caprine (goat) proteome annotation was accepted as the protein name.</li>
+</ul>
+<h3 id="13-defensive-fungal-symbiosis-on-insect-hindlegs">[13] Defensive fungal symbiosis on insect hindlegs</h3>
+<ul>
+<li>Authors: Takanori Nishino, Hiromi Mukai, M. Moriyama, Takahiro Hosokawa, Masahiko Tanahashi et al.</li>
+<li>Year: 2024</li>
+<li>Venue: bioRxiv</li>
+<li>URL: https://www.semanticscholar.org/paper/f28ad37271aab17c5c7c5ad8bfbef3017388d10c</li>
+<li>DOI: 10.1101/2024.03.25.586038</li>
+<li>PMID: 38585921</li>
+<li>PMCID: 10996522</li>
+<li>Citations: 2</li>
+<li>Summary: A novel external fungal symbiosis is uncovered in which host’s elaborate morphological, physiological and behavioral specializations underpin the selective recruitment of benign entomopathogens for a defensive purpose.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.685)<br />
+    &gt; Supplementary Fig. 10 (84,85); Urostylididae (86). No information is available for Tessaratomidae. For Cydnidae, while egg smearing was reported for some species (87), other species are likely to acquire the symbiont environmentally. For Pentatomidae and Scutelleridae, both egg smearing and environmental transmission may occur (88). S3), we identified 550 differentially expressed genes (DEGs) that showed significantly high expression levels in the hindleg of mature females (FDR q &lt; 0.001, Table S6). Functional enrichment analysis revealed an overall up-regulation of genes related to transporter activities in the hindleg of mature females (UniProt Keyword "Transport", P = 2.23e -9 ). The gene category included genes for ABC transporters (25 contigs), facilitated trehalose transporter Tret1 (14 contigs), alpha-tocopherol transfer protein (3 contigs), ammonium transporter Rh type C2, and zinc transporter ZIP8. The enhanced transport activities might reflect the secretory role of the epidermal cells of the hindleg organ, where uptake and secretion of nutrients from hemolymph to mycangial pores must actively occur to foster the fungal growth.<br />
+    &gt; As for individual genes, the most highly expressed DEG in the hindlegs of mature females was the gene for a Takeout family protein (TRINITY_DN2609_c0_g2_i2), and another Takeout family gene (TRINITY_DN4168_c0_g2_i1) was also highly expressed (rank 6, Table S6). Takeout family proteins are small secretion proteins that are thought to bind to and transport hydrophobic molecules (18). These proteins may represent the major carriers of hydrophobic materials secreted for the fungi growing on the hindleg organ. We also found that the hindlegs of mature females preferentially expressed UDP-glucuronosyltransferases (UGT, e.g.</li>
+</ul>
+<h3 id="14-construction-of-an-ortholog-database-using-the-semantic-web-technology-for-integrative-analysis-of-genomic-data">[14] Construction of an Ortholog Database Using the Semantic Web Technology for Integrative Analysis of Genomic Data</h3>
+<ul>
+<li>Authors: H. Chiba, Hiroyo Nishide, I. Uchiyama</li>
+<li>Year: 2015</li>
+<li>Venue: PLoS ONE</li>
+<li>URL: https://www.semanticscholar.org/paper/7cc805575c642aa8efdc1204383a7662965fbb60</li>
+<li>DOI: 10.1371/journal.pone.0122802</li>
+<li>PMID: 25875762</li>
+<li>PMCID: 4395280</li>
+<li>Citations: 14</li>
+<li>Summary: The ortholog database using the Semantic Web technology can contribute to biological knowledge discovery through integrative data analysis and examples demonstrate that the ortholog information described in RDF can be used to link various biological data such as taxonomy information and Gene Ontology.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.684)<br />
+    &gt; A typical use of an ortholog database is transferring functional annotations from known genes in model organisms to genes of unknown function in other organisms, on the basis of the conjecture that orthologs are usually functionally conserved. To demonstrate such an application in our database, we showed a query to retrieve ortholog information of a specified protein.<br />
+    &gt; Here, we specified a UniProt ID to obtain ortholog information. For describing functional categories of genes, we used Gene Ontology (GO) [24]. The UniProt GO Annotation (UniProt-GOA) database [25] (http://www.ebi.ac.uk/GOA) provides GO term assignment to proteins with evidence codes (http://www.geneontology.org/GO.evidence.shtml). We created an ontology for GO annotation (GOA-O, Table 1, http://purl.jp/bio/11/goa) and described UniProt-GOA data in RDF using it (Table 2). If some model organisms have experimentally verified GO annotations, we can transfer such a validated annotation to orthologs of other organisms.</li>
+</ul>
+<h3 id="15-phyletic-profiling-with-cliques-of-orthologs-is-enhanced-by-signatures-of-paralogy-relationships">[15] Phyletic Profiling with Cliques of Orthologs Is Enhanced by Signatures of Paralogy Relationships</h3>
+<ul>
+<li>Authors: N. Skunca, Matko Bosnjak, A. Kriško, P. Panov, S. Džeroski et al.</li>
+<li>Year: 2013</li>
+<li>Venue: PLoS Computational Biology</li>
+<li>URL: https://www.semanticscholar.org/paper/1510cd0e087650323cdf75ea132e6fcbc4d7e852</li>
+<li>DOI: 10.1371/journal.pcbi.1002852</li>
+<li>PMID: 23308060</li>
+<li>PMCID: 3536626</li>
+<li>Citations: 41</li>
+<li>Influential citations: 2</li>
+<li>Summary: A novel model for computational annotation that refines two established concepts: annotation based on homology and annotations based on phyletic profiling is introduced, which will contribute to making experimental validation of computational predictions more approachable, both in cost and time.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.680)<br />
+    &gt; In addition to the systematic experimental verification of novel annotations in three GO categories as described above, here we highlight individual predictions for which we found supporting evidence in the publicly available databases. This information was not available to the classifiers at the time when the models were constructed. The following examples are for E. coli K12, as this is by far the best-studied model prokaryote [21].<br />
+    &gt; We predict genes hypC and hybG to have ''nickel cation binding.'' These genes had no GO terms assigned in the 07-02-2012 UniProt-GOA release (http://www.uniprot.org/uniprot/ P0AAM3 and http://www.uniprot.org/uniprot/P0AAM7), and we therefore considered them unannotated. In the meantime, hypC was annotated with ''metal ion binding'' using experimental evidence: this is a parent GO term of our prediction. Moreover, when examining the literature, we found evidence that these two genes are involved in the biosynthesis of the [NiFe] cluster [22].<br />
+    &gt; Another prediction is for gltL: we predicted it is annotated with ''ATP-binding cassette (ABC) transporter complex.'' In line with our predictions, PortEco, a portal that includes information from 14 different E. coli data resources [23], labels the gene as ''ATPbinding component of ABC superfamily.'' Note that more general electronic GO annotations were available for this gene, e.g. ''ATP binding,'' ''ATPase activity,'' and ''ATP catabolic process'' (http://www.uniprot.org/uniprot/P0AAG3).<br />
+    &gt; A similar prediction of a more detailed function is for ybgI, where we predict GO terms from both BP and MF ontologies. This gene is known to be a conserved metal-binding protein [24], having an electronic GO annotation ''metal ion binding''; we predict it is annotated with the BP GO term ''Mo-molybdopterin cofactor metabolic process.''</li>
+</ul>
+<h3 id="16-gene-discovery-through-transcriptome-sequencing-for-the-invasive-mussel-limnoperna-fortunei">[16] Gene Discovery through Transcriptome Sequencing for the Invasive Mussel Limnoperna fortunei</h3>
+<ul>
+<li>Authors: Marcela Uliano-Silva, J. Americo, R. Brindeiro, F. Dondero, F. Prosdocimi et al.</li>
+<li>Year: 2014</li>
+<li>Venue: PLoS ONE</li>
+<li>URL: https://www.semanticscholar.org/paper/6e168d6898550dc5793d4b1606efdb9c7e9caaed</li>
+<li>DOI: 10.1371/journal.pone.0102973</li>
+<li>PMID: 25047650</li>
+<li>PMCID: 4105566</li>
+<li>Citations: 52</li>
+<li>Influential citations: 4</li>
+<li>Summary: The presence of toll-like receptors gives a first insight into an immune system that could be more complex than previously assumed and may be involved in the prevention of disease and extinction when population densities are high and the apparent lack of special adaptations to extremely low O2 levels is a target worth pursuing for the development of a molecular control approach.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.680)<br />
+    &gt; BLAST analysis returned significant similarities (e-value cutoff , = 10 25 ) with other protein-coding genes for a small fraction of assembled genes. Table 3 reports the results obtained against the three major protein databases, UNIPROT, NCBI non redundant (nr) and eggNOG. UNIPROT more frequent BLAST hits were against human sequences (16%), Mus musculus (15%), Ratus novergicus (9%) and Drosophila melanogaster (5%). The reproducibility of results in different databases highlights the robustness of the analysis. However, almost 71% of unigenes were not annotated in BLAST searches with protein sequences from the NCBI nr database (FASTA sequences and the annotation text file can be downloaded at http://goo.gl/DZt7K8). We identified several key genes for gene-environment relationships such as cytochrome P450, proteins involved in the toll-like receptors signaling pathway, glutathione S-transferase (GST), gammaglutamil-transpeptidase (GGT) and adhesive proteins Mepf1 (9 unigenes) and Mepf2 (103 unigenes) (Table S2 in supporting information presents the KEGG Orthology identifiers (KO) and the unigenes IDs). For a more straightforward analysis, Table 4 shows the quantity of unigenes annotated as cellular defensesrelated genes through BLAST searches against C. gigas protein sequences (Table S5 presents L. fortunei IDs for genes in Table 4).<br />
+    &gt; A total of 3,612 L. fortunei unigenes were classified into 20 of 24 functional categories at eggNOG database (Figure 2). KO identifiers were assigned to 2,579 unigenes, indicating involvement in 292 different pathways (Table S2). These sequences could be assigned to specific KEGG classes: 39.8% to genetic information processing (GIP); 34.3% to metabolism (with enzymes being the most abundant subcategory, 368 unigenes) and 11.5% to Signaling and cellular processes, including cytoskeleton proteins and transporters.</li>
+</ul>
+<h3 id="17-genomic-and-proteomic-characterization-of-the-deltamethrin-degrading-bacterium-paracoccus-sp-p-2">[17] Genomic and Proteomic Characterization of the Deltamethrin-Degrading Bacterium Paracoccus sp. P-2</h3>
+<ul>
+<li>Authors: Qing Li, Yawei Zhang, Xianfeng Ren, Qingguo Meng, Baocheng Xu et al.</li>
+<li>Year: 2025</li>
+<li>Venue: Microorganisms</li>
+<li>URL: https://www.semanticscholar.org/paper/74c0d94a67b8f801f8322fe976457dfd4c3fd76c</li>
+<li>DOI: 10.3390/microorganisms13112481</li>
+<li>PMID: 41304166</li>
+<li>PMCID: 12654547</li>
+<li>Summary: This study elucidates the impact of deltamethrin on bacterial metabolism and its degradation mechanism by Paracoccus sp.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.679)<br />
+    &gt; To obtain comprehensive gene function information, we performed gene function annotation using eight major databases, including UniProt [23], KEGG [24] and KEGG Pathway, GO [25], Pfam [26], COG [27], TIGERfams [28], RefSeq, and NR. The predicted gene sequences were aligned against functional databases such as COG, KEGG, UniProt, and RefSeq using BLAST+ (Version: 2.11.0+), resulting in the gene function annotation outcomes. The statistical results of the annotations are shown in Table S2. Among the top 20 domains annotated based on Pfam, we observed that genes belonging to "ABC transporters" were the most abundant (Figure 2A). As we know, ABC transporters comprise a large superfamily of proteins that facilitate the translocation of a diverse array of substrates, including ions and macromolecules, across cellular membranes through ATP binding and hydrolysis. Furthermore, these transporters are also critically involved in the cellular uptake and efflux of numerous organic pollutants [29,30]. These results suggest that the abundance of ABC transporter genes provides Paracoccus sp. P-2 with a significant capacity for deltamethrin transport. As shown in Figure 2B, the genes annotated by KEGG are divided into 5 major categories and 23 minor subcategories. Among them, the subcategory with the largest number of genes is metabolic pathways, which include amino acid metabolism, carbohydrate metabolism, energy metabolism, metabolism of cofactors and vitamins, among others. The abundance of genes related to metabolic pathways provides the fundamental basis for the survival and deltamethrin degradation capability of Paracoccus sp. P-2. It is worth noting that a substantial number (254) of membrane transporter genes have been annotated in the genome of Paracoccus sp. P-2. Pollutants are often adsorbed onto the microbial membrane surface and subsequently internalized into the cells-a process in which membrane transporter proteins play a crucial role [31]. This abundance of transporter genes highlights the strain's strong capacity for pollutant transport.</li>
+</ul>
+<h3 id="18-the-thermus-thermophilus-dead-box-protein-hera-is-a-general-rna-binding-protein-and-plays-a-key-role-in-trna-metabolism">[18] The Thermus thermophilus DEAD-box protein Hera is a general RNA binding protein and plays a key role in tRNA metabolism</h3>
+<ul>
+<li>Authors: Pascal Donsbach, Brian A. Yee, Dione L Sánchez-Hevia, J. Berenguer, S. Aigner et al.</li>
+<li>Year: 2020</li>
+<li>Venue: RNA</li>
+<li>URL: https://www.semanticscholar.org/paper/533f89524b50f1df6146e8665eed9512b23e1a5c</li>
+<li>DOI: 10.1261/rna.075580.120</li>
+<li>PMID: 32669294</li>
+<li>PMCID: 7566566</li>
+<li>Citations: 3</li>
+<li>Summary: Gene ontology analysis reveals an enrichment of genes related to translation, including mRNAs of ribosomal proteins, tRNAs, tRNA ligases, and t RNA-modifying enzymes, consistent with a key role of Hera in ribosome and tRNA metabolism.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.678)<br />
+    &gt; However, the peaks were in different positions within the gene in the four individual experiments performed (Fig. 6), and no specific binding site within the mRNA could be identified from the data.<br />
+    &gt; Among the genes identified were numerous genes related to protein biosynthesis (tRNAs, tRNA-aminoacyl synthetases, tRNA-modifying enzymes, ribosomal proteins). As an example, genes for ribosomal proteins were highly represented with 18 out of the 22 genes (82%) for small ribosomal proteins, (12 after cold shock, 55%), and 31 out of 34 genes (91%) for large ribosomal subunit proteins (22 after cold shock, 65%). Other protein families represented were chaperones (e.g., dnaK, dnaJ, grpE, but not dafA, groES, groEL, clpB), cold-shock and general stress proteins (TT_RS08235, _09210; hsp22, hsp30; uspA), topoisomerase genes (gyrA, gyrB, topA), genes for transporters and their subunits (often both the gene for the substrate-bind-ing protein and for the permease, for example, branchedchain amino acid ABC transporter, TT_RS01115 and _01120), and genes related to sugar-and cell wall metabolism and cell division, as well as CRISPR-related genes. In many cases, genes for all subunits of protein complexes (e.g., genes for cytochrome c oxidase subunits I and II; clpA, clpX coding for the ClpAX protease) were present.<br />
+    &gt; A systematic gene ontology analysis using the DAVID server 6.7 (https://david-d.ncifcrf.gov/home.jsp) (Huang da et al. 2009a,b) with the consolidated gene lists for Hera1/Hera2, and Hera3/Hera4, translated into UniProt accession numbers, revealed three annotation clusters with significant enrichment (Supplemental Table 4a,b).</li>
+</ul>
+<h3 id="19-spot-a-machine-learning-model-that-predicts-specific-substrates-for-transport-proteins">[19] SPOT: A machine learning model that predicts specific substrates for transport proteins</h3>
+<ul>
+<li>Authors: Alexander Kroll, Nico Niebuhr, Gregory Butler, Martin J. Lercher</li>
+<li>Year: 2024</li>
+<li>Venue: PLOS Biology</li>
+<li>URL: https://www.semanticscholar.org/paper/4e4856476180ba17f72a69e8ea0c68e75232f758</li>
+<li>DOI: 10.1371/journal.pbio.3002807</li>
+<li>PMID: 39325691</li>
+<li>PMCID: 11426516</li>
+<li>Citations: 21</li>
+<li>Summary: SPOT is presented, the first general machine learning model that can successfully predict specific substrates for arbitrary transport proteins, achieving an accuracy above 92% on independent and diverse test data covering widely different transporters and a broad range of metabolites.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.678)<br />
+    &gt; To construct the data set, we extracted 4,775 transporter-substrate pairs with experimental evidence from the Gene Ontology (GO) database [25] and 15,864 data points from the UniProt database that were labeled as manually reviewed [2]. After removing 2,633 duplicates of data points present in both databases, the resulting merged data set consisted of 18,006 unique transporter-substrate pairs with UniProt IDs for the transporters and ChEBI IDs for the substrates.<br />
+    &gt; The Transporter Classification Database (TCDB) [26] is another database containing functional information for transport proteins. Examining a random sample of literature sources listed in TCDB entries, we noticed that many assigned protein functions have not been validated experimentally. To further investigate the quality of the TCDB data, we extracted 18,051 transporter-substrate pairs with UniProt IDs from the TCDB, covering 11,799 different proteins. Proteins in the UniProt database have been assigned annotation scores that range from 1 to 5 and provide a measure of accuracy of the protein annotation; the extraction of transporter-substrate pairs from UniProt described above considered only those with score 5. In constrast, over 50% of UniProt IDs extracted from the TCDB have a UniProt annotation score of 2 or below (S1 Fig) , indicating a lack of experimental evidence for many TCDB entries. To ensure high data quality, we thus did not use data from TCDB.<br />
+    &gt; For the binary task of predicting whether a given molecule is a substrate for a transporter, we mapped all substrates in the data set to InChI (International Chemical Identifier) [27] and SMILES [28] strings, which are textual identifiers of the structure of chemical substances. Some of the substrates could not be mapped, e.g., because their ChEBI IDs were referring to general molecule typess-such as sugar, ion, or protein-instead of specific molecules. We removed the corresponding data points, 78% of which were extracted from the UniProt database and 22% from the GO Annotation database. Furthermore, we removed all ~7,500 transporter-substrate pairs with a proton as a substrate.</li>
+</ul>
+<h3 id="20-recent-advances-in-genome-annotation-and-synthetic-biology-for-the-development-of-microbial-chassis">[20] Recent advances in genome annotation and synthetic biology for the development of microbial chassis</h3>
+<ul>
+<li>Authors: Saltiel Hamese, Kanganwiro Mugwanda, M. Takundwa, Earl Prinsloo, D. B. Thimiri Govinda Raj</li>
+<li>Year: 2023</li>
+<li>Venue: Journal of Genetic Engineering &amp; Biotechnology</li>
+<li>URL: https://www.semanticscholar.org/paper/64c7c01c15495b3bf0ddb86c33e71d766b554517</li>
+<li>DOI: 10.1186/s43141-023-00598-3</li>
+<li>PMID: 38038785</li>
+<li>PMCID: 10692039</li>
+<li>Citations: 4</li>
+<li>Influential citations: 1</li>
+<li>Summary: The strategies for genome annotations of lactic acid bacteria provide insights into streamlining genome reduction without compromising the functionality of the chassis and the potential for minimal genome chassis development.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.678)<br />
+    &gt; A webpage that provides access to gene prediction in metagenomes [24] (Meta)Prodigal Gene prediction software that is used to identify protein-coding genes in prokaryotic genomes [29] MetaGeneAnnotator Predicts all kinds of prokaryotic genes from a single or a set of anonymous genomic sequences having a variety of lengths [47] CDD Comprises protein domains conserved throughout molecular evolution [41] ChEBI<br />
+    &gt; The CHEBI database contains manually curated data on chemical entities [26] GO FEAT A web-based functional annotation tool for genomic and transcriptomic data [5] GO The Gene Ontology database provides a standardized vocabulary for describing gene function [2,9] KEGG Links genomic data and higher-order functional information [32] Rhea Rhea is a database that contains functional annotations for enzymes and descriptions of metabolic pathways. The annotations in Rhea are based on expert-curated, non-redundant information on biochemical reactions [43] InterPro InterPro provides functional analysis of proteins by classifying them into families and predicting domains and important sites [53] NCBI Blast BLAST is a program that identifies regions of similarity between sequences [30] SEED<br />
+    &gt; The SEED database provides genome annotations across thousands of genomes [52] UniProt A freely accessible resource on protein sequences and functional annotation [11] RefSeq RefSeq provides a well-annotated set of sequences, including genomic DNA, transcripts, and proteins [48] FunMappOne FunMappOne is a tool for functional analysis and visualization of gene lists [60] g:Profiler Web server for functional enrichment analysis and additional information mining [37] GAEV A tool that was developed for the construction of complete sets of molecular pathways for non-model organisms using KEGG gene function annotations [73] GOPlot GOPlot is an R package for the functional analysis of gene lists [69]</li>
+</ul>
+<h2 id="notes">Notes</h2>
+<ul>
+<li>This provider combines <code>search_papers_by_relevance</code> with <code>snippet_search</code>.</li>
+<li>No synthesis or second-stage model call is performed.</li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>H. Lorenzi, D. Puiu, J. Miller, L. Brinkac, P. Amedeo et al. (2010). New Assembly, Reannotation and Analysis of the Entamoeba histolytica Genome Reveal New Genomic Features and Protein Content Information. PLoS Neglected Tropical Diseases. https://www.semanticscholar.org/paper/740492918c8083d568473ed3576b8520db4e5005</li>
+<li>Dawn Cotter, A. Maer, C. Guda, Brian Saunders, S. Subramaniam (2005). LMPD: LIPID MAPS proteome database. Nucleic Acids Research. https://www.semanticscholar.org/paper/265c37b45326b7927e396484751e84e4aeff92d5</li>
+<li>Christopher M. Humphreys, Samantha McLean, Sarah Schatschneider, Thomas Millat, A. Henstra et al. (2015). Whole genome sequence and manual annotation of Clostridium autoethanogenum, an industrially relevant bacterium. BMC Genomics. https://www.semanticscholar.org/paper/8960e4d28fe195cb11cf0274c2dbd5952eefbef1</li>
+<li>P. Hornbeck, J. Kornhauser, S. Tkachev, Bin Zhang, E. Skrzypek et al. (2011). PhosphoSitePlus: a comprehensive resource for investigating the structure and function of experimentally determined post-translational modifications in man and mouse. Nucleic Acids Research. https://www.semanticscholar.org/paper/93e4acf4ba3bca1b379ae8292e73dddb344abd90</li>
+<li>Samuel J. Modlin, A. Elghraoui, Deepika Gunasekaran, Alyssa M Zlotnicki, N. Dillon et al. (2021). Structure-Aware Mycobacterium tuberculosis Functional Annotation Uncloaks Resistance, Metabolic, and Virulence Genes. mSystems. https://www.semanticscholar.org/paper/76ff9a62b36b32cc10e46e71ffd4dd90344e4706</li>
+<li>Megan G. Behringer, Wei-Chin Ho, Samuel F. Miller, Sarah B. Worthan, Zeer Cen et al. (2024). Trade-offs, trade-ups, and high mutational parallelism underlie microbial adaptation during extreme cycles of feast and famine. Current biology : CB. https://www.semanticscholar.org/paper/13c71a271ad81ea813516193454b0fed04b2cd2b</li>
+<li>Misty M. Attwood, Arunkumar Krishnan, Valentina Pivotti, Samira Yazdi, M. S. Almén et al. (2016). Topology based identification and comprehensive classification of four-transmembrane helix containing proteins (4TMs) in the human genome. BMC Genomics. https://www.semanticscholar.org/paper/268e83d5e00c4b7b210ab19c9bd873e0e50ba87e</li>
+<li>Ralf C. Mueller, Nicolai Mallig, Jacqueline Smith, Lél Eöry, Richard I. Kuo et al. (2020). Avian Immunome DB: an example of a user-friendly interface for extracting genetic information. BMC Bioinformatics. https://www.semanticscholar.org/paper/b894d9ca8ea2d653bf1711a0c67dab71d054487c</li>
+<li>Maria Juanpere-Borràs, Tiantong Zhao, Jos Boekhorst, Blanca Fernandez-Ciruelos, Rajrita Sanyal et al. (2025). Genome-wide Identification of conditionally essential genes supporting Streptococcus suis growth in serum and cerebrospinal fluid. Virulence. https://www.semanticscholar.org/paper/400884affc80cbd5eef1e69b6961748a60a5b400</li>
+<li>Avril Coghlan, M. Berriman (2018). Functional annotation of parasitic worm genomes, by assigning protein names and GO terms. https://www.semanticscholar.org/paper/583c74a2e225dbff5fca04d36298e5b690491e82</li>
+<li>Nagaraja Reddy Rama Reddy, Rucha Harishbhai Mehta, Palak Soni, Jayanti Makasana, N. Gajbhiye et al. (2015). Next Generation Sequencing and Transcriptome Analysis Predicts Biosynthetic Pathway of Sennosides from Senna (Cassia angustifolia Vahl.), a Non-Model Plant with Potent Laxative Properties. PLoS ONE. https://www.semanticscholar.org/paper/fec6263b90f9cd765752bdb1be3d162872f2e64e</li>
+<li>J. Bond, A. Donaldson, S. Woodgate, K. Kamath, M. McKay et al. (2022). Quantification of cytosol and membrane proteins in rumen epithelium of sheep with low or high CH4 emission phenotype. PLoS ONE. https://www.semanticscholar.org/paper/b1e6e0b34671baf1eb1ec74743f7301a52572b0b</li>
+<li>Takanori Nishino, Hiromi Mukai, M. Moriyama, Takahiro Hosokawa, Masahiko Tanahashi et al. (2024). Defensive fungal symbiosis on insect hindlegs. bioRxiv. https://www.semanticscholar.org/paper/f28ad37271aab17c5c7c5ad8bfbef3017388d10c</li>
+<li>H. Chiba, Hiroyo Nishide, I. Uchiyama (2015). Construction of an Ortholog Database Using the Semantic Web Technology for Integrative Analysis of Genomic Data. PLoS ONE. https://www.semanticscholar.org/paper/7cc805575c642aa8efdc1204383a7662965fbb60</li>
+<li>N. Skunca, Matko Bosnjak, A. Kriško, P. Panov, S. Džeroski et al. (2013). Phyletic Profiling with Cliques of Orthologs Is Enhanced by Signatures of Paralogy Relationships. PLoS Computational Biology. https://www.semanticscholar.org/paper/1510cd0e087650323cdf75ea132e6fcbc4d7e852</li>
+<li>Marcela Uliano-Silva, J. Americo, R. Brindeiro, F. Dondero, F. Prosdocimi et al. (2014). Gene Discovery through Transcriptome Sequencing for the Invasive Mussel Limnoperna fortunei. PLoS ONE. https://www.semanticscholar.org/paper/6e168d6898550dc5793d4b1606efdb9c7e9caaed</li>
+<li>Qing Li, Yawei Zhang, Xianfeng Ren, Qingguo Meng, Baocheng Xu et al. (2025). Genomic and Proteomic Characterization of the Deltamethrin-Degrading Bacterium Paracoccus sp. P-2. Microorganisms. https://www.semanticscholar.org/paper/74c0d94a67b8f801f8322fe976457dfd4c3fd76c</li>
+<li>Pascal Donsbach, Brian A. Yee, Dione L Sánchez-Hevia, J. Berenguer, S. Aigner et al. (2020). The Thermus thermophilus DEAD-box protein Hera is a general RNA binding protein and plays a key role in tRNA metabolism. RNA. https://www.semanticscholar.org/paper/533f89524b50f1df6146e8665eed9512b23e1a5c</li>
+<li>Alexander Kroll, Nico Niebuhr, Gregory Butler, Martin J. Lercher (2024). SPOT: A machine learning model that predicts specific substrates for transport proteins. PLOS Biology. https://www.semanticscholar.org/paper/4e4856476180ba17f72a69e8ea0c68e75232f758</li>
+<li>Saltiel Hamese, Kanganwiro Mugwanda, M. Takundwa, Earl Prinsloo, D. B. Thimiri Govinda Raj (2023). Recent advances in genome annotation and synthetic biology for the development of microbial chassis. Journal of Genetic Engineering &amp; Biotechnology. https://www.semanticscholar.org/paper/64c7c01c15495b3bf0ddb86c33e71d766b554517</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88FQ2
+gene_symbol: pydP
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: pydP encodes PydP transporter, NCS1 nucleoside transporter family, curated in the NCS1 purine-cytosine/nucleobase
+  permeases subgroup with core nucleobase transmembrane transporter activity context.
+existing_annotations:
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: located_in
+  review:
+    summary: Plasma membrane localization is appropriate for this bacterial membrane protein.
+    action: ACCEPT
+    reason: The UniProt/GOA membrane context supports plasma or inner-membrane localization.
+    supported_by:
+    - reference_id: file:PSEPK/pydP/pydP-goa.tsv
+      supporting_text: &#34;GO:0005886\tplasma membrane&#34;
+    - reference_id: file:PSEPK/pydP/pydP-uniprot.txt
+      supporting_text: &#39;DE   SubName: Full=PydP transporter, NCS1 nucleoside transporter family {ECO:0000313|EMBL:AAN69627.1};&#39;
+    - reference_id: file:PSEPK/pydP/pydP-deep-research-asta.md
+      supporting_text: &#39;- **Protein Description:** SubName: Full=PydP transporter, NCS1 nucleoside transporter family {ECO:0000313|EMBL:AAN69627.1};&#39;
+    - reference_id: file:PSEPK/pydP/pydP-deep-research-asta.md
+      supporting_text: &#39;- **Key Domains:** Pur-cyt_permease. (IPR001248); Uracil/uridine/allantoin_perm. (IPR045225); Transp_cyt_pur
+        (PF02133)&#39;
+    - reference_id: file:PSEPK/pydP/pydP-uniprot.txt
+      supporting_text: &#39;CC   -!- SUBCELLULAR LOCATION: Membrane {ECO:0000256|ARBA:ARBA00004141}; Multi-&#39;
+- term:
+    id: GO:0015205
+    label: nucleobase transmembrane transporter activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: enables
+  review:
+    summary: nucleobase transmembrane transporter activity is appropriate broad NCS1-family nucleobase transport context.
+    action: ACCEPT
+    reason: The purine-cytosine permease/NCS1 family evidence supports nucleobase transport, but not a narrower substrate
+      for every paralog.
+    supported_by:
+    - reference_id: file:PSEPK/pydP/pydP-goa.tsv
+      supporting_text: &#34;GO:0015205\tnucleobase transmembrane transporter activity&#34;
+    - reference_id: file:PSEPK/pydP/pydP-uniprot.txt
+      supporting_text: &#39;DE   SubName: Full=PydP transporter, NCS1 nucleoside transporter family {ECO:0000313|EMBL:AAN69627.1};&#39;
+    - reference_id: file:PSEPK/pydP/pydP-deep-research-asta.md
+      supporting_text: &#39;- **Protein Description:** SubName: Full=PydP transporter, NCS1 nucleoside transporter family {ECO:0000313|EMBL:AAN69627.1};&#39;
+    - reference_id: file:PSEPK/pydP/pydP-deep-research-asta.md
+      supporting_text: &#39;- **Key Domains:** Pur-cyt_permease. (IPR001248); Uracil/uridine/allantoin_perm. (IPR045225); Transp_cyt_pur
+        (PF02133)&#39;
+    - reference_id: file:PSEPK/pydP/pydP-uniprot.txt
+      supporting_text: &#39;CC   -!- SUBCELLULAR LOCATION: Membrane {ECO:0000256|ARBA:ARBA00004141}; Multi-&#39;
+- term:
+    id: GO:0015851
+    label: nucleobase transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: nucleobase transport is appropriate broad NCS1-family nucleobase transport context.
+    action: ACCEPT
+    reason: The purine-cytosine permease/NCS1 family evidence supports nucleobase transport, but not a narrower substrate
+      for every paralog.
+    supported_by:
+    - reference_id: file:PSEPK/pydP/pydP-goa.tsv
+      supporting_text: &#34;GO:0015851\tnucleobase transport&#34;
+    - reference_id: file:PSEPK/pydP/pydP-uniprot.txt
+      supporting_text: &#39;DE   SubName: Full=PydP transporter, NCS1 nucleoside transporter family {ECO:0000313|EMBL:AAN69627.1};&#39;
+    - reference_id: file:PSEPK/pydP/pydP-deep-research-asta.md
+      supporting_text: &#39;- **Protein Description:** SubName: Full=PydP transporter, NCS1 nucleoside transporter family {ECO:0000313|EMBL:AAN69627.1};&#39;
+    - reference_id: file:PSEPK/pydP/pydP-deep-research-asta.md
+      supporting_text: &#39;- **Key Domains:** Pur-cyt_permease. (IPR001248); Uracil/uridine/allantoin_perm. (IPR045225); Transp_cyt_pur
+        (PF02133)&#39;
+    - reference_id: file:PSEPK/pydP/pydP-uniprot.txt
+      supporting_text: &#39;CC   -!- SUBCELLULAR LOCATION: Membrane {ECO:0000256|ARBA:ARBA00004141}; Multi-&#39;
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: Generic membrane localization is true but less informative than plasma membrane.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: A more specific plasma-membrane annotation is present.
+    supported_by:
+    - reference_id: file:PSEPK/pydP/pydP-goa.tsv
+      supporting_text: &#34;GO:0016020\tmembrane&#34;
+    - reference_id: file:PSEPK/pydP/pydP-uniprot.txt
+      supporting_text: &#39;DE   SubName: Full=PydP transporter, NCS1 nucleoside transporter family {ECO:0000313|EMBL:AAN69627.1};&#39;
+    - reference_id: file:PSEPK/pydP/pydP-deep-research-asta.md
+      supporting_text: &#39;- **Protein Description:** SubName: Full=PydP transporter, NCS1 nucleoside transporter family {ECO:0000313|EMBL:AAN69627.1};&#39;
+    - reference_id: file:PSEPK/pydP/pydP-deep-research-asta.md
+      supporting_text: &#39;- **Key Domains:** Pur-cyt_permease. (IPR001248); Uracil/uridine/allantoin_perm. (IPR045225); Transp_cyt_pur
+        (PF02133)&#39;
+    - reference_id: file:PSEPK/pydP/pydP-uniprot.txt
+      supporting_text: &#39;CC   -!- SUBCELLULAR LOCATION: Membrane {ECO:0000256|ARBA:ARBA00004141}; Multi-&#39;
+- term:
+    id: GO:0022857
+    label: transmembrane transporter activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: transmembrane transporter activity is true but broad relative to the substrate/family-specific transporter call.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: A more informative transporter term is available for the core function.
+    supported_by:
+    - reference_id: file:PSEPK/pydP/pydP-goa.tsv
+      supporting_text: &#34;GO:0022857\ttransmembrane transporter activity&#34;
+    - reference_id: file:PSEPK/pydP/pydP-uniprot.txt
+      supporting_text: &#39;DE   SubName: Full=PydP transporter, NCS1 nucleoside transporter family {ECO:0000313|EMBL:AAN69627.1};&#39;
+    - reference_id: file:PSEPK/pydP/pydP-deep-research-asta.md
+      supporting_text: &#39;- **Protein Description:** SubName: Full=PydP transporter, NCS1 nucleoside transporter family {ECO:0000313|EMBL:AAN69627.1};&#39;
+    - reference_id: file:PSEPK/pydP/pydP-deep-research-asta.md
+      supporting_text: &#39;- **Key Domains:** Pur-cyt_permease. (IPR001248); Uracil/uridine/allantoin_perm. (IPR045225); Transp_cyt_pur
+        (PF02133)&#39;
+    - reference_id: file:PSEPK/pydP/pydP-uniprot.txt
+      supporting_text: &#39;CC   -!- SUBCELLULAR LOCATION: Membrane {ECO:0000256|ARBA:ARBA00004141}; Multi-&#39;
+    proposed_replacement_terms:
+    - id: GO:0015205
+      label: nucleobase transmembrane transporter activity
+- term:
+    id: GO:0055085
+    label: transmembrane transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: transmembrane transport is true but broad relative to the substrate/family-specific transporter call.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: A more informative transporter term is available for the core function.
+    supported_by:
+    - reference_id: file:PSEPK/pydP/pydP-goa.tsv
+      supporting_text: &#34;GO:0055085\ttransmembrane transport&#34;
+    - reference_id: file:PSEPK/pydP/pydP-uniprot.txt
+      supporting_text: &#39;DE   SubName: Full=PydP transporter, NCS1 nucleoside transporter family {ECO:0000313|EMBL:AAN69627.1};&#39;
+    - reference_id: file:PSEPK/pydP/pydP-deep-research-asta.md
+      supporting_text: &#39;- **Protein Description:** SubName: Full=PydP transporter, NCS1 nucleoside transporter family {ECO:0000313|EMBL:AAN69627.1};&#39;
+    - reference_id: file:PSEPK/pydP/pydP-deep-research-asta.md
+      supporting_text: &#39;- **Key Domains:** Pur-cyt_permease. (IPR001248); Uracil/uridine/allantoin_perm. (IPR045225); Transp_cyt_pur
+        (PF02133)&#39;
+    - reference_id: file:PSEPK/pydP/pydP-uniprot.txt
+      supporting_text: &#39;CC   -!- SUBCELLULAR LOCATION: Membrane {ECO:0000256|ARBA:ARBA00004141}; Multi-&#39;
+    proposed_replacement_terms:
+    - id: GO:0015205
+      label: nucleobase transmembrane transporter activity
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/pydP/pydP-goa.tsv
+  title: QuickGO GOA annotations for pydP
+  findings: []
+- id: file:PSEPK/pydP/pydP-uniprot.txt
+  title: UniProtKB entry for pydP (Q88FQ2)
+  findings:
+  - supporting_text: &#39;DE   SubName: Full=PydP transporter, NCS1 nucleoside transporter family {ECO:0000313|EMBL:AAN69627.1};&#39;
+- id: file:PSEPK/pydP/pydP-deep-research-asta.md
+  title: Asta retrieval report for pydP (Q88FQ2)
+  findings:
+  - supporting_text: &#39;- **Protein Description:** SubName: Full=PydP transporter, NCS1 nucleoside transporter family {ECO:0000313|EMBL:AAN69627.1};&#39;
+  - supporting_text: &#39;- **Key Domains:** Pur-cyt_permease. (IPR001248); Uracil/uridine/allantoin_perm. (IPR045225); Transp_cyt_pur
+      (PF02133)&#39;
+core_functions:
+- description: pydP encodes PydP transporter, NCS1 nucleoside transporter family, curated in the NCS1 purine-cytosine/nucleobase
+    permeases subgroup with core nucleobase transmembrane transporter activity context.
+  supported_by:
+  - reference_id: file:PSEPK/pydP/pydP-uniprot.txt
+    supporting_text: &#39;DE   SubName: Full=PydP transporter, NCS1 nucleoside transporter family {ECO:0000313|EMBL:AAN69627.1};&#39;
+  - reference_id: file:PSEPK/pydP/pydP-deep-research-asta.md
+    supporting_text: &#39;- **Protein Description:** SubName: Full=PydP transporter, NCS1 nucleoside transporter family {ECO:0000313|EMBL:AAN69627.1};&#39;
+  - reference_id: file:PSEPK/pydP/pydP-deep-research-asta.md
+    supporting_text: &#39;- **Key Domains:** Pur-cyt_permease. (IPR001248); Uracil/uridine/allantoin_perm. (IPR045225); Transp_cyt_pur
+      (PF02133)&#39;
+  - reference_id: file:PSEPK/pydP/pydP-uniprot.txt
+    supporting_text: &#39;CC   -!- SUBCELLULAR LOCATION: Membrane {ECO:0000256|ARBA:ARBA00004141}; Multi-&#39;
+  molecular_function:
+    id: GO:0015205
+    label: nucleobase transmembrane transporter activity
+  directly_involved_in:
+  - id: GO:0015851
+    label: nucleobase transport
+  locations:
+  - id: GO:0005886
+    label: plasma membrane
+proposed_new_terms: []
+suggested_questions:
+- question: What are the exact substrates, direction, and coupling mechanisms for the unresolved NCS1/Gate-domain transporter
+    candidates?
+suggested_experiments:
+- description: Measure uptake or growth rescue for candidate gluconate, cytosine, purine/pyrimidine, nucleoside, nicotinamide-riboside,
+    or related substrates in knockout/complement strains and heterologous expression systems.
+  experiment_type: transport genetics and substrate uptake assay
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,0 +1,2724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PP_2749 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PP_2749</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88JA0" target="_blank" class="term-link">
+                        Q88JA0
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PP_2749";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88JA0" data-a="DESCRIPTION: PP_2749 encodes a predicted multi-pass inner-membr..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PP_2749 encodes a predicted multi-pass inner-membrane permease component of the PP_2748-PP_2753 branched-chain amino-acid ABC uptake system. UniProt places it in the cell inner membrane and assigns BCAA transport permease features, supporting a membrane-channel role in BCAA import.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88JA0" data-a="GO:0005886" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Plasma membrane localization is appropriate for this predicted inner-membrane ABC permease.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt predicts this permease as a cell inner-membrane multi-pass membrane protein.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_2749/PP_2749-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0005886	plasma membrane</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_2749/PP_2749-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Cell inner membrane</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_2749/PP_2749-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Full=Branched-chain amino acid ABC transporter, permease protein</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_2749/PP_2749-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">Protein Description:** SubName: Full=Branched-chain amino acid ABC transporter, permease protein</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88JA0" data-a="GO:0016020" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Membrane localization is true but less informative than plasma membrane for this bacterial inner-membrane permease.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The record also has a plasma-membrane annotation and UniProt predicts a cell inner-membrane multi-pass protein.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_2749/PP_2749-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0016020	membrane</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_2749/PP_2749-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Cell inner membrane</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_2749/PP_2749-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Full=Branched-chain amino acid ABC transporter, permease protein</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0022857" target="_blank" class="term-link">
+                                    GO:0022857
+                                </a>
+                            </span>
+                            <span class="term-label">transmembrane transporter activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88JA0" data-a="GO:0022857" data-r="GO_REF:0000120" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic transmembrane transporter activity is too broad for this BCAA ABC-transporter permease component.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The product name and BCAA transport permease domain support branched-chain amino acid transmembrane transporter activity as the better complex-level activity.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015658" target="_blank" class="term-link">
+                                    branched-chain amino acid transmembrane transporter activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_2749/PP_2749-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0022857	transmembrane transporter activity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_2749/PP_2749-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Full=Branched-chain amino acid ABC transporter, permease protein</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_2749/PP_2749-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">InterPro; IPR052157; BCAA_transport_permease.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_2749/PP_2749-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">Protein Description:** SubName: Full=Branched-chain amino acid ABC transporter, permease protein</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0055085" target="_blank" class="term-link">
+                                    GO:0055085
+                                </a>
+                            </span>
+                            <span class="term-label">transmembrane transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88JA0" data-a="GO:0055085" data-r="GO_REF:0000120" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Transmembrane transport is true but broad relative to the branched-chain amino-acid ABC-import context.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Branched-chain amino acid transport better captures the expected substrate class for this permease.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015803" target="_blank" class="term-link">
+                                    branched-chain amino acid transport
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_2749/PP_2749-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0055085	transmembrane transport</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_2749/PP_2749-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Full=Branched-chain amino acid ABC transporter, permease protein</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_2749/PP_2749-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">InterPro; IPR052157; BCAA_transport_permease.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_2749/PP_2749-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">Protein Description:** SubName: Full=Branched-chain amino acid ABC transporter, permease protein</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015658" target="_blank" class="term-link">
+                                    GO:0015658
+                                </a>
+                            </span>
+                            <span class="term-label">branched-chain amino acid transmembrane transporter activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:PSEPK/PP_2749/PP_2749-uniprot.txt
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88JA0" data-a="GO:0015658" data-r="file:PSEPK/PP_2749/PP_2749-uniprot.txt" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Branched-chain amino acid transmembrane transporter activity captures the complex-level activity to which PP_2749 contributes.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PP_2749 is a permease subunit of the adjacent PP_2748-PP_2753 branched-chain amino-acid ABC transporter.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_2749/PP_2749-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Full=Branched-chain amino acid ABC transporter, permease protein</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_2749/PP_2749-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">InterPro; IPR052157; BCAA_transport_permease.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_2749/PP_2749-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">Protein Description:** SubName: Full=Branched-chain amino acid ABC transporter, permease protein</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015803" target="_blank" class="term-link">
+                                    GO:0015803
+                                </a>
+                            </span>
+                            <span class="term-label">branched-chain amino acid transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:PSEPK/PP_2749/PP_2749-uniprot.txt
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88JA0" data-a="GO:0015803" data-r="file:PSEPK/PP_2749/PP_2749-uniprot.txt" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Branched-chain amino acid transport is a useful missing process annotation for PP_2749.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PP_2749 is paired with BCAA transporter ATP-binding, permease, and leucine-family binding components.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_2749/PP_2749-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Full=Branched-chain amino acid ABC transporter, permease protein</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_2749/PP_2749-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">Protein Description:** SubName: Full=Branched-chain amino acid ABC transporter, permease protein</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043190" target="_blank" class="term-link">
+                                    GO:0043190
+                                </a>
+                            </span>
+                            <span class="term-label">ATP-binding cassette (ABC) transporter complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:PSEPK/PP_2749/PP_2749-uniprot.txt
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88JA0" data-a="GO:0043190" data-r="file:PSEPK/PP_2749/PP_2749-uniprot.txt" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ABC transporter complex membership is appropriate for PP_2749.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PP_2749 is a permease component of the adjacent PP_2748-PP_2753 branched-chain amino-acid ABC transporter locus.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_2749/PP_2749-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Full=Branched-chain amino acid ABC transporter, permease protein</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_2749/PP_2749-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">Protein Description:** SubName: Full=Branched-chain amino acid ABC transporter, permease protein</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Multi-pass permease component contributing to the predicted PP_2748-PP_2753 branched-chain amino-acid ABC uptake system.</h3>
+                <span class="vote-buttons" data-g="Q88JA0" data-a="FUNCTION: Multi-pass permease component contributing to the ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015803" target="_blank" class="term-link">
+                                branched-chain amino acid transport
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043190" target="_blank" class="term-link">
+                            ATP-binding cassette (ABC) transporter complex
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_2749/PP_2749-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Full=Branched-chain amino acid ABC transporter, permease protein</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_2749/PP_2749-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">InterPro; IPR052157; BCAA_transport_permease.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_2749/PP_2749-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Cell inner membrane</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_2749/PP_2749-deep-research-asta.md
+
+                        </span>
+
+                        <div class="finding-text">Protein Description:** SubName: Full=Branched-chain amino acid ABC transporter, permease protein</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_2749/PP_2749-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO GOA annotations for PP_2749</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_2749/PP_2749-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for PP_2749 (Q88JA0)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"Full=Branched-chain amino acid ABC transporter, permease protein"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_2749/PP_2749-deep-research-asta.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Asta retrieval report for PP_2749 (Q88JA0)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"Protein Description:** SubName: Full=Branched-chain amino acid ABC transporter, permease protein"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What substrate range and regulation distinguish the PP_2748-PP_2753 BCAA ABC importer from the other P. putida KT2440 branched-chain amino-acid transporter loci?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88JA0" data-a="Q: What substrate range and regulation distinguish th..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Measure uptake and growth phenotypes for PP_2748-PP_2753 mutants, alone and in combination with other BCAA transporter loci, using L-leucine, L-isoleucine, L-valine, alanine, and related hydrophobic amino acids as candidate substrates.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: targeted transporter mutant substrate-uptake and redundancy assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88JA0" data-a="EXPERIMENT: Measure uptake and growth phenotypes for PP_2748-P..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Asta</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PP_2749-deep-research-asta.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88JA0" data-a="DEEP_RESEARCH: Asta" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Asta Literature Retrieval: Gene Research for Functional Annotation ⚠️ CRITICAL: Gene/Protein Identification Context BEFORE YOU BEGIN RESEARCH: Y...</span>
+
+
+                    <span class="report-badge">Asta</span>
+
+
+                    <span class="report-badge">Asta Scientific Corpus Retrieval</span>
+
+
+                    <span class="report-badge">20 citations</span>
+
+
+
+                    <span class="report-meta-text">2026-07-08T20:53:06.930187</span>
+
+
+
+                </div>
+
+
+                <h1 id="asta-literature-retrieval-gene-research-for-functional-annotation-critical-geneprotein-identification-context-before-you-begin-research-y">Asta Literature Retrieval: Gene Research for Functional Annotation ⚠️ CRITICAL: Gene/Protein Identification Context BEFORE YOU BEGIN RESEARCH: Y...</h1>
+<p>This report is retrieval-only and is generated directly from Asta results.</p>
+<ul>
+<li>Papers retrieved: 20</li>
+<li>Snippets retrieved: 20</li>
+</ul>
+<h2 id="relevant-papers">Relevant Papers</h2>
+<h3 id="1-lmpd-lipid-maps-proteome-database">[1] LMPD: LIPID MAPS proteome database</h3>
+<ul>
+<li>Authors: Dawn Cotter, A. Maer, C. Guda, Brian Saunders, S. Subramaniam</li>
+<li>Year: 2005</li>
+<li>Venue: Nucleic Acids Research</li>
+<li>URL: https://www.semanticscholar.org/paper/265c37b45326b7927e396484751e84e4aeff92d5</li>
+<li>DOI: 10.1093/nar/gkj122</li>
+<li>PMID: 16381922</li>
+<li>PMCID: 1347484</li>
+<li>Citations: 92</li>
+<li>Influential citations: 2</li>
+<li>Summary: The initial release of the LIPID MAPS Proteome Database contains 2959 records, representing human and mouse proteins involved in lipid metabolism, and this LMPD protein list was enhanced with annotations from UniProt, EntrezGene, ENZYME, GO, KEGG and other public resources.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.807)<br />
+    &gt; For each record selected from the results summary, all LMPD data relevant to that protein are displayed, with external database IDs linked to their respective resources.<br />
+    &gt; Annotations are organized by category: Record Overview, Gene/GO/KEGG Information, UniProt Annotations, and Related Proteins. The record overview contains LMPD_ID, species, description, gene symbols, lipid categories, EC number, molecular weight, sequence length and protein sequence. Gene information includes Entrez Gene ID, chromosome, map location, primary name, primary symbol and alternate names and symbols; Gene Ontology (GO) IDs and descriptions, and KEGG pathway IDs and descriptions. UniProt annotations include primary accession number, entry name and comments such as catalytic activity, enzyme regulation, function and similarity. For related proteins and splice variants, we display source database, database ID, sequence length, and title.</li>
+</ul>
+<h3 id="2-trade-offs-trade-ups-and-high-mutational-parallelism-underlie-microbial-adaptation-during-extreme-cycles-of-feast-and-famine">[2] Trade-offs, trade-ups, and high mutational parallelism underlie microbial adaptation during extreme cycles of feast and famine</h3>
+<ul>
+<li>Authors: Megan G. Behringer, Wei-Chin Ho, Samuel F. Miller, Sarah B. Worthan, Zeer Cen et al.</li>
+<li>Year: 2024</li>
+<li>Venue: Current biology : CB</li>
+<li>URL: https://www.semanticscholar.org/paper/13c71a271ad81ea813516193454b0fed04b2cd2b</li>
+<li>DOI: 10.1016/j.cub.2024.02.040</li>
+<li>PMID: 38460514</li>
+<li>PMCID: 11066936</li>
+<li>Citations: 18</li>
+<li>Summary: It is found that evolution in response to extreme feast/famine is characterized by narrow adaptive trajectories with high mutational parallelism and notable mutational order, which demonstrate how microbes can navigate the adaptive landscapes of regularly fluctuating conditions and ultimately follow mutational trajectories that confer benefits across diverse environments.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.806)<br />
+    &gt; Genes overrepresented for nonsynonymous and structural mutations were classified into functional groups based on the functional annotation table constructed with DAVID v.2023q3 91,92 (Table S4). We established the following rules for generalizing genes into functional groups: Chaperone: genes that encode proteins that perform chaperone or chaperonin-like activities (Uniprot Keyword: KW-0143); Envelope: Genes that encode proteins involved in the maintenance of the cell-envelope such as phospholipid biosynthesis (GO-BP: 0008654) and peptidoglycan biosynthesis (GO-BP: 0000270); Metabolism: Genes that encode proteins involved in general metabolic functions, such as purine metabolism (KEGG: eco00230), amino acid metabolism (KEGG: eco00470, eco00330); or TCA Cycle (KEGG: eco00020); Regulators: Genes that encode proteins directly involved in transcription (GO-BP: 0031564; Uniprot Keyword: KW-0804), translation (GO-BP:0006412, GO-BP:0006413; Uniprot Keyword: KW-0689), or the regulation of transcription (GO-BP: 0006355, GO-BP:2000143, GO-BP:0006353, GO-BP: GO:0045893; Uniprot Keyword: KW-0805); and Transport: Genes that encode proteins involved in transport: such as ABC transporters (Interpro: PR017871), MFS transporters (Interpro: IPR011701); symporters (Interpro: IPR023954, IPR001204, IPR001734, IPR023025, IPR004840), or Antiporters (Interpro: IPR004771). A combination of resources were used to determine if a parallel mutation arose in a functional region of a protein including, EcoCyc, 96 UniProt, 97 and the primary literature (see supplemental bibliography).</li>
+</ul>
+<h3 id="3-the-thermus-thermophilus-dead-box-protein-hera-is-a-general-rna-binding-protein-and-plays-a-key-role-in-trna-metabolism">[3] The Thermus thermophilus DEAD-box protein Hera is a general RNA binding protein and plays a key role in tRNA metabolism</h3>
+<ul>
+<li>Authors: Pascal Donsbach, Brian A. Yee, Dione L Sánchez-Hevia, J. Berenguer, S. Aigner et al.</li>
+<li>Year: 2020</li>
+<li>Venue: RNA</li>
+<li>URL: https://www.semanticscholar.org/paper/533f89524b50f1df6146e8665eed9512b23e1a5c</li>
+<li>DOI: 10.1261/rna.075580.120</li>
+<li>PMID: 32669294</li>
+<li>PMCID: 7566566</li>
+<li>Citations: 3</li>
+<li>Summary: Gene ontology analysis reveals an enrichment of genes related to translation, including mRNAs of ribosomal proteins, tRNAs, tRNA ligases, and t RNA-modifying enzymes, consistent with a key role of Hera in ribosome and tRNA metabolism.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.790)<br />
+    &gt; However, the peaks were in different positions within the gene in the four individual experiments performed (Fig. 6), and no specific binding site within the mRNA could be identified from the data.<br />
+    &gt; Among the genes identified were numerous genes related to protein biosynthesis (tRNAs, tRNA-aminoacyl synthetases, tRNA-modifying enzymes, ribosomal proteins). As an example, genes for ribosomal proteins were highly represented with 18 out of the 22 genes (82%) for small ribosomal proteins, (12 after cold shock, 55%), and 31 out of 34 genes (91%) for large ribosomal subunit proteins (22 after cold shock, 65%). Other protein families represented were chaperones (e.g., dnaK, dnaJ, grpE, but not dafA, groES, groEL, clpB), cold-shock and general stress proteins (TT_RS08235, _09210; hsp22, hsp30; uspA), topoisomerase genes (gyrA, gyrB, topA), genes for transporters and their subunits (often both the gene for the substrate-bind-ing protein and for the permease, for example, branchedchain amino acid ABC transporter, TT_RS01115 and _01120), and genes related to sugar-and cell wall metabolism and cell division, as well as CRISPR-related genes. In many cases, genes for all subunits of protein complexes (e.g., genes for cytochrome c oxidase subunits I and II; clpA, clpX coding for the ClpAX protease) were present.<br />
+    &gt; A systematic gene ontology analysis using the DAVID server 6.7 (https://david-d.ncifcrf.gov/home.jsp) (Huang da et al. 2009a,b) with the consolidated gene lists for Hera1/Hera2, and Hera3/Hera4, translated into UniProt accession numbers, revealed three annotation clusters with significant enrichment (Supplemental Table 4a,b).</li>
+</ul>
+<h3 id="4-avian-immunome-db-an-example-of-a-user-friendly-interface-for-extracting-genetic-information">[4] Avian Immunome DB: an example of a user-friendly interface for extracting genetic information</h3>
+<ul>
+<li>Authors: Ralf C. Mueller, Nicolai Mallig, Jacqueline Smith, Lél Eöry, Richard I. Kuo et al.</li>
+<li>Year: 2020</li>
+<li>Venue: BMC Bioinformatics</li>
+<li>URL: https://www.semanticscholar.org/paper/b894d9ca8ea2d653bf1711a0c67dab71d054487c</li>
+<li>DOI: 10.1186/s12859-020-03764-3</li>
+<li>PMID: 33176685</li>
+<li>PMCID: 7661159</li>
+<li>Citations: 6</li>
+<li>Summary: The Avian Immunome DB (Avimm) for easy gene property extraction as exemplified by avian immune genes is presented and described, which contains 1170 distinct avian immune genes with canonical gene symbols and 612 synonyms across 363 bird species.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.755)<br />
+    &gt; Ever since the advent of commercial next-generation sequencing platforms in the early 2000s with its associated decrease in sequencing costs [1], the number of DNA sequences increased considerably [2]. Generally, these data become publicly accessible in databases provided by projects focussing on different aspects of biological sequence information [3,4]. Ensembl [5] and NCBI [6] for instance, have a strong focus on genome annotation with the help of RNA transcript information while UniProt has a pronounced emphasis on protein-coding genes and biological function of proteins. UniProt's records are either based on manually annotated, non-redundant protein sequences (SwissProt) or on highquality computationally analysed records, which are enriched with automatic annotation (TrEMBL) [7]. Relying on accurate genome annotations and protein descriptions, Gene Ontology (GO) [8,9] categorises gene products and fits them into a computational model of biological systems. Their assignment deploys a controlled vocabulary, so-called GO terms, to link genes and gene products to biological processes, cellular components, or molecular functions.<br />
+    &gt; However, genome annotation is not standardised, and each service provider uses their own custom-built annotation pipelines. As a consequence, this often leads to ambiguity in gene names during genome annotation with different gene symbols being given to the same gene or the same gene symbol being given to different, but similar genes. Additionally, since the pre-existing wealth of sequencing information relies on model organisms like human and mouse, there is a strong bias in gene symbols towards those chosen for these species. Particularly for model species, this issue has been partially addressed, for example by the Human Genome Organisation (HUGO) Gene Nomenclature Committee (HGNC) [10], the Vertebrate Gene Nomenclature Committee (VGNC) [11], or the Chicken Gene Nomenclature Consortium [12]. However, this neither guarantees that gene names are harmonised among these consortia, nor does it keep researchers from assigning alternative gene symbols in their annotations, especially when working with non-model species.</li>
+</ul>
+<h3 id="5-whole-genome-sequence-and-manual-annotation-of-clostridium-autoethanogenum-an-industrially-relevant-bacterium">[5] Whole genome sequence and manual annotation of Clostridium autoethanogenum, an industrially relevant bacterium</h3>
+<ul>
+<li>Authors: Christopher M. Humphreys, Samantha McLean, Sarah Schatschneider, Thomas Millat, A. Henstra et al.</li>
+<li>Year: 2015</li>
+<li>Venue: BMC Genomics</li>
+<li>URL: https://www.semanticscholar.org/paper/8960e4d28fe195cb11cf0274c2dbd5952eefbef1</li>
+<li>DOI: 10.1186/s12864-015-2287-5</li>
+<li>PMID: 26692227</li>
+<li>PMCID: 4687164</li>
+<li>Citations: 69</li>
+<li>Influential citations: 2</li>
+<li>Summary: A revised manually curated full genome sequence for Clostridium autoethanogenum DSM10061 is presented, which provides reliable information for genome-scale models that rely heavily on the accuracy of annotation, and represents an important step towards the manipulation and metabolic modelling of this industrially relevant acetogen.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.755)<br />
+    &gt; Sequence similarity analyses were accomplished using blastx [26] against the NCBI non-redundant database on protein level [32], the Swissprot database [33,34] and KEGG [35]. Additionally, manual gene annotation was performed using PRIAM [36], Motif Scan [37], Prosite  [38], BRENDA [39,40], UniProt/SwissProt [34], Inter-ProScan [41], and Pfam [42] databases. One example of how our manual annotation differed from that of the automated pipeline used by Brown et al. can be found in the case of CLAU_3519 (CAETHG_3609). Here the automated pipeline from the Brown et al. finished genome assigned this gene product as a hypothetical protein, however when the sequence was aligned using BLASTP as part of our manual curation all other proteins with &gt;75 % identity were named sodium ABC transporter. Upon further inspection in Pfam, one large ABC-2 family transporter protein domain was found (E-value 6.8e-31). Similar searches of UniProt and KEGG databases agreed with Pfam, therefore we annotated this gene product as an ABC-2 family transporter. The correction of the previously short-called homopolymer reads through our sequencing efforts gave a fully annotated finished sequence of C. autoethanogenum without the erroneous frame-shift containing annotations which had occurred previously. Using these tools we were able to manually curate the entire genome to ensure that the automated annotation was correct and to insert additional information where required, as well as implementing a standardised protein product naming system as recommend by the NCBI guidelines [43] for ease of identification of genes with related functions. As a consequence of the automated and subsequent manual curation, we have found 482 instances across the genome where genes previously identified as 'hypothetical protein' have either been assigned a specific function, or have been named through identification of conserved domains based on sequence similarity.</li>
+</ul>
+<h3 id="6-proteomic-profiling-of-regenerated-urinary-bladder-tissue-with-stem-cell-seeded-scaffold-composites-in-a-non-human-primate-bladder-augmentation-model">[6] Proteomic profiling of regenerated urinary bladder tissue with stem cell seeded scaffold composites in a non-human primate bladder augmentation model</h3>
+<ul>
+<li>Authors: Tiffany T. Sharma, S. Edassery, N. Rajinikanth, Vikram Karra, Matthew I. Bury et al.</li>
+<li>Year: 2023</li>
+<li>Venue: bioRxiv</li>
+<li>URL: https://www.semanticscholar.org/paper/6446e5bc8c0ec1aa0836a711b705ebafa66bd5c8</li>
+<li>DOI: 10.1101/2023.08.29.554824</li>
+<li>PMID: 37693577</li>
+<li>PMCID: 10491202</li>
+<li>Citations: 1</li>
+<li>Summary: Autologous, bone marrow derived mesenchymal stem cells along with primitive hematopoietic stem/progenitor cells can be used to regenerate bladder tissue in a large deficit, non-human primate bladder augmentation model and facilitates the promotion of a protein tissue landscape that is nearly identical to native bladder tissue.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.749)<br />
+    &gt; Raw data were analyzed using Proteome Discoverer 2.5 (Thermo Fisher Scientific) using the "PWF Tribrid TMTpro Quan SPS MS3 SequestHT Percolator" and "CWF Comprehensive Enhanced Annotation Reporter<br />
+    &gt; Quan" methods implemented in the PD2.For uncharacterized proteins or proteins with unknown function presented in the manuscript, the UniProt Accession number was search against UniProt database https://www.uniprot.org/and the NCBI Gene database https://www.ncbi.nlm.nih.gov/gene/.If required, more information was obtained with regards to protein identity by matching the amino acid sequence of the protein on the NCBI BLAST alignment program https://blast.ncbi.nlm.nih.gov/Blast.cgi .</li>
+</ul>
+<h3 id="7-structure-aware-mycobacterium-tuberculosis-functional-annotation-uncloaks-resistance-metabolic-and-virulence-genes">[7] Structure-Aware Mycobacterium tuberculosis Functional Annotation Uncloaks Resistance, Metabolic, and Virulence Genes</h3>
+<ul>
+<li>Authors: Samuel J. Modlin, A. Elghraoui, Deepika Gunasekaran, Alyssa M Zlotnicki, N. Dillon et al.</li>
+<li>Year: 2021</li>
+<li>Venue: mSystems</li>
+<li>URL: https://www.semanticscholar.org/paper/76ff9a62b36b32cc10e46e71ffd4dd90344e4706</li>
+<li>DOI: 10.1128/mSystems.00673-21</li>
+<li>PMID: 34726489</li>
+<li>PMCID: 8562490</li>
+<li>Citations: 15</li>
+<li>Summary: This work systematically updates the functional genome annotation of Mycobacterium tuberculosis virulent type strain H37Rv and identifies hundreds of high-confidence candidates for mechanisms of antibiotic resistance, virulence factors, and basic metabolism and other functions key in clinical and basic tuberculosis research.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.745)<br />
+    &gt; 3. Fig. S2B -match/mismatch colours mixed up? (I think match should be teal and mismatch -red?) 4. Line 162-163: Rv1430 is in UniProt (EC 3.1.1.-) and has been present in Uniprot since version 45 of the gene record: https://www.uniprot.org/uniprot/L7N697. I presume you had conducted your literature analysis before the UniProt entry was updated to include the EC code, so maybe you can add the dates when the data was retrieved from UniProt and other databases you used in the Materials and Methods section? 5. Supplementary text, p. 9, first paragraph. I believe that an unrelated fragment of text was copy-pasted into the second sentence of the paragraph ("Many mutations that altered bacterial clearance...") 6. Supplementary text, p. 12, final paragraph. It should be Rv1191, not Rv1191c. Could you also add a short explanation why you believe it should be classified as a cathepsin (what protein did you transfer this annotation from)?<br />
+    &gt; Reviewer #3 (Comments for the Author):<br />
+    &gt; In this manuscript, Modlin et al., attempt to tackle the problem of assigning functions to ~1700 hypothetical and/or underannotated genes in the Mycobacterium tuberculosis H37Rv (Mtb) genome. Rapid and accurate annotation of microbial genomes is indeed a very critical and under appreciated part of microbial ecophysiology. This step is especially crucial for pathogenic organisms such as Mtb where accurate functional annotation of these hypothetical proteins could unravel mechanisms which could act as drug targets. The authors employed a two-pronged strategy to define a set of these unannotated or under-annotated genes and to then provide possible functions for many of these genes. First, they undertook a large-scale manual curation of literature to assign functions (including EC numbers for enzymatic functions) to ~575 genes.</li>
+</ul>
+<h3 id="8-miclique-an-algorithm-to-identify-differentially-coexpressed-disease-gene-subset-from-microarray-data">[8] MIClique: An Algorithm to Identify Differentially Coexpressed Disease Gene Subset from Microarray Data</h3>
+<ul>
+<li>Authors: Huanping Zhang, Xiaofeng Song, Huinan Wang, Xiaobai Zhang</li>
+<li>Year: 2010</li>
+<li>Venue: Journal of Biomedicine and Biotechnology</li>
+<li>URL: https://www.semanticscholar.org/paper/db76c2ba82c53c1eb0967c1196ae98ca75de22e5</li>
+<li>DOI: 10.1155/2009/642524</li>
+<li>PMID: 20169000</li>
+<li>PMCID: 2822236</li>
+<li>Citations: 18</li>
+<li>Influential citations: 1</li>
+<li>Summary: By applying the MIClique algorithm to real gene expression data, some DEC gene subsets which correlated under one experimental condition but uncorrelated under another condition are detected from the graph of colon dataset and leukemia dataset.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.744)<br />
+    &gt; Table 3 lists the Genbank accession number, the gene symbols, accession number in UniProtKB (UniProt Knowledgebase), and gene descriptions given by colon data. The UniProtKB is the central hub for the collection of information on proteins such as amino acid sequence, protein name or description, taxonomic data, and biological ontology [24]. Figure 6 depicts gene expression profiles of the eight genes in normal and disease samples. As shown in Figure 6, the profiles of these genes are highly coexpressed in normal samples (samples 1-22) while the coexpression pattern disappears in disease samples (samples 23-62).</li>
+</ul>
+<h3 id="9-predicted-transmembrane-proteins-with-homology-to-mefa-are-not-responsible-for-complementing-mefa-deletion-in-the-mefamsrd-macrolide-efflux-system-in-streptococcus-pneumoniae">[9] Predicted transmembrane proteins with homology to Mef(A) are not responsible for complementing mef(A) deletion in the mef(A)–msr(D) macrolide efflux system in Streptococcus pneumoniae</h3>
+<ul>
+<li>Authors: Valeria Fox, Francesco Santoro, G. Pozzi, F. Iannelli</li>
+<li>Year: 2021</li>
+<li>Venue: BMC Research Notes</li>
+<li>URL: https://www.semanticscholar.org/paper/4f78acee7559d5e406bacad91d5982d9f3244ea3</li>
+<li>DOI: 10.1186/s13104-021-05856-6</li>
+<li>PMID: 34823574</li>
+<li>PMCID: 8620141</li>
+<li>Citations: 10</li>
+<li>Summary: To identify candidate genes likely involved in complementation of mef( A) deletion, the Mef(A) amino acid sequence was used as probe for database searching and identified 3 putative candidates in the S. pneumoniae R6 genome, namely spr0971, spr1023 and spr1932.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.734)<br />
+    &gt; The 405-aa Mef(A) sequence (GenBank accession no. AAT72347) was used as a query to conduct a BLAST homology search of S. pneumoniae R6 genome. Homology analysis revealed the presence of three genes coding for proteins with a significant homology (e-value &lt; 0.001) to Mef(A): (i) spr0971 (GenBank accession number NP_ 358565.1); (ii) spr1023 (GenBank accession number NP_ 358617.1); (iii) spr1932 (GenBank accession number NP_ 359523.1). The spr0971 gene, annotated as "ABC transporter membrane-spanning permease-macrolide efflux", codes for a 403 aa protein displaying 23% identity to Mef(A). The spr1023 gene, annotated as "macrolide ABC transporter permease", codes for a 392 aa protein with 24% identity to Mef(A). The spr1932 gene, annotated as "hypothetical protein", codes for a 415 aa protein with 21% identity to Mef(A). Analysis of the transmembrane domains of all deduced amino acid products predicted the presence of up to 12 transmembrane helices.</li>
+</ul>
+<h3 id="10-computational-screening-of-phytochemicals-targeting-mutant-kras-in-colorectal-cancer">[10] Computational screening of phytochemicals targeting mutant KRAS in colorectal cancer</h3>
+<ul>
+<li>Authors: Muskan Arooj, R. Mateen, M. Javed, Muhammad Ali, Muhammad Irfan Fareed et al.</li>
+<li>Year: 2025</li>
+<li>Venue: Scientific Reports</li>
+<li>URL: https://www.semanticscholar.org/paper/2e47ff33fc8e4bd8a85a3cd322f3441bb45db205</li>
+<li>DOI: 10.1038/s41598-025-14229-z</li>
+<li>PMID: 40770256</li>
+<li>PMCID: 12329011</li>
+<li>Citations: 2</li>
+<li>Summary: This study focused on the identification of potential phytochemicals that can inhibit the KRAS protein from being overexpressed in CRC using the anticancer medication fruquintinib, which has been authorized by the FDA.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.734)<br />
+    &gt; For the structure retrieval of the KRAS gene, which is overexpressed in CRC, the Universal Protein Resource (UniProt) (https://www.uniprot.org/) database was first consulted for detailed functional information. UniProt provides extensive data on proteins and their functional annotations 19 . The KRAS gene encoding GTPase protein consisting of 189 amino acids with a molecular weight of approximately 21.6 kDa was recovered from the Protein Data Bank (PDB) using the RCSB-PDB ID: 7SCW, which has a resolution of 1.98 Å. The Protein Data Bank (PDB) ( https://doi.org/10.2210/pdb7SCW/pdb) is a crucial resource for studying the 3D structures, aiding research and education in many fields 20 .</li>
+</ul>
+<h3 id="11-predicted-transmembrane-proteins-with-homology-to-mefa-are-not-responsible-for-complementing-mefa-deletion-in-the-mefamsrd-macrolide-efflux-system-in-streptococcus-pneumoniae">[11] Predicted transmembrane proteins with homology to Mef(A) are not responsible for complementing mef(A) deletion in the mef(A)–msr(D) macrolide efflux system in Streptococcus pneumoniae</h3>
+<ul>
+<li>Authors: Valeria Fox, Francesco Santoro, G. Pozzi, F. Iannelli</li>
+<li>Year: 2021</li>
+<li>Venue: BMC Research Notes</li>
+<li>URL: https://www.semanticscholar.org/paper/f30df2b539544c70ac0c1f373b0235d4e92d7687</li>
+<li>DOI: 10.1186/s13104-021-05856-6</li>
+<li>Summary: In streptococci, the type M resistance to macrolides is due to the mef(A)–msr(D) efflux transport system of the ATP-Binding cassette (ABC) superfamily, where it is proposed that mef(A) codes for the transmembrane channel and msr(D) for the two ATP-binding domains. Phage ϕ1207.3 of Streptococcus pyogenes, carrying the mef(A)–msr(D) gene pair, is able to transfer the macrolide efflux phenotype to Streptococcus pneumoniae. Deletion of mef(A) in pneumococcal ϕ1207.3-carrying strains did not affec...</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.734)<br />
+    &gt; The 405-aa Mef(A) sequence (GenBank accession no. AAT72347) was used as a query to conduct a BLAST homology search of S. pneumoniae R6 genome. Homology analysis revealed the presence of three genes coding for proteins with a significant homology (e-value &lt; 0.001) to Mef(A): (i) spr0971 (GenBank accession number NP_ 358565.1); (ii) spr1023 (GenBank accession number NP_ 358617.1); (iii) spr1932 (GenBank accession number NP_ 359523.1). The spr0971 gene, annotated as "ABC transporter membrane-spanning permease-macrolide efflux", codes for a 403 aa protein displaying 23% identity to Mef(A). The spr1023 gene, annotated as "macrolide ABC transporter permease", codes for a 392 aa protein with 24% identity to Mef(A). The spr1932 gene, annotated as "hypothetical protein", codes for a 415 aa protein with 21% identity to Mef(A). Analysis of the transmembrane domains of all deduced amino acid products predicted the presence of up to 12 transmembrane helices.</li>
+</ul>
+<h3 id="12-genetools-application-for-functional-annotation-and-statistical-hypothesis-testing">[12] GeneTools – application for functional annotation and statistical hypothesis testing</h3>
+<ul>
+<li>Authors: V. Beisvåg, Frode K. R. Jünge, Hallgeir Bergum, Lars Jølsum, S. Lydersen et al.</li>
+<li>Year: 2006</li>
+<li>Venue: BMC Bioinformatics</li>
+<li>URL: https://www.semanticscholar.org/paper/1d9e0c2f67acd5bf64c659f1f3f8624325b6be8a</li>
+<li>DOI: 10.1186/1471-2105-7-470</li>
+<li>PMID: 17062145</li>
+<li>PMCID: 1630634</li>
+<li>Citations: 107</li>
+<li>Influential citations: 11</li>
+<li>Summary: GeneTools is the first "all in one" annotation tool, providing users with a rapid extraction of highly relevant gene annotation data for e.g. thousands of genes or clones at once.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.733)<br />
+    &gt; The database enables searching by gene symbols/names, GenBank accession numbers, UniGene cluster IDs, Swiss-Prot entry names and several unique clone IDs (IMAGE clone IDs, University of Iowa clone IDs, Operon oligo IDs, TAIR IDs and a subset of selected Affymetrix and Agilent IDs).<br />
+    &gt; The names and symbols of genes/proteins may be highly ambiguous [20]. We therefore recommend using primary gene IDs, like GeneBank accession numbers or specific probe IDs when querying the database. However, if gene names or symbols are used, caution is advised because only official names/symbols associated with UniProt knowledgebase will be recognized. The underlying database is updated on a weekly basis with annotation information from several external databases including UniGene, Swiss-Prot, Entrez Gene and GO. User data are submitted to the database as text files of gene reporters and analysis of the annotation data can be performed through three user interfaces: the NMC Annotation Tool, the GO Annotator Tool and eGOn. Analysis results and annotation data can be exported in various formats.</li>
+</ul>
+<h3 id="13-combining-of-transcriptome-and-metabolome-analyses-for-understanding-the-utilization-and-metabolic-pathways-of-xylooligosaccharide-in-bifidobacterium-adolescentis-atcc-15703">[13] Combining of transcriptome and metabolome analyses for understanding the utilization and metabolic pathways of Xylo‐oligosaccharide in Bifidobacterium adolescentis ATCC 15703</h3>
+<ul>
+<li>Authors: Jian Yang, Qilong Tang, Lei Xu, Zhijiang Li, Yongqiang Ma et al.</li>
+<li>Year: 2019</li>
+<li>Venue: Food Science &amp; Nutrition</li>
+<li>URL: https://www.semanticscholar.org/paper/a1dc16e9f5c2615024cf1c7cb6bc2e2d3a63a626</li>
+<li>DOI: 10.1002/fsn3.1194</li>
+<li>PMID: 31762999</li>
+<li>PMCID: 6848847</li>
+<li>Citations: 28</li>
+<li>Influential citations: 1</li>
+<li>Summary: The transcriptome analysis showed that XOS could enhance genes, including ABC transporters, galactosidase, xylosid enzyme, glucosidases, and amylase, which were involved in transport and metabolism of carbohydrate compared with xylose, which contributed to the optimization of XOS probiotic effects as a food additive.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.733)<br />
+    &gt; From the RNA-seq analysis data, it can be seen that over 99% of the reads were aligned to encoding regions of the B. adolescentis.<br />
+    &gt; Genes were assigned to 25 functional groups, which were annotated in COG database (Figure 2). Among these classifications, the largest group was amino acid transport and metabolism (191, 13.45%), followed by carbohydrate transport and metabolism (160, 11.27%) and general function prediction (151, 10.63%).<br />
+    &gt; A total number of 302 DEGs were identified for B. adolescentis grown on xylose and XOS, including 158 upregulated genes and 144 downregulated genes (Figure 3). The top 10 upregulated genes and 10 downregulated genes of xylose and XOS treatments are presented in Table 2. Four genes of the top 10 upregulated genes encode ABC and MFS transporters. Among the remaining genes, two genes encode hsp20/alpha crystallin family protein and ATP-dependent chaperone ClpB, two genes encode RNA polymerase sigma factor and death-on-curing protein, other two genes encode enzyme proteins belonging to multiple sugar-binding transport system permease and shikimate kinase. Five genes of the top 10 downregulated genes encode structure protein, including penicillin-binding protein, von willebrand factor type A domain protein, fhiA protein, arginine repressor DUF4956, domain-containing protein, three genes are associated with membrane transport, including peptide ABC transporter ATP-binding protein, ABC transporter permease, and membrane spanning polysaccharide biosynthesis protein, while two genes encode O-antigen polymerase and hypothetical protein.</li>
+</ul>
+<h3 id="14-cronos-the-cross-reference-navigation-server">[14] CRONOS: the cross-reference navigation server</h3>
+<ul>
+<li>Authors: Brigitte Waegele, I. Dunger, G. Fobo, Corinna Montrone, H. Mewes et al.</li>
+<li>Year: 2008</li>
+<li>Venue: Bioinformatics</li>
+<li>URL: https://www.semanticscholar.org/paper/8c05b3aa0ba01c41ee97c2dc98ea7b5b14ce0e9c</li>
+<li>DOI: 10.1093/bioinformatics/btn590</li>
+<li>PMID: 19010804</li>
+<li>PMCID: 2638938</li>
+<li>Citations: 20</li>
+<li>Summary: CRONOS, a cross-reference server that contains entries from five mammalian organisms presented by major gene and protein information resources, is developed, which shows that the cross-references are highly accurate.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.722)<br />
+    &gt; In order to detect gene and protein names which are assigned to products of different genes and thus result in erroneous cross-references, dedicated lists are created for each organism separately. Organism-specific lists are necessary, since terms that are ambiguous in one organism might be explicit in another. For example, ADORA2 is an ambiguous gene name in Homo sapiens but not in mouse, and GALT in mouse but not in H.sapiens.<br />
+    &gt; In a first step, ambiguous names within the databases were extracted. If a name occurs in at least two entries describing different genes or proteins (splice variants count as one gene/protein), this particular name is marked as ambiguous and is excluded from the mapping process. In a second step, corresponding gene names occurring in the manually annotated sections of RefSeq as well as in UniProt were analyzed. Entries containing the same gene product name and having a one-to-many or many-to-many relation (e.g. one Swiss-Prot entry maps to many RefSeq entries) were scrutinized for misleading annotation. This process is done manually by inspecting additional information like sequence similarity or functional information about the involved entries. In most of the cases, the exclusion of the ambiguous gene names resulted in correct one-to-one relations.<br />
+    &gt; As statistical analysis revealed (Supplementary Material S2) that gene names with less than four letters are exceptionally error-prone, only gene names with at least four letters are kept for mapping purposes. However, gene names with less than four letters can be queried, e.g. a search for the tumor suppressor 'p53' reveals the respective entries with the official gene name 'TP53'. Organism-specific lists of ambiguous gene and protein names are available for download on the CRONOS home page.</li>
+</ul>
+<h3 id="15-establishing-comprehensive-quaternary-structural-proteomes-from-genome-sequence">[15] Establishing comprehensive quaternary structural proteomes from genome sequence</h3>
+<ul>
+<li>Authors: Nathan Mih, M. Lu, B. Palsson, E. Catoiu</li>
+<li>Year: 2023</li>
+<li>Venue: Research Square</li>
+<li>URL: https://www.semanticscholar.org/paper/bf3821f3fcaef0b354e05b3332a155278a721316</li>
+<li>DOI: 10.21203/rs.3.rs-2923626/v1</li>
+<li>PMID: 37292890</li>
+<li>PMCID: 10246253</li>
+<li>Citations: 4</li>
+<li>Summary: A computational platform is developed that can resolve genome-scale structural proteomes to obtain an angstrom-level understanding of whole-cell functions and obtains a draft 3D visualization of the proteome in a functioning cell.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.713)<br />
+    &gt; Blattner numbers were used to obtain gene-level subcellular information from UniProt topological annotation, EcoCyc compartment annotation, Gene Ontology (GO) terms relating to the membrane, and subcellular compartments in genome-scale model iML1515 36 .<br />
+    &gt; Presence of annotated sequence features related to the membrane (TOPO_DOM, TRANSMEM, INTRAMEM) were used to identify potential membrane genes with UniProt. Genes containing membrane-related keywords ('membrane', 'transport', 'abc', 'wall' and 'periplasm') among their gene ontology (GO) terms were identified as potential membrane genes. These GO terms were scraped from the uniport text file for each gene. Genes containing membrane-related keywords ('membrane', 'periplas', 'transport', 'secretion', 'extracellular' and 'wall') found in the "Locations'' column of the EcoCyc public SmartTable "All genes of E. coli K-12 substr. MG1655" were tagged to the membrane. Membrane-related keywords ('membrane', 'transport', 'abc', 'wall', 'periplasm', 'envelope' and 'murein') in the gene-protein-reaction (GPR) relationships from genome-scale model iML1515 were used to identify potential membrane genes.<br />
+    &gt; Once the complete set of all potential membrane genes was determined, a set of protein structures selected by QSPACE whose subunits consisted of at least one membrane gene were identified as potential membrane structures (Fig. 3a). This set of structures was analyzed further to confirm membrane embeddedness.<br />
+    &gt; Identification of membrane-embedded and membrane-crossing residues.<br />
+    &gt; Membrane-embedded residues are used to define amino acids in between the two membrane leaflets. Membrane-crossing residues are used to define amino acids that are at the surface of membrane leaflets.<br />
+    &gt; The membrane-embedded and membrane-crossing residues were identified using the sequence-based topological annotation provided in UniProt, a sequence-based prediction using DeepTMHMM 40 , a structure-based prediction using OPM 41 .</li>
+</ul>
+<h3 id="16-extensive-inter-domain-lateral-gene-transfer-in-the-evolution-of-the-human-commensal-methanosphaera-stadtmanae">[16] Extensive Inter-Domain Lateral Gene Transfer in the Evolution of the Human Commensal Methanosphaera stadtmanae</h3>
+<ul>
+<li>Authors: M. Lurie-Weinberger, Michael Peeri, T. Tuller, U. Gophna</li>
+<li>Year: 2012</li>
+<li>Venue: Frontiers in Genetics</li>
+<li>URL: https://www.semanticscholar.org/paper/d34372c95ea31abaa75d4248b82c50cace6acaa1</li>
+<li>DOI: 10.3389/fgene.2012.00182</li>
+<li>PMID: 23049536</li>
+<li>PMCID: 3445992</li>
+<li>Citations: 17</li>
+<li>Summary: Bacterial genes contributed to the adaptation of M. stadtmanae to a host-dependent lifestyle by allowing a larger variation in surface structures and increasing transport efficiency in the gut niche which is diverse and competitive.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.713)<br />
+    &gt; Genes with low ENC (Values under 28.49, lower by more than 2 S.D) included the gene ThiM1, a nitroreductase, a nitrate/sulfonate/bicarbonate ABC transporter permease, a polar amino acid ABC transporter periplasmic substrate-binding protein, a transcriptional regulator, and two hypothetical proteins. On the other end of the spectrum, genes with high ENC values (values over 40.0, higher by more than two standard deviations) include a d-tyrosyl-tRNA (Tyr) deacylase, a putative secreted RNase (barnase), and three hypothetical proteins (see Table S2 in Supplementary Material).<br />
+    &gt; Generally, CAI values showed the same trend as the ENC data (mean CAI of 0.72 for genes acquired from bacteria vs. a general CAI mean of 0.73), both implying that transferred genes are now highly ameliorated (see Table S2 in Supplementary Material). CAI values varied greatly among laterally transferred genes, ranging between 0.55 and 0.87. Genes with low CAI values (Values under 0.61, lower by more than 2 S.D) included an ATPase, a polar amino acid ABC transporter permease, an exopolysaccharide synthesis protein, a phosphohydrolase, and three hypothetical proteins (see Table S2 in Supplementary Material). Genes with high CAI values (values over 0.84, higher by more than 2 S.D) include a desulfoferrodoxin and ferredoxin, asn/thr-rich large protein family protein, glutamate dehydrogenase, a short chain dehydrogenase, the gene LeuD1 (a member of the Leucine biosynthetic process), ThiM1 (a member of the Thiamine biosynthesis process), and three hypothetical proteins (see Table S2 in Supplementary Material). Such high CAI values indicate high expression levels of these proteins, testifying to their functional importance.</li>
+</ul>
+<h3 id="17-genome-wide-identification-of-conditionally-essential-genes-supporting-streptococcus-suis-growth-in-serum-and-cerebrospinal-fluid">[17] Genome-wide Identification of conditionally essential genes supporting Streptococcus suis growth in serum and cerebrospinal fluid</h3>
+<ul>
+<li>Authors: Maria Juanpere-Borràs, Tiantong Zhao, Jos Boekhorst, Blanca Fernandez-Ciruelos, Rajrita Sanyal et al.</li>
+<li>Year: 2025</li>
+<li>Venue: Virulence</li>
+<li>URL: https://www.semanticscholar.org/paper/400884affc80cbd5eef1e69b6961748a60a5b400</li>
+<li>DOI: 10.1080/21505594.2025.2600145</li>
+<li>PMID: 41396007</li>
+<li>PMCID: 12707516</li>
+<li>Citations: 1</li>
+<li>Summary: Using Tn-Seq coupled with Nanopore sequencing to identify conditionally essential genes for growth of S. suis provides new insights into the genetic requirements for S. suis survival in host-like environments and a deeper understanding of its ability to adapt to distinct physiological niches.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.713)<br />
+    &gt; Gene SSU_RS04755 has been predicted to encode a basic membrane family protein (BMP), a transmembrane component of specific ABC transporters. Growth curve experiments did not reveal a significant reduction in the growth rate of our ΔSSU_RS04755 mutant. The operon genes with SSU_RS04755 were predicted to encode an ATPbinding protein and a permease which are typical components of an ABC transporter. Both predicted ATPbinding protein and permease encoding genes appeared as CEGs in our Tn-seq results (Table 1). The protein sequence associated with SSU_RS04755 shares significant identity with lipoproteins that are components of nucleoside ABC transporters in Gram-positive bacteria (see above), suggesting that SSU_RS04755 and its operon genes may encode an ABC transporter complex involved in nucleoside transport. To investigate the possible functional equivalence of SSU_RS04755 operon genes with ABC transporters, we performed amino acid sequence alignments of SSU_RS04755 with PnrA and TmpC, which are homologous nucleoside binding lipoproteins from S. pneumoniae and Treponema pallidum (T. pallidum) respectively [49,50]. Using the crystal structure of PnrA binding to adenosine [49], we confirmed that all but one (T70) of the specific amino acids involved in adenosine binding by PnrA were conserved in SSU_RS04755 (Figure 5(c)).<br />
+    &gt; To verify if the structural positions of these amino acids were conserved, we performed a structural prediction (see methods) of the predicted S. suis lipoprotein SSU_RS04755 and aligned it to the structure of PnrA (ID 6y9U in Protein Data Bank (PDB). We confirmed that all amino acids involved in the adenosine binding are located at the same position in both protein structures.</li>
+</ul>
+<h3 id="18-genome-wide-identification-characterization-and-phylogenetic-analysis-of-50-catfish-atp-binding-cassette-abc-transporter-genes">[18] Genome-Wide Identification, Characterization and Phylogenetic Analysis of 50 Catfish ATP-Binding Cassette (ABC) Transporter Genes</h3>
+<ul>
+<li>Authors: Shikai Liu, Qi Li, Zhanjiang Liu</li>
+<li>Year: 2013</li>
+<li>Venue: PLoS ONE</li>
+<li>URL: https://www.semanticscholar.org/paper/427dc24364271d57abe57d9efe0b1ebfc116d51c</li>
+<li>DOI: 10.1371/journal.pone.0063895</li>
+<li>PMID: 23696857</li>
+<li>PMCID: 3655950</li>
+<li>Citations: 63</li>
+<li>Influential citations: 7</li>
+<li>Summary: A set of 50 ABC transporters in catfish genome is identified and identified into seven subfamilies, providing the essential genomic resources for future biochemical, toxicological and physiological studies of ABC drug effluxtransporters.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.712)<br />
+    &gt; Background Although a large set of full-length transcripts was recently assembled in catfish, annotation of large gene families, especially those with duplications, is still a great challenge. Most often, complexities in annotation cause mis-identification and thereby much confusion in the scientific literature. As such, detailed phylogenetic analysis and/or orthology analysis are required for annotation of genes involved in gene families. The ATP-binding cassette (ABC) transporter gene superfamily is a large gene family that encodes membrane proteins that transport a diverse set of substrates across membranes, playing important roles in protecting organisms from diverse environment. Methodology/Principal Findings In this work, we identified a set of 50 ABC transporters in catfish genome. Phylogenetic analysis allowed their identification and annotation into seven subfamilies, including 9 ABCA genes, 12 ABCB genes, 12 ABCC genes, 5 ABCD genes, 2 ABCE genes, 4 ABCF genes and 6 ABCG genes. Most ABC transporters are conserved among vertebrates, though cases of recent gene duplications and gene losses do exist. Gene duplications in catfish were found for ABCA1, ABCB3, ABCB6, ABCC5, ABCD3, ABCE1, ABCF2 and ABCG2. Conclusion/Significance The whole set of catfish ABC transporters provide the essential genomic resources for future biochemical, toxicological and physiological studies of ABC drug efflux transporters. The establishment of orthologies should allow functional inferences with the information from model species, though the function of lineage-specific genes can be distinct because of specific living environment with different selection pressure.</li>
+</ul>
+<h3 id="19-quantitative-proteomic-dataset-of-whole-protein-in-three-melanoma-samples-of-921-921-a-and-921-b">[19] Quantitative proteomic dataset of whole protein in three melanoma samples of 92.1, 92.1-A and 92.1-B</h3>
+<ul>
+<li>Authors: Xi-feng Fei, Xiangtong Xie, X. Ji, Haiyan Tian, F. Sun et al.</li>
+<li>Year: 2022</li>
+<li>Venue: Data in Brief</li>
+<li>URL: https://www.semanticscholar.org/paper/33312bb6cc2cf985d32f3a31cf4fdee6b4e17385</li>
+<li>DOI: 10.1016/j.dib.2022.108592</li>
+<li>PMID: 36164296</li>
+<li>PMCID: 9508510</li>
+<li>Citations: 2</li>
+<li>Influential citations: 1</li>
+<li>Summary: Covering differential proteomes of three cell lines in a pairwise model, the data could be used to further screen the kinesins that play a vital role in regulating the growth of UM.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.709)<br />
+    &gt; 2.8.1. Annotation methods 2.8.1.1. Functional annotation. UniProt-GOA database was utilized to retrieve Gene Ontology (GO) annotation proteome. First, the identified protein identity was converted to UniProt identity and then mapped to GO identity based on the protein identity. When the identified protein was not annotated by UniProt-GOA, the functional annotation of that protein was conducted using the InterProScan software according to the amino acid sequence alignment approach. All proteins were then classified into 3 groups: molecular function, cellular component and biological process.</li>
+</ul>
+<h3 id="20-potential-role-of-multiple-carbon-fixation-pathways-during-lipid-accumulation-in-phaeodactylum-tricornutum">[20] Potential role of multiple carbon fixation pathways during lipid accumulation in Phaeodactylum tricornutum</h3>
+<ul>
+<li>Authors: Jacob J. Valenzuela, Aurélien Mazurie, R. Carlson, R. Gerlach, K. Cooksey et al.</li>
+<li>Year: 2012</li>
+<li>Venue: Biotechnology for Biofuels</li>
+<li>URL: https://www.semanticscholar.org/paper/5f205021fe6a9b10aba8237bdac8ceada97adde0</li>
+<li>DOI: 10.1186/1754-6834-5-40</li>
+<li>PMID: 22672912</li>
+<li>PMCID: 3457861</li>
+<li>Citations: 206</li>
+<li>Influential citations: 10</li>
+<li>Summary: The results indicate that P. tricornutum continued carbon dioxide reduction when population growth was arrested and different carbon-concentrating mechanisms were used dependent upon exogenous DIC levels, and suggest that the build-up of precursors to the acetyl-CoA carboxylases may play a more significant role in TAG synthesis rather than the actual enzyme levels of acetyl</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.708)<br />
+    &gt; Cufflinks output files had transcripts identified by uniprot accessions. Using the DAVID (Database for Annotation, Visualization, and Integrated Discovery) [67] Gene ID conversion tool, uniprot accessions were converted to Locus Tag IDs and Protein IDs. Once all accessions were converted, the DAVID Functional Annotation tool was used to retrieve gene names as well as KEGG (Kyoto Encyclopedia of Genes and Genomes) Pathway information. For genes that were identified as hypothetical proteins, searches were performed on the JGI Phaeodactylum tricornutum v2.0 genome website (http://genome.jgi-psf. org/Phatr2/Phatr2.home.html) and based on best hits, % ID, score, and consistency of the top hits, genes were either identified or remained as hypothetical. Genes were also searched on NCBI and ENSEMBL genome browsers for cross-referencing. To assign genes into pathways, we used KEGG maps for P. tricornutum as a backbone. Genes for major pathways were searched manually to find genes not directly annotated in the P. tricornutum KEGG maps. Gene lists were compiled for the major pathways and developed into network maps.<br />
+    &gt; Organelle targeting for transcript products was done based on annotations from the databases of JGI, NCBI, and ENSEMBL. If no localization was found, eukaryotic organelle localizations were predicted with TargetP 1.1. server [68] in both plant and non-plant mode. Amino acid sequences were also checked for a peroxisomal targeting sequence (SKL, serine-lysine-leucine). If potential targeting was not identified, we assumed that the gene product occurred in the cytoplasm. If the gene was an integral membrane protein we again checked JGI, NCBI, and ENSEMBL, and if targeting could not be determined we located the gene in the most biologically relevant membrane (e.g., light harvesting complex in the plastid).</li>
+</ul>
+<h2 id="notes">Notes</h2>
+<ul>
+<li>This provider combines <code>search_papers_by_relevance</code> with <code>snippet_search</code>.</li>
+<li>No synthesis or second-stage model call is performed.</li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>Dawn Cotter, A. Maer, C. Guda, Brian Saunders, S. Subramaniam (2005). LMPD: LIPID MAPS proteome database. Nucleic Acids Research. https://www.semanticscholar.org/paper/265c37b45326b7927e396484751e84e4aeff92d5</li>
+<li>Megan G. Behringer, Wei-Chin Ho, Samuel F. Miller, Sarah B. Worthan, Zeer Cen et al. (2024). Trade-offs, trade-ups, and high mutational parallelism underlie microbial adaptation during extreme cycles of feast and famine. Current biology : CB. https://www.semanticscholar.org/paper/13c71a271ad81ea813516193454b0fed04b2cd2b</li>
+<li>Pascal Donsbach, Brian A. Yee, Dione L Sánchez-Hevia, J. Berenguer, S. Aigner et al. (2020). The Thermus thermophilus DEAD-box protein Hera is a general RNA binding protein and plays a key role in tRNA metabolism. RNA. https://www.semanticscholar.org/paper/533f89524b50f1df6146e8665eed9512b23e1a5c</li>
+<li>Ralf C. Mueller, Nicolai Mallig, Jacqueline Smith, Lél Eöry, Richard I. Kuo et al. (2020). Avian Immunome DB: an example of a user-friendly interface for extracting genetic information. BMC Bioinformatics. https://www.semanticscholar.org/paper/b894d9ca8ea2d653bf1711a0c67dab71d054487c</li>
+<li>Christopher M. Humphreys, Samantha McLean, Sarah Schatschneider, Thomas Millat, A. Henstra et al. (2015). Whole genome sequence and manual annotation of Clostridium autoethanogenum, an industrially relevant bacterium. BMC Genomics. https://www.semanticscholar.org/paper/8960e4d28fe195cb11cf0274c2dbd5952eefbef1</li>
+<li>Tiffany T. Sharma, S. Edassery, N. Rajinikanth, Vikram Karra, Matthew I. Bury et al. (2023). Proteomic profiling of regenerated urinary bladder tissue with stem cell seeded scaffold composites in a non-human primate bladder augmentation model. bioRxiv. https://www.semanticscholar.org/paper/6446e5bc8c0ec1aa0836a711b705ebafa66bd5c8</li>
+<li>Samuel J. Modlin, A. Elghraoui, Deepika Gunasekaran, Alyssa M Zlotnicki, N. Dillon et al. (2021). Structure-Aware Mycobacterium tuberculosis Functional Annotation Uncloaks Resistance, Metabolic, and Virulence Genes. mSystems. https://www.semanticscholar.org/paper/76ff9a62b36b32cc10e46e71ffd4dd90344e4706</li>
+<li>Huanping Zhang, Xiaofeng Song, Huinan Wang, Xiaobai Zhang (2010). MIClique: An Algorithm to Identify Differentially Coexpressed Disease Gene Subset from Microarray Data. Journal of Biomedicine and Biotechnology. https://www.semanticscholar.org/paper/db76c2ba82c53c1eb0967c1196ae98ca75de22e5</li>
+<li>Valeria Fox, Francesco Santoro, G. Pozzi, F. Iannelli (2021). Predicted transmembrane proteins with homology to Mef(A) are not responsible for complementing mef(A) deletion in the mef(A)–msr(D) macrolide efflux system in Streptococcus pneumoniae. BMC Research Notes. https://www.semanticscholar.org/paper/4f78acee7559d5e406bacad91d5982d9f3244ea3</li>
+<li>Muskan Arooj, R. Mateen, M. Javed, Muhammad Ali, Muhammad Irfan Fareed et al. (2025). Computational screening of phytochemicals targeting mutant KRAS in colorectal cancer. Scientific Reports. https://www.semanticscholar.org/paper/2e47ff33fc8e4bd8a85a3cd322f3441bb45db205</li>
+<li>Valeria Fox, Francesco Santoro, G. Pozzi, F. Iannelli (2021). Predicted transmembrane proteins with homology to Mef(A) are not responsible for complementing mef(A) deletion in the mef(A)–msr(D) macrolide efflux system in Streptococcus pneumoniae. BMC Research Notes. https://www.semanticscholar.org/paper/f30df2b539544c70ac0c1f373b0235d4e92d7687</li>
+<li>V. Beisvåg, Frode K. R. Jünge, Hallgeir Bergum, Lars Jølsum, S. Lydersen et al. (2006). GeneTools – application for functional annotation and statistical hypothesis testing. BMC Bioinformatics. https://www.semanticscholar.org/paper/1d9e0c2f67acd5bf64c659f1f3f8624325b6be8a</li>
+<li>Jian Yang, Qilong Tang, Lei Xu, Zhijiang Li, Yongqiang Ma et al. (2019). Combining of transcriptome and metabolome analyses for understanding the utilization and metabolic pathways of Xylo‐oligosaccharide in Bifidobacterium adolescentis ATCC 15703. Food Science &amp; Nutrition. https://www.semanticscholar.org/paper/a1dc16e9f5c2615024cf1c7cb6bc2e2d3a63a626</li>
+<li>Brigitte Waegele, I. Dunger, G. Fobo, Corinna Montrone, H. Mewes et al. (2008). CRONOS: the cross-reference navigation server. Bioinformatics. https://www.semanticscholar.org/paper/8c05b3aa0ba01c41ee97c2dc98ea7b5b14ce0e9c</li>
+<li>Nathan Mih, M. Lu, B. Palsson, E. Catoiu (2023). Establishing comprehensive quaternary structural proteomes from genome sequence. Research Square. https://www.semanticscholar.org/paper/bf3821f3fcaef0b354e05b3332a155278a721316</li>
+<li>M. Lurie-Weinberger, Michael Peeri, T. Tuller, U. Gophna (2012). Extensive Inter-Domain Lateral Gene Transfer in the Evolution of the Human Commensal Methanosphaera stadtmanae. Frontiers in Genetics. https://www.semanticscholar.org/paper/d34372c95ea31abaa75d4248b82c50cace6acaa1</li>
+<li>Maria Juanpere-Borràs, Tiantong Zhao, Jos Boekhorst, Blanca Fernandez-Ciruelos, Rajrita Sanyal et al. (2025). Genome-wide Identification of conditionally essential genes supporting Streptococcus suis growth in serum and cerebrospinal fluid. Virulence. https://www.semanticscholar.org/paper/400884affc80cbd5eef1e69b6961748a60a5b400</li>
+<li>Shikai Liu, Qi Li, Zhanjiang Liu (2013). Genome-Wide Identification, Characterization and Phylogenetic Analysis of 50 Catfish ATP-Binding Cassette (ABC) Transporter Genes. PLoS ONE. https://www.semanticscholar.org/paper/427dc24364271d57abe57d9efe0b1ebfc116d51c</li>
+<li>Xi-feng Fei, Xiangtong Xie, X. Ji, Haiyan Tian, F. Sun et al. (2022). Quantitative proteomic dataset of whole protein in three melanoma samples of 92.1, 92.1-A and 92.1-B. Data in Brief. https://www.semanticscholar.org/paper/33312bb6cc2cf985d32f3a31cf4fdee6b4e17385</li>
+<li>Jacob J. Valenzuela, Aurélien Mazurie, R. Carlson, R. Gerlach, K. Cooksey et al. (2012). Potential role of multiple carbon fixation pathways during lipid accumulation in Phaeodactylum tricornutum. Biotechnology for Biofuels. https://www.semanticscholar.org/paper/5f205021fe6a9b10aba8237bdac8ceada97adde0</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88JA0
+gene_symbol: PP_2749
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: PP_2749 encodes a predicted multi-pass inner-membrane permease component of the PP_2748-PP_2753 branched-chain
+  amino-acid ABC uptake system. UniProt places it in the cell inner membrane and assigns BCAA transport permease features,
+  supporting a membrane-channel role in BCAA import.
+existing_annotations:
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: Plasma membrane localization is appropriate for this predicted inner-membrane ABC permease.
+    action: ACCEPT
+    reason: UniProt predicts this permease as a cell inner-membrane multi-pass membrane protein.
+    supported_by:
+    - reference_id: file:PSEPK/PP_2749/PP_2749-goa.tsv
+      supporting_text: &#34;GO:0005886\tplasma membrane&#34;
+    - reference_id: file:PSEPK/PP_2749/PP_2749-uniprot.txt
+      supporting_text: Cell inner membrane
+    - reference_id: file:PSEPK/PP_2749/PP_2749-uniprot.txt
+      supporting_text: Full=Branched-chain amino acid ABC transporter, permease protein
+    - reference_id: file:PSEPK/PP_2749/PP_2749-deep-research-asta.md
+      supporting_text: &#39;Protein Description:** SubName: Full=Branched-chain amino acid ABC transporter, permease protein&#39;
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: located_in
+  review:
+    summary: Membrane localization is true but less informative than plasma membrane for this bacterial inner-membrane permease.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The record also has a plasma-membrane annotation and UniProt predicts a cell inner-membrane multi-pass protein.
+    supported_by:
+    - reference_id: file:PSEPK/PP_2749/PP_2749-goa.tsv
+      supporting_text: &#34;GO:0016020\tmembrane&#34;
+    - reference_id: file:PSEPK/PP_2749/PP_2749-uniprot.txt
+      supporting_text: Cell inner membrane
+    - reference_id: file:PSEPK/PP_2749/PP_2749-uniprot.txt
+      supporting_text: Full=Branched-chain amino acid ABC transporter, permease protein
+- term:
+    id: GO:0022857
+    label: transmembrane transporter activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Generic transmembrane transporter activity is too broad for this BCAA ABC-transporter permease component.
+    action: MODIFY
+    reason: The product name and BCAA transport permease domain support branched-chain amino acid transmembrane transporter
+      activity as the better complex-level activity.
+    supported_by:
+    - reference_id: file:PSEPK/PP_2749/PP_2749-goa.tsv
+      supporting_text: &#34;GO:0022857\ttransmembrane transporter activity&#34;
+    - reference_id: file:PSEPK/PP_2749/PP_2749-uniprot.txt
+      supporting_text: Full=Branched-chain amino acid ABC transporter, permease protein
+    - reference_id: file:PSEPK/PP_2749/PP_2749-uniprot.txt
+      supporting_text: InterPro; IPR052157; BCAA_transport_permease.
+    - reference_id: file:PSEPK/PP_2749/PP_2749-deep-research-asta.md
+      supporting_text: &#39;Protein Description:** SubName: Full=Branched-chain amino acid ABC transporter, permease protein&#39;
+    proposed_replacement_terms:
+    - id: GO:0015658
+      label: branched-chain amino acid transmembrane transporter activity
+- term:
+    id: GO:0055085
+    label: transmembrane transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Transmembrane transport is true but broad relative to the branched-chain amino-acid ABC-import context.
+    action: MODIFY
+    reason: Branched-chain amino acid transport better captures the expected substrate class for this permease.
+    supported_by:
+    - reference_id: file:PSEPK/PP_2749/PP_2749-goa.tsv
+      supporting_text: &#34;GO:0055085\ttransmembrane transport&#34;
+    - reference_id: file:PSEPK/PP_2749/PP_2749-uniprot.txt
+      supporting_text: Full=Branched-chain amino acid ABC transporter, permease protein
+    - reference_id: file:PSEPK/PP_2749/PP_2749-uniprot.txt
+      supporting_text: InterPro; IPR052157; BCAA_transport_permease.
+    - reference_id: file:PSEPK/PP_2749/PP_2749-deep-research-asta.md
+      supporting_text: &#39;Protein Description:** SubName: Full=Branched-chain amino acid ABC transporter, permease protein&#39;
+    proposed_replacement_terms:
+    - id: GO:0015803
+      label: branched-chain amino acid transport
+- term:
+    id: GO:0015658
+    label: branched-chain amino acid transmembrane transporter activity
+  evidence_type: IEA
+  original_reference_id: file:PSEPK/PP_2749/PP_2749-uniprot.txt
+  qualifier: contributes_to
+  review:
+    summary: Branched-chain amino acid transmembrane transporter activity captures the complex-level activity to which PP_2749
+      contributes.
+    action: NEW
+    reason: PP_2749 is a permease subunit of the adjacent PP_2748-PP_2753 branched-chain amino-acid ABC transporter.
+    supported_by:
+    - reference_id: file:PSEPK/PP_2749/PP_2749-uniprot.txt
+      supporting_text: Full=Branched-chain amino acid ABC transporter, permease protein
+    - reference_id: file:PSEPK/PP_2749/PP_2749-uniprot.txt
+      supporting_text: InterPro; IPR052157; BCAA_transport_permease.
+    - reference_id: file:PSEPK/PP_2749/PP_2749-deep-research-asta.md
+      supporting_text: &#39;Protein Description:** SubName: Full=Branched-chain amino acid ABC transporter, permease protein&#39;
+- term:
+    id: GO:0015803
+    label: branched-chain amino acid transport
+  evidence_type: IEA
+  original_reference_id: file:PSEPK/PP_2749/PP_2749-uniprot.txt
+  qualifier: involved_in
+  review:
+    summary: Branched-chain amino acid transport is a useful missing process annotation for PP_2749.
+    action: NEW
+    reason: PP_2749 is paired with BCAA transporter ATP-binding, permease, and leucine-family binding components.
+    supported_by: &amp;id001
+    - reference_id: file:PSEPK/PP_2749/PP_2749-uniprot.txt
+      supporting_text: Full=Branched-chain amino acid ABC transporter, permease protein
+    - reference_id: file:PSEPK/PP_2749/PP_2749-deep-research-asta.md
+      supporting_text: &#39;Protein Description:** SubName: Full=Branched-chain amino acid ABC transporter, permease protein&#39;
+- term:
+    id: GO:0043190
+    label: ATP-binding cassette (ABC) transporter complex
+  evidence_type: IEA
+  original_reference_id: file:PSEPK/PP_2749/PP_2749-uniprot.txt
+  qualifier: part_of
+  review:
+    summary: ABC transporter complex membership is appropriate for PP_2749.
+    action: NEW
+    reason: PP_2749 is a permease component of the adjacent PP_2748-PP_2753 branched-chain amino-acid ABC transporter locus.
+    supported_by: *id001
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/PP_2749/PP_2749-goa.tsv
+  title: QuickGO GOA annotations for PP_2749
+  findings: []
+- id: file:PSEPK/PP_2749/PP_2749-uniprot.txt
+  title: UniProtKB entry for PP_2749 (Q88JA0)
+  findings:
+  - supporting_text: Full=Branched-chain amino acid ABC transporter, permease protein
+- id: file:PSEPK/PP_2749/PP_2749-deep-research-asta.md
+  title: Asta retrieval report for PP_2749 (Q88JA0)
+  findings:
+  - supporting_text: &#39;Protein Description:** SubName: Full=Branched-chain amino acid ABC transporter, permease protein&#39;
+core_functions:
+- description: Multi-pass permease component contributing to the predicted PP_2748-PP_2753 branched-chain amino-acid ABC uptake
+    system.
+  contributes_to_molecular_function:
+    id: GO:0015658
+    label: branched-chain amino acid transmembrane transporter activity
+  directly_involved_in:
+  - id: GO:0015803
+    label: branched-chain amino acid transport
+  locations:
+  - id: GO:0005886
+    label: plasma membrane
+  in_complex:
+    id: GO:0043190
+    label: ATP-binding cassette (ABC) transporter complex
+  supported_by:
+  - reference_id: file:PSEPK/PP_2749/PP_2749-uniprot.txt
+    supporting_text: Full=Branched-chain amino acid ABC transporter, permease protein
+  - reference_id: file:PSEPK/PP_2749/PP_2749-uniprot.txt
+    supporting_text: InterPro; IPR052157; BCAA_transport_permease.
+  - reference_id: file:PSEPK/PP_2749/PP_2749-uniprot.txt
+    supporting_text: Cell inner membrane
+  - reference_id: file:PSEPK/PP_2749/PP_2749-deep-research-asta.md
+    supporting_text: &#39;Protein Description:** SubName: Full=Branched-chain amino acid ABC transporter, permease protein&#39;
+proposed_new_terms: []
+suggested_questions:
+- question: What substrate range and regulation distinguish the PP_2748-PP_2753 BCAA ABC importer from the other P. putida
+    KT2440 branched-chain amino-acid transporter loci?
+suggested_experiments:
+- description: Measure uptake and growth phenotypes for PP_2748-PP_2753 mutants, alone and in combination with other BCAA
+    transporter loci, using L-leucine, L-isoleucine, L-valine, alanine, and related hydrophobic amino acids as candidate substrates.
+  experiment_type: targeted transporter mutant substrate-uptake and redundancy assay
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

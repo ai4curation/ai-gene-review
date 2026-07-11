@@ -1,0 +1,2740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mqsR - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>mqsR</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88F93" target="_blank" class="term-link">
+                        Q88F93
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "mqsR";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88F93" data-a="DESCRIPTION: mqsR encodes a predicted MqsR-family type II toxin..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>mqsR encodes a predicted MqsR-family type II toxin in Pseudomonas putida KT2440. UniProt and Asta context support an MqsR toxin-family protein with mRNA-interferase wording, while current GOA rows focus on downstream translation, biofilm, and quorum-sensing process context. This first pass records toxin activity as the core molecular-function-level call and avoids asserting a specific KT2440 physiological phenotype.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009372" target="_blank" class="term-link">
+                                    GO:0009372
+                                </a>
+                            </span>
+                            <span class="term-label">quorum sensing</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F93" data-a="GO:0009372" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> quorum sensing is likely downstream or over-propagated from MqsR-family biology.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The local evidence supports an MqsR-family toxin candidate, but does not establish quorum-sensing or biofilm phenotypes for this KT2440 gene. These process annotations are kept out of the core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/mqsR/mqsR-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">UniProtKB	Q88F93	mqsR	involved_in	GO:0009372	quorum sensing	biological_process	ECO:0000256	IEA	GO_REF:0000002	InterPro:IPR031451	160488	Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)	InterPro	mRNA interferase MqsR of the MqsA-MqsR antitoxin/toxin complex and DNA-binding transcriptional repressor	20260706</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/mqsR/mqsR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DE   SubName: Full=mRNA interferase MqsR of the MqsA-MqsR antitoxin/toxin complex and DNA-binding transcriptional repressor {ECO:0000313|EMBL:AAN69786.1};</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/mqsR/mqsR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR038493; MqsR_sf.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/mqsR/mqsR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR031451; MqsR_toxin.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/mqsR/mqsR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   Pfam; PF15723; MqsR_toxin; 1.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/mqsR/mqsR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">KW   DNA-binding {ECO:0000313|EMBL:AAN69786.1};</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/mqsR/mqsR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">KW   Hydrolase {ECO:0000313|EMBL:AAN69786.1};</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/mqsR/mqsR-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">protein_description: &#39;SubName: Full=mRNA interferase MqsR of the MqsA-MqsR antitoxin/toxin</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/mqsR/mqsR-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">protein_family: Not specified in UniProt</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/mqsR/mqsR-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">- **Protein Family:** Not specified in UniProt</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/mqsR/mqsR-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">protein_domains: MqsR_sf. (IPR038493); MqsR_toxin. (IPR031451); MqsR_toxin (PF15723)</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/mqsR/mqsR-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">- **Key Domains:** MqsR_sf. (IPR038493); MqsR_toxin. (IPR031451); MqsR_toxin (PF15723)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0017148" target="_blank" class="term-link">
+                                    GO:0017148
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of translation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F93" data-a="GO:0017148" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Negative regulation of translation is retained as direct process context for the MqsR toxin candidate.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The MqsR toxin-family and mRNA-interferase product context support translation-inhibition process context, although the precise RNA cleavage activity is not represented in the current GOA rows.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/mqsR/mqsR-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">UniProtKB	Q88F93	mqsR	involved_in	GO:0017148	negative regulation of translation	biological_process	ECO:0000256	IEA	GO_REF:0000002	InterPro:IPR031451	160488	Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)	InterPro	mRNA interferase MqsR of the MqsA-MqsR antitoxin/toxin complex and DNA-binding transcriptional repressor	20260706</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/mqsR/mqsR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DE   SubName: Full=mRNA interferase MqsR of the MqsA-MqsR antitoxin/toxin complex and DNA-binding transcriptional repressor {ECO:0000313|EMBL:AAN69786.1};</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/mqsR/mqsR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR038493; MqsR_sf.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/mqsR/mqsR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR031451; MqsR_toxin.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/mqsR/mqsR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   Pfam; PF15723; MqsR_toxin; 1.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/mqsR/mqsR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">KW   DNA-binding {ECO:0000313|EMBL:AAN69786.1};</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/mqsR/mqsR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">KW   Hydrolase {ECO:0000313|EMBL:AAN69786.1};</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/mqsR/mqsR-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">protein_description: &#39;SubName: Full=mRNA interferase MqsR of the MqsA-MqsR antitoxin/toxin</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/mqsR/mqsR-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">protein_family: Not specified in UniProt</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/mqsR/mqsR-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">- **Protein Family:** Not specified in UniProt</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/mqsR/mqsR-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">protein_domains: MqsR_sf. (IPR038493); MqsR_toxin. (IPR031451); MqsR_toxin (PF15723)</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/mqsR/mqsR-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">- **Key Domains:** MqsR_sf. (IPR038493); MqsR_toxin. (IPR031451); MqsR_toxin (PF15723)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044010" target="_blank" class="term-link">
+                                    GO:0044010
+                                </a>
+                            </span>
+                            <span class="term-label">single-species biofilm formation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F93" data-a="GO:0044010" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> single-species biofilm formation is likely downstream or over-propagated from MqsR-family biology.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The local evidence supports an MqsR-family toxin candidate, but does not establish quorum-sensing or biofilm phenotypes for this KT2440 gene. These process annotations are kept out of the core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/mqsR/mqsR-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">UniProtKB	Q88F93	mqsR	involved_in	GO:0044010	single-species biofilm formation	biological_process	ECO:0000256	IEA	GO_REF:0000002	InterPro:IPR031451	160488	Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)	InterPro	mRNA interferase MqsR of the MqsA-MqsR antitoxin/toxin complex and DNA-binding transcriptional repressor	20260706</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/mqsR/mqsR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DE   SubName: Full=mRNA interferase MqsR of the MqsA-MqsR antitoxin/toxin complex and DNA-binding transcriptional repressor {ECO:0000313|EMBL:AAN69786.1};</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/mqsR/mqsR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR038493; MqsR_sf.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/mqsR/mqsR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR031451; MqsR_toxin.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/mqsR/mqsR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   Pfam; PF15723; MqsR_toxin; 1.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/mqsR/mqsR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">KW   DNA-binding {ECO:0000313|EMBL:AAN69786.1};</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/mqsR/mqsR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">KW   Hydrolase {ECO:0000313|EMBL:AAN69786.1};</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/mqsR/mqsR-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">protein_description: &#39;SubName: Full=mRNA interferase MqsR of the MqsA-MqsR antitoxin/toxin</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/mqsR/mqsR-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">protein_family: Not specified in UniProt</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/mqsR/mqsR-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">- **Protein Family:** Not specified in UniProt</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/mqsR/mqsR-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">protein_domains: MqsR_sf. (IPR038493); MqsR_toxin. (IPR031451); MqsR_toxin (PF15723)</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/mqsR/mqsR-deep-research-asta.md
+
+                                </span>
+
+                                <div class="support-text">- **Key Domains:** MqsR_sf. (IPR038493); MqsR_toxin. (IPR031451); MqsR_toxin (PF15723)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>MqsR-family type II toxin candidate with mRNA-interferase and translation-inhibition context</h3>
+                <span class="vote-buttons" data-g="Q88F93" data-a="FUNCTION: MqsR-family type II toxin candidate with mRNA-inte..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0090729" target="_blank" class="term-link">
+                            toxin activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0017148" target="_blank" class="term-link">
+                                negative regulation of translation
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/mqsR/mqsR-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">DE   SubName: Full=mRNA interferase MqsR of the MqsA-MqsR antitoxin/toxin complex and DNA-binding transcriptional repressor {ECO:0000313|EMBL:AAN69786.1};</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/mqsR/mqsR-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">DR   InterPro; IPR038493; MqsR_sf.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/mqsR/mqsR-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">DR   InterPro; IPR031451; MqsR_toxin.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/mqsR/mqsR-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">DR   Pfam; PF15723; MqsR_toxin; 1.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/mqsR/mqsR-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">KW   DNA-binding {ECO:0000313|EMBL:AAN69786.1};</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/mqsR/mqsR-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">KW   Hydrolase {ECO:0000313|EMBL:AAN69786.1};</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/mqsR/mqsR-deep-research-asta.md
+
+                        </span>
+
+                        <div class="finding-text">protein_description: &#39;SubName: Full=mRNA interferase MqsR of the MqsA-MqsR antitoxin/toxin</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/mqsR/mqsR-deep-research-asta.md
+
+                        </span>
+
+                        <div class="finding-text">protein_family: Not specified in UniProt</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/mqsR/mqsR-deep-research-asta.md
+
+                        </span>
+
+                        <div class="finding-text">- **Protein Family:** Not specified in UniProt</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/mqsR/mqsR-deep-research-asta.md
+
+                        </span>
+
+                        <div class="finding-text">protein_domains: MqsR_sf. (IPR038493); MqsR_toxin. (IPR031451); MqsR_toxin (PF15723)</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/mqsR/mqsR-deep-research-asta.md
+
+                        </span>
+
+                        <div class="finding-text">- **Key Domains:** MqsR_sf. (IPR038493); MqsR_toxin. (IPR031451); MqsR_toxin (PF15723)</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/mqsR/mqsR-goa.tsv
+
+                        </span>
+
+                        <div class="finding-text">UniProtKB	Q88F93	mqsR	involved_in	GO:0017148	negative regulation of translation	biological_process	ECO:0000256	IEA	GO_REF:0000002	InterPro:IPR031451	160488	Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)	InterPro	mRNA interferase MqsR of the MqsA-MqsR antitoxin/toxin complex and DNA-binding transcriptional repressor	20260706</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/mqsR/mqsR-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO GOA annotations for mqsR (Q88F93)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"UniProtKB	Q88F93	mqsR	involved_in	GO:0009372	quorum sensing	biological_process	ECO:0000256	IEA	GO_REF:0000002	InterPro:IPR031451	160488	Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)	InterPro	mRNA interferase MqsR of the MqsA-MqsR antitoxin/toxin complex and DNA-binding transcriptional repressor	20260706"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"UniProtKB	Q88F93	mqsR	involved_in	GO:0017148	negative regulation of translation	biological_process	ECO:0000256	IEA	GO_REF:0000002	InterPro:IPR031451	160488	Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)	InterPro	mRNA interferase MqsR of the MqsA-MqsR antitoxin/toxin complex and DNA-binding transcriptional repressor	20260706"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"UniProtKB	Q88F93	mqsR	involved_in	GO:0044010	single-species biofilm formation	biological_process	ECO:0000256	IEA	GO_REF:0000002	InterPro:IPR031451	160488	Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)	InterPro	mRNA interferase MqsR of the MqsA-MqsR antitoxin/toxin complex and DNA-binding transcriptional repressor	20260706"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/mqsR/mqsR-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for mqsR (Q88F93)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"DE   SubName: Full=mRNA interferase MqsR of the MqsA-MqsR antitoxin/toxin complex and DNA-binding transcriptional repressor {ECO:0000313|EMBL:AAN69786.1};"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"DR   InterPro; IPR038493; MqsR_sf."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"DR   InterPro; IPR031451; MqsR_toxin."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"DR   Pfam; PF15723; MqsR_toxin; 1."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"KW   DNA-binding {ECO:0000313|EMBL:AAN69786.1};"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"KW   Hydrolase {ECO:0000313|EMBL:AAN69786.1};"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/mqsR/mqsR-deep-research-asta.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Asta retrieval report for mqsR (Q88F93)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"protein_description: &#39;SubName: Full=mRNA interferase MqsR of the MqsA-MqsR antitoxin/toxin"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"protein_family: Not specified in UniProt"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"- **Protein Family:** Not specified in UniProt"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"protein_domains: MqsR_sf. (IPR038493); MqsR_toxin. (IPR031451); MqsR_toxin (PF15723)"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"- **Key Domains:** MqsR_sf. (IPR038493); MqsR_toxin. (IPR031451); MqsR_toxin (PF15723)"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What toxin-antitoxin partner, operator target, and stress condition define mqsR in KT2440?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88F93" data-a="Q: What toxin-antitoxin partner, operator target, and..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Test mqsR in toxin-antitoxin interaction, promoter binding, and stress-induced expression assays.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: regulatory network mapping</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88F93" data-a="EXPERIMENT: Test mqsR in toxin-antitoxin interaction, promoter..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Asta</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(mqsR-deep-research-asta.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88F93" data-a="DEEP_RESEARCH: Asta" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Asta Literature Retrieval: Gene Research for Functional Annotation ⚠️ CRITICAL: Gene/Protein Identification Context BEFORE YOU BEGIN RESEARCH: Y...</span>
+
+
+                    <span class="report-badge">Asta</span>
+
+
+                    <span class="report-badge">Asta Scientific Corpus Retrieval</span>
+
+
+                    <span class="report-badge">13 citations</span>
+
+
+
+                    <span class="report-meta-text">2026-07-10T16:03:03.068553</span>
+
+
+
+                </div>
+
+
+                <h1 id="asta-literature-retrieval-gene-research-for-functional-annotation-critical-geneprotein-identification-context-before-you-begin-research-y">Asta Literature Retrieval: Gene Research for Functional Annotation ⚠️ CRITICAL: Gene/Protein Identification Context BEFORE YOU BEGIN RESEARCH: Y...</h1>
+<p>This report is retrieval-only and is generated directly from Asta results.</p>
+<ul>
+<li>Papers retrieved: 13</li>
+<li>Snippets retrieved: 20</li>
+</ul>
+<h2 id="relevant-papers">Relevant Papers</h2>
+<h3 id="1-substrate-specificity-of-bacterial-endoribonuclease-toxins">[1] Substrate specificity of bacterial endoribonuclease toxins</h3>
+<ul>
+<li>Authors: Yoontak Han, Eun-Jin Lee</li>
+<li>Year: 2020</li>
+<li>Venue: BMB Reports</li>
+<li>URL: https://www.semanticscholar.org/paper/c8fba26817ac67e890b44fbe9acd42764898eb15</li>
+<li>DOI: 10.5483/BMBRep.2020.53.12.203</li>
+<li>PMID: 33148377</li>
+<li>PMCID: 7781912</li>
+<li>Citations: 13</li>
+<li>Influential citations: 2</li>
+<li>Summary: The biology, structure, and substrate specificity of the updated bacterial endoribonuclease toxins are summarized and determined by its structure and the composition of active site residues.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.880)<br />
+    &gt; PemK toxin inhibits protein synthesis by cleaving mRNAs while PemI antitoxin neutralizes PemK to resume protein synthesis (60). PemK toxin is yet another sequence-specific endoribonuclease that cleaves mRNA at the 5' or 3' side of the A nucleotide in the UAH recognition sequences where H could be one of C, A, or U nucleotides (60). MqsR-MqsA: The mqsR-mqsA (ygiU-ygiT) operon encodes MqsR toxin and MqsA antitoxin protein. The organization of the mqsR-mqsA (ygiU-ygiT) operon is non-canonical in a sense that the mqsR toxin gene precedes the mqsA antitoxin gene (61, 62). In addition to an MqsA-autorepressible promoter upstream of the mqsR toxin gene, the mqsA antitoxin gene has two additional constitutive promoters in the coding region of the mqsR toxin gene, allowing to uncouple transcription of the mqsR and mqsA genes (63). The MqsR toxin was originally identified as a motility quorum-sensing regulator because an mqsR insertional mutant exhibited a decreased autoinducer 2-mediated biofilm formation and reduced motility (64), both of which were controversial (63). In addition to motility and quorum sensing, the biological function of MqsR toxin was also suggested to be involved in persister cell formation (65).<br />
+    &gt; MqsR toxin turned out to be a ribosome-independent endoribonuclease in E. coli (62). It cleaves mRNA preferentially at the 5' or 3' side of G nucleotide in GCU recognition sequences both in vivo and in vitro (8,62).</li>
+<li>Snippet 2 (score: 0.755)<br />
+    &gt; Here we summarized the bacterial toxins with endoribonuclease activity. The toxin components are organized in pairs with its cognate antitoxin components. For example, type II toxin-antitoxin systems consist of toxins and its cognate antitoxin proteins that are organized as bicistronic operons. The expression of the bicistronic operon is mostly repressed by the antitoxin protein, which has a DNA-binding domain for auto-repressor activity and a toxin-binding domain for neutralizing the toxin's activity. Stress conditions including amino acid starvation promote the differential degradation of the labile antitoxins by Lon or ClpAP proteases (78), and the removal of antitoxins results in an increase in the expression of the toxin-antitoxin operon (Fig. 1). The molecular ratio between toxin and anti-toxin proteins appears to be tightly regulated because most of the antitoxin and toxin genes are bicistronic and translationally coupled. Generally, the antitoxin gene precedes the toxin gene, which is also likely to ensure an appropriate molecular ratio between toxin and antitoxin proteins. However, the hicAB, higBA, and mqsRA operons have a reverse arrangement, whereby the toxin genes (hicA, higB, and mqsR) precede its cognate antitoxin genes (hicB, higA, and mqsA) (7,62,79). Moreover, the mqsRA operon has an additional promoter within the mqsR gene uncoupling transcription of the mqsR and mqsA genes (63). However, the biological significance of the reverse arrangement or transcriptional uncoupling is currently unclear. Similarly to most type II toxin-antitoxin systems, type III toxin-antitoxin systems are transcribed as single transcripts and then antitoxin RNAs are processed as mature sRNAs (34-36 nt) by the type III ribonuclease toxin.</li>
+</ul>
+<h3 id="2-regulating-toxin-antitoxin-expression-controlled-detonation-of-intracellular-molecular-timebombs">[2] Regulating Toxin-Antitoxin Expression: Controlled Detonation of Intracellular Molecular Timebombs</h3>
+<ul>
+<li>Authors: Finbarr Hayes, B. Kedzierska</li>
+<li>Year: 2014</li>
+<li>Venue: Toxins</li>
+<li>URL: https://www.semanticscholar.org/paper/8696cca8682182bc588454346364063c1e6d4dbd</li>
+<li>DOI: 10.3390/toxins6010337</li>
+<li>PMID: 24434949</li>
+<li>PMCID: 3920265</li>
+<li>Citations: 95</li>
+<li>Influential citations: 2</li>
+<li>Summary: Interference with TA gene transcriptional autoregulation holds considerable promise as a novel antibacterial strategy: artificial release of the toxin factor using designer drugs is a potential approach to induce bacterial suicide from within.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.832)<br />
+    &gt; The mqsRA module encoded by E. coli displays many features that differ from canonical type II TA systems. First, the gene for the mqsR toxin precedes the mqsA antitoxin gene, whereas the standard organization comprises an antitoxin gene followed by a toxin gene (Figure 1). This unusual genetic organization has been observed only rarely in other TA systems characterized to date, including the higBA [105] and hicAB modules [106]. Second, the MqsA antitoxin is well-ordered throughout its entire length and requires zinc ions to maintain its structural stability, properties that are unique among known antitoxins (Figure 2D) [48].<br />
+    &gt; Autoregulation of the mqsRA module also is distinctive. The antitoxin repressor, MqsA, undergoes extensive domain rearrangements upon DNA binding and is the only antitoxin known to interact with DNA via its C-terminal domain [48,107]. However, the MqsA N-terminal domain, which binds the MqsR toxin, also makes direct interactions with DNA. It twists and collapses over the DNA and this rotation clamps the DNA thereby enhancing binding [107]. Interestingly, the MqsR toxin does not function as a transcriptional corepressor as in many other TA systems. Instead, MqsR destabilizes the MqsA-DNA complex. This reflects that the binding sites of DNA and MqsR on MqsA partially overlap rendering simultaneous binding of both by MqsA impossible. Thus, MqsR is a transcriptional activator of mqsRA expression, not a transcriptional repressor [85].<br />
+    &gt; Distinct from other type II TA systems, the MqsR-MqsA complex also regulates other genomic promoter regions. Specifically, the MqsA antitoxin and the MqsR-MqsA complex regulate the promoters of genes that are important for E. coli metabolism, including the mcbR, spy and cspD loci [48,108]. The mcbR gene encodes a colanic acid regulator, Spy is a periplasmic chaperone of proteins, and CspD is a stress-induced cold shock protein that is a DNA replication inhibitor.</li>
+</ul>
+<h3 id="3-the-escherichia-coli-toxin-mqsr-destabilizes-the-transcriptional-repression-complex-formed-between-the-antitoxin-mqsa-and-the-mqsra-operon-promoter">[3] The Escherichia coli Toxin MqsR Destabilizes the Transcriptional Repression Complex Formed between the Antitoxin MqsA and the mqsRA Operon Promoter*</h3>
+<ul>
+<li>Authors: Breann L Brown, D. Lord, Simina Grigoriu, W. Peti, R. Page</li>
+<li>Year: 2012</li>
+<li>Venue: The Journal of Biological Chemistry</li>
+<li>URL: https://www.semanticscholar.org/paper/c7d314c4583ac3d5f64c54bbb571597a3eeea8aa</li>
+<li>DOI: 10.1074/jbc.M112.421008</li>
+<li>PMID: 23172222</li>
+<li>Citations: 85</li>
+<li>Influential citations: 8</li>
+<li>Summary: This is the first TA system in which the toxin does not function as a transcriptional co-repressor, but instead functions to destabilize the antitoxin-operator complex under all conditions, and thus defines another unique feature of the mqsRA TA module.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.819)<br />
+    &gt; Background: MqsR, an endoribonuclease, and MqsA, a transcriptional regulator, form a unique toxin-antitoxin (TA) pair. Results: The high affinity, stable MqsR-MqsA complex is unable to bind DNA. Conclusion: MqsR is the only toxin shown to disrupt the antitoxin-DNA complex, which would promote transcription. Significance: The MqsR toxin may promote multidrug tolerance in E. coli by disrupting MqsA-mediated transcriptional repression of several genes related to persistence. Bacterial biofilms are complex communities of cells containing an increased prevalence of dormant cells known as persisters, which are characterized by an up-regulation of genes known as toxin-antitoxin (TA) modules. The association of toxins with their cognate antitoxins neutralizes toxin activity, allowing for normal cell growth. Additionally, protein antitoxins bind their own promoters and repress transcription, whereas the toxins serve as co-repressors. Recently, TA pairs have been shown to regulate their own transcription through a phenomenon known as conditional cooperativity, where the TA complexes bind operator DNA and repress transcription only when present in the proper stoichiometric amounts. The most differentially up-regulated gene in persister cells is mqsR, a gene that, with the antitoxin mqsA, constitutes a TA module. Here, we reveal that, unlike other TA systems, MqsR is not a transcription co-repressor but instead functions to destabilize the MqsA-DNA complex. We further show that DNA binding is not regulated by conditional cooperativity. Finally, using biophysical studies, we show that complex formation between MqsR and MqsA results in an exceptionally stable interaction, resulting in a subnanomolar dissociation constant that is similar to that observed between MqsA and DNA. In combination with crystallographic studies, this work reveals that MqsA binding to DNA and MqsR is mutually exclusive. To our knowledge, this is the first TA system in which the toxin does not function as a transcriptional co-repressor, but instead functions to destabilize the antitoxin-operator complex under all conditions, and thus defines another unique feature of</li>
+<li>Snippet 2 (score: 0.730)<br />
+    &gt; Thus, unlike most toxins, MqsR does not act as a transcriptional co-repressor but instead a transcriptional derepressor. Critically, this newly identified function of MqsR may also explain previous results which showed that overexpression of MqsR led to an increase in the transcription of genes known to be regulated by MqsA, including cspD, rpoS, and mqsA itself (28). Therefore, both in vitro (these studies) and in vivo experiments (28) show that MqsR also functions as a transcriptional derepressor.<br />
+    &gt; We previously determined that the mqsRA toxin-antitoxin module is unique among E. coli TA modules based upon the novel features of the MqsA antitoxin. However, it is now becoming evident that the MqsR toxin also displays unusual toxin characteristics which, together with the unique features of the MqsA antitoxin, may also lead to differences in transcriptional regulation of the mqsRA operon. We report that the MqsR-MqsA complex does not bind its own operon promoter, which would lead to transcriptional repression, as is common for several other TA systems. Instead, in all instances, the MqsR toxin serves solely to disrupt the MqsA-DNA complex in vitro and thus results in transcriptional activation. In addition, we show that MqsR is capable of cleaving mRNA corresponding not only to mqsA, but to mqsR as well. This suggests that MqsR may autoregulate its own activity, which could allow for rapid exit from the persister state upon removal of environmental stress. Expression of MqsR was previously shown to play a role in persistence as well as biofilm formation through positively regulating the expression of various genes including the toxin cspD and the two-component motility regulatory system qseBC (27,28). Because MqsA regulates multiple genes that play a vital role in E. coli physiology, including activation of the general stress response (21), the function of MqsR in alleviating MqsAmediated repression would further elucidate the mechanism by which MqsR exerts some of its cellular effects.</li>
+<li>Snippet 3 (score: 0.719)<br />
+    &gt; However, under conditions of environmen-tal stress, such as nutrient starvation, oxidative stress, or antibiotic challenge, the antitoxins are rapidly degraded by cellular proteases, mainly Lon or ClpXP (20 -23), and the toxins are free to exert their cellular effects.<br />
+    &gt; Previously, gene expression profiling revealed that the gene most highly up-regulated in Escherichia coli persister cells is the toxin mqsR (9). The mqsR gene encodes a small 98-amino acid protein that functions as a sequence-specific mRNA endoribonuclease belonging to the RelE family of bacterial toxins (24 -26). Its cognate antitoxin mqsA, which is located immediately downstream of mqsR in the same operon, encodes a 131-amino acid protein that functions to neutralize MqsR toxicity. There is a growing body of evidence that the mqsRA TA system plays a significant role in multiple cellular processes in E. coli. For instance, MqsR has been shown to facilitate biofilm formation by affecting cellular motility as a result of autoinducer-2 signaling (27). Also, deletion of mqsR and the mqsRA operon leads to decreased persister cell formation, the only type II TA system known to do so, whereas overexpression of MqsR increases persister cell formation (10). Finally, the antitoxin MqsA has been shown to serve as a transcriptional regulator not only of the mqsRA operon, but also of several other E. coli genes, including mcbR, cspD, and the general stress response regulator rpoS (21,24,28).<br />
+    &gt; We showed previously that the antitoxin MqsA is unique among all antitoxins studied to date. First, MqsA is completely structured throughout its entire sequence both in the free and DNA-or toxin-bound states (24,29), whereas other antitoxins are either partially or completely unstructured in the free state (30 -34).</li>
+<li>Snippet 4 (score: 0.691)<br />
+    &gt; We believe that MqsR cannot utilize either mechanism to serve as a transcriptional co-repressor for two reasons. First, there is no evidence for multiple binding interfaces between MqsR and MqsA. Our analysis of the MqsR-MqsA complex in solution has not revealed the presence of any oligomeric species larger than the MqsR-MqsA 2 -MqsR heterotetramer, as determined using size exclusion chromatography (Fig. 1A). Second, MqsR exists as a monomer in solution and has not been demonstrated to dimerize, which we also showed using size exclusion chromatography (Fig. 1A). Therefore, MqsR cannot serve as a co-repressor either alone (mechanism 1) or as a dimer (mechanism 2). Instead, and in contrast to all other characterized TA systems, even subequimolar quantities of MqsR toxin serve to destabilize the MqsA-DNA interaction (Fig. 4). In fact, at a 1:1 ratio of MqsR toxin to MqsA antitoxin, DNA binding by MqsA is essentially ablated. This behavior is unique to mqsRA because in all other TA systems, transcriptional derepression occurs only when toxin concentrations exceed their normal stoichiometric levels.<br />
+    &gt; A detailed analysis of the x-ray crystal structures of the various states of MqsR and MqsA provides insight as to why MqsR destabilizes the interaction between MqsA and the mqsRA promoter. A model of the hypothetical MqsR-MqsA-DNA ternary complex based on our crystal structures of MqsA bound to DNA (Protein Data Bank (PDB) ID code 3O9X) and MqsR bound to the N-terminal domain of MqsA (PDB ID code 3HI2) revealed the potential for clashes between the DNA and MqsR when both are bound to MqsA (Fig. 5A). Moreover, the binding sites on MqsA for both MqsR and DNA partially overlap as MqsA Arg-61 forms interactions with both binding partners in the respective crystal structures (Fig. 5, B and C).</li>
+</ul>
+<h3 id="4-mqsrmqsa-toxinantitoxin-system-regulates-persistence-and-biofilm-formation-in-pseudomonas-putida-kt2440">[4] MqsR/MqsA Toxin/Antitoxin System Regulates Persistence and Biofilm Formation in Pseudomonas putida KT2440</h3>
+<ul>
+<li>Authors: Chenglong Sun, Yunxue Guo, K. Tang, Zhongling Wen, Baiyuan Li et al.</li>
+<li>Year: 2017</li>
+<li>Venue: Frontiers in Microbiology</li>
+<li>URL: https://www.semanticscholar.org/paper/6c4b78f65bbb7964332e329c0758f28c7a7a38ac</li>
+<li>DOI: 10.3389/fmicb.2017.00840</li>
+<li>PMID: 28536573</li>
+<li>PMCID: 5422877</li>
+<li>Citations: 60</li>
+<li>Influential citations: 2</li>
+<li>Summary: An important regulatory role of MqsR/MqsA in persistence and biofilm formation in P. putida KT2440 is revealed and an type II TA system in a soil bacterium Pseudomonas putidaKT2440 belongs to the MqS/MqA family is identified.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.783)<br />
+    &gt; Bacterial toxin/antitoxin (TA) systems have received increasing attention due to their prevalence, diverse structures, and important physiological functions. In this study, we identified and characterized a type II TA system in a soil bacterium Pseudomonas putida KT2440. This TA system belongs to the MqsR/MqsA family. We found that PP_4205 (MqsR) greatly inhibits cell growth in P. putida KT2440 and Escherichia coli, the antitoxin PP_4204 (MqsA) neutralizes the toxicity of the toxin MqsR, and the two genes encoding them are co-transcribed. MqsR and MqsA interact with each other directly in vivo and MqsA is a negative regulator of the TA operon through binding to the promoter. Consistent with the MqsR/MqsA pair in E. coli, the binding of the toxin MqsR to MqsA inhibits the DNA binding ability of MqsA in P. putida KT2440. Disruption of the mqsA gene which induces mqsR expression increases persister cell formation 53-fold, while overexpressing mqsA which represses mqsR expression reduces persister cell formation 220-fold, suggesting an important role of MqsR in persistence in P. putida KT2440. Furthermore, both MqsR and MqsA promote biofilm formation. As a DNA binding protein, MqsA can also negatively regulate an ECF sigma factor AlgU and a universal stress protein PP_3288. Thus, we revealed an important regulatory role of MqsR/MqsA in persistence and biofilm formation in P. putida KT2440.</li>
+<li>Snippet 2 (score: 0.759)<br />
+    &gt; The two genes encoding MqsR homolog and MqsA homolog are co-transcribed and both encode small proteins. MqsR and MqsA interact with each other directly in vivo and MqsA is a negative regulator of the TA operon through binding to the promoter. Consistent with the MqsR/MqsA pair in E. coli, the MqsR inhibits the binding of MqsA to its promoter in P. putida KT2440. Disruption of the mqsA gene which induces mqsR expression increases persister cell formation while overexpressing mqsA which represses mqsR expression reduces persister cell formation, suggesting an important role of MqsR in persistence in P. putida KT2440. However, different from E. coli, both MqsR and MqsA promote biofilm formation in P. putida KT2440. As a DNA binding protein, MqsA in E. coli also regulates the stationary phase sigma factor RpoS and CsgD. In contrast, we found that MqsA negatively regulates the ECF sigma factor AlgU and a universal stress protein PP_3288 in P. putida KT2440, suggesting a different role of MqsR/MqsA in P. putida KT2440.</li>
+</ul>
+<h3 id="5-escherichia-coli-toxinantitoxin-pair-mqsrmqsa-regulate-toxin-cspd">[5] Escherichia coli toxin/antitoxin pair MqsR/MqsA regulate toxin CspD</h3>
+<ul>
+<li>Authors: Younghoon Kim, Xiaoxue Wang, Xue-Song Zhang, Simina Grigoriu, R. Page et al.</li>
+<li>Year: 2010</li>
+<li>Venue: Environmental microbiology</li>
+<li>URL: https://www.semanticscholar.org/paper/c80a41dacb26d80cbb67433eee406eba7b42b354</li>
+<li>DOI: 10.1111/j.1462-2920.2009.02147.x</li>
+<li>PMID: 20105222</li>
+<li>PMCID: 3980499</li>
+<li>Citations: 172</li>
+<li>Influential citations: 13</li>
+<li>Summary: It is demonstrated that the MqsR/MqsA TA system controls cell physiology via its own toxicity as well as through its regulation of another toxin, CspD, through proteases Lon and ClpXP.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.750)<br />
+    &gt; Summary Previously we identified that the Escherichia coli protein MqsR (YgiU) functions as a toxin and that it is involved in the regulation of motility by quorum sensing signal autoinducer-2 (AI-2). Furthermore, MqsR is directly associated with biofilm development and is linked to the development of persister cells. Here we show that MqsR and MqsA (YgiT) are a toxin/antitoxin (TA) pair, which, in significant difference to other TA pairs, regulates additional loci besides its own. We have recently identified that MqsR functions as an RNase. However, using three sets of whole-transcriptome studies and two nickel-enrichment DNA binding microarrays coupled with cell survival studies in which MqsR was overproduced in isogenic mutants, we identified eight genes (cspD, clpX, clpP, lon, yfjZ, relB, relE and hokA) that are involved in a mode of MqsR toxicity in addition to its RNase activity. Quantitative real-time reverse transcription polymerase chain reaction (qRT-PCR) showed that (i) the MqsR/MqsA complex (and MqsA alone) represses the toxin gene cspD, (ii) MqsR overproduction induces cspD, (iii) stress induces cspD, and (iv) stress fails to induce cspD when MqsR/MqsA are overproduced or when mqsRA is deleted. Electrophoretic mobility shift assays show that the MqsA/MqsR complex binds the promoter of cspD. In addition, proteases Lon and ClpXP are necessary for MqsR toxicity. Together, these results indicate the MqsR/MqsA complex represses cspD which may be derepressed by titrating MqsA with MqsR or by degrading MqsA via stress conditions through proteases Lon and ClpXP. Hence, we demonstrate that the MqsR/MqsA TA system controls cell physiology via its own toxicity as well as through its regulation of another toxin, CspD.</li>
+</ul>
+<h3 id="6-three-dimensional-structure-of-the-mqsrmqsa-complex-a-novel-ta-pair-comprised-of-a-toxin-homologous-to-rele-and-an-antitoxin-with-unique-properties">[6] Three Dimensional Structure of the MqsR:MqsA Complex: A Novel TA Pair Comprised of a Toxin Homologous to RelE and an Antitoxin with Unique Properties</h3>
+<ul>
+<li>Authors: Breann L Brown, Simina Grigoriu, Younghoon Kim, J. M. Arruda, Andrew M. Davenport et al.</li>
+<li>Year: 2009</li>
+<li>Venue: PLoS Pathogens</li>
+<li>URL: https://www.semanticscholar.org/paper/4762d1b8181e2d25190402a4f115b51310b3c47a</li>
+<li>DOI: 10.1371/journal.ppat.1000706</li>
+<li>PMID: 20041169</li>
+<li>PMCID: 2791442</li>
+<li>Citations: 191</li>
+<li>Influential citations: 16</li>
+<li>Summary: It is revealed that MqsR:MqsA form a novel toxin:antitoxin (TA) pair and that TA systems, especially the antitoxins, are significantly more diverse than previously recognized and provide new insights into the role of toxins in maintaining the persister state.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.745)<br />
+    &gt; Because the sequence of MqsR is not similar to that of any other known toxin, its molecular function is unknown.<br />
+    &gt; Deletion of mqsA (ygiT/b3021), the second gene in the two-gene mqsRA operon, is lethal [6,36]. This led to the postulation that mqsRA constitutes a novel TA module [6,15], with MqsR as the toxin and MqsA as its cognate antitoxin. However, mqsRA has many characteristics that differ from canonical TA systems. First, in the mqsRA operon, mqsR precedes, instead of follows, mqsA. This unusual genetic organization has only been observed in two other recently characterized TA systems, that of higBA [37] and hicAB [32]. Second, their isoelectric points are nearly identical (8.8, MqsR; 9.1, MqsA) rather than being basic and acidic for the toxin and antitoxin, respectively. Third, the MqsA protein is larger, instead of smaller, than MqsR; the only other TA system with an antitoxin larger than its cognate toxin is that of hicAB [32]. Finally, their sequences are not homologous to any member of a recognized TA system.<br />
+    &gt; In this paper, we employed a combination of biochemical and structural studies to show that MqsR, along with MqsA, are a bona fide TA pair that, because of the unique features of MqsA, define a novel family of TA modules. We show that MqsR is toxic and forms a tight complex with its antitoxin, MqsA, an interaction that mitigates MqsR toxicity. MqsA and the MqsR:MqsA complex also bind the promoters of the mqsRA operon and, unexpectedly, genes critical for E. coli physiology, including mcbR and spy. To the best of our knowledge, this is the first time a TA pair has been shown to bind and regulate promoters other than its own. The structure of MqsR reveals that it is a member of the RelE/YoeB family of bacterial RNase toxins.</li>
+<li>Snippet 2 (score: 0.732)<br />
+    &gt; (B) Western blots showing soluble expression of MqsR mutants K56A, Q68A, Y81A and K96A from the cultures used to generate the growth curves in (A) (WT MqsR arrests cell growth so rapidly that free MqsR is not detectable by Western Blot). All MqsR constructs include an N-terminal his 6 -tag and protein expression was detected using a polyhistidine polyclonal antibody. Like WT, expressed protein for MqsR mutants Y55A, M58A and R72A was not detected. doi:10.1371/journal.ppat.1000706.g006 predicted to bind DNA via its C-and not N-terminal domain is HicB [32,50]. MqsA is also the first antitoxin described that requires a metal, zinc, for structural stability. Moreover, unlike most other TA inhibition mechanisms, MqsA (like its RelB homolog [28]) does not occlude the toxin active site. Finally, in addition to binding its own promoter, MqsA and the MqsR:MqsA 2 :MqsR complex also bind and regulate the promoters of genes that play roles in E. coli physiology, including mcbR and spy. To the best of our knowledge, this is the first time a TA system has been shown to bind the promoters of genes other than its own. The MqsR:MqsA 2 :MqsR complex is oligomeric, and forms a dimer of dimers (MqsR:MqsA 2 :MqsR). Since the structure of the MqsA-N is invariant among all structures determined (MqsA-F; MqsA-N and the MqsR:MqsA-N complex), we used the MqsA-F and MqsR:MqsA-N structures to generate an accurate model of the full MqsR:MqsA 2 :MqsR complex.</li>
+<li>Snippet 3 (score: 0.716)<br />
+    &gt; Our biochemical and structural analysis of the E. coli MqsA antitoxin and the MqsR:MqsA-N complex provide a detailed 3dimensional structural view of the free antitoxin and the TA complex. These structures combined with our biochemical data unequivocally demonstrate that MqsR, a protein previously shown to be critical for biofilm formation [34,35] and the most highly upregulated gene in persister cells [6] in E. coli, and MqsA form a novel bacterial TA system. Our data show that, as expected for a TA system, the expression of the MqsR toxin leads to growth arrest, while co-expression with its antitoxin, MqsA, rescues the growth arrest phenotype. In addition, MqsR associates with MqsA to form a tight, non-toxic complex and both MqsA alone and the MqsR:MqsA 2 :MqsR complex bind and regulate the mqsR promoter. Finally, the structure of MqsR reveals that it is a member of the RelE/YoeB family of bacterial RNases, which are structurally and functionally characterized bacterial toxins.<br />
+    &gt; Comparison of the microbial RNase active sites between MqsR, RelE, YoeB and RNase Sa demonstrates that MqsR is most similar to RelE (Fig. 8A). In microbial RNases, such as RNase Sa, RNA binding is mediated by polar (Q38) and aromatic (Y86) residues while RNA cleavage is catalyzed by a histidine (H85) and glutamic acid (E54) residue [47,48]. While the catalytic histidine and glutamic acid are conserved in YoeB (H83, E46), which has intrinsic endoribonuclease activity [33], they are not found in RelE, which functions as a ribosome-dependent RNase [23,45]. These catalytic residues are also not present at the MqsR functional site (Figs. 7C, 8B, 8C).</li>
+</ul>
+<h3 id="7-toxins-of-prokaryotic-toxin-antitoxin-systems-with-sequence-specific-endoribonuclease-activity">[7] Toxins of Prokaryotic Toxin-Antitoxin Systems with Sequence-Specific Endoribonuclease Activity</h3>
+<ul>
+<li>Authors: H. Masuda, M. Inouye</li>
+<li>Year: 2017</li>
+<li>Venue: Toxins</li>
+<li>URL: https://www.semanticscholar.org/paper/1e5086124d4cd5473bee417c858d7815f2f44e0b</li>
+<li>DOI: 10.3390/toxins9040140</li>
+<li>PMID: 28420090</li>
+<li>PMCID: 5408214</li>
+<li>Citations: 59</li>
+<li>Summary: In this review, a variety of tools utilized to study the nuclease activities of toxins over the past 15 years will be reviewed and a recent adaptation of an RNA-seq-based technique to analyze entire sets of cellular RNA will be introduced with an emphasis on its strength in identifying novel targets and redefining recognition sequences.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.738)<br />
+    &gt; Cleavage occurs at the 5 and/or 3 end of the G-residue. Despite exhibiting sequence-specific ribonuclease activity independently of a ribosome, MqsR belongs to the same protein family as RelE and YoeB, which are the ribosome-dependent ribonucleases [39].<br />
+    &gt; MqsA, an antitoxin of MqsR, also belongs to a distinctive protein family from MazE [39,75]. There are many differences between MqsA and MazE, with regard to the structure and the mechanism of inhibiting the toxin's activity. MqsA consists of a novel fold containing a zinc ion, although it merely serves structural role and not a catalytic role [39]. Unlike MazE, whose unstructured C-terminal tail is crucial for binding with the toxin to inhibit its activity, the structure of MqsA is not flexible [39,76]. Furthermore, MqsA does not directly bind to the active site of the toxin to block catalysis. Binding with MqsA induces a substantial conformational change in MqsR so that it loses its activity. Additionally, when bound to its antitoxin, the active sites in two MqsR proteins face one another, making them inaccessible to the target mRNA.<br />
+    &gt; Despite its distinct phylogenetic origin and mechanism of toxin sequestration, MqsRA autoregulates its own transcription in a similar manner as other Type II TA systems [49,76,77]. The antitoxin or TA complex binds with DNA at the palindromic sequence and suppresses its own expression. MqsRA also regulates the expression of other genes as a global transcriptional regulator, which will be further discussed in the later sections.</li>
+</ul>
+<h3 id="8-structure-aware-mycobacterium-tuberculosis-functional-annotation-uncloaks-resistance-metabolic-and-virulence-genes">[8] Structure-Aware Mycobacterium tuberculosis Functional Annotation Uncloaks Resistance, Metabolic, and Virulence Genes</h3>
+<ul>
+<li>Authors: Samuel J. Modlin, A. Elghraoui, Deepika Gunasekaran, Alyssa M Zlotnicki, N. Dillon et al.</li>
+<li>Year: 2021</li>
+<li>Venue: mSystems</li>
+<li>URL: https://www.semanticscholar.org/paper/76ff9a62b36b32cc10e46e71ffd4dd90344e4706</li>
+<li>DOI: 10.1128/mSystems.00673-21</li>
+<li>PMID: 34726489</li>
+<li>PMCID: 8562490</li>
+<li>Citations: 15</li>
+<li>Summary: This work systematically updates the functional genome annotation of Mycobacterium tuberculosis virulent type strain H37Rv and identifies hundreds of high-confidence candidates for mechanisms of antibiotic resistance, virulence factors, and basic metabolism and other functions key in clinical and basic tuberculosis research.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.738)<br />
+    &gt; 3. Fig. S2B -match/mismatch colours mixed up? (I think match should be teal and mismatch -red?) 4. Line 162-163: Rv1430 is in UniProt (EC 3.1.1.-) and has been present in Uniprot since version 45 of the gene record: https://www.uniprot.org/uniprot/L7N697. I presume you had conducted your literature analysis before the UniProt entry was updated to include the EC code, so maybe you can add the dates when the data was retrieved from UniProt and other databases you used in the Materials and Methods section? 5. Supplementary text, p. 9, first paragraph. I believe that an unrelated fragment of text was copy-pasted into the second sentence of the paragraph ("Many mutations that altered bacterial clearance...") 6. Supplementary text, p. 12, final paragraph. It should be Rv1191, not Rv1191c. Could you also add a short explanation why you believe it should be classified as a cathepsin (what protein did you transfer this annotation from)?<br />
+    &gt; Reviewer #3 (Comments for the Author):<br />
+    &gt; In this manuscript, Modlin et al., attempt to tackle the problem of assigning functions to ~1700 hypothetical and/or underannotated genes in the Mycobacterium tuberculosis H37Rv (Mtb) genome. Rapid and accurate annotation of microbial genomes is indeed a very critical and under appreciated part of microbial ecophysiology. This step is especially crucial for pathogenic organisms such as Mtb where accurate functional annotation of these hypothetical proteins could unravel mechanisms which could act as drug targets. The authors employed a two-pronged strategy to define a set of these unannotated or under-annotated genes and to then provide possible functions for many of these genes. First, they undertook a large-scale manual curation of literature to assign functions (including EC numbers for enzymatic functions) to ~575 genes.</li>
+</ul>
+<h3 id="9-keeping-the-wolves-at-bay-antitoxins-of-prokaryotic-type-ii-toxin-antitoxin-systems">[9] Keeping the Wolves at Bay: Antitoxins of Prokaryotic Type II Toxin-Antitoxin Systems</h3>
+<ul>
+<li>Authors: W. Chan, M. Espinosa, C. Yeo</li>
+<li>Year: 2016</li>
+<li>Venue: Frontiers in Molecular Biosciences</li>
+<li>URL: https://www.semanticscholar.org/paper/3f550bf6b186a2a89d348d5159da25909e53896e</li>
+<li>DOI: 10.3389/fmolb.2016.00009</li>
+<li>PMID: 27047942</li>
+<li>PMCID: 4803016</li>
+<li>Citations: 141</li>
+<li>Influential citations: 6</li>
+<li>Summary: Type II TA antitoxins, as DNA-binding proteins, play an essential role in modulating the prokaryotic lifestyle whilst at the same time preventing the lethal action of the toxins under normal growth conditions, i.e., keeping the proverbial wolves at bay.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.729)<br />
+    &gt; The MqsRA locus of E. coli K-12 is an unusual TA locus that differs from most canonical TA systems. The MqsR (motility quorum sensing regulator) toxin was initially identified as a regulator of motility and quorum sensing, influencing the development of biofilms by mediating the cellular response to autoinducer-2 (Ren et al., 2004;González Barrios et al., 2006). The mqsR gene was also significantly upregulated in persister cells and, along with its downstream gene, mqsA, were shown to be a type II TA system (Brown et al., 2009;Yamaguchi et al., 2009;Christensen-Dalsgaard et al., 2010;Kasari et al., 2010). MqsR is a ribosome-independent endoribonuclease that specifically cleaves mRNA at 5 ′ -GCU-3 ′ and, to a lesser extent, 5 ′ -GCA-3 ′ sequences (Yamaguchi et al., 2009;Christensen-Dalsgaard et al., 2010).<br />
+    &gt; The MqsRA system is unique in several aspects. The mqsR toxin gene precedes the mqsA antitoxin gene, an arrangement that so far has been observed only in a few type II TA loci, namely higBA (Tian et al., 1996), hicAB (Jørgensen et al., 2009), and rnlAB (Koga et al., 2011). The MqsA antitoxin is larger than MqsR toxin (14.7 kDa and 11.2 kDa, respectively) whereas in canonical TA systems, the toxin is larger than the antitoxin, with the exception of HicB (Jørgensen et al., 2009). Both MqsA and MqsR are also basic proteins whereas usually, the toxin is basic while the antitoxin is acidic (Kasari et al., 2010).<br />
+    &gt; Elucidation of the MqsRA crystal structure also revealed a few surprises.</li>
+</ul>
+<h3 id="10-avian-immunome-db-an-example-of-a-user-friendly-interface-for-extracting-genetic-information">[10] Avian Immunome DB: an example of a user-friendly interface for extracting genetic information</h3>
+<ul>
+<li>Authors: Ralf C. Mueller, Nicolai Mallig, Jacqueline Smith, Lél Eöry, Richard I. Kuo et al.</li>
+<li>Year: 2020</li>
+<li>Venue: BMC Bioinformatics</li>
+<li>URL: https://www.semanticscholar.org/paper/b894d9ca8ea2d653bf1711a0c67dab71d054487c</li>
+<li>DOI: 10.1186/s12859-020-03764-3</li>
+<li>PMID: 33176685</li>
+<li>PMCID: 7661159</li>
+<li>Citations: 6</li>
+<li>Summary: The Avian Immunome DB (Avimm) for easy gene property extraction as exemplified by avian immune genes is presented and described, which contains 1170 distinct avian immune genes with canonical gene symbols and 612 synonyms across 363 bird species.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.719)<br />
+    &gt; Ever since the advent of commercial next-generation sequencing platforms in the early 2000s with its associated decrease in sequencing costs [1], the number of DNA sequences increased considerably [2]. Generally, these data become publicly accessible in databases provided by projects focussing on different aspects of biological sequence information [3,4]. Ensembl [5] and NCBI [6] for instance, have a strong focus on genome annotation with the help of RNA transcript information while UniProt has a pronounced emphasis on protein-coding genes and biological function of proteins. UniProt's records are either based on manually annotated, non-redundant protein sequences (SwissProt) or on highquality computationally analysed records, which are enriched with automatic annotation (TrEMBL) [7]. Relying on accurate genome annotations and protein descriptions, Gene Ontology (GO) [8,9] categorises gene products and fits them into a computational model of biological systems. Their assignment deploys a controlled vocabulary, so-called GO terms, to link genes and gene products to biological processes, cellular components, or molecular functions.<br />
+    &gt; However, genome annotation is not standardised, and each service provider uses their own custom-built annotation pipelines. As a consequence, this often leads to ambiguity in gene names during genome annotation with different gene symbols being given to the same gene or the same gene symbol being given to different, but similar genes. Additionally, since the pre-existing wealth of sequencing information relies on model organisms like human and mouse, there is a strong bias in gene symbols towards those chosen for these species. Particularly for model species, this issue has been partially addressed, for example by the Human Genome Organisation (HUGO) Gene Nomenclature Committee (HGNC) [10], the Vertebrate Gene Nomenclature Committee (VGNC) [11], or the Chicken Gene Nomenclature Consortium [12]. However, this neither guarantees that gene names are harmonised among these consortia, nor does it keep researchers from assigning alternative gene symbols in their annotations, especially when working with non-model species.</li>
+</ul>
+<h3 id="11-intracellular-localization-of-the-proteins-encoded-by-some-type-ii-toxin-antitoxin-systems-in-escherichia-coli">[11] Intracellular Localization of the Proteins Encoded by Some Type II Toxin-Antitoxin Systems in Escherichia coli</h3>
+<ul>
+<li>Authors: Alexander Mager, Tommy Safran, H. Engelberg-Kulka</li>
+<li>Year: 2021</li>
+<li>Venue: mBio</li>
+<li>URL: https://www.semanticscholar.org/paper/3400981ba961c43f50e703afa6b9a869aeefbb69</li>
+<li>DOI: 10.1128/mBio.01417-21</li>
+<li>PMID: 34340547</li>
+<li>PMCID: 8406201</li>
+<li>Citations: 1</li>
+<li>Summary: This study is the first to clarify the intracellular localization of the proteins specified for some type II TA systems, and shows that, with the exception of the chpBIK module, each toxin-antitoxin complex was localized in a different part of the cell than the toxin itself.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.699)<br />
+    &gt; Having found that the protein products of the mazEF and chpBIK TA modules had different intracellular localization patterns, we asked if other type II TA modules might each have unique intracellular localization patterns. First, we considered the mqsRA toxin-antitoxin module, generating mCherry fusions of the toxin MqsR and the antitoxin MqsA as we did for the mazEF and chpBIK modules. The primers used for cloning are listed in the supplemental material, and the constructed fusions are illustrated schematically in Fig. S2 in the supplemental material.<br />
+    &gt; Figure 6A demonstrates the intracellular localization of the toxin MqsR fused with mCherry in the E. coli MC4100 relA 1 strain. As shown, two main intracellular localization patterns of MqsR were observed. First, in one subpopulation of the cells, MqsR-mCherry was located at the middle of the cell (indicated by yellow arrows). In another subpopulation of the cells, the toxin MqsR was localized between the pole and the middle of the cell (indicated by white arrows).<br />
+    &gt; Figure 6B represents the intracellular localization of the antitoxin MqsA fused with mCherry. In contrast to the toxin MqsR, MqsA-mCherry was dispersed homogenously in the cells.<br />
+    &gt; Unlike the mazEF and chpBIK TA modules, in which the gene for the antitoxin precedes the gene for the toxin, in the mqsRA TA module, the mqsR toxin gene precedes the mqsA antitoxin gene. To recreate the conditions under which the toxin is fused with mCherry and is expressed in the presence of the overproduced antitoxin, we needed to use a different approach than the one described above for the mazEF and chpBIK modules. We cloned the mqsA antitoxin gene to pBAD33 and transformed this newly constructed plasmid into E. coli MC4100 relA 1 cells harboring the pBAD-18-mqsR-mcherry plasmids. The cloning protocol is described in details in Materials and Methods.</li>
+</ul>
+<h3 id="12-molecular-mechanisms-underlying-response-to-influenza-in-grey-seals-halichoerus-grypus-a-potential-wild-reservoir">[12] Molecular mechanisms underlying response to influenza in grey seals (Halichoerus grypus), a potential wild reservoir</h3>
+<ul>
+<li>Authors: Christina M McCosker, E. Unal, Alayna K Gigliotti, Wendy B Puryear, Jonathan A. Runstadler et al.</li>
+<li>Year: 2025</li>
+<li>Venue: Molecular ecology</li>
+<li>URL: https://www.semanticscholar.org/paper/bebb135aae1c1182d098fce839c9a3df0cfb2b21</li>
+<li>DOI: 10.1111/mec.70012</li>
+<li>PMID: 40613337</li>
+<li>PMCID: 12288799</li>
+<li>Citations: 3</li>
+<li>Summary: It is hypothesized that the combination of down‐ and up‐regulated immune gene expression may prevent overstimulation of the immune response, acting as an adaptation in grey seals to resist IAV‐associated mortality.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.690)<br />
+    &gt; Top hits were required to have a percent query coverage (QC) ≥ 80 to be used for annotating transcripts. A subsequent blastx search against the Swiss-Prot database (downloaded from NCBI 07/02/2021) for transcripts without a sufficient hit was conducted using the parameters max_target_seqs 2, max_hsps 1, e-value 0.001 and qcov_hsp_perc 80. Genes without a published gene symbol (named 'LOC' + Gene ID in NCBI's database) were assigned a UniProt gene symbol based on the protein annotation listed in the RefSeq entries, when possible. Ultimately, a list of transcript identifiers and gene symbols were compiled into a transcript-to-gene map for subsequent analyses.<br />
+    &gt; To further facilitate analyses of gene functions, additional steps were taken to identify the putative function of genes annotated with a symbol that began with 'LOC'. First 'LOC' genes with a protein-coding gene description in NCBI's database were manually assigned the appropriate gene symbol. Transcript sequences of remaining 'LOC' genes were queried through a blastn search against NCBI's nucleotide database (parameters: max target seq = 2, max hsps = 1, evalue = 0.01, perc identity = 90). Results from the blastn search were filtered to exclude hits with query coverage &lt; 90 and hits that included vague terms (e.g., 'uncharacterized', 'genome assembly' and 'chromosome'). Gene symbols were extracted from the first hit for each transcript and assigned as the identity of that gene for genes with only a single transcript with hits or with consistent hits across transcripts. For genes with multiple transcripts that matched different gene symbols, the annotation was manually determined based on the number of transcripts for each gene symbol hit and query coverage/% identity values. For any 'LOC' genes that were identified as a gene already present in the dataset, gene counts were concatenated for further analysis.</li>
+</ul>
+<h3 id="13-characterization-of-the-deep-sea-streptomyces-sp-scsio-02999-derived-vapcvapb-toxin-antitoxin-system-in-escherichia-coli">[13] Characterization of the Deep-Sea Streptomyces sp. SCSIO 02999 Derived VapC/VapB Toxin-Antitoxin System in Escherichia coli</h3>
+<ul>
+<li>Authors: Yunxue Guo, Jianyun Yao, Chenglong Sun, Zhongling Wen, Xiaoxue Wang</li>
+<li>Year: 2016</li>
+<li>Venue: Toxins</li>
+<li>URL: https://www.semanticscholar.org/paper/ba38f6ce608d862163fee287c086e7c988bb9d45</li>
+<li>DOI: 10.3390/toxins8070195</li>
+<li>PMID: 27376329</li>
+<li>PMCID: 4963828</li>
+<li>Citations: 19</li>
+<li>Influential citations: 1</li>
+<li>Summary: A new deep sea TA system is identified and characterized in the deep sea Streptomyces sp.</li>
+<li>Evidence snippets:</li>
+<li>Snippet 1 (score: 0.688)<br />
+    &gt; New approaches are in needed to purify the toxin for in vitro characterization of the cellular targets of the toxin.<br />
+    &gt; Studies on cross-activation among TA systems or other toxins mainly focus on type II TA system in which the toxin components are endoribonucleases. The well-studied type II TA MqsR/MqsA induces or represses various toxin genes in E. coli. For example, titrating antitoxin MqsA with MqsR or degrading MqsA through proteases Lon and ClpXP represses the expression of small toxic gene cspD [65]. In contrast, the deletion of toxin gene mqsR represses small toxic polypeptides encoding genes hokA and hokE [65]. In addition, MqsR overproduction induced expression of the relBEF operon and relF encodes a hok-like toxin targeting the inner membrane [65,66]. Furthermore, MqsR degrades ghoS mRNA and enriches toxin ghoT mRNA of the GhoT/GhoS type V TA pair during stress conditions [40]. In turn, HipA toxin activates the mqsR/mqsA operon [22], and RelE toxin induces the transcription of several TA operons including mqsR/mqsA [66,67]. Expression of VapC from Salmonella and Shigella activates toxin gene yoeB expression in E. coli, and the activation depends on Lon protease [41]. However, cross-activation among TAs in E. coli can also occur in protease deficient strains such as in lon, ppk, clpP, and hslV deficient strains [66]. Collectively, these results suggest that cross-talk among TAs is rather complex, and the exact mechanism remains to be elucidated.</li>
+</ul>
+<h2 id="notes">Notes</h2>
+<ul>
+<li>This provider combines <code>search_papers_by_relevance</code> with <code>snippet_search</code>.</li>
+<li>No synthesis or second-stage model call is performed.</li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>Yoontak Han, Eun-Jin Lee (2020). Substrate specificity of bacterial endoribonuclease toxins. BMB Reports. https://www.semanticscholar.org/paper/c8fba26817ac67e890b44fbe9acd42764898eb15</li>
+<li>Finbarr Hayes, B. Kedzierska (2014). Regulating Toxin-Antitoxin Expression: Controlled Detonation of Intracellular Molecular Timebombs. Toxins. https://www.semanticscholar.org/paper/8696cca8682182bc588454346364063c1e6d4dbd</li>
+<li>Breann L Brown, D. Lord, Simina Grigoriu, W. Peti, R. Page (2012). The Escherichia coli Toxin MqsR Destabilizes the Transcriptional Repression Complex Formed between the Antitoxin MqsA and the mqsRA Operon Promoter*. The Journal of Biological Chemistry. https://www.semanticscholar.org/paper/c7d314c4583ac3d5f64c54bbb571597a3eeea8aa</li>
+<li>Chenglong Sun, Yunxue Guo, K. Tang, Zhongling Wen, Baiyuan Li et al. (2017). MqsR/MqsA Toxin/Antitoxin System Regulates Persistence and Biofilm Formation in Pseudomonas putida KT2440. Frontiers in Microbiology. https://www.semanticscholar.org/paper/6c4b78f65bbb7964332e329c0758f28c7a7a38ac</li>
+<li>Younghoon Kim, Xiaoxue Wang, Xue-Song Zhang, Simina Grigoriu, R. Page et al. (2010). Escherichia coli toxin/antitoxin pair MqsR/MqsA regulate toxin CspD. Environmental microbiology. https://www.semanticscholar.org/paper/c80a41dacb26d80cbb67433eee406eba7b42b354</li>
+<li>Breann L Brown, Simina Grigoriu, Younghoon Kim, J. M. Arruda, Andrew M. Davenport et al. (2009). Three Dimensional Structure of the MqsR:MqsA Complex: A Novel TA Pair Comprised of a Toxin Homologous to RelE and an Antitoxin with Unique Properties. PLoS Pathogens. https://www.semanticscholar.org/paper/4762d1b8181e2d25190402a4f115b51310b3c47a</li>
+<li>H. Masuda, M. Inouye (2017). Toxins of Prokaryotic Toxin-Antitoxin Systems with Sequence-Specific Endoribonuclease Activity. Toxins. https://www.semanticscholar.org/paper/1e5086124d4cd5473bee417c858d7815f2f44e0b</li>
+<li>Samuel J. Modlin, A. Elghraoui, Deepika Gunasekaran, Alyssa M Zlotnicki, N. Dillon et al. (2021). Structure-Aware Mycobacterium tuberculosis Functional Annotation Uncloaks Resistance, Metabolic, and Virulence Genes. mSystems. https://www.semanticscholar.org/paper/76ff9a62b36b32cc10e46e71ffd4dd90344e4706</li>
+<li>W. Chan, M. Espinosa, C. Yeo (2016). Keeping the Wolves at Bay: Antitoxins of Prokaryotic Type II Toxin-Antitoxin Systems. Frontiers in Molecular Biosciences. https://www.semanticscholar.org/paper/3f550bf6b186a2a89d348d5159da25909e53896e</li>
+<li>Ralf C. Mueller, Nicolai Mallig, Jacqueline Smith, Lél Eöry, Richard I. Kuo et al. (2020). Avian Immunome DB: an example of a user-friendly interface for extracting genetic information. BMC Bioinformatics. https://www.semanticscholar.org/paper/b894d9ca8ea2d653bf1711a0c67dab71d054487c</li>
+<li>Alexander Mager, Tommy Safran, H. Engelberg-Kulka (2021). Intracellular Localization of the Proteins Encoded by Some Type II Toxin-Antitoxin Systems in Escherichia coli. mBio. https://www.semanticscholar.org/paper/3400981ba961c43f50e703afa6b9a869aeefbb69</li>
+<li>Christina M McCosker, E. Unal, Alayna K Gigliotti, Wendy B Puryear, Jonathan A. Runstadler et al. (2025). Molecular mechanisms underlying response to influenza in grey seals (Halichoerus grypus), a potential wild reservoir. Molecular ecology. https://www.semanticscholar.org/paper/bebb135aae1c1182d098fce839c9a3df0cfb2b21</li>
+<li>Yunxue Guo, Jianyun Yao, Chenglong Sun, Zhongling Wen, Xiaoxue Wang (2016). Characterization of the Deep-Sea Streptomyces sp. SCSIO 02999 Derived VapC/VapB Toxin-Antitoxin System in Escherichia coli. Toxins. https://www.semanticscholar.org/paper/ba38f6ce608d862163fee287c086e7c988bb9d45</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(mqsR-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88F93" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="mqsr-notes">mqsR notes</h1>
+<h2 id="2026-07-10-xrecro-toxin-antitoxin-regulator-first-pass">2026-07-10 XRE/Cro toxin-antitoxin regulator first pass</h2>
+<ul>
+<li>Batch: <code>projects/P_PUTIDA/batches/module_regulation_signal_transduction_xre_cro_phage_toxin_antitoxin_regulators.tsv</code>.</li>
+<li>Main conclusion: MqsR-family type II toxin candidate with mRNA-interferase and translation-inhibition context.</li>
+<li>Decision: curate as an MqsR-family toxin candidate; keep quorum-sensing and biofilm rows out of the core function.</li>
+</ul>
+<p>Primary provenance:<br />
+- [file:PSEPK/mqsR/mqsR-uniprot.txt "DE   SubName: Full=mRNA interferase MqsR of the MqsA-MqsR antitoxin/toxin complex and DNA-binding transcriptional repressor {ECO:0000313|EMBL:AAN69786.1};"]<br />
+- [file:PSEPK/mqsR/mqsR-uniprot.txt "DR   InterPro; IPR038493; MqsR_sf."]<br />
+- [file:PSEPK/mqsR/mqsR-uniprot.txt "DR   InterPro; IPR031451; MqsR_toxin."]<br />
+- [file:PSEPK/mqsR/mqsR-uniprot.txt "DR   Pfam; PF15723; MqsR_toxin; 1."]<br />
+- [file:PSEPK/mqsR/mqsR-uniprot.txt "KW   DNA-binding {ECO:0000313|EMBL:AAN69786.1};"]<br />
+- [file:PSEPK/mqsR/mqsR-uniprot.txt "KW   Hydrolase {ECO:0000313|EMBL:AAN69786.1};"]<br />
+- [file:PSEPK/mqsR/mqsR-deep-research-asta.md "protein_description: 'SubName: Full=mRNA interferase MqsR of the MqsA-MqsR antitoxin/toxin"]<br />
+- [file:PSEPK/mqsR/mqsR-deep-research-asta.md "protein_family: Not specified in UniProt"]</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88F93
+gene_symbol: mqsR
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: mqsR encodes a predicted MqsR-family type II toxin in Pseudomonas putida KT2440. UniProt and Asta context support
+  an MqsR toxin-family protein with mRNA-interferase wording, while current GOA rows focus on downstream translation, biofilm,
+  and quorum-sensing process context. This first pass records toxin activity as the core molecular-function-level call and
+  avoids asserting a specific KT2440 physiological phenotype.
+existing_annotations:
+- term:
+    id: GO:0009372
+    label: quorum sensing
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: quorum sensing is likely downstream or over-propagated from MqsR-family biology.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The local evidence supports an MqsR-family toxin candidate, but does not establish quorum-sensing or biofilm phenotypes
+      for this KT2440 gene. These process annotations are kept out of the core function.
+    supported_by:
+    - reference_id: file:PSEPK/mqsR/mqsR-goa.tsv
+      supporting_text: &#34;UniProtKB\tQ88F93\tmqsR\tinvolved_in\tGO:0009372\tquorum sensing\tbiological_process\tECO:0000256\t\
+        IEA\tGO_REF:0000002\tInterPro:IPR031451\t160488\tPseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB\
+        \ 11950 / KT2440)\tInterPro\tmRNA interferase MqsR of the MqsA-MqsR antitoxin/toxin complex and DNA-binding transcriptional\
+        \ repressor\t20260706&#34;
+    - reference_id: file:PSEPK/mqsR/mqsR-uniprot.txt
+      supporting_text: &#39;DE   SubName: Full=mRNA interferase MqsR of the MqsA-MqsR antitoxin/toxin complex and DNA-binding
+        transcriptional repressor {ECO:0000313|EMBL:AAN69786.1};&#39;
+    - reference_id: file:PSEPK/mqsR/mqsR-uniprot.txt
+      supporting_text: DR   InterPro; IPR038493; MqsR_sf.
+    - reference_id: file:PSEPK/mqsR/mqsR-uniprot.txt
+      supporting_text: DR   InterPro; IPR031451; MqsR_toxin.
+    - reference_id: file:PSEPK/mqsR/mqsR-uniprot.txt
+      supporting_text: DR   Pfam; PF15723; MqsR_toxin; 1.
+    - reference_id: file:PSEPK/mqsR/mqsR-uniprot.txt
+      supporting_text: KW   DNA-binding {ECO:0000313|EMBL:AAN69786.1};
+    - reference_id: file:PSEPK/mqsR/mqsR-uniprot.txt
+      supporting_text: KW   Hydrolase {ECO:0000313|EMBL:AAN69786.1};
+    - reference_id: file:PSEPK/mqsR/mqsR-deep-research-asta.md
+      supporting_text: &#39;protein_description: &#39;&#39;SubName: Full=mRNA interferase MqsR of the MqsA-MqsR antitoxin/toxin&#39;
+    - reference_id: file:PSEPK/mqsR/mqsR-deep-research-asta.md
+      supporting_text: &#39;protein_family: Not specified in UniProt&#39;
+    - reference_id: file:PSEPK/mqsR/mqsR-deep-research-asta.md
+      supporting_text: &#39;- **Protein Family:** Not specified in UniProt&#39;
+    - reference_id: file:PSEPK/mqsR/mqsR-deep-research-asta.md
+      supporting_text: &#39;protein_domains: MqsR_sf. (IPR038493); MqsR_toxin. (IPR031451); MqsR_toxin (PF15723)&#39;
+    - reference_id: file:PSEPK/mqsR/mqsR-deep-research-asta.md
+      supporting_text: &#39;- **Key Domains:** MqsR_sf. (IPR038493); MqsR_toxin. (IPR031451); MqsR_toxin (PF15723)&#39;
+- term:
+    id: GO:0017148
+    label: negative regulation of translation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: Negative regulation of translation is retained as direct process context for the MqsR toxin candidate.
+    action: ACCEPT
+    reason: The MqsR toxin-family and mRNA-interferase product context support translation-inhibition process context, although
+      the precise RNA cleavage activity is not represented in the current GOA rows.
+    supported_by:
+    - reference_id: file:PSEPK/mqsR/mqsR-goa.tsv
+      supporting_text: &#34;UniProtKB\tQ88F93\tmqsR\tinvolved_in\tGO:0017148\tnegative regulation of translation\tbiological_process\t\
+        ECO:0000256\tIEA\tGO_REF:0000002\tInterPro:IPR031451\t160488\tPseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP\
+        \ 8728 / NCIMB 11950 / KT2440)\tInterPro\tmRNA interferase MqsR of the MqsA-MqsR antitoxin/toxin complex and DNA-binding\
+        \ transcriptional repressor\t20260706&#34;
+    - reference_id: file:PSEPK/mqsR/mqsR-uniprot.txt
+      supporting_text: &#39;DE   SubName: Full=mRNA interferase MqsR of the MqsA-MqsR antitoxin/toxin complex and DNA-binding
+        transcriptional repressor {ECO:0000313|EMBL:AAN69786.1};&#39;
+    - reference_id: file:PSEPK/mqsR/mqsR-uniprot.txt
+      supporting_text: DR   InterPro; IPR038493; MqsR_sf.
+    - reference_id: file:PSEPK/mqsR/mqsR-uniprot.txt
+      supporting_text: DR   InterPro; IPR031451; MqsR_toxin.
+    - reference_id: file:PSEPK/mqsR/mqsR-uniprot.txt
+      supporting_text: DR   Pfam; PF15723; MqsR_toxin; 1.
+    - reference_id: file:PSEPK/mqsR/mqsR-uniprot.txt
+      supporting_text: KW   DNA-binding {ECO:0000313|EMBL:AAN69786.1};
+    - reference_id: file:PSEPK/mqsR/mqsR-uniprot.txt
+      supporting_text: KW   Hydrolase {ECO:0000313|EMBL:AAN69786.1};
+    - reference_id: file:PSEPK/mqsR/mqsR-deep-research-asta.md
+      supporting_text: &#39;protein_description: &#39;&#39;SubName: Full=mRNA interferase MqsR of the MqsA-MqsR antitoxin/toxin&#39;
+    - reference_id: file:PSEPK/mqsR/mqsR-deep-research-asta.md
+      supporting_text: &#39;protein_family: Not specified in UniProt&#39;
+    - reference_id: file:PSEPK/mqsR/mqsR-deep-research-asta.md
+      supporting_text: &#39;- **Protein Family:** Not specified in UniProt&#39;
+    - reference_id: file:PSEPK/mqsR/mqsR-deep-research-asta.md
+      supporting_text: &#39;protein_domains: MqsR_sf. (IPR038493); MqsR_toxin. (IPR031451); MqsR_toxin (PF15723)&#39;
+    - reference_id: file:PSEPK/mqsR/mqsR-deep-research-asta.md
+      supporting_text: &#39;- **Key Domains:** MqsR_sf. (IPR038493); MqsR_toxin. (IPR031451); MqsR_toxin (PF15723)&#39;
+- term:
+    id: GO:0044010
+    label: single-species biofilm formation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: single-species biofilm formation is likely downstream or over-propagated from MqsR-family biology.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The local evidence supports an MqsR-family toxin candidate, but does not establish quorum-sensing or biofilm phenotypes
+      for this KT2440 gene. These process annotations are kept out of the core function.
+    supported_by:
+    - reference_id: file:PSEPK/mqsR/mqsR-goa.tsv
+      supporting_text: &#34;UniProtKB\tQ88F93\tmqsR\tinvolved_in\tGO:0044010\tsingle-species biofilm formation\tbiological_process\t\
+        ECO:0000256\tIEA\tGO_REF:0000002\tInterPro:IPR031451\t160488\tPseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP\
+        \ 8728 / NCIMB 11950 / KT2440)\tInterPro\tmRNA interferase MqsR of the MqsA-MqsR antitoxin/toxin complex and DNA-binding\
+        \ transcriptional repressor\t20260706&#34;
+    - reference_id: file:PSEPK/mqsR/mqsR-uniprot.txt
+      supporting_text: &#39;DE   SubName: Full=mRNA interferase MqsR of the MqsA-MqsR antitoxin/toxin complex and DNA-binding
+        transcriptional repressor {ECO:0000313|EMBL:AAN69786.1};&#39;
+    - reference_id: file:PSEPK/mqsR/mqsR-uniprot.txt
+      supporting_text: DR   InterPro; IPR038493; MqsR_sf.
+    - reference_id: file:PSEPK/mqsR/mqsR-uniprot.txt
+      supporting_text: DR   InterPro; IPR031451; MqsR_toxin.
+    - reference_id: file:PSEPK/mqsR/mqsR-uniprot.txt
+      supporting_text: DR   Pfam; PF15723; MqsR_toxin; 1.
+    - reference_id: file:PSEPK/mqsR/mqsR-uniprot.txt
+      supporting_text: KW   DNA-binding {ECO:0000313|EMBL:AAN69786.1};
+    - reference_id: file:PSEPK/mqsR/mqsR-uniprot.txt
+      supporting_text: KW   Hydrolase {ECO:0000313|EMBL:AAN69786.1};
+    - reference_id: file:PSEPK/mqsR/mqsR-deep-research-asta.md
+      supporting_text: &#39;protein_description: &#39;&#39;SubName: Full=mRNA interferase MqsR of the MqsA-MqsR antitoxin/toxin&#39;
+    - reference_id: file:PSEPK/mqsR/mqsR-deep-research-asta.md
+      supporting_text: &#39;protein_family: Not specified in UniProt&#39;
+    - reference_id: file:PSEPK/mqsR/mqsR-deep-research-asta.md
+      supporting_text: &#39;- **Protein Family:** Not specified in UniProt&#39;
+    - reference_id: file:PSEPK/mqsR/mqsR-deep-research-asta.md
+      supporting_text: &#39;protein_domains: MqsR_sf. (IPR038493); MqsR_toxin. (IPR031451); MqsR_toxin (PF15723)&#39;
+    - reference_id: file:PSEPK/mqsR/mqsR-deep-research-asta.md
+      supporting_text: &#39;- **Key Domains:** MqsR_sf. (IPR038493); MqsR_toxin. (IPR031451); MqsR_toxin (PF15723)&#39;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: file:PSEPK/mqsR/mqsR-goa.tsv
+  title: QuickGO GOA annotations for mqsR (Q88F93)
+  findings:
+  - supporting_text: &#34;UniProtKB\tQ88F93\tmqsR\tinvolved_in\tGO:0009372\tquorum sensing\tbiological_process\tECO:0000256\t\
+      IEA\tGO_REF:0000002\tInterPro:IPR031451\t160488\tPseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB\
+      \ 11950 / KT2440)\tInterPro\tmRNA interferase MqsR of the MqsA-MqsR antitoxin/toxin complex and DNA-binding transcriptional\
+      \ repressor\t20260706&#34;
+  - supporting_text: &#34;UniProtKB\tQ88F93\tmqsR\tinvolved_in\tGO:0017148\tnegative regulation of translation\tbiological_process\t\
+      ECO:0000256\tIEA\tGO_REF:0000002\tInterPro:IPR031451\t160488\tPseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP\
+      \ 8728 / NCIMB 11950 / KT2440)\tInterPro\tmRNA interferase MqsR of the MqsA-MqsR antitoxin/toxin complex and DNA-binding\
+      \ transcriptional repressor\t20260706&#34;
+  - supporting_text: &#34;UniProtKB\tQ88F93\tmqsR\tinvolved_in\tGO:0044010\tsingle-species biofilm formation\tbiological_process\t\
+      ECO:0000256\tIEA\tGO_REF:0000002\tInterPro:IPR031451\t160488\tPseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP\
+      \ 8728 / NCIMB 11950 / KT2440)\tInterPro\tmRNA interferase MqsR of the MqsA-MqsR antitoxin/toxin complex and DNA-binding\
+      \ transcriptional repressor\t20260706&#34;
+- id: file:PSEPK/mqsR/mqsR-uniprot.txt
+  title: UniProtKB entry for mqsR (Q88F93)
+  findings:
+  - supporting_text: &#39;DE   SubName: Full=mRNA interferase MqsR of the MqsA-MqsR antitoxin/toxin complex and DNA-binding transcriptional
+      repressor {ECO:0000313|EMBL:AAN69786.1};&#39;
+  - supporting_text: DR   InterPro; IPR038493; MqsR_sf.
+  - supporting_text: DR   InterPro; IPR031451; MqsR_toxin.
+  - supporting_text: DR   Pfam; PF15723; MqsR_toxin; 1.
+  - supporting_text: KW   DNA-binding {ECO:0000313|EMBL:AAN69786.1};
+  - supporting_text: KW   Hydrolase {ECO:0000313|EMBL:AAN69786.1};
+- id: file:PSEPK/mqsR/mqsR-deep-research-asta.md
+  title: Asta retrieval report for mqsR (Q88F93)
+  findings:
+  - supporting_text: &#39;protein_description: &#39;&#39;SubName: Full=mRNA interferase MqsR of the MqsA-MqsR antitoxin/toxin&#39;
+  - supporting_text: &#39;protein_family: Not specified in UniProt&#39;
+  - supporting_text: &#39;- **Protein Family:** Not specified in UniProt&#39;
+  - supporting_text: &#39;protein_domains: MqsR_sf. (IPR038493); MqsR_toxin. (IPR031451); MqsR_toxin (PF15723)&#39;
+  - supporting_text: &#39;- **Key Domains:** MqsR_sf. (IPR038493); MqsR_toxin. (IPR031451); MqsR_toxin (PF15723)&#39;
+core_functions:
+- description: MqsR-family type II toxin candidate with mRNA-interferase and translation-inhibition context
+  molecular_function:
+    id: GO:0090729
+    label: toxin activity
+  supported_by:
+  - reference_id: file:PSEPK/mqsR/mqsR-uniprot.txt
+    supporting_text: &#39;DE   SubName: Full=mRNA interferase MqsR of the MqsA-MqsR antitoxin/toxin complex and DNA-binding transcriptional
+      repressor {ECO:0000313|EMBL:AAN69786.1};&#39;
+  - reference_id: file:PSEPK/mqsR/mqsR-uniprot.txt
+    supporting_text: DR   InterPro; IPR038493; MqsR_sf.
+  - reference_id: file:PSEPK/mqsR/mqsR-uniprot.txt
+    supporting_text: DR   InterPro; IPR031451; MqsR_toxin.
+  - reference_id: file:PSEPK/mqsR/mqsR-uniprot.txt
+    supporting_text: DR   Pfam; PF15723; MqsR_toxin; 1.
+  - reference_id: file:PSEPK/mqsR/mqsR-uniprot.txt
+    supporting_text: KW   DNA-binding {ECO:0000313|EMBL:AAN69786.1};
+  - reference_id: file:PSEPK/mqsR/mqsR-uniprot.txt
+    supporting_text: KW   Hydrolase {ECO:0000313|EMBL:AAN69786.1};
+  - reference_id: file:PSEPK/mqsR/mqsR-deep-research-asta.md
+    supporting_text: &#39;protein_description: &#39;&#39;SubName: Full=mRNA interferase MqsR of the MqsA-MqsR antitoxin/toxin&#39;
+  - reference_id: file:PSEPK/mqsR/mqsR-deep-research-asta.md
+    supporting_text: &#39;protein_family: Not specified in UniProt&#39;
+  - reference_id: file:PSEPK/mqsR/mqsR-deep-research-asta.md
+    supporting_text: &#39;- **Protein Family:** Not specified in UniProt&#39;
+  - reference_id: file:PSEPK/mqsR/mqsR-deep-research-asta.md
+    supporting_text: &#39;protein_domains: MqsR_sf. (IPR038493); MqsR_toxin. (IPR031451); MqsR_toxin (PF15723)&#39;
+  - reference_id: file:PSEPK/mqsR/mqsR-deep-research-asta.md
+    supporting_text: &#39;- **Key Domains:** MqsR_sf. (IPR038493); MqsR_toxin. (IPR031451); MqsR_toxin (PF15723)&#39;
+  - reference_id: file:PSEPK/mqsR/mqsR-goa.tsv
+    supporting_text: &#34;UniProtKB\tQ88F93\tmqsR\tinvolved_in\tGO:0017148\tnegative regulation of translation\tbiological_process\t\
+      ECO:0000256\tIEA\tGO_REF:0000002\tInterPro:IPR031451\t160488\tPseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP\
+      \ 8728 / NCIMB 11950 / KT2440)\tInterPro\tmRNA interferase MqsR of the MqsA-MqsR antitoxin/toxin complex and DNA-binding\
+      \ transcriptional repressor\t20260706&#34;
+  directly_involved_in:
+  - id: GO:0017148
+    label: negative regulation of translation
+proposed_new_terms: []
+suggested_questions:
+- question: What toxin-antitoxin partner, operator target, and stress condition define mqsR in KT2440?
+  experts: []
+suggested_experiments:
+- experiment_type: regulatory network mapping
+  description: Test mqsR in toxin-antitoxin interaction, promoter binding, and stress-induced expression assays.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
