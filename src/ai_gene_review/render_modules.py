@@ -37,16 +37,45 @@ def load_module_yaml(yaml_path: Path) -> dict[str, Any]:
     return data
 
 
+def is_module_document(path: Path) -> bool:
+    """True if a YAML file is a ModuleReview document (has a top-level ``module:`` key).
+
+    Cheap textual check (no full parse) so that non-module YAML colocated with a
+    module -- e.g. a scan-target config, or stray package data under a ``.venv`` --
+    is not mistaken for a module.
+    """
+    try:
+        with path.open() as fh:
+            for line in fh:
+                # a top-level mapping key starts at column 0 (no indentation)
+                if line[:1] in (" ", "\t", "#", "\n", "\r", ""):
+                    continue
+                if line.split(":", 1)[0].strip() == "module":
+                    return True
+    except OSError:
+        return False
+    return False
+
+
 def iter_module_files(modules_dir: Path = Path("modules")) -> list[Path]:
-    """Return module YAML files under a module directory."""
+    """Return ModuleReview YAML files under a module directory.
+
+    Skips hidden / virtual-env / cache directories and only returns files that are
+    actual module documents, so module-specific support files (configs, analyses,
+    ``.venv`` package data) can safely live alongside a module.
+    """
     if not modules_dir.exists():
         return []
-    files = {
-        path
-        for pattern in ("*.yaml", "*.yml")
-        for path in modules_dir.rglob(pattern)
-        if path.is_file()
-    }
+    skip = {".venv", "__pycache__", ".scan_cache", ".git", "node_modules"}
+    files = set()
+    for pattern in ("*.yaml", "*.yml"):
+        for path in modules_dir.rglob(pattern):
+            if not path.is_file():
+                continue
+            if any(part in skip or part.startswith(".") for part in path.relative_to(modules_dir).parts):
+                continue
+            if is_module_document(path):
+                files.add(path)
     return sorted(files)
 
 
