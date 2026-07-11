@@ -825,7 +825,7 @@ class ManuscriptSection(str, Enum):
 
 class RuleTypeEnum(str, Enum):
     """
-    Type of UniProt annotation rule
+    Type of annotation rule
     """
     ARBA = "ARBA"
     """
@@ -834,6 +834,10 @@ class RuleTypeEnum(str, Enum):
     UNIRULE = "UNIRULE"
     """
     Expert-curated UniRule
+    """
+    MICROTRAIT = "MICROTRAIT"
+    """
+    microTrait rule (Karaoz & Brodie, Front Bioinform 2022) - predicate logic over profile-HMM presence/absence asserting a microbial fitness trait
     """
 
 
@@ -1022,6 +1026,10 @@ class ConditionTypeEnum(str, Enum):
     PFAM = "PFAM"
     """
     Pfam domain
+    """
+    HMM = "HMM"
+    """
+    Profile-HMM presence/absence (e.g. a microTrait-HMM gene model). Use the value/curie fields for the HMM/gene identifier and negated for absence conditions.
     """
     TAXON = "TAXON"
     """

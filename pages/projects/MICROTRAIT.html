@@ -365,9 +365,33 @@
 
     <div class="content">
         <h1 id="microtrait-framework-integration">microTrait Framework Integration</h1>
-<p><strong>Project type:</strong> Scoping — evaluate incorporating the microTrait trait framework as a<br />
-resource for microbial gene annotation review.<br />
-<strong>Status:</strong> Scoping. No data pulled yet; this page proposes how (and whether) to integrate.</p>
+<p><strong>Project type:</strong> Rule review — incorporate microTrait's HMM→trait rules as first-class<br />
+reviewable rules alongside UniRule/ARBA.<br />
+<strong>Status:</strong> Scoped; enabling schema change landed. <strong>Blocked on input data from Ulas</strong><br />
+(the rule table), then rule review begins. See the<br />
+<a href="MICROTRAIT/microtrait-rule-review-plan.html">rule-review plan</a>.</p>
+<h2 id="direction-decided">Direction (decided)</h2>
+<ul>
+<li><strong>First deliverable: microTrait rule review</strong> — treat each microTrait rule like a<br />
+  UniRule/ARBA rule and assess it for GO-annotation quality. This angle reuses the most<br />
+  existing tooling (<code>rules/</code>, the <code>RuleReview</code> schema class, the rule-review templates).</li>
+<li><strong>Data source: files provided by Ulas</strong> — the curated rule table (HMM/gene → trait<br />
+  predicate logic) rather than scraping the public repo's packaged HMM DB. See the plan<br />
+  doc for the exact input format needed.</li>
+<li>The <strong>trait → GO crosswalk emerges as a byproduct</strong>: reviewing a rule requires judging<br />
+  which GO term(s) its asserted trait corresponds to, so each review records that mapping.</li>
+</ul>
+<h2 id="schema-enablement-done">Schema enablement (done)</h2>
+<p><code>RuleReview</code> previously only recognized <code>ARBA</code>/<code>UNIRULE</code>. Two additive enum values now make<br />
+microTrait rules first-class (<code>src/ai_gene_review/schema/gene_review.yaml</code> + regenerated<br />
+datamodel):</p>
+<ul>
+<li><code>RuleTypeEnum.MICROTRAIT</code> — a microTrait rule.</li>
+<li><code>ConditionTypeEnum.HMM</code> — a profile-HMM presence/absence condition (use <code>negated</code> for<br />
+  absence). microTrait antecedents are HMM/gene presence logic, not InterPro/FunFam domains.</li>
+</ul>
+<p>A microTrait <code>RuleReview</code> object therefore constructs and validates today; only the rule<br />
+<em>content</em> awaits Ulas's table.</p>
 <h2 id="what-microtrait-is">What microTrait is</h2>
 <p><strong>microTrait</strong> (<a href="https://github.com/ukaraoz/microtrait">ukaraoz/microtrait</a>; Karaoz &amp;<br />
 Brodie, <em>"microTrait: A Toolset for a Trait-Based Representation of Microbial Genomes"</em>,<br />
@@ -428,32 +452,23 @@ runtime pipeline.</p>
 <p>The strongest structural affinity is with the <strong>rules work</strong>: microTrait rules are<br />
 predicate-logic conditions over HMM hits that assert a functional capability — the same<br />
 shape as UniRule/ARBA condition sets that this repo already reviews and crosswalks to GO.</p>
-<h2 id="proposed-phased-plan">Proposed phased plan</h2>
+<h2 id="phased-plan">Phased plan</h2>
 <ul>
-<li><strong>Phase 0 (this page).</strong> Scope and decide direction. ← current</li>
-<li><strong>Phase 1 — inventory the public assets.</strong> Pull the trait hierarchy, rule table, and<br />
-  HMM→trait mapping from the public repo; report exact file formats, term counts, and how<br />
-  much is directly reusable without running the pipeline. Decide whether the crosswalk or<br />
-  the rule-review angle is the better first deliverable.</li>
-<li><strong>Phase 2 — trait→GO crosswalk (candidate first deliverable).</strong> Author an SSSOM-style<br />
-  mapping from microTrait traits/genes to GO terms, mirroring <code>cazy2go</code>. This is the<br />
-  reusable substrate that later feeds both rule review and trait-guided gene reviews.</li>
-<li><strong>Phase 3 — exemplar gene reviews.</strong> Pick microbial exemplar genes/organisms where a<br />
-  microTrait trait provides useful review context (energetic / stress-tolerance traits with<br />
-  clear GO analogues) and curate them, citing the trait basis.</li>
+<li><strong>Phase 0 — scope + schema enablement.</strong> ✅ Done (this page; <code>MICROTRAIT</code>/<code>HMM</code> enum values).</li>
+<li><strong>Phase 1 — ingest Ulas's rule table.</strong> ⏳ <em>Blocked on input.</em> Convert the provided rule<br />
+  table into per-rule <code>RuleReview</code> YAML stubs under <code>rules/microtrait/&lt;rule_id&gt;/</code>. Format<br />
+  and workflow specified in the <a href="MICROTRAIT/microtrait-rule-review-plan.html">rule-review plan</a>.</li>
+<li><strong>Phase 2 — review rules.</strong> For each rule, assess the HMM logic, the asserted trait, the<br />
+  GO term the trait maps to, and the appropriate <code>action</code>. The trait→GO mappings recorded<br />
+  here accumulate into a reusable crosswalk (byproduct).</li>
+<li><strong>Phase 3 — exemplar gene reviews (optional follow-on).</strong> Use reviewed trait context as a<br />
+  prior when curating microbial exemplar genes.</li>
 </ul>
-<h2 id="open-questions-for-the-maintainer">Open questions for the maintainer</h2>
-<ul>
-<li><strong>Scope:</strong> which of the three angles above is the intended first deliverable? (Rule<br />
-  review has the closest existing tooling; the trait→GO crosswalk is the most reusable<br />
-  substrate.)</li>
-<li><strong>Data source:</strong> pull the trait/rule tables directly from the public<br />
-<code>ukaraoz/microtrait</code> repo, or work from files provided by Ulas (e.g. a cleaner rules<br />
-  spreadsheet or an updated HMM→trait table than what's public)?</li>
-<li><strong>CAZy overlap:</strong> microTrait already carries dbCAN CAZy HMMs; how should a<br />
-  microTrait→GO crosswalk relate to the existing <code>cazy2go</code> mapping in<br />
-<code>projects/GLYCOBIOLOGY</code> to avoid divergence?</li>
-</ul>
+<h2 id="open-item-cazy-overlap">Open item — CAZy overlap</h2>
+<p>microTrait bundles dbCAN CAZy HMMs, and this repo already has a curated <code>cazy2go</code> mapping in<br />
+<code>projects/GLYCOBIOLOGY</code>. Any microTrait rule whose logic rests on CAZy families must<br />
+<strong>reuse <code>cazy2go</code> for its trait→GO judgment rather than re-deriving it</strong>, so the two do not<br />
+diverge. The plan doc records this as a hard constraint on CAZy-based rules.</p>
 <h2 id="caveats">Caveats</h2>
 <ul>
 <li>microTrait traits are <strong>genome-inferred capabilities</strong>, not experimentally verified<br />
