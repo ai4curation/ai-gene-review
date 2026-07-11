@@ -62,6 +62,25 @@ The best hits for FraC/FraD/FraE carry **consecutive accessions** in both positi
 so the operon is intact and syntenic. This adds strong genomic-context confidence to the
 FraE ortholog call even though its InterPro family is broad.
 
+## Extending to further genomes
+
+**Cylindrospermum stagnale PCC 7417 (taxon 56107, a more divergent Nostocaceae).** All
+components are reciprocal orthologs at 52–72% identity (more divergent than *A. variabilis*),
+and the fraC–fraD–fraE operon is syntenic (Cylst_1330 / Cylst_1329 / Cylst_1328): FraD
+**K9WUY7**, FraC **K9WTD1**, FraE **K9WTV4**, SepN **K9WXR0**, SepJ **K9WRN1**, AmiC2
+**K9X2S2**. Notably this genome has **no tandem AmiC1** — the AmiC2 ortholog (K9X2S2) is
+standalone and both 7120 AmiC exemplars reciprocate to it, so the AmiC1/AmiC2 duplication
+appears to be a *Nostoc/Anabaena*-specific event rather than ancestral to the module.
+
+**Chlorogloeopsis fritschii PCC 6912 (taxon 246409, Stigonematales / true-branching) — a
+genuine absence.** Despite being a heterocyst-former, this genome yields **no detectable
+FraD, FraC, FraE, SepN or AmiC** (family membership = 0 for IPR020360/IPR054663; homology =
+no hit), and only a weak, non-reciprocal SepJ-domain hit. The full 16,971-protein proteome
+was searched, so this is a real negative, not a data artifact: the FraD/SepN septal-junction
+module is **not universal across heterocyst-forming cyanobacteria** — the deepest-branching
+Stigonematales lineage sampled here either uses a divergent SJ system or lacks these
+components. A worthwhile follow-up question for the module.
+
 ## Candidate members for curation
 
 High-confidence orthologs detected in the two positive genomes (the "gap-fill" candidates):
