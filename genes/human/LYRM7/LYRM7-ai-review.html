@@ -1,0 +1,4066 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LYRM7 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>LYRM7</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q5U5X0" target="_blank" class="term-link">
+                        Q5U5X0
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "LYRM7";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q5U5X0" data-a="DESCRIPTION: LYRM7 (LYR motif-containing protein 7; also MZM1L/..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>LYRM7 (LYR motif-containing protein 7; also MZM1L/C5orf31) is a small mitochondrial-matrix LYR-family assembly chaperone for respiratory Complex III (cytochrome bc1 / ubiquinol-cytochrome c reductase). It acts as a dedicated chaperone for the Rieske iron-sulfur protein UQCRFS1, binding and stabilising UQCRFS1 in the mitochondrial matrix prior to insertion of its [2Fe-2S] cluster and the subunit&#39;s translocation and incorporation into the late Complex III dimeric intermediate in the inner membrane. Its LYR motif recruits the Fe-S transfer cochaperone HSC20 (HSCB), coupling the UQCRFS1-LYRM7 intermediate to the ISCU-HSPA9-HSC20 cluster-delivery machinery. LYRM7 is non-catalytic and is the human ortholog of yeast Mzm1. Loss-of-function variants cause mitochondrial complex III deficiency, nuclear type 8 (a leukoencephalopathy).</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5U5X0" data-a="GO:0005759" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) propagation placing LYRM7 in the mitochondrial matrix, where it acts as a chaperone. This is directly confirmed experimentally: LYRM7 binds and stabilises UQCRFS1 within the mitochondrial matrix.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The matrix location is the site of LYRM7&#39;s chaperone activity and is supported by direct experimental evidence (IDA, PMID:23168492) and the UniProt subcellular location, in addition to this phylogenetic inference. is_active_in is appropriate for the compartment where it chaperones UQCRFS1.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23168492" target="_blank" class="term-link">
+                                        PMID:23168492
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">binding to this subunit within the</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/LYRM7/LYRM7-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion matrix</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034551" target="_blank" class="term-link">
+                                    GO:0034551
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial respiratory chain complex III assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5U5X0" data-a="GO:0034551" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference that LYRM7 is involved in Complex III assembly. This is the core biological process of the gene and is strongly supported experimentally.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> LYRM7 is a bona fide Complex III assembly factor mediating the UQCRFS1/Rieske Fe-S protein incorporation step. This is the precise, well-evidenced core BP and is consistent across IBA, IDA (PMID:23168492), IEA and Reactome TAS annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23168492" target="_blank" class="term-link">
+                                        PMID:23168492
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">LYRM7/MZM1L is a novel human CIII assembly factor involved in the UQCRFS1</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044183" target="_blank" class="term-link">
+                                    GO:0044183
+                                </a>
+                            </span>
+                            <span class="term-label">protein folding chaperone</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5U5X0" data-a="GO:0044183" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) assignment of a protein folding chaperone molecular function. LYRM7 is a non-catalytic chaperone that binds and stabilises (holds) its client UQCRFS1, so a chaperone MF is the correct, most informative non-catalytic molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The chaperone MF is directly supported: LYRM7 works as a UQCRFS1 chaperone, binding and stabilising the Rieske Fe-S protein prior to its incorporation into Complex III (PMID:23168492). This is the appropriate MF for this non-enzymatic assembly factor and is retained as the core molecular function; no catalytic activity should be assigned.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23168492" target="_blank" class="term-link">
+                                        PMID:23168492
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">works as a human Rieske</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/LYRM7/LYRM7-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Assembly factor required for Rieske Fe-S protein UQCRFS1</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5U5X0" data-a="GO:0005739" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO electronic annotation to the mitochondrion, based on the Complex1_LYR domain family. Correct but less specific than the matrix localisation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Mitochondrial localisation is correct and well supported; this is simply a broader (parent) location than the experimentally established mitochondrial matrix. Retained as a valid, if general, CC annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/LYRM7/LYRM7-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion matrix</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5U5X0" data-a="GO:0005759" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation to the mitochondrial matrix from the UniProt Swiss-Prot subcellular location vocabulary mapping. Matches the curated UniProt location and experimental evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the experimentally determined (IDA, PMID:23168492) and curated UniProt matrix location where LYRM7 chaperones UQCRFS1.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/LYRM7/LYRM7-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion matrix</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006457" target="_blank" class="term-link">
+                                    GO:0006457
+                                </a>
+                            </span>
+                            <span class="term-label">protein folding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000108
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5U5X0" data-a="GO:0006457" data-r="GO_REF:0000108" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Inter-ontology (logical) inference of a protein folding BP from the protein folding chaperone MF (GO:0044183). Consistent with LYRM7&#39;s role in stabilising/holding UQCRFS1.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is a sound, if general, logical consequence of the chaperone MF. LYRM7 stabilises its unfolded/apo client UQCRFS1, which falls under protein folding. It is broader than the specific Complex III assembly BP but not incorrect. Kept as non-core context; the precise core BP is mitochondrial respiratory chain complex III assembly.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/LYRM7/LYRM7-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">stabilizing it prior to its translocation and insertion into the late</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034551" target="_blank" class="term-link">
+                                    GO:0034551
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial respiratory chain complex III assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5U5X0" data-a="GO:0034551" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO electronic annotation to Complex III assembly, based on the LYRM7-specific InterPro family (IPR045298). Correct and matches experimental evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The LYRM7/MZM1-LYRM7 family signature reliably predicts a Complex III assembly-factor role, which is experimentally confirmed. This is the core BP.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23168492" target="_blank" class="term-link">
+                                        PMID:23168492
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">LYRM7/MZM1L is a novel human CIII assembly factor involved in the UQCRFS1</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24606901" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24606901
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cochaperone binding to LYR motifs confers specificity of iro...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q5U5X0" data-a="GO:0005515" data-r="PMID:24606901" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI (IntAct) capturing a physical interaction between LYRM7 and HSC20/HSCB (UniProt Q8IWL3), the Fe-S cluster transfer cochaperone. This is a real and functionally meaningful interaction (LYRM7&#39;s LYR motif is an HSC20 binding site), but the GO term &#34;protein binding&#34; is uninformative.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Bare protein binding (GO:0005515) conveys no specific molecular function. The underlying LYRM7-HSC20 interaction is genuine and biologically important (it couples the UQCRFS1-LYRM7 intermediate to the Fe-S transfer machinery), so this is not removed; but the term is retained only as an uninformative over-annotation. The informative MF is the chaperone activity (GO:0044183).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24606901" target="_blank" class="term-link">
+                                        PMID:24606901
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">SDHAF1 and LYRM7, respectively, are HSC20 binding partners</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27499296" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27499296
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mitochondrial Protein Interaction Mapping Identifies Regulat...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q5U5X0" data-a="GO:0005515" data-r="PMID:27499296" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI (IntAct) capturing a physical interaction between LYRM7 and UQCRFS1 (P47985) reported in a large-scale mitochondrial protein interaction map. UQCRFS1 is the physiological client of LYRM7, so the interaction is correct, but &#34;protein binding&#34; is uninformative.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The LYRM7-UQCRFS1 interaction is the core, well-established relationship of this gene, but bare GO:0005515 does not capture the chaperone function. Retained as an uninformative over-annotation rather than removed.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27499296" target="_blank" class="term-link">
+                                        PMID:27499296
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Mitochondrial Protein Interaction Mapping Identifies Regulators of Respiratory</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28380382" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28380382
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A Single Adaptable Cochaperone-Scaffold Complex Delivers Nas...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q5U5X0" data-a="GO:0005515" data-r="PMID:28380382" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI (IntAct) capturing physical interactions of LYRM7 with UQCRFS1 (P47985) and with HSC20/HSCB (Q8IWL3). Both are physiologically central: the UQCRFS1-LYRM7 intermediate recruits HSC20 via LYRM7&#39;s LYR motif to deliver the [2Fe-2S] cluster to UQCRFS1.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The interactions are real and mechanistically important, but bare protein binding is uninformative and does not capture the chaperone/assembly-factor MF. Retained as an over-annotation rather than removed.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28380382" target="_blank" class="term-link">
+                                        PMID:28380382
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">direct binding of the co-chaperone HSC20 to the LYR (Leucine, Tyrosine, Arginine) consensus sequence of LYRM7 was required for recruitment of the Fe-S transfer complex to the LYRM7-UQCRFS1 assembly intermediate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q5U5X0" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI from the HuRI binary (yeast two-hybrid) reference interactome mapping LYRM7 to SAT1 (P21673, spermidine/spermine N1-acetyltransferase). SAT1 has no known mitochondrial or Complex III role; this is most likely a non-physiological binary-screen hit.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Bare protein binding is uninformative, and this particular partner (SAT1) is not a plausible physiological interactor of a mitochondrial-matrix CIII assembly chaperone. Per curation policy, an experimental IPI is not removed on the basis of an incomplete assessment; it is marked as an uninformative (and here likely non-physiological) over-annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                                        PMID:32296183
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">A reference map of the human binary protein interactome</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33961781
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dual proteome-scale networks reveal cell-specific remodeling...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q5U5X0" data-a="GO:0005515" data-r="PMID:33961781" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI (BioPlex) capturing a physical interaction between LYRM7 and UQCRFS1 (P47985) in a proteome-scale affinity-purification interactome. Consistent with the core LYRM7-UQCRFS1 client relationship.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct interaction with the physiological client UQCRFS1, but bare GO:0005515 is uninformative. Retained as an over-annotation rather than removed; the chaperone MF (GO:0044183) captures the function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                                        PMID:33961781
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Dual proteome-scale networks reveal cell-specific remodeling of the human</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/40205054" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:40205054
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Multimodal cell maps as a foundation for structural and func...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q5U5X0" data-a="GO:0005515" data-r="PMID:40205054" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI capturing a physical interaction between LYRM7 and UQCRFS1 (P47985) in a large-scale cell-map / structural-functional genomics interactome. Consistent with the core client relationship.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct interaction with UQCRFS1 but bare protein binding is uninformative. Retained as an over-annotation; the informative MF is the chaperone activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/40205054" target="_blank" class="term-link">
+                                        PMID:40205054
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Multimodal cell maps as a foundation for structural and functional genomics</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034551" target="_blank" class="term-link">
+                                    GO:0034551
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial respiratory chain complex III assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9865881
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5U5X0" data-a="GO:0034551" data-r="Reactome:R-HSA-9865881" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) annotation placing LYRM7 in the Complex III assembly pathway. Matches the core, experimentally supported BP.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Reactome curates LYRM7 as a Complex III assembly factor (the UQCRFS1/Rieske protein binds and is stabilised by LYRM7). This is the correct core BP.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23168492" target="_blank" class="term-link">
+                                        PMID:23168492
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">LYRM7/MZM1L is a novel human CIII assembly factor involved in the UQCRFS1</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HTP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34800366
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quantitative high-confidence human mitochondrial proteome an...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5U5X0" data-a="GO:0005739" data-r="PMID:34800366" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput annotation of LYRM7 to the mitochondrion from a quantitative high-confidence human mitochondrial proteome. Consistent with the curated matrix localisation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Independent proteomic support for mitochondrial localisation; broader than the specific matrix location but correct.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/LYRM7/LYRM7-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion matrix</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044183" target="_blank" class="term-link">
+                                    GO:0044183
+                                </a>
+                            </span>
+                            <span class="term-label">protein folding chaperone</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9866253
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5U5X0" data-a="GO:0044183" data-r="Reactome:R-HSA-9866253" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) assignment of the protein folding chaperone MF, corresponding to the reaction in which apo-UQCRFS1 binds and is stabilised by LYRM7. Matches the core chaperone function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Reactome curates LYRM7 as the chaperone that binds and stabilises apo-UQCRFS1 in the matrix, the correct non-catalytic MF for this assembly factor. Core molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23168492" target="_blank" class="term-link">
+                                        PMID:23168492
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">works as a human Rieske</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9866253
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5U5X0" data-a="GO:0005759" data-r="Reactome:R-HSA-9866253" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) localisation of LYRM7 to the mitochondrial matrix, the compartment where apo-UQCRFS1 binds LYRM7. Matches experimental and curated localisation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the experimentally established matrix location where LYRM7 chaperones UQCRFS1.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/LYRM7/LYRM7-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion matrix</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9866272
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5U5X0" data-a="GO:0005759" data-r="Reactome:R-HSA-9866272" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) localisation of LYRM7 to the mitochondrial matrix, associated with the reaction inserting the [2Fe-2S] cluster into UQCRFS1 as part of the UQCRFS1:LYRM7 complex.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the matrix location where the LYRM7-UQCRFS1 intermediate recruits the Fe-S transfer machinery for cluster insertion.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/LYRM7/LYRM7-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion matrix</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23168492" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23168492
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    LYRM7/MZM1L is a UQCRFS1 chaperone involved in the last step...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q5U5X0" data-a="GO:0005515" data-r="PMID:23168492" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI (UniProt) capturing the physical interaction between LYRM7 and UQCRFS1 (P47985) from the primary characterisation paper, in which LYRM7 was shown to bind and stabilise the Rieske Fe-S protein. This is the defining, physiological interaction of LYRM7.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The LYRM7-UQCRFS1 interaction is the core relationship establishing LYRM7 as the UQCRFS1 chaperone, so it is not removed; however, bare protein binding (GO:0005515) is uninformative and does not capture the chaperone MF. The chaperone activity (GO:0044183) is the informative MF that should represent this function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23168492" target="_blank" class="term-link">
+                                        PMID:23168492
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">works as a human Rieske</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23168492" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23168492
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    LYRM7/MZM1L is a UQCRFS1 chaperone involved in the last step...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5U5X0" data-a="GO:0005759" data-r="PMID:23168492" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental (IDA) localisation of LYRM7 to the mitochondrial matrix from the primary characterisation study. This is the strongest evidence for the core localisation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> LYRM7 was experimentally shown to reside in and act within the mitochondrial matrix, where it binds and stabilises UQCRFS1. Core CC annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23168492" target="_blank" class="term-link">
+                                        PMID:23168492
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">binding to this subunit within the</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/LYRM7/LYRM7-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion matrix</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031966" target="_blank" class="term-link">
+                                    GO:0031966
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23168492" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23168492
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    LYRM7/MZM1L is a UQCRFS1 chaperone involved in the last step...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q5U5X0" data-a="GO:0031966" data-r="PMID:23168492" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental (IDA) detection of a pool of LYRM7 associated with the mitochondrial membrane, consistent with its transient association with the membrane-embedded late Complex III dimeric intermediate during UQCRFS1 insertion.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Membrane association is a real but secondary/transient aspect of LYRM7 function: its primary site of action is the matrix, where it chaperones UQCRFS1; the membrane pool reflects delivery of UQCRFS1 to the inner-membrane CIII intermediate. Kept but marked non-core relative to the matrix localisation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/LYRM7/LYRM7-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">stabilizing it prior to its translocation and insertion into the late</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034551" target="_blank" class="term-link">
+                                    GO:0034551
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial respiratory chain complex III assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23168492" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23168492
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    LYRM7/MZM1L is a UQCRFS1 chaperone involved in the last step...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5U5X0" data-a="GO:0034551" data-r="PMID:23168492" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental (IDA) evidence that LYRM7 is required for the UQCRFS1 insertion step of Complex III assembly. This is the definitive experimental support for the core BP.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The primary study established LYRM7 as a Complex III assembly factor acting at the UQCRFS1 incorporation step; this is the core, best-supported biological process.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23168492" target="_blank" class="term-link">
+                                        PMID:23168492
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">LYRM7/MZM1L is a novel human CIII assembly factor involved in the UQCRFS1</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045333" target="_blank" class="term-link">
+                                    GO:0045333
+                                </a>
+                            </span>
+                            <span class="term-label">cellular respiration</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23168492" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23168492
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    LYRM7/MZM1L is a UQCRFS1 chaperone involved in the last step...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q5U5X0" data-a="GO:0045333" data-r="PMID:23168492" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation to cellular respiration, based on the observation that loss of LYRM7 impairs Complex III activity and hence respiration. LYRM7 is an assembly factor, not itself a respiratory-chain component; its effect on respiration is indirect (via enabling functional Complex III).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> LYRM7 does not itself carry out or directly participate in respiration; it enables assembly of Complex III, whose activity is required for respiration. The precise, mechanistically accurate BP is mitochondrial respiratory chain complex III assembly (GO:0034551). Cellular respiration is an over-annotation capturing a downstream consequence rather than LYRM7&#39;s direct role. Not removed (experimental annotation) but flagged as over-annotated.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23168492" target="_blank" class="term-link">
+                                        PMID:23168492
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">which enables formation of the mature and functional CIII</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Non-catalytic protein-folding chaperone that binds and stabilises the Rieske iron-sulfur protein UQCRFS1 in the mitochondrial matrix, holding it prior to [2Fe-2S] cluster insertion and its incorporation into respiratory Complex III (cytochrome bc1). LYRM7&#39;s LYR motif also recruits the Fe-S transfer cochaperone HSC20, coupling the UQCRFS1-LYRM7 intermediate to the cluster-delivery machinery.</h3>
+                <span class="vote-buttons" data-g="Q5U5X0" data-a="FUNCTION: Non-catalytic protein-folding chaperone that binds..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044183" target="_blank" class="term-link">
+                            protein folding chaperone
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034551" target="_blank" class="term-link">
+                                mitochondrial respiratory chain complex III assembly
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                mitochondrial matrix
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23168492" target="_blank" class="term-link">
+                                PMID:23168492
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">works as a human Rieske</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23168492" target="_blank" class="term-link">
+                                PMID:23168492
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">LYRM7/MZM1L is a novel human CIII assembly factor involved in the UQCRFS1</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28380382" target="_blank" class="term-link">
+                                PMID:28380382
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">direct binding of the co-chaperone HSC20 to the LYR (Leucine, Tyrosine, Arginine) consensus sequence of LYRM7 was required for recruitment of the Fe-S transfer complex to the LYRM7-UQCRFS1 assembly intermediate</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000108.md" target="_blank" class="term-link">
+                            GO_REF:0000108
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic assignment of GO terms using logical inference, based on on inter-ontology links</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23168492" target="_blank" class="term-link">
+                            PMID:23168492
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">LYRM7/MZM1L is a UQCRFS1 chaperone involved in the last steps of mitochondrial Complex III assembly in human cells.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24606901" target="_blank" class="term-link">
+                            PMID:24606901
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Cochaperone binding to LYR motifs confers specificity of iron sulfur cluster delivery.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27499296" target="_blank" class="term-link">
+                            PMID:27499296
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Mitochondrial Protein Interaction Mapping Identifies Regulators of Respiratory Chain Function.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28380382" target="_blank" class="term-link">
+                            PMID:28380382
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A Single Adaptable Cochaperone-Scaffold Complex Delivers Nascent Iron-Sulfur Clusters to Mammalian Respiratory Chain Complexes I-III.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                            PMID:33961781
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Dual proteome-scale networks reveal cell-specific remodeling of the human interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link">
+                            PMID:34800366
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Quantitative high-confidence human mitochondrial proteome and its dynamics in cellular context.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/40205054" target="_blank" class="term-link">
+                            PMID:40205054
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Multimodal cell maps as a foundation for structural and functional genomics.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9865881
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Complex III assembly</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9866253
+
+                    </span>
+                </div>
+
+                <div class="reference-title">apo-UQCRFS1 binds LYRM7</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9866272
+
+                    </span>
+                </div>
+
+                <div class="reference-title">2Fe-2S is inserted in UQCRFS1</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/LYRM7/LYRM7-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry Q5U5X0 (LYRM7_HUMAN)</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does LYRM7 act purely as a holdase that stabilises apo-UQCRFS1, or does it also actively template/position UQCRFS1 for [2Fe-2S] cluster receipt and membrane insertion?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q5U5X0" data-a="Q: Does LYRM7 act purely as a holdase that stabilises..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Reconstitute the UQCRFS1-LYRM7 intermediate with the HSC20-HSPA9-ISCU Fe-S transfer complex in vitro to determine the minimal components and the order of cluster insertion versus membrane insertion of UQCRFS1.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q5U5X0" data-a="EXPERIMENT: Reconstitute the UQCRFS1-LYRM7 intermediate with t..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(LYRM7-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q5U5X0" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="lyrm7-q5u5x0-review-notes">LYRM7 (Q5U5X0) review notes</h1>
+<h2 id="identity">Identity</h2>
+<ul>
+<li>Human LYRM7 = LYR motif-containing protein 7; synonyms C5orf31, MZM1L. HGNC:28072. 104 aa.</li>
+<li>Ortholog of <em>S. cerevisiae</em> Mzm1 (SGD:S000002901; PANTHER PTN005318945). Complex I LYR family / MZM1-LYRM7 InterPro family (IPR045298, IPR050435; Pfam PF05347 Complex1_LYR).</li>
+</ul>
+<h2 id="core-function-verified">Core function (verified)</h2>
+<ul>
+<li>Mitochondrial-matrix <strong>assembly chaperone for respiratory Complex III</strong> (cytochrome bc1 / ubiquinol-cytochrome c reductase). Non-catalytic.</li>
+<li>Specifically a <strong>UQCRFS1 (Rieske Fe-S protein) chaperone</strong>: binds and stabilises UQCRFS1 in the mitochondrial matrix prior to its [2Fe-2S] cluster insertion, translocation and incorporation into the late CIII dimeric intermediate in the inner membrane.</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/23168492" title="human LYRM7, which we propose to be renamed MZM1L (MZM1-like), works as a human Rieske Fe-S protein (UQCRFS1) chaperone, binding to this subunit within the mitochondrial matrix and stabilizing it prior to its translocation and insertion into the late CIII dimeric intermediate within the mitochondrial inner membrane">PMID:23168492</a></li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/23168492" title="LYRM7/MZM1L is a novel human CIII assembly factor involved in the UQCRFS1 insertion step, which enables formation of the mature and functional CIII enzyme">PMID:23168492</a></li>
+<li>LYR motif engages the Fe-S transfer cochaperone HSC20/HSCB (Q8IWL3): the UQCRFS1-LYRM7 intermediate recruits HSC20-HSPA9-ISCU to deliver the [2Fe-2S] cluster to UQCRFS1.</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/28380382" title="a transient subcomplex involved in CIII assembly, composed of LYRM7 bound to UQCRFS1, interacts with components of an Fe-S transfer complex, consisting of HSC20, its cognate chaperone HSPA9, and the holo-scaffold ISCU. Binding of HSC20 to the LYR motif of LYRM7 in a pre-assembled UQCRFS1-LYRM7 intermediate in the mitochondrial matrix facilitates Fe-S cluster transfer to UQCRFS1">PMID:28380382</a></li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/24606901" title="members of the LYR motif family which assist assembly of complexes II or III, SDHAF1 and LYRM7, respectively, are HSC20 binding partners">PMID:24606901</a></li>
+</ul>
+<h2 id="localisation-verified">Localisation (verified)</h2>
+<ul>
+<li>Mitochondrial matrix (IDA, PMID:23168492; UniProt SUBCELLULAR LOCATION: Mitochondrion matrix). Also mitochondrial membrane (IDA, PMID:23168492 — consistent with association with the inner-membrane CIII intermediate). HTP mito proteome PMID:34800366.</li>
+</ul>
+<h2 id="disease-context-not-a-go-annotation-here">Disease (context, not a GO annotation here)</h2>
+<ul>
+<li>Mitochondrial complex III deficiency, nuclear type 8 (MC3DN8; MIM:615838). Homozygous D25N impairs Rieske Fe-S incorporation into CIII; early-onset encephalopathy/leukoencephalopathy, lactic acidosis, severe CIII activity reduction. <a href="https://pubmed.ncbi.nlm.nih.gov/24014394">PMID:24014394</a>.</li>
+</ul>
+<h2 id="goa-interactors-ipi-withfrom-accessions">GOA interactors (IPI WITH/FROM accessions)</h2>
+<ul>
+<li>P47985 = UQCRFS1 (Rieske) — the physiological client. Cited by PMID:23168492, 27499296, 28380382, 33961781, 40205054.</li>
+<li>Q8IWL3 = HSCB/HSC20 — the Fe-S cochaperone. Cited by PMID:24606901, 28380382.</li>
+<li>P21673 = SAT1 (diamine acetyltransferase) — from HuRI binary interactome (PMID:32296183); no known mitochondrial/CIII role; likely non-physiological Y2H hit.</li>
+</ul>
+<h2 id="go-term-decisions">GO term decisions</h2>
+<ul>
+<li>MF: <strong>GO:0044183 protein folding chaperone</strong> (IBA + Reactome TAS) is the correct non-catalytic MF. Keep as core. Do NOT invent a catalytic MF.</li>
+<li>BP core: <strong>GO:0034551 mitochondrial respiratory chain complex III assembly</strong> (IDA/IBA/IEA/TAS) — accept as core.</li>
+<li>CC: <strong>GO:0005759 mitochondrial matrix</strong> (IDA + IBA + IEA + TAS) core; GO:0005739 mitochondrion (IEA/HTP) broader-accept; GO:0031966 mitochondrial membrane (IDA) accept as non-core (association with membrane CIII intermediate).</li>
+<li>GO:0006457 protein folding (IEA, inferred from the chaperone MF) — accept, general but sound.</li>
+<li>GO:0045333 cellular respiration (IDA) — LYRM7 is an assembly factor, not itself part of respiration; the phenotype of its loss is impaired respiration. Mark as over-annotated (indirect; complex III assembly is the precise BP).</li>
+<li>GO:0005515 protein binding IPIs — bare, uninformative MF; per policy MARK_AS_OVER_ANNOTATED (do not REMOVE). SAT1 hit noted as likely non-physiological but not removed.</li>
+<li>Note: current CIII complex term is GO:0045275 (GO:0005750 obsolete); no complex-membership annotation is present in this GOA, and LYRM7 is a transient assembly factor, not a stable CIII subunit, so no in_complex is asserted.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q5U5X0
+gene_symbol: LYRM7
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  LYRM7 (LYR motif-containing protein 7; also MZM1L/C5orf31) is a small mitochondrial-matrix
+  LYR-family assembly chaperone for respiratory Complex III (cytochrome bc1 / ubiquinol-cytochrome
+  c reductase). It acts as a dedicated chaperone for the Rieske iron-sulfur protein UQCRFS1,
+  binding and stabilising UQCRFS1 in the mitochondrial matrix prior to insertion of its
+  [2Fe-2S] cluster and the subunit&#39;s translocation and incorporation into the late Complex III
+  dimeric intermediate in the inner membrane. Its LYR motif recruits the Fe-S transfer cochaperone
+  HSC20 (HSCB), coupling the UQCRFS1-LYRM7 intermediate to the ISCU-HSPA9-HSC20 cluster-delivery
+  machinery. LYRM7 is non-catalytic and is the human ortholog of yeast Mzm1. Loss-of-function
+  variants cause mitochondrial complex III deficiency, nuclear type 8 (a leukoencephalopathy).
+existing_annotations:
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) propagation placing LYRM7 in the mitochondrial matrix, where it acts
+      as a chaperone. This is directly confirmed experimentally: LYRM7 binds and stabilises
+      UQCRFS1 within the mitochondrial matrix.
+    action: ACCEPT
+    reason: &gt;-
+      The matrix location is the site of LYRM7&#39;s chaperone activity and is supported by direct
+      experimental evidence (IDA, PMID:23168492) and the UniProt subcellular location, in
+      addition to this phylogenetic inference. is_active_in is appropriate for the compartment
+      where it chaperones UQCRFS1.
+    supported_by:
+    - reference_id: PMID:23168492
+      supporting_text: &gt;-
+        binding to this subunit within the
+    - reference_id: file:human/LYRM7/LYRM7-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Mitochondrion matrix&#34;
+- term:
+    id: GO:0034551
+    label: mitochondrial respiratory chain complex III assembly
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) inference that LYRM7 is involved in Complex III assembly. This is the
+      core biological process of the gene and is strongly supported experimentally.
+    action: ACCEPT
+    reason: &gt;-
+      LYRM7 is a bona fide Complex III assembly factor mediating the UQCRFS1/Rieske Fe-S protein
+      incorporation step. This is the precise, well-evidenced core BP and is consistent across
+      IBA, IDA (PMID:23168492), IEA and Reactome TAS annotations.
+    supported_by:
+    - reference_id: PMID:23168492
+      supporting_text: &gt;-
+        LYRM7/MZM1L is a novel human CIII assembly factor involved in the UQCRFS1
+- term:
+    id: GO:0044183
+    label: protein folding chaperone
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) assignment of a protein folding chaperone molecular function. LYRM7
+      is a non-catalytic chaperone that binds and stabilises (holds) its client UQCRFS1, so a
+      chaperone MF is the correct, most informative non-catalytic molecular function.
+    action: ACCEPT
+    reason: &gt;-
+      The chaperone MF is directly supported: LYRM7 works as a UQCRFS1 chaperone, binding and
+      stabilising the Rieske Fe-S protein prior to its incorporation into Complex III
+      (PMID:23168492). This is the appropriate MF for this non-enzymatic assembly factor and is
+      retained as the core molecular function; no catalytic activity should be assigned.
+    supported_by:
+    - reference_id: PMID:23168492
+      supporting_text: &gt;-
+        works as a human Rieske
+    - reference_id: file:human/LYRM7/LYRM7-uniprot.txt
+      supporting_text: &gt;-
+        Assembly factor required for Rieske Fe-S protein UQCRFS1
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      InterPro2GO electronic annotation to the mitochondrion, based on the Complex1_LYR domain
+      family. Correct but less specific than the matrix localisation.
+    action: ACCEPT
+    reason: &gt;-
+      Mitochondrial localisation is correct and well supported; this is simply a broader (parent)
+      location than the experimentally established mitochondrial matrix. Retained as a valid,
+      if general, CC annotation.
+    supported_by:
+    - reference_id: file:human/LYRM7/LYRM7-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Mitochondrion matrix&#34;
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic annotation to the mitochondrial matrix from the UniProt Swiss-Prot subcellular
+      location vocabulary mapping. Matches the curated UniProt location and experimental evidence.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with the experimentally determined (IDA, PMID:23168492) and curated UniProt
+      matrix location where LYRM7 chaperones UQCRFS1.
+    supported_by:
+    - reference_id: file:human/LYRM7/LYRM7-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Mitochondrion matrix&#34;
+- term:
+    id: GO:0006457
+    label: protein folding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000108
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Inter-ontology (logical) inference of a protein folding BP from the protein folding
+      chaperone MF (GO:0044183). Consistent with LYRM7&#39;s role in stabilising/holding UQCRFS1.
+    action: ACCEPT
+    reason: &gt;-
+      This is a sound, if general, logical consequence of the chaperone MF. LYRM7 stabilises its
+      unfolded/apo client UQCRFS1, which falls under protein folding. It is broader than the
+      specific Complex III assembly BP but not incorrect. Kept as non-core context; the precise
+      core BP is mitochondrial respiratory chain complex III assembly.
+    supported_by:
+    - reference_id: file:human/LYRM7/LYRM7-uniprot.txt
+      supporting_text: &gt;-
+        stabilizing it prior to its translocation and insertion into the late
+- term:
+    id: GO:0034551
+    label: mitochondrial respiratory chain complex III assembly
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      InterPro2GO electronic annotation to Complex III assembly, based on the LYRM7-specific
+      InterPro family (IPR045298). Correct and matches experimental evidence.
+    action: ACCEPT
+    reason: &gt;-
+      The LYRM7/MZM1-LYRM7 family signature reliably predicts a Complex III assembly-factor role,
+      which is experimentally confirmed. This is the core BP.
+    supported_by:
+    - reference_id: PMID:23168492
+      supporting_text: &gt;-
+        LYRM7/MZM1L is a novel human CIII assembly factor involved in the UQCRFS1
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:24606901
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IPI (IntAct) capturing a physical interaction between LYRM7 and HSC20/HSCB (UniProt Q8IWL3),
+      the Fe-S cluster transfer cochaperone. This is a real and functionally meaningful interaction
+      (LYRM7&#39;s LYR motif is an HSC20 binding site), but the GO term &#34;protein binding&#34; is
+      uninformative.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Bare protein binding (GO:0005515) conveys no specific molecular function. The underlying
+      LYRM7-HSC20 interaction is genuine and biologically important (it couples the UQCRFS1-LYRM7
+      intermediate to the Fe-S transfer machinery), so this is not removed; but the term is
+      retained only as an uninformative over-annotation. The informative MF is the chaperone
+      activity (GO:0044183).
+    supported_by:
+    - reference_id: PMID:24606901
+      supporting_text: &gt;-
+        SDHAF1 and LYRM7, respectively, are HSC20 binding partners
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:27499296
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IPI (IntAct) capturing a physical interaction between LYRM7 and UQCRFS1 (P47985) reported in
+      a large-scale mitochondrial protein interaction map. UQCRFS1 is the physiological client of
+      LYRM7, so the interaction is correct, but &#34;protein binding&#34; is uninformative.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The LYRM7-UQCRFS1 interaction is the core, well-established relationship of this gene, but
+      bare GO:0005515 does not capture the chaperone function. Retained as an uninformative
+      over-annotation rather than removed.
+    supported_by:
+    - reference_id: PMID:27499296
+      supporting_text: Mitochondrial Protein Interaction Mapping Identifies Regulators of Respiratory
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:28380382
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IPI (IntAct) capturing physical interactions of LYRM7 with UQCRFS1 (P47985) and with
+      HSC20/HSCB (Q8IWL3). Both are physiologically central: the UQCRFS1-LYRM7 intermediate
+      recruits HSC20 via LYRM7&#39;s LYR motif to deliver the [2Fe-2S] cluster to UQCRFS1.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The interactions are real and mechanistically important, but bare protein binding is
+      uninformative and does not capture the chaperone/assembly-factor MF. Retained as an
+      over-annotation rather than removed.
+    supported_by:
+    - reference_id: PMID:28380382
+      supporting_text: &gt;-
+        direct binding of the co-chaperone HSC20 to the LYR (Leucine, Tyrosine, Arginine)
+        consensus sequence of LYRM7 was required for recruitment of the Fe-S transfer complex to
+        the LYRM7-UQCRFS1 assembly intermediate
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IPI from the HuRI binary (yeast two-hybrid) reference interactome mapping LYRM7 to SAT1
+      (P21673, spermidine/spermine N1-acetyltransferase). SAT1 has no known mitochondrial or
+      Complex III role; this is most likely a non-physiological binary-screen hit.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Bare protein binding is uninformative, and this particular partner (SAT1) is not a plausible
+      physiological interactor of a mitochondrial-matrix CIII assembly chaperone. Per curation
+      policy, an experimental IPI is not removed on the basis of an incomplete assessment; it is
+      marked as an uninformative (and here likely non-physiological) over-annotation.
+    supported_by:
+    - reference_id: PMID:32296183
+      supporting_text: A reference map of the human binary protein interactome
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:33961781
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IPI (BioPlex) capturing a physical interaction between LYRM7 and UQCRFS1 (P47985) in a
+      proteome-scale affinity-purification interactome. Consistent with the core LYRM7-UQCRFS1
+      client relationship.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Correct interaction with the physiological client UQCRFS1, but bare GO:0005515 is
+      uninformative. Retained as an over-annotation rather than removed; the chaperone MF
+      (GO:0044183) captures the function.
+    supported_by:
+    - reference_id: PMID:33961781
+      supporting_text: Dual proteome-scale networks reveal cell-specific remodeling of the human
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:40205054
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IPI capturing a physical interaction between LYRM7 and UQCRFS1 (P47985) in a large-scale
+      cell-map / structural-functional genomics interactome. Consistent with the core client
+      relationship.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Correct interaction with UQCRFS1 but bare protein binding is uninformative. Retained as an
+      over-annotation; the informative MF is the chaperone activity.
+    supported_by:
+    - reference_id: PMID:40205054
+      supporting_text: Multimodal cell maps as a foundation for structural and functional genomics
+- term:
+    id: GO:0034551
+    label: mitochondrial respiratory chain complex III assembly
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9865881
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Reactome (TAS) annotation placing LYRM7 in the Complex III assembly pathway. Matches the
+      core, experimentally supported BP.
+    action: ACCEPT
+    reason: &gt;-
+      Reactome curates LYRM7 as a Complex III assembly factor (the UQCRFS1/Rieske protein binds
+      and is stabilised by LYRM7). This is the correct core BP.
+    supported_by:
+    - reference_id: PMID:23168492
+      supporting_text: &gt;-
+        LYRM7/MZM1L is a novel human CIII assembly factor involved in the UQCRFS1
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HTP
+  original_reference_id: PMID:34800366
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput annotation of LYRM7 to the mitochondrion from a quantitative high-confidence
+      human mitochondrial proteome. Consistent with the curated matrix localisation.
+    action: ACCEPT
+    reason: &gt;-
+      Independent proteomic support for mitochondrial localisation; broader than the specific
+      matrix location but correct.
+    supported_by:
+    - reference_id: file:human/LYRM7/LYRM7-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Mitochondrion matrix&#34;
+- term:
+    id: GO:0044183
+    label: protein folding chaperone
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9866253
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Reactome (TAS) assignment of the protein folding chaperone MF, corresponding to the reaction
+      in which apo-UQCRFS1 binds and is stabilised by LYRM7. Matches the core chaperone function.
+    action: ACCEPT
+    reason: &gt;-
+      Reactome curates LYRM7 as the chaperone that binds and stabilises apo-UQCRFS1 in the matrix,
+      the correct non-catalytic MF for this assembly factor. Core molecular function.
+    supported_by:
+    - reference_id: PMID:23168492
+      supporting_text: &gt;-
+        works as a human Rieske
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9866253
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome (TAS) localisation of LYRM7 to the mitochondrial matrix, the compartment where
+      apo-UQCRFS1 binds LYRM7. Matches experimental and curated localisation.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with the experimentally established matrix location where LYRM7 chaperones
+      UQCRFS1.
+    supported_by:
+    - reference_id: file:human/LYRM7/LYRM7-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Mitochondrion matrix&#34;
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9866272
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome (TAS) localisation of LYRM7 to the mitochondrial matrix, associated with the
+      reaction inserting the [2Fe-2S] cluster into UQCRFS1 as part of the UQCRFS1:LYRM7 complex.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with the matrix location where the LYRM7-UQCRFS1 intermediate recruits the Fe-S
+      transfer machinery for cluster insertion.
+    supported_by:
+    - reference_id: file:human/LYRM7/LYRM7-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Mitochondrion matrix&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:23168492
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IPI (UniProt) capturing the physical interaction between LYRM7 and UQCRFS1 (P47985) from the
+      primary characterisation paper, in which LYRM7 was shown to bind and stabilise the Rieske
+      Fe-S protein. This is the defining, physiological interaction of LYRM7.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The LYRM7-UQCRFS1 interaction is the core relationship establishing LYRM7 as the UQCRFS1
+      chaperone, so it is not removed; however, bare protein binding (GO:0005515) is uninformative
+      and does not capture the chaperone MF. The chaperone activity (GO:0044183) is the informative
+      MF that should represent this function.
+    supported_by:
+    - reference_id: PMID:23168492
+      supporting_text: &gt;-
+        works as a human Rieske
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: IDA
+  original_reference_id: PMID:23168492
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct experimental (IDA) localisation of LYRM7 to the mitochondrial matrix from the primary
+      characterisation study. This is the strongest evidence for the core localisation.
+    action: ACCEPT
+    reason: &gt;-
+      LYRM7 was experimentally shown to reside in and act within the mitochondrial matrix, where it
+      binds and stabilises UQCRFS1. Core CC annotation.
+    supported_by:
+    - reference_id: PMID:23168492
+      supporting_text: &gt;-
+        binding to this subunit within the
+    - reference_id: file:human/LYRM7/LYRM7-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Mitochondrion matrix&#34;
+- term:
+    id: GO:0031966
+    label: mitochondrial membrane
+  evidence_type: IDA
+  original_reference_id: PMID:23168492
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct experimental (IDA) detection of a pool of LYRM7 associated with the mitochondrial
+      membrane, consistent with its transient association with the membrane-embedded late Complex
+      III dimeric intermediate during UQCRFS1 insertion.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Membrane association is a real but secondary/transient aspect of LYRM7 function: its primary
+      site of action is the matrix, where it chaperones UQCRFS1; the membrane pool reflects delivery
+      of UQCRFS1 to the inner-membrane CIII intermediate. Kept but marked non-core relative to the
+      matrix localisation.
+    supported_by:
+    - reference_id: file:human/LYRM7/LYRM7-uniprot.txt
+      supporting_text: &gt;-
+        stabilizing it prior to its translocation and insertion into the late
+- term:
+    id: GO:0034551
+    label: mitochondrial respiratory chain complex III assembly
+  evidence_type: IDA
+  original_reference_id: PMID:23168492
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Direct experimental (IDA) evidence that LYRM7 is required for the UQCRFS1 insertion step of
+      Complex III assembly. This is the definitive experimental support for the core BP.
+    action: ACCEPT
+    reason: &gt;-
+      The primary study established LYRM7 as a Complex III assembly factor acting at the UQCRFS1
+      incorporation step; this is the core, best-supported biological process.
+    supported_by:
+    - reference_id: PMID:23168492
+      supporting_text: &gt;-
+        LYRM7/MZM1L is a novel human CIII assembly factor involved in the UQCRFS1
+- term:
+    id: GO:0045333
+    label: cellular respiration
+  evidence_type: IDA
+  original_reference_id: PMID:23168492
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      IDA annotation to cellular respiration, based on the observation that loss of LYRM7 impairs
+      Complex III activity and hence respiration. LYRM7 is an assembly factor, not itself a
+      respiratory-chain component; its effect on respiration is indirect (via enabling functional
+      Complex III).
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      LYRM7 does not itself carry out or directly participate in respiration; it enables assembly
+      of Complex III, whose activity is required for respiration. The precise, mechanistically
+      accurate BP is mitochondrial respiratory chain complex III assembly (GO:0034551). Cellular
+      respiration is an over-annotation capturing a downstream consequence rather than LYRM7&#39;s
+      direct role. Not removed (experimental annotation) but flagged as over-annotated.
+    supported_by:
+    - reference_id: PMID:23168492
+      supporting_text: &gt;-
+        which enables formation of the mature and functional CIII
+core_functions:
+- description: &gt;-
+    Non-catalytic protein-folding chaperone that binds and stabilises the Rieske iron-sulfur
+    protein UQCRFS1 in the mitochondrial matrix, holding it prior to [2Fe-2S] cluster insertion
+    and its incorporation into respiratory Complex III (cytochrome bc1). LYRM7&#39;s LYR motif also
+    recruits the Fe-S transfer cochaperone HSC20, coupling the UQCRFS1-LYRM7 intermediate to the
+    cluster-delivery machinery.
+  molecular_function:
+    id: GO:0044183
+    label: protein folding chaperone
+  directly_involved_in:
+  - id: GO:0034551
+    label: mitochondrial respiratory chain complex III assembly
+  locations:
+  - id: GO:0005759
+    label: mitochondrial matrix
+  supported_by:
+  - reference_id: PMID:23168492
+    supporting_text: &gt;-
+      works as a human Rieske
+  - reference_id: PMID:23168492
+    supporting_text: &gt;-
+      LYRM7/MZM1L is a novel human CIII assembly factor involved in the UQCRFS1
+  - reference_id: PMID:28380382
+    supporting_text: &gt;-
+      direct binding of the co-chaperone HSC20 to the LYR (Leucine, Tyrosine, Arginine)
+      consensus sequence of LYRM7 was required for recruitment of the Fe-S transfer complex to
+      the LYRM7-UQCRFS1 assembly intermediate
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000108
+  title: Automatic assignment of GO terms using logical inference, based on on inter-ontology
+    links
+  findings: []
+- id: PMID:23168492
+  title: LYRM7/MZM1L is a UQCRFS1 chaperone involved in the last steps of mitochondrial
+    Complex III assembly in human cells.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Primary characterisation of human LYRM7/MZM1L. Establishes it as a mitochondrial-matrix
+      UQCRFS1 (Rieske Fe-S) chaperone and Complex III assembly factor. Supports the core MF, BP,
+      and matrix localisation.
+- id: PMID:24606901
+  title: Cochaperone binding to LYR motifs confers specificity of iron sulfur cluster
+    delivery.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full text explicitly names LYRM7 as an HSC20 (HSC20/HSCB) binding partner among the LYR-motif
+      family that assist Complex II/III assembly, supporting the LYRM7-HSC20 interaction.
+- id: PMID:27499296
+  title: Mitochondrial Protein Interaction Mapping Identifies Regulators of Respiratory
+    Chain Function.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Large-scale mitochondrial interaction map; source of an IntAct LYRM7-UQCRFS1 interaction.
+      Supports the physiological client relationship but not gene-specific mechanism.
+- id: PMID:28380382
+  title: A Single Adaptable Cochaperone-Scaffold Complex Delivers Nascent Iron-Sulfur
+    Clusters to Mammalian Respiratory Chain Complexes I-III.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full text details the UQCRFS1-LYRM7 intermediate recruiting HSC20 via LYRM7&#39;s LYR motif to
+      deliver the [2Fe-2S] cluster to UQCRFS1. Strong mechanistic support for the core function.
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      HuRI binary (Y2H) interactome; source of an IntAct LYRM7-SAT1 hit. SAT1 has no known
+      mitochondrial/CIII role, so this is likely a non-physiological binary-screen interaction.
+- id: PMID:33961781
+  title: Dual proteome-scale networks reveal cell-specific remodeling of the human
+    interactome.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      BioPlex proteome-scale interactome; source of an IntAct LYRM7-UQCRFS1 interaction consistent
+      with the core client relationship.
+- id: PMID:34800366
+  title: Quantitative high-confidence human mitochondrial proteome and its dynamics
+    in cellular context.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-confidence mitochondrial proteome; supports mitochondrial localisation of LYRM7 (HTP).
+- id: PMID:40205054
+  title: Multimodal cell maps as a foundation for structural and functional genomics.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Large-scale cell-map interactome; source of an IntAct LYRM7-UQCRFS1 interaction consistent
+      with the core client relationship.
+- id: Reactome:R-HSA-9865881
+  title: Complex III assembly
+  findings: []
+- id: Reactome:R-HSA-9866253
+  title: apo-UQCRFS1 binds LYRM7
+  findings: []
+- id: Reactome:R-HSA-9866272
+  title: 2Fe-2S is inserted in UQCRFS1
+  findings: []
+- id: file:human/LYRM7/LYRM7-uniprot.txt
+  title: UniProtKB entry Q5U5X0 (LYRM7_HUMAN)
+  findings: []
+suggested_questions:
+- question: &gt;-
+    Does LYRM7 act purely as a holdase that stabilises apo-UQCRFS1, or does it also
+    actively template/position UQCRFS1 for [2Fe-2S] cluster receipt and membrane insertion?
+suggested_experiments:
+- description: &gt;-
+    Reconstitute the UQCRFS1-LYRM7 intermediate with the HSC20-HSPA9-ISCU Fe-S transfer complex
+    in vitro to determine the minimal components and the order of cluster insertion versus
+    membrane insertion of UQCRFS1.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
