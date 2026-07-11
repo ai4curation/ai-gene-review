@@ -1,0 +1,3846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NAGLU - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>NAGLU</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P54802" target="_blank" class="term-link">
+                        P54802
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "NAGLU";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P54802" data-a="DESCRIPTION: NAGLU encodes alpha-N-acetylglucosaminidase, a lys..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>NAGLU encodes alpha-N-acetylglucosaminidase, a lysosomal exoglycosidase of glycoside hydrolase family 89 (CAZy GH89) that catalyses the hydrolysis of terminal non-reducing alpha-N-acetyl-D-glucosamine residues in N-acetyl-alpha-D-glucosaminides (EC 3.2.1.50). It carries out one step in the ordered, stepwise exolytic degradation of heparan sulfate in the lysosome: NAGLU removes the terminal alpha-N-acetylglucosamine residue that is exposed after upstream enzymes (SGSH liberates a glucosamine, which HGSNAT then N-acetylates). The protein is synthesised as a signal-peptide-bearing precursor, N-glycosylated, and processed to mature 82 kDa and 77 kDa lysosomal forms; it functions as a monomer or homodimer. Loss of NAGLU activity blocks heparan sulfate catabolism and causes mucopolysaccharidosis type IIIB (MPS IIIB, Sanfilippo syndrome B), an autosomal recessive lysosomal storage disease dominated by progressive central nervous system degeneration. A dominant NAGLU missense variant additionally causes axonal Charcot-Marie-Tooth disease type 2V.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004561" target="_blank" class="term-link">
+                                    GO:0004561
+                                </a>
+                            </span>
+                            <span class="term-label">alpha-N-acetylglucosaminidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P54802" data-a="GO:0004561" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) assignment of the core catalytic molecular function of NAGLU, alpha-N-acetylglucosaminidase activity, propagated across the GH89 family from experimentally characterized orthologs.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the defining, experimentally established activity of NAGLU: hydrolysis of terminal non-reducing N-acetyl-D-glucosamine residues in N-acetyl-alpha-D-glucosaminides (EC 3.2.1.50), consistent with the GO term definition and UniProt. The IBA assignment is correct and at the right level of specificity; retained as a core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/NAGLU/NAGLU-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=Hydrolysis of terminal non-reducing N-acetyl-D-glucosamine residues in N-acetyl-alpha-D-glucosaminides.; EC=3.2.1.50</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8650226" target="_blank" class="term-link">
+                                        PMID:8650226
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The Sanfilippo syndrome type B is a lysosomal storage disorder caused by deficiency of alpha-N-acetylglucosaminidase</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005773" target="_blank" class="term-link">
+                                    GO:0005773
+                                </a>
+                            </span>
+                            <span class="term-label">vacuole</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P54802" data-a="GO:0005773" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) location annotation to vacuole, the lineage-general parent of the lysosome used by GO_Central for this family.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Vacuole (GO:0005773) is the broad, taxon-general term encompassing the lysosome, where NAGLU actually acts in animals. It is correct but less specific than the lysosome/lysosomal lumen annotations also present; accepted as a valid (if general) location. The specific human location is captured by the lysosome and lysosomal lumen annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/NAGLU/NAGLU-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Lysosome.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030202" target="_blank" class="term-link">
+                                    GO:0030202
+                                </a>
+                            </span>
+                            <span class="term-label">heparin proteoglycan metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P54802" data-a="GO:0030202" data-r="GO_REF:0000033" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) biological-process annotation placing NAGLU in heparin proteoglycan metabolism.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Heparin is a highly sulfated variant of heparan sulfate and NAGLU acts on the shared alpha-N-acetylglucosamine linkage, so the annotation is not wrong; however the primary, disease-relevant process for NAGLU is the lysosomal catabolism of heparan sulfate. Modify to the more accurate and specific heparan sulfate proteoglycan catabolic process, which is what the enzyme&#39;s deficiency (MPS IIIB) directly impairs.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030200" target="_blank" class="term-link">
+                                    heparan sulfate proteoglycan catabolic process
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/NAGLU/NAGLU-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">FUNCTION: Involved in the degradation of heparan sulfate.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-1678742
+
+                                </span>
+
+                                <div class="support-text">Alpha-N-acetylglucosaminidase (NAGLU) hydrolyses the non-reducing, terminal N-acetyl-D-glucosamine residue from heparan sulfate.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004561" target="_blank" class="term-link">
+                                    GO:0004561
+                                </a>
+                            </span>
+                            <span class="term-label">alpha-N-acetylglucosaminidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000003
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P54802" data-a="GO:0004561" data-r="GO_REF:0000003" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (IEA) annotation of alpha-N-acetylglucosaminidase activity derived from the EC 3.2.1.50 to GO mapping.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The EC-to-GO mapping is exactly correct: NAGLU carries EC 3.2.1.50, and the reaction matches the GO term definition. Accepted as a redundant but valid statement of the core molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/NAGLU/NAGLU-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">RecName: Full=Alpha-N-acetylglucosaminidase; DE            EC=3.2.1.50;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005764" target="_blank" class="term-link">
+                                    GO:0005764
+                                </a>
+                            </span>
+                            <span class="term-label">lysosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P54802" data-a="GO:0005764" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (IEA) location annotation to lysosome from the UniProt subcellular-location keyword mapping.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> NAGLU is a soluble lysosomal hydrolase; the lysosome is its established site of action. Correct and core; consistent with the experimental (TAS) lysosome annotation from PMID:8650226.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/NAGLU/NAGLU-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Lysosome.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0048731" target="_blank" class="term-link">
+                                    GO:0048731
+                                </a>
+                            </span>
+                            <span class="term-label">system development</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P54802" data-a="GO:0048731" data-r="GO_REF:0000117" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARBA machine-learning (IEA) biological-process annotation to the very general term system development.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This general developmental term reflects the disease phenotype (multi-system, predominantly neurological deterioration in MPS IIIB) rather than a direct developmental role of the enzyme. The observed developmental defects are downstream consequences of impaired heparan sulfate catabolism and lysosomal storage, not a molecular developmental function of NAGLU. Uninformative at this level and over-annotated.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/NAGLU/NAGLU-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">MPS3 is characterized by severe central nervous system degeneration, but only mild somatic disease.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1901135" target="_blank" class="term-link">
+                                    GO:1901135
+                                </a>
+                            </span>
+                            <span class="term-label">carbohydrate derivative metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P54802" data-a="GO:1901135" data-r="GO_REF:0000117" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARBA machine-learning (IEA) biological-process annotation to the general term carbohydrate derivative metabolic process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> NAGLU does act in the metabolism of a carbohydrate derivative (heparan sulfate, an N-acetylglucosamine-containing glycosaminoglycan), so the term is not incorrect, but it is far too general to be informative. Modify to the specific heparan sulfate proteoglycan catabolic process that captures the actual biology.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030200" target="_blank" class="term-link">
+                                    heparan sulfate proteoglycan catabolic process
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/NAGLU/NAGLU-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">FUNCTION: Involved in the degradation of heparan sulfate.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030200" target="_blank" class="term-link">
+                                    GO:0030200
+                                </a>
+                            </span>
+                            <span class="term-label">heparan sulfate proteoglycan catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-2024096
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P54802" data-a="GO:0030200" data-r="Reactome:R-HSA-2024096" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) annotation placing NAGLU in the lysosomal degradation of heparan sulfate glycosaminoglycan (HS-GAG degradation pathway).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the core biological process for NAGLU. The enzyme performs one exolytic step in the ordered lysosomal breakdown of heparan sulfate, removing terminal alpha-N-acetylglucosamine residues; its deficiency blocks this catabolic pathway and causes MPS IIIB. Accepted as a core function and used as the preferred replacement for the more general/heparin-specific process annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-2024096
+
+                                </span>
+
+                                <div class="support-text">The steps outlined below describe the cleavage of heparan sulfate/heparin from heparan sulfate proteoglycans (HSPGs) and its degradation.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/NAGLU/NAGLU-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">FUNCTION: Involved in the degradation of heparan sulfate.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004561" target="_blank" class="term-link">
+                                    GO:0004561
+                                </a>
+                            </span>
+                            <span class="term-label">alpha-N-acetylglucosaminidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-1678742
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P54802" data-a="GO:0004561" data-r="Reactome:R-HSA-1678742" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) annotation of the core catalytic activity in the reaction &#34;NAGLU hydrolyses Heparan sulfate chain(4)&#34;.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly supported: Reactome describes NAGLU hydrolysing the non-reducing terminal N-acetyl-D-glucosamine residue from heparan sulfate, which is exactly alpha-N-acetylglucosaminidase activity. Redundant with the IBA/IEA MF annotations but valid; core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-1678742
+
+                                </span>
+
+                                <div class="support-text">Alpha-N-acetylglucosaminidase (NAGLU) hydrolyses the non-reducing, terminal N-acetyl-D-glucosamine residue from heparan sulfate.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004561" target="_blank" class="term-link">
+                                    GO:0004561
+                                </a>
+                            </span>
+                            <span class="term-label">alpha-N-acetylglucosaminidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-2090038
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P54802" data-a="GO:0004561" data-r="Reactome:R-HSA-2090038" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) annotation of the core catalytic activity in a second heparan chain hydrolysis reaction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Same well-supported core molecular function as the other alpha-N-acetylglucosaminidase activity annotations, from a distinct Reactome reaction. Redundant but valid.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-1678742
+
+                                </span>
+
+                                <div class="support-text">Alpha-N-acetylglucosaminidase (NAGLU) hydrolyses the non-reducing, terminal N-acetyl-D-glucosamine residue from heparan sulfate.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004561" target="_blank" class="term-link">
+                                    GO:0004561
+                                </a>
+                            </span>
+                            <span class="term-label">alpha-N-acetylglucosaminidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-2263496
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P54802" data-a="GO:0004561" data-r="Reactome:R-HSA-2263496" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) annotation of the core catalytic activity, from a reaction contrasting wild-type with defective NAGLU.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Restates the core alpha-N-acetylglucosaminidase activity of NAGLU. Redundant with the other MF annotations but valid and correctly attributed.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-1678742
+
+                                </span>
+
+                                <div class="support-text">Alpha-N-acetylglucosaminidase (NAGLU) hydrolyses the non-reducing, terminal N-acetyl-D-glucosamine residue from heparan sulfate.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004561" target="_blank" class="term-link">
+                                    GO:0004561
+                                </a>
+                            </span>
+                            <span class="term-label">alpha-N-acetylglucosaminidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9036052
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P54802" data-a="GO:0004561" data-r="Reactome:R-HSA-9036052" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) annotation of the core catalytic activity, from a further heparan chain hydrolysis reaction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Restates the core alpha-N-acetylglucosaminidase activity. Redundant with the other MF annotations but valid.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-1678742
+
+                                </span>
+
+                                <div class="support-text">Alpha-N-acetylglucosaminidase (NAGLU) hydrolyses the non-reducing, terminal N-acetyl-D-glucosamine residue from heparan sulfate.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043202" target="_blank" class="term-link">
+                                    GO:0043202
+                                </a>
+                            </span>
+                            <span class="term-label">lysosomal lumen</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-2263496
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P54802" data-a="GO:0043202" data-r="Reactome:R-HSA-2263496" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) location annotation placing NAGLU in the lysosomal lumen, where it acts on soluble heparan sulfate fragments.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> NAGLU is a soluble lysosomal hydrolase acting in the lysosomal lumen; this is the precise compartment for its activity and is core. Consistent with the lysosome annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/NAGLU/NAGLU-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Lysosome.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043202" target="_blank" class="term-link">
+                                    GO:0043202
+                                </a>
+                            </span>
+                            <span class="term-label">lysosomal lumen</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9036052
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P54802" data-a="GO:0043202" data-r="Reactome:R-HSA-9036052" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) location annotation to lysosomal lumen, from a second reaction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Same well-supported core lysosomal-lumen location as the other lysosomal lumen annotation. Redundant but valid.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/NAGLU/NAGLU-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Lysosome.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070062" target="_blank" class="term-link">
+                                    GO:0070062
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular exosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23533145
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    In-depth proteomic analyses of exosomes isolated from expres...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P54802" data-a="GO:0070062" data-r="PMID:23533145" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput mass-spectrometry (HDA) detection of NAGLU in exosomes isolated from expressed prostatic secretions in urine.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> NAGLU was identified in a bulk shotgun-proteomics survey of urinary/prostatic exosomes. Presence of lysosomal enzymes in secreted extracellular vesicles is a real but peripheral observation and does not reflect the core lysosomal catabolic function of the enzyme. Retained as a non-core localization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link">
+                                        PMID:23533145
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">exosome preparations were characterized by a shotgun proteomics procedure. In pooled EPS-urine exosome samples, ~900 proteins were detected.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070062" target="_blank" class="term-link">
+                                    GO:0070062
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular exosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21082674" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21082674
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Comprehensive analysis of low-abundance proteins in human ur...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P54802" data-a="GO:0070062" data-r="PMID:21082674" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proteomic (IDA) detection of NAGLU among low-abundance proteins in human urinary exosomes.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> NAGLU was detected in a targeted low-abundance urinary-exosome proteome. As with the other exosome annotations, this is a peripheral localization observation, not the core lysosomal function; retained as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21082674" target="_blank" class="term-link">
+                                        PMID:21082674
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">After analysis by nanoHPLC-chip-MS/MS, 512 proteins were identified</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070062" target="_blank" class="term-link">
+                                    GO:0070062
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular exosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19056867
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Large-scale proteomics and phosphoproteomics of urinary exos...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P54802" data-a="GO:0070062" data-r="PMID:19056867" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Large-scale mass-spectrometry (HDA) detection of NAGLU in the human urinary exosome proteome.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> NAGLU was among the ~1132 proteins profiled in urinary exosomes by LC-MS/MS. Consistent with the other exosome detections; a real but non-core localization for a lysosomal hydrolase.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link">
+                                        PMID:19056867
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the analysis identified 1132 proteins unambiguously</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043202" target="_blank" class="term-link">
+                                    GO:0043202
+                                </a>
+                            </span>
+                            <span class="term-label">lysosomal lumen</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-1678742
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P54802" data-a="GO:0043202" data-r="Reactome:R-HSA-1678742" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) location annotation to lysosomal lumen, from the primary NAGLU heparan sulfate hydrolysis reaction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core compartment for NAGLU&#39;s soluble hydrolase activity, tied directly to the reaction in which it degrades heparan sulfate. Consistent with other lysosomal annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/NAGLU/NAGLU-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Lysosome.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043202" target="_blank" class="term-link">
+                                    GO:0043202
+                                </a>
+                            </span>
+                            <span class="term-label">lysosomal lumen</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-2090038
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P54802" data-a="GO:0043202" data-r="Reactome:R-HSA-2090038" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) location annotation to lysosomal lumen, from a second heparan hydrolysis reaction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Same well-supported core lysosomal-lumen location. Redundant but valid.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/NAGLU/NAGLU-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Lysosome.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004561" target="_blank" class="term-link">
+                                    GO:0004561
+                                </a>
+                            </span>
+                            <span class="term-label">alpha-N-acetylglucosaminidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8650226" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8650226
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The molecular basis of Sanfilippo syndrome type B.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P54802" data-a="GO:0004561" data-r="PMID:8650226" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author-statement (TAS) annotation of alpha-N-acetylglucosaminidase activity from the foundational paper that cloned NAGLU and defined Sanfilippo B as its deficiency.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the primary literature establishing NAGLU as alpha-N-acetylglucosaminidase: the cDNA/gene was cloned starting from purified enzyme, and the disease is defined by deficiency of this activity. Core molecular function, strongly supported.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8650226" target="_blank" class="term-link">
+                                        PMID:8650226
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The Sanfilippo syndrome type B is a lysosomal storage disorder caused by deficiency of alpha-N-acetylglucosaminidase</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005764" target="_blank" class="term-link">
+                                    GO:0005764
+                                </a>
+                            </span>
+                            <span class="term-label">lysosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8650226" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8650226
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The molecular basis of Sanfilippo syndrome type B.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P54802" data-a="GO:0005764" data-r="PMID:8650226" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author-statement (TAS) annotation of lysosomal localization from the foundational NAGLU cloning paper.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> NAGLU is characterized as a lysosomal enzyme whose deficiency causes a lysosomal storage disorder; the lysosome is its established site of action. Core location, experimentally grounded.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8650226" target="_blank" class="term-link">
+                                        PMID:8650226
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The Sanfilippo syndrome type B is a lysosomal storage disorder caused by deficiency of alpha-N-acetylglucosaminidase</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007399" target="_blank" class="term-link">
+                                    GO:0007399
+                                </a>
+                            </span>
+                            <span class="term-label">nervous system development</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8650226" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8650226
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The molecular basis of Sanfilippo syndrome type B.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P54802" data-a="GO:0007399" data-r="PMID:8650226" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author-statement (TAS) annotation to nervous system development, reflecting the profound neurological phenotype of NAGLU deficiency (Sanfilippo B).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The neurological phenotype of MPS IIIB (profound mental deterioration, CNS degeneration) is a downstream pathological consequence of failed lysosomal heparan sulfate catabolism and progressive storage, not a direct developmental function of the enzyme. NAGLU is a housekeeping lysosomal glycosidase; annotating it to nervous system development conflates disease phenotype with molecular role and over-annotates. The core biology is captured by the catabolic-process and lysosome annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8650226" target="_blank" class="term-link">
+                                        PMID:8650226
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">it is characterized by profound mental deterioration in childhood and death in the second decade</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Lysosomal alpha-N-acetylglucosaminidase that hydrolyses terminal non-reducing alpha-N-acetyl-D-glucosamine residues in heparan sulfate, carrying out one exolytic step in the stepwise lysosomal catabolism of heparan sulfate glycosaminoglycan.</h3>
+                <span class="vote-buttons" data-g="P54802" data-a="FUNCTION: Lysosomal alpha-N-acetylglucosaminidase that hydro..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004561" target="_blank" class="term-link">
+                            alpha-N-acetylglucosaminidase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030200" target="_blank" class="term-link">
+                                heparan sulfate proteoglycan catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043202" target="_blank" class="term-link">
+                                lysosomal lumen
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005764" target="_blank" class="term-link">
+                                lysosome
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/NAGLU/NAGLU-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Reaction=Hydrolysis of terminal non-reducing N-acetyl-D-glucosamine residues in N-acetyl-alpha-D-glucosaminides.; EC=3.2.1.50</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            Reactome:R-HSA-1678742
+
+                        </span>
+
+                        <div class="finding-text">Alpha-N-acetylglucosaminidase (NAGLU) hydrolyses the non-reducing, terminal N-acetyl-D-glucosamine residue from heparan sulfate.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8650226" target="_blank" class="term-link">
+                                PMID:8650226
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">The Sanfilippo syndrome type B is a lysosomal storage disorder caused by deficiency of alpha-N-acetylglucosaminidase</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000003.md" target="_blank" class="term-link">
+                            GO_REF:0000003
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on Enzyme Commission mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link">
+                            PMID:19056867
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Large-scale proteomics and phosphoproteomics of urinary exosomes.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21082674" target="_blank" class="term-link">
+                            PMID:21082674
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Comprehensive analysis of low-abundance proteins in human urinary exosomes using peptide ligand library technology, peptide OFFGEL fractionation and nanoHPLC-chip-MS/MS.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link">
+                            PMID:23533145
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">In-depth proteomic analyses of exosomes isolated from expressed prostatic secretions in urine.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8650226" target="_blank" class="term-link">
+                            PMID:8650226
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The molecular basis of Sanfilippo syndrome type B.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-1678742
+
+                    </span>
+                </div>
+
+                <div class="reference-title">NAGLU hydrolyses Heparan sulfate chain(4)</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-2024096
+
+                    </span>
+                </div>
+
+                <div class="reference-title">HS-GAG degradation</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-2090038
+
+                    </span>
+                </div>
+
+                <div class="reference-title">NAGLU hydrolyses heparan chain(2)</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-2263496
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Defective NAGLU does not hydrolyse Heparan sulfate chain(4)</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9036052
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Defective NAGLU does not hydrolyse heparan chain(2)</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/NAGLU/NAGLU-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry P54802 (ANAG_HUMAN), Alpha-N-acetylglucosaminidase</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(NAGLU-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P54802" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="naglu-p54802-review-notes">NAGLU (P54802) review notes</h1>
+<h2 id="summary">Summary</h2>
+<p>NAGLU = alpha-N-acetylglucosaminidase, a lysosomal exoglycosidase of glycoside hydrolase<br />
+family 89 (CAZy GH89). It catalyses hydrolysis of terminal non-reducing<br />
+alpha-N-acetyl-D-glucosamine residues in N-acetyl-alpha-D-glucosaminides (EC 3.2.1.50),<br />
+a step in the stepwise exolytic lysosomal degradation of heparan sulfate. Deficiency<br />
+causes mucopolysaccharidosis type IIIB (MPS IIIB / Sanfilippo syndrome B), a lysosomal<br />
+storage disorder with severe CNS degeneration. A dominant NAGLU variant (I403T) also<br />
+causes axonal Charcot-Marie-Tooth disease type 2V (CMT2V).</p>
+<h2 id="key-evidence">Key evidence</h2>
+<ul>
+<li>UniProt P54802 FUNCTION: "Involved in the degradation of heparan sulfate."<br />
+  [file:human/NAGLU/NAGLU-uniprot.txt]</li>
+<li>CATALYTIC ACTIVITY: "Hydrolysis of terminal non-reducing N-acetyl-D-glucosamine<br />
+  residues in N-acetyl-alpha-D-glucosaminides.; EC=3.2.1.50"<br />
+  [file:human/NAGLU/NAGLU-uniprot.txt]</li>
+<li>SUBCELLULAR LOCATION: Lysosome. SIMILARITY: glycosyl hydrolase 89 family.<br />
+  [file:human/NAGLU/NAGLU-uniprot.txt]</li>
+<li>PMID:8650226 (Zhao et al. 1996) — cloned NAGLU cDNA/gene; "Sanfilippo syndrome type B<br />
+  is a lysosomal storage disorder caused by deficiency of alpha-N-acetylglucosaminidase".<br />
+  This is the ProtInc/PINC TAS source for the MF, lysosome, and nervous-system-development<br />
+  annotations. Abstract-only in cache; full text read by curator.</li>
+<li>Reactome R-HSA-1678742 "NAGLU hydrolyses Heparan sulfate chain(4)": NAGLU "hydrolyses<br />
+  the non-reducing, terminal N-acetyl-D-glucosamine residue from heparan sulfate".</li>
+<li>Reactome R-HSA-2024096 "HS-GAG degradation": lysosomal degradation of heparan<br />
+  sulfate/heparin; parent pathway for GO:0030200 annotation.</li>
+</ul>
+<h2 id="go-term-choices">GO term choices</h2>
+<ul>
+<li>Core MF: GO:0004561 alpha-N-acetylglucosaminidase activity (exact GOA term; def matches<br />
+  UniProt catalytic activity and EC 3.2.1.50). CONFIRMED current label via OLS.</li>
+<li>Core BP: GO:0030200 heparan sulfate proteoglycan catabolic process (present in GOA as<br />
+  Reactome TAS; def = breakdown of heparan sulfate proteoglycans). CONFIRMED current label.</li>
+<li>Core location: GO:0043202 lysosomal lumen and GO:0005764 lysosome (both in GOA).</li>
+</ul>
+<h2 id="annotation-dispositions">Annotation dispositions</h2>
+<ul>
+<li>MF alpha-N-acetylglucosaminidase (GO:0004561) across IBA/IEA-EC/Reactome-TAS/ProtInc-TAS:<br />
+  ACCEPT — core catalytic function, strongly supported.</li>
+<li>Lysosome (GO:0005764) / lysosomal lumen (GO:0043202): ACCEPT — core location.</li>
+<li>GO:0030200 HS proteoglycan catabolic process (Reactome TAS): ACCEPT — core BP.</li>
+<li>GO:0030202 heparin proteoglycan metabolic process (IBA): heparin is a highly sulfated HS<br />
+  variant; NAGLU acts on both. MODIFY to HS catabolic process (GO:0030200) as the more<br />
+  accurate primary process; keep as valid but not the best label.</li>
+<li>GO:0005773 vacuole (IBA): ACCEPT — the yeast/broad-lineage generalization of lysosome<br />
+  used by GO_Central for the family; correct but less specific than lysosome.</li>
+<li>GO:0070062 extracellular exosome (HDA/IDA, x3): KEEP_AS_NON_CORE — bulk proteomics<br />
+  detection in urinary/prostatic exosomes; secretion is real but peripheral to lysosomal<br />
+  function.</li>
+<li>GO:0007399 nervous system development (ProtInc TAS, PMID:8650226): MARK_AS_OVER_ANNOTATED<br />
+  — the CNS phenotype is a downstream consequence of HS storage, not a direct developmental<br />
+  role of the enzyme.</li>
+<li>GO:0048731 system development (ARBA IEA): MARK_AS_OVER_ANNOTATED — very general ML-derived<br />
+  term, same disease-phenotype conflation, not informative.</li>
+<li>GO:1901135 carbohydrate derivative metabolic process (ARBA IEA): MODIFY — correct but<br />
+  extremely general; HS catabolic process is the specific term.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P54802
+gene_symbol: NAGLU
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  NAGLU encodes alpha-N-acetylglucosaminidase, a lysosomal exoglycosidase of glycoside
+  hydrolase family 89 (CAZy GH89) that catalyses the hydrolysis of terminal non-reducing
+  alpha-N-acetyl-D-glucosamine residues in N-acetyl-alpha-D-glucosaminides (EC 3.2.1.50).
+  It carries out one step in the ordered, stepwise exolytic degradation of heparan sulfate
+  in the lysosome: NAGLU removes the terminal alpha-N-acetylglucosamine residue that is
+  exposed after upstream enzymes (SGSH liberates a glucosamine, which HGSNAT then
+  N-acetylates). The protein is synthesised as a signal-peptide-bearing precursor,
+  N-glycosylated, and processed to mature 82 kDa and 77 kDa lysosomal forms; it functions
+  as a monomer or homodimer. Loss of NAGLU activity blocks heparan sulfate catabolism and
+  causes mucopolysaccharidosis type IIIB (MPS IIIB, Sanfilippo syndrome B), an autosomal
+  recessive lysosomal storage disease dominated by progressive central nervous system
+  degeneration. A dominant NAGLU missense variant additionally causes axonal
+  Charcot-Marie-Tooth disease type 2V.
+existing_annotations:
+- term:
+    id: GO:0004561
+    label: alpha-N-acetylglucosaminidase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) assignment of the core catalytic molecular function of NAGLU,
+      alpha-N-acetylglucosaminidase activity, propagated across the GH89 family from
+      experimentally characterized orthologs.
+    action: ACCEPT
+    reason: &gt;-
+      This is the defining, experimentally established activity of NAGLU: hydrolysis of
+      terminal non-reducing N-acetyl-D-glucosamine residues in N-acetyl-alpha-D-glucosaminides
+      (EC 3.2.1.50), consistent with the GO term definition and UniProt. The IBA assignment
+      is correct and at the right level of specificity; retained as a core function.
+    supported_by:
+    - reference_id: file:human/NAGLU/NAGLU-uniprot.txt
+      supporting_text: &gt;-
+        Reaction=Hydrolysis of terminal non-reducing N-acetyl-D-glucosamine
+        residues in N-acetyl-alpha-D-glucosaminides.; EC=3.2.1.50
+    - reference_id: PMID:8650226
+      supporting_text: &gt;-
+        The Sanfilippo syndrome type B is a lysosomal storage disorder caused by
+        deficiency of alpha-N-acetylglucosaminidase
+- term:
+    id: GO:0005773
+    label: vacuole
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) location annotation to vacuole, the lineage-general parent of the
+      lysosome used by GO_Central for this family.
+    action: ACCEPT
+    reason: &gt;-
+      Vacuole (GO:0005773) is the broad, taxon-general term encompassing the lysosome, where
+      NAGLU actually acts in animals. It is correct but less specific than the lysosome/lysosomal
+      lumen annotations also present; accepted as a valid (if general) location. The specific
+      human location is captured by the lysosome and lysosomal lumen annotations.
+    supported_by:
+    - reference_id: file:human/NAGLU/NAGLU-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Lysosome.&#39;
+- term:
+    id: GO:0030202
+    label: heparin proteoglycan metabolic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) biological-process annotation placing NAGLU in heparin proteoglycan
+      metabolism.
+    action: MODIFY
+    reason: &gt;-
+      Heparin is a highly sulfated variant of heparan sulfate and NAGLU acts on the shared
+      alpha-N-acetylglucosamine linkage, so the annotation is not wrong; however the primary,
+      disease-relevant process for NAGLU is the lysosomal catabolism of heparan sulfate.
+      Modify to the more accurate and specific heparan sulfate proteoglycan catabolic process,
+      which is what the enzyme&#39;s deficiency (MPS IIIB) directly impairs.
+    proposed_replacement_terms:
+    - id: GO:0030200
+      label: heparan sulfate proteoglycan catabolic process
+    supported_by:
+    - reference_id: file:human/NAGLU/NAGLU-uniprot.txt
+      supporting_text: &#39;FUNCTION: Involved in the degradation of heparan sulfate.&#39;
+    - reference_id: Reactome:R-HSA-1678742
+      supporting_text: &gt;-
+        Alpha-N-acetylglucosaminidase (NAGLU) hydrolyses the non-reducing, terminal
+        N-acetyl-D-glucosamine residue from heparan sulfate.
+- term:
+    id: GO:0004561
+    label: alpha-N-acetylglucosaminidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000003
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic (IEA) annotation of alpha-N-acetylglucosaminidase activity derived from the
+      EC 3.2.1.50 to GO mapping.
+    action: ACCEPT
+    reason: &gt;-
+      The EC-to-GO mapping is exactly correct: NAGLU carries EC 3.2.1.50, and the reaction
+      matches the GO term definition. Accepted as a redundant but valid statement of the core
+      molecular function.
+    supported_by:
+    - reference_id: file:human/NAGLU/NAGLU-uniprot.txt
+      supporting_text: &gt;-
+        RecName: Full=Alpha-N-acetylglucosaminidase;
+        DE            EC=3.2.1.50;
+- term:
+    id: GO:0005764
+    label: lysosome
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic (IEA) location annotation to lysosome from the UniProt subcellular-location
+      keyword mapping.
+    action: ACCEPT
+    reason: &gt;-
+      NAGLU is a soluble lysosomal hydrolase; the lysosome is its established site of action.
+      Correct and core; consistent with the experimental (TAS) lysosome annotation from
+      PMID:8650226.
+    supported_by:
+    - reference_id: file:human/NAGLU/NAGLU-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Lysosome.&#39;
+- term:
+    id: GO:0048731
+    label: system development
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      ARBA machine-learning (IEA) biological-process annotation to the very general term
+      system development.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      This general developmental term reflects the disease phenotype (multi-system,
+      predominantly neurological deterioration in MPS IIIB) rather than a direct developmental
+      role of the enzyme. The observed developmental defects are downstream consequences of
+      impaired heparan sulfate catabolism and lysosomal storage, not a molecular developmental
+      function of NAGLU. Uninformative at this level and over-annotated.
+    supported_by:
+    - reference_id: file:human/NAGLU/NAGLU-uniprot.txt
+      supporting_text: &gt;-
+        MPS3 is characterized by severe central nervous system degeneration, but only
+        mild somatic disease.
+- term:
+    id: GO:1901135
+    label: carbohydrate derivative metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      ARBA machine-learning (IEA) biological-process annotation to the general term
+      carbohydrate derivative metabolic process.
+    action: MODIFY
+    reason: &gt;-
+      NAGLU does act in the metabolism of a carbohydrate derivative (heparan sulfate, an
+      N-acetylglucosamine-containing glycosaminoglycan), so the term is not incorrect, but it
+      is far too general to be informative. Modify to the specific heparan sulfate proteoglycan
+      catabolic process that captures the actual biology.
+    proposed_replacement_terms:
+    - id: GO:0030200
+      label: heparan sulfate proteoglycan catabolic process
+    supported_by:
+    - reference_id: file:human/NAGLU/NAGLU-uniprot.txt
+      supporting_text: &#39;FUNCTION: Involved in the degradation of heparan sulfate.&#39;
+- term:
+    id: GO:0030200
+    label: heparan sulfate proteoglycan catabolic process
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-2024096
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Reactome (TAS) annotation placing NAGLU in the lysosomal degradation of heparan sulfate
+      glycosaminoglycan (HS-GAG degradation pathway).
+    action: ACCEPT
+    reason: &gt;-
+      This is the core biological process for NAGLU. The enzyme performs one exolytic step in
+      the ordered lysosomal breakdown of heparan sulfate, removing terminal
+      alpha-N-acetylglucosamine residues; its deficiency blocks this catabolic pathway and
+      causes MPS IIIB. Accepted as a core function and used as the preferred replacement for
+      the more general/heparin-specific process annotations.
+    supported_by:
+    - reference_id: Reactome:R-HSA-2024096
+      supporting_text: &gt;-
+        The steps outlined below describe the cleavage of heparan sulfate/heparin from
+        heparan sulfate proteoglycans (HSPGs) and its degradation.
+    - reference_id: file:human/NAGLU/NAGLU-uniprot.txt
+      supporting_text: &#39;FUNCTION: Involved in the degradation of heparan sulfate.&#39;
+- term:
+    id: GO:0004561
+    label: alpha-N-acetylglucosaminidase activity
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-1678742
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Reactome (TAS) annotation of the core catalytic activity in the reaction &#34;NAGLU hydrolyses
+      Heparan sulfate chain(4)&#34;.
+    action: ACCEPT
+    reason: &gt;-
+      Directly supported: Reactome describes NAGLU hydrolysing the non-reducing terminal
+      N-acetyl-D-glucosamine residue from heparan sulfate, which is exactly
+      alpha-N-acetylglucosaminidase activity. Redundant with the IBA/IEA MF annotations but
+      valid; core function.
+    supported_by:
+    - reference_id: Reactome:R-HSA-1678742
+      supporting_text: &gt;-
+        Alpha-N-acetylglucosaminidase (NAGLU) hydrolyses the non-reducing, terminal
+        N-acetyl-D-glucosamine residue from heparan sulfate.
+- term:
+    id: GO:0004561
+    label: alpha-N-acetylglucosaminidase activity
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-2090038
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Reactome (TAS) annotation of the core catalytic activity in a second heparan chain
+      hydrolysis reaction.
+    action: ACCEPT
+    reason: &gt;-
+      Same well-supported core molecular function as the other alpha-N-acetylglucosaminidase
+      activity annotations, from a distinct Reactome reaction. Redundant but valid.
+    supported_by:
+    - reference_id: Reactome:R-HSA-1678742
+      supporting_text: &gt;-
+        Alpha-N-acetylglucosaminidase (NAGLU) hydrolyses the non-reducing, terminal
+        N-acetyl-D-glucosamine residue from heparan sulfate.
+- term:
+    id: GO:0004561
+    label: alpha-N-acetylglucosaminidase activity
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-2263496
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Reactome (TAS) annotation of the core catalytic activity, from a reaction contrasting
+      wild-type with defective NAGLU.
+    action: ACCEPT
+    reason: &gt;-
+      Restates the core alpha-N-acetylglucosaminidase activity of NAGLU. Redundant with the
+      other MF annotations but valid and correctly attributed.
+    supported_by:
+    - reference_id: Reactome:R-HSA-1678742
+      supporting_text: &gt;-
+        Alpha-N-acetylglucosaminidase (NAGLU) hydrolyses the non-reducing, terminal
+        N-acetyl-D-glucosamine residue from heparan sulfate.
+- term:
+    id: GO:0004561
+    label: alpha-N-acetylglucosaminidase activity
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9036052
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Reactome (TAS) annotation of the core catalytic activity, from a further heparan chain
+      hydrolysis reaction.
+    action: ACCEPT
+    reason: &gt;-
+      Restates the core alpha-N-acetylglucosaminidase activity. Redundant with the other MF
+      annotations but valid.
+    supported_by:
+    - reference_id: Reactome:R-HSA-1678742
+      supporting_text: &gt;-
+        Alpha-N-acetylglucosaminidase (NAGLU) hydrolyses the non-reducing, terminal
+        N-acetyl-D-glucosamine residue from heparan sulfate.
+- term:
+    id: GO:0043202
+    label: lysosomal lumen
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-2263496
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome (TAS) location annotation placing NAGLU in the lysosomal lumen, where it acts on
+      soluble heparan sulfate fragments.
+    action: ACCEPT
+    reason: &gt;-
+      NAGLU is a soluble lysosomal hydrolase acting in the lysosomal lumen; this is the precise
+      compartment for its activity and is core. Consistent with the lysosome annotations.
+    supported_by:
+    - reference_id: file:human/NAGLU/NAGLU-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Lysosome.&#39;
+- term:
+    id: GO:0043202
+    label: lysosomal lumen
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9036052
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome (TAS) location annotation to lysosomal lumen, from a second reaction.
+    action: ACCEPT
+    reason: &gt;-
+      Same well-supported core lysosomal-lumen location as the other lysosomal lumen
+      annotation. Redundant but valid.
+    supported_by:
+    - reference_id: file:human/NAGLU/NAGLU-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Lysosome.&#39;
+- term:
+    id: GO:0070062
+    label: extracellular exosome
+  evidence_type: HDA
+  original_reference_id: PMID:23533145
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput mass-spectrometry (HDA) detection of NAGLU in exosomes isolated from
+      expressed prostatic secretions in urine.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      NAGLU was identified in a bulk shotgun-proteomics survey of urinary/prostatic exosomes.
+      Presence of lysosomal enzymes in secreted extracellular vesicles is a real but peripheral
+      observation and does not reflect the core lysosomal catabolic function of the enzyme.
+      Retained as a non-core localization.
+    supported_by:
+    - reference_id: PMID:23533145
+      supporting_text: &gt;-
+        exosome preparations were characterized by a shotgun proteomics procedure. In pooled
+        EPS-urine exosome samples, ~900 proteins were detected.
+- term:
+    id: GO:0070062
+    label: extracellular exosome
+  evidence_type: IDA
+  original_reference_id: PMID:21082674
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Proteomic (IDA) detection of NAGLU among low-abundance proteins in human urinary exosomes.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      NAGLU was detected in a targeted low-abundance urinary-exosome proteome. As with the other
+      exosome annotations, this is a peripheral localization observation, not the core lysosomal
+      function; retained as non-core.
+    supported_by:
+    - reference_id: PMID:21082674
+      supporting_text: &gt;-
+        After analysis by nanoHPLC-chip-MS/MS, 512 proteins were identified
+- term:
+    id: GO:0070062
+    label: extracellular exosome
+  evidence_type: HDA
+  original_reference_id: PMID:19056867
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Large-scale mass-spectrometry (HDA) detection of NAGLU in the human urinary exosome
+      proteome.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      NAGLU was among the ~1132 proteins profiled in urinary exosomes by LC-MS/MS. Consistent
+      with the other exosome detections; a real but non-core localization for a lysosomal
+      hydrolase.
+    supported_by:
+    - reference_id: PMID:19056867
+      supporting_text: &gt;-
+        the analysis identified 1132 proteins unambiguously
+- term:
+    id: GO:0043202
+    label: lysosomal lumen
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-1678742
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome (TAS) location annotation to lysosomal lumen, from the primary NAGLU heparan
+      sulfate hydrolysis reaction.
+    action: ACCEPT
+    reason: &gt;-
+      Correct core compartment for NAGLU&#39;s soluble hydrolase activity, tied directly to the
+      reaction in which it degrades heparan sulfate. Consistent with other lysosomal
+      annotations.
+    supported_by:
+    - reference_id: file:human/NAGLU/NAGLU-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Lysosome.&#39;
+- term:
+    id: GO:0043202
+    label: lysosomal lumen
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-2090038
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome (TAS) location annotation to lysosomal lumen, from a second heparan hydrolysis
+      reaction.
+    action: ACCEPT
+    reason: &gt;-
+      Same well-supported core lysosomal-lumen location. Redundant but valid.
+    supported_by:
+    - reference_id: file:human/NAGLU/NAGLU-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Lysosome.&#39;
+- term:
+    id: GO:0004561
+    label: alpha-N-acetylglucosaminidase activity
+  evidence_type: TAS
+  original_reference_id: PMID:8650226
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Author-statement (TAS) annotation of alpha-N-acetylglucosaminidase activity from the
+      foundational paper that cloned NAGLU and defined Sanfilippo B as its deficiency.
+    action: ACCEPT
+    reason: &gt;-
+      This is the primary literature establishing NAGLU as alpha-N-acetylglucosaminidase: the
+      cDNA/gene was cloned starting from purified enzyme, and the disease is defined by
+      deficiency of this activity. Core molecular function, strongly supported.
+    supported_by:
+    - reference_id: PMID:8650226
+      supporting_text: &gt;-
+        The Sanfilippo syndrome type B is a lysosomal storage disorder caused by
+        deficiency of alpha-N-acetylglucosaminidase
+- term:
+    id: GO:0005764
+    label: lysosome
+  evidence_type: TAS
+  original_reference_id: PMID:8650226
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Author-statement (TAS) annotation of lysosomal localization from the foundational NAGLU
+      cloning paper.
+    action: ACCEPT
+    reason: &gt;-
+      NAGLU is characterized as a lysosomal enzyme whose deficiency causes a lysosomal storage
+      disorder; the lysosome is its established site of action. Core location, experimentally
+      grounded.
+    supported_by:
+    - reference_id: PMID:8650226
+      supporting_text: &gt;-
+        The Sanfilippo syndrome type B is a lysosomal storage disorder caused by
+        deficiency of alpha-N-acetylglucosaminidase
+- term:
+    id: GO:0007399
+    label: nervous system development
+  evidence_type: TAS
+  original_reference_id: PMID:8650226
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Author-statement (TAS) annotation to nervous system development, reflecting the profound
+      neurological phenotype of NAGLU deficiency (Sanfilippo B).
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The neurological phenotype of MPS IIIB (profound mental deterioration, CNS degeneration)
+      is a downstream pathological consequence of failed lysosomal heparan sulfate catabolism
+      and progressive storage, not a direct developmental function of the enzyme. NAGLU is a
+      housekeeping lysosomal glycosidase; annotating it to nervous system development conflates
+      disease phenotype with molecular role and over-annotates. The core biology is captured by
+      the catabolic-process and lysosome annotations.
+    supported_by:
+    - reference_id: PMID:8650226
+      supporting_text: &gt;-
+        it is characterized by profound mental deterioration in childhood and death in the
+        second decade
+core_functions:
+- description: &gt;-
+    Lysosomal alpha-N-acetylglucosaminidase that hydrolyses terminal non-reducing
+    alpha-N-acetyl-D-glucosamine residues in heparan sulfate, carrying out one exolytic step
+    in the stepwise lysosomal catabolism of heparan sulfate glycosaminoglycan.
+  molecular_function:
+    id: GO:0004561
+    label: alpha-N-acetylglucosaminidase activity
+  directly_involved_in:
+  - id: GO:0030200
+    label: heparan sulfate proteoglycan catabolic process
+  locations:
+  - id: GO:0043202
+    label: lysosomal lumen
+  - id: GO:0005764
+    label: lysosome
+  supported_by:
+  - reference_id: file:human/NAGLU/NAGLU-uniprot.txt
+    supporting_text: &gt;-
+      Reaction=Hydrolysis of terminal non-reducing N-acetyl-D-glucosamine
+      residues in N-acetyl-alpha-D-glucosaminides.; EC=3.2.1.50
+  - reference_id: Reactome:R-HSA-1678742
+    supporting_text: &gt;-
+      Alpha-N-acetylglucosaminidase (NAGLU) hydrolyses the non-reducing, terminal
+      N-acetyl-D-glucosamine residue from heparan sulfate.
+  - reference_id: PMID:8650226
+    supporting_text: &gt;-
+      The Sanfilippo syndrome type B is a lysosomal storage disorder caused by
+      deficiency of alpha-N-acetylglucosaminidase
+references:
+- id: GO_REF:0000003
+  title: Gene Ontology annotation based on Enzyme Commission mapping
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: PMID:19056867
+  title: Large-scale proteomics and phosphoproteomics of urinary exosomes.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Bulk urinary-exosome proteomics; supports only the non-core extracellular exosome
+      localization of NAGLU, not its lysosomal function.
+- id: PMID:21082674
+  title: Comprehensive analysis of low-abundance proteins in human urinary exosomes
+    using peptide ligand library technology, peptide OFFGEL fractionation and nanoHPLC-chip-MS/MS.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Low-abundance urinary-exosome proteome; supports only non-core extracellular exosome
+      detection of NAGLU.
+- id: PMID:23533145
+  title: In-depth proteomic analyses of exosomes isolated from expressed prostatic
+    secretions in urine.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Prostatic-secretion exosome proteomics; supports only non-core extracellular exosome
+      detection of NAGLU.
+- id: PMID:8650226
+  title: The molecular basis of Sanfilippo syndrome type B.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Foundational paper that cloned the NAGLU cDNA/gene and established that Sanfilippo
+      syndrome type B is caused by deficiency of alpha-N-acetylglucosaminidase; supports the
+      core molecular function and lysosomal localization.
+- id: Reactome:R-HSA-1678742
+  title: NAGLU hydrolyses Heparan sulfate chain(4)
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Directly describes NAGLU hydrolysing the terminal non-reducing N-acetyl-D-glucosamine
+      of heparan sulfate; supports the core catalytic activity and heparan sulfate catabolism.
+- id: Reactome:R-HSA-2024096
+  title: HS-GAG degradation
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Pathway describing lysosomal degradation of heparan sulfate glycosaminoglycan; supports
+      the core biological process annotation for NAGLU.
+- id: Reactome:R-HSA-2090038
+  title: NAGLU hydrolyses heparan chain(2)
+  findings: []
+- id: Reactome:R-HSA-2263496
+  title: Defective NAGLU does not hydrolyse Heparan sulfate chain(4)
+  findings: []
+- id: Reactome:R-HSA-9036052
+  title: Defective NAGLU does not hydrolyse heparan chain(2)
+  findings: []
+- id: file:human/NAGLU/NAGLU-uniprot.txt
+  title: UniProtKB entry P54802 (ANAG_HUMAN), Alpha-N-acetylglucosaminidase
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
