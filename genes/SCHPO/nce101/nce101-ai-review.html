@@ -1,0 +1,2659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>nce101 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>nce101</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/C6Y4B6" target="_blank" class="term-link">
+                        C6Y4B6
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Schizosaccharomyces pombe (strain 972 / ATCC 24843)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "nce101";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="C6Y4B6" data-a="DESCRIPTION: nce101 (SPAC12G12.17) is a small (58 amino acid) m..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>nce101 (SPAC12G12.17) is a small (58 amino acid) membrane-associated microprotein of fission yeast and the sole S. pombe member of the NCE101 family (InterPro IPR024242, Pfam PF11654, PANTHER PTHR28011), orthologous to Saccharomyces cerevisiae NCE101 (NCE1). The protein carries a single predicted transmembrane helix (residues 10-27) and a short, basic-residue-enriched C-terminal tail, features consistent with a single-pass membrane protein, though its topology and precise subcellular localization have not been experimentally determined. The founding member of the family, budding yeast NCE1, was recovered in a genetic screen for factors affecting a signal-sequence-independent (&#34;non-classical&#34;) protein export pathway, and the family is therefore annotated to protein secretion/transport; the original study could not distinguish whether the small protein is part of the export machinery or is itself a non-classically secreted substrate. No molecular activity, interaction partner, or catalytic motif has been identified for the S. pombe protein, and it is classified as a conserved protein of unknown biological role. Genome-wide deletion profiling of the nce101 deletion reports only broad, pleiotropic chemical-stress sensitivity and resistance phenotypes, none of which isolate a specific molecular function.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009306" target="_blank" class="term-link">
+                                    GO:0009306
+                                </a>
+                            </span>
+                            <span class="term-label">protein secretion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="C6Y4B6" data-a="GO:0009306" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) propagation of protein secretion across the NCE101 family (PANTHER PTN001997334), seeded by S. cerevisiae NCE101 whose own annotation derives from the Cleves et al. 1996 non-classical export screen (IGI:SGD, PMID:8655575). This is a defensible family-level inference and there is no positive evidence against it, so it is retained; however it is an indirect inference for a gene with no direct functional data, and even in the founding study the protein&#39;s role (machinery versus substrate) was ambiguous, so it should not be treated as an experimentally established core function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Reasonable phylogenetic inference for an uncharacterized family member, but not demonstrated for the S. pombe protein and interpretively ambiguous at source; keep as a non-core, low-confidence functional context rather than a core function.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">NO FAILURE NON CORE</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">SOURCE EVIDENCE WEAK</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:Q02820</span>
+
+                                    &middot; S. cerevisiae NCE101 (NCE1)
+
+
+                                    <span class="badge">SOURCE WEAK OR INFERRED</span>
+
+
+                                    <div class="propagation-comment">Seed annotation is IGI from a single overexpression screen (PMID:8655575) in which the small NCE1 protein&#39;s role was ambiguous (machinery versus exported substrate).</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009306" target="_blank" class="term-link">
+                                    GO:0009306
+                                </a>
+                            </span>
+                            <span class="term-label">protein secretion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="C6Y4B6" data-a="GO:0009306" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO mapping of the NCE101 family signature (IPR024242) to protein secretion. This is the same family-level inference as the IBA annotation, mapped from the domain model rather than the phylogenetic tree, and is redundant with it. Accurate at the family level but uninformative about the specific molecular function of the S. pombe protein.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct family-signature-to-GO mapping but redundant with the IBA and not evidence of a demonstrated function; retain as non-core.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="C6Y4B6" data-a="GO:0016020" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Membrane localization mapped from the UniProtKB subcellular-location keyword, which itself rests on a single predicted transmembrane helix (residues 10-27, ECO:0000255) and the curator-inferred single-pass membrane assignment (ECO:0000305). Consistent with the sequence but not experimentally verified; note the S. cerevisiae ortholog also carries a cytosol (HDA) annotation, so the localization is not firmly established. This is an accurate but low-information cellular-component term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Localization is only predicted (single TM helix) and not experimentally confirmed; the term is not wrong but is uninformative and non-core.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003674" target="_blank" class="term-link">
+                                    GO:0003674
+                                </a>
+                            </span>
+                            <span class="term-label">molecular_function</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="C6Y4B6" data-a="GO:0003674" data-r="GO_REF:0000015" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root molecular_function term with the ND (no biological data) evidence code, correctly recording that no molecular function has been experimentally determined for nce101. There is no biochemical activity, ligand, substrate, or catalytic motif described for this protein or its family, so ND is the honest and appropriate annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ND correctly captures a genuine molecular-function knowledge gap; retaining it is the accurate curatorial choice for a dark gene.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005575" target="_blank" class="term-link">
+                                    GO:0005575
+                                </a>
+                            </span>
+                            <span class="term-label">cellular_component</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="C6Y4B6" data-a="GO:0005575" data-r="GO_REF:0000015" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root cellular_component term with ND evidence, from PomBase. The only localization signal is the predicted transmembrane helix (captured separately by the UniProt SubCell membrane IEA); no experimental localization has been reported, so PomBase&#39;s ND annotation reflects the absence of curated CC evidence. Retained as an honest record of the gap.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Accurately records that no experimentally supported cellular component is curated; consistent with a conserved-unknown-function gene.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008150" target="_blank" class="term-link">
+                                    GO:0008150
+                                </a>
+                            </span>
+                            <span class="term-label">biological_process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="C6Y4B6" data-a="GO:0008150" data-r="GO_REF:0000015" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root biological_process term with ND evidence. No biological process has been experimentally established for the S. pombe gene; deletion phenotypes are limited to broad, pleiotropic chemical-stress sensitivities and resistances that do not define a specific pathway, and the family-level protein secretion inference is captured by the IBA/IEA annotations. ND appropriately marks the absence of a curated process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ND honestly records an unknown biological process; the pleiotropic drug phenotypes do not support a specific BP annotation.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>No molecular function can be assigned with confidence. nce101 is a small single-pass membrane microprotein of the NCE101 family whose only functional association, protein secretion / non-classical protein export, is a family-level phylogenetic inference (IBA/InterPro) transferred from budding yeast NCE101 and is interpretively ambiguous at its experimental source (the founding study could not distinguish an export-machinery role from an export-substrate role). No molecular_function term is asserted here because none is supported by direct evidence; the molecular function is an open question (see knowledge_gaps).</h3>
+                <span class="vote-buttons" data-g="C6Y4B6" data-a="FUNCTION: No molecular function can be assigned with confide..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8655575" target="_blank" class="term-link">
+                                PMID:8655575
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">A screen for components of the export machinery has identified genes that are involved in nonclassical export. These findings demonstrate a new pathway for protein export that is distinct from the classical secretory pathway in yeast.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000015.md" target="_blank" class="term-link">
+                            GO_REF:0000015
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Use of the ND evidence code for Gene Ontology (GO) terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11859360" target="_blank" class="term-link">
+                            PMID:11859360
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The genome sequence of Schizosaccharomyces pombe.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18488015" target="_blank" class="term-link">
+                            PMID:18488015
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Dynamic repertoire of a eukaryotic transcriptome surveyed at single-nucleotide resolution.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8655575" target="_blank" class="term-link">
+                            PMID:8655575
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A new pathway for protein export in Saccharomyces cerevisiae.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Defines the non-classical (signal-sequence-independent) protein export pathway in budding yeast and, through a genetic screen, identified the founding NCE genes including NCE1/NCE101, the ortholog of S. pombe nce101. Establishes the family-level basis for the protein secretion / protein transport annotations, but the paper&#39;s molecular characterization is performed on NCE2, not on the small NCE1 gene product, whose role (machinery versus exported substrate) was left unresolved.</div>
+
+                        <div class="finding-text">"A screen for components of the export machinery has identified genes that are involved in nonclassical export. These findings demonstrate a new pathway for protein export that is distinct from the classical secretory pathway in yeast."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does S. pombe possess a non-classical (signal-sequence-independent) protein export pathway, and if so does nce101 contribute to it?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="C6Y4B6" data-a="Q: Does S. pombe possess a non-classical (signal-sequ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is nce101 a component of a transport/export machinery or is it itself a secreted or membrane-cargo substrate, as the ambiguity in the founding budding-yeast study implies?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="C6Y4B6" data-a="Q: Is nce101 a component of a transport/export machin..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the true subcellular localization and membrane topology of the Nce101 protein?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="C6Y4B6" data-a="Q: What is the true subcellular localization and memb..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Determine the endogenous subcellular localization and membrane topology of Nce101 by tagging (avoiding tag-induced mislocalization of a 58-aa protein), fluorescence microscopy, and protease-protection / carbonate-extraction membrane fractionation.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: Fluorescence microscopy and membrane fractionation</p>
+
+                </div>
+                <span class="vote-buttons" data-g="C6Y4B6" data-a="EXPERIMENT: Determine the endogenous subcellular localization ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Identify physical interaction partners by co-immunoprecipitation/mass spectrometry or proximity labeling to test the export-machinery hypothesis, and perform secretome analysis of nce101-delta versus wild type to test whether it affects non-classical protein secretion.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: Affinity purification / mass spectrometry and secretome analysis</p>
+
+                </div>
+                <span class="vote-buttons" data-g="C6Y4B6" data-a="EXPERIMENT: Identify physical interaction partners by co-immun..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Characterize nce101-delta (and combinations with related small membrane proteins, to control for redundancy) under the stress conditions flagged by chemical-genomics screens to connect the pleiotropic phenotypes to a defined cellular process.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: Genetic / phenotypic characterization</p>
+
+                </div>
+                <span class="vote-buttons" data-g="C6Y4B6" data-a="EXPERIMENT: Characterize nce101-delta (and combinations with r..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The molecular function of nce101 is undetermined: no biochemical activity, ligand, substrate, catalytic residue, or diagnostic sequence motif has been identified for the protein or the NCE101 family.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> The protein is a defined 58-aa NCE101-family member with a single predicted transmembrane helix; its only functional association (protein secretion / non-classical export) is an indirect inference from an overexpression/genetic screen of the S. cerevisiae ortholog, in which the founding authors could not determine whether the small protein acts as part of the export machinery or is itself a non-classically secreted substrate.</p>
+
+
+
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The biological process in which nce101 participates in S. pombe is unknown, and it has not been shown that fission yeast operates a non-classical protein export pathway through nce101.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">BP_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Genome-wide deletion profiling of nce101-delta reports only broad, pleiotropic chemical-stress phenotypes (sensitivity to cadmium, diamide, valproate and vanadate; resistance to lithium, MMS, tert-butyl hydroperoxide, EGTA, amorolfine, and various salt/SDS combinations) that do not point to a single pathway.</p>
+
+
+
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The subcellular localization and membrane topology of Nce101 are experimentally undetermined: it is unclear whether the protein is stably membrane-integral, which membrane it occupies, and in what orientation (N-in versus N-out, signal-anchored versus tail-anchored).</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">CC_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Membrane association is inferred solely from a single predicted transmembrane helix (residues 10-27) and a curator-assigned single-pass membrane annotation; the S. cerevisiae ortholog additionally carries a high-throughput cytosol annotation.</p>
+
+
+
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> No loss-of-function phenotype isolates a specific molecular or cellular role, and no interacting partners, complex membership, or regulatory context are known; it is also unresolved whether nce101 is functionally redundant with other small membrane microproteins, which would mask deletion phenotypes.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">WHOLLY_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> A viable deletion strain exists and has been chemically profiled, but the resulting phenotypes are pleiotropic and non-diagnostic.</p>
+
+
+
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(nce101-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="C6Y4B6" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Comprehensive Research Report: *nce101* (SPAC12G12.17) in *Schizosaccharomyces pombe*</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">27 citations</span>
+
+
+                    <span class="report-badge">1 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-06T16:47:59.912326</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="nce101-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="comprehensive-research-report-nce101-spac12g1217-in-schizosaccharomyces-pombe">Comprehensive Research Report: <em>nce101</em> (SPAC12G12.17) in <em>Schizosaccharomyces pombe</em></h1>
+<h2 id="1-geneprotein-identity-and-nomenclature">1. Gene/Protein Identity and Nomenclature</h2>
+<p>The <em>nce101</em> gene (systematic name SPAC12G12.17) in <em>Schizosaccharomyces pombe</em> (strain 972/ATCC 24843) encodes a protein designated "Non-classical export protein 1" (UniProt accession C6Y4B6). The protein belongs to the NCE101 family, characterized by the NCE101 domain (InterPro: IPR024242; Pfam: PF11654). It is critical to distinguish this protein from the much more extensively studied Nce102 protein, as the two are frequently confused due to their similar names but represent fundamentally different protein families with distinct sizes, domain architectures, and levels of functional characterization.</p>
+<h2 id="2-historical-context-discovery-of-the-nce-gene-family">2. Historical Context: Discovery of the NCE Gene Family</h2>
+<p>The NCE (Non-Classical Export) gene nomenclature originates from a landmark study by Cleves et al. (1996), who investigated non-classical protein secretion in <em>Saccharomyces cerevisiae</em>. In this study, the mammalian protein galectin-1—which lacks a classical secretory signal sequence yet is exported from cells—was expressed in yeast. Galectin-1 was shown to be exported across the yeast plasma membrane by a novel mechanism that does not require the classical secretory pathway (Sec18p-dependent) nor the multidrug resistance-like transporter Ste6p (cleves1996anewpathway pages 1-2, cleves1996anewpathway pages 4-6). A genetic screen for components of this non-classical export machinery identified three genes: <em>NCE1</em>, <em>NCE2</em>, and <em>NCE3</em> (cleves1996anewpathway pages 4-6, cleves1996anewpathway pages 8-9).</p>
+<p><strong>NCE1</strong> (the <em>S. cerevisiae</em> ortholog of <em>S. pombe</em> nce101) encodes a small 53-amino acid protein. It was one of four novel proteins smaller than 100 amino acids identified in the screen. The NCE1 genomic sequence contains a 143-bp intron between nucleotides 32 and 33 of the cDNA (between the second and third nucleotide of the Lys11 codon), and its sequence was confirmed by homology to genomic sequence SCPRP21 on chromosome X (cleves1996anewpathway pages 6-6). The small size of the open reading frame and the presence of the intron likely explain why NCE1 was not originally annotated in the database sequence (cleves1996anewpathway pages 6-6).</p>
+<p>Regarding NCE1's precise role, the original investigators suggested that "the small NCE1 gene product may be part of the export machinery, or, along with the other low molecular weight proteins identified in the screen, may also be a substrate for nonclassical export" (cleves1996anewpathway pages 8-9). The exact mechanism by which NCE1 participates in non-classical export has not been definitively resolved.</p>
+<h2 id="3-critical-distinction-nce101-vs-nce102">3. Critical Distinction: NCE101 vs. NCE102</h2>
+<p>A key finding from this research is that NCE101 (Nce1) and NCE102 (Nce102/Nce2) are entirely distinct proteins that should not be conflated:</p>
+<ul>
+<li>
+<p><strong>NCE1/NCE101</strong> encodes a small ~53-amino acid protein belonging to the NCE101 family (PF11654). It was identified in the non-classical export screen but remains poorly characterized (cleves1996anewpathway pages 6-6).</p>
+</li>
+<li>
+<p><strong>NCE2/NCE102</strong> encodes a much larger 173-amino acid protein with four predicted transmembrane domains, belonging to the MARVEL-domain tetraspan protein family. It is extensively studied as a critical component of MCC (Membrane Compartment of Can1)/eisosome domains (cleves1996anewpathway pages 6-6, cleves1996anewpathway pages 6-8, athanasopoulos2019fungalplasmamembrane pages 6-7).</p>
+</li>
+</ul>
+<p>The following table summarizes the key differences between these two protein families:</p>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>NCE101/Nce1</th>
+<th>NCE102/Nce102</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene name (<em>S. cerevisiae</em>)</td>
+<td><strong>NCE1</strong>; small ORF first identified in a non-classical export screen (cleves1996anewpathway pages 4-6, cleves1996anewpathway pages 6-6)</td>
+<td><strong>NCE2 / NCE102</strong>; the better-characterized MCC/eisosome tetraspan protein (cleves1996anewpathway pages 6-8, grossmann2008plasmamembranemicrodomains pages 4-5, lanze2020plasmamembranemcceisosome pages 5-6)</td>
+</tr>
+<tr>
+<td>Gene name (<em>S. pombe</em>)</td>
+<td><strong>nce101</strong>; ORF <strong>SPAC12G12.17</strong> (UniProt annotation from prompt; family context supported by NCE1 literature) (cleves1996anewpathway pages 6-6)</td>
+<td><strong>fhn1</strong>; the fission-yeast Nce102 homolog (<strong>SpFhn1</strong>) (athanasopoulos2019fungalplasmamembrane pages 6-7)</td>
+</tr>
+<tr>
+<td>Protein size (amino acids)</td>
+<td><strong>53 aa</strong> in <em>S. cerevisiae</em> Nce1 (cleves1996anewpathway pages 6-6)</td>
+<td><strong>173 aa</strong> in <em>S. cerevisiae</em> Nce102/Nce2 (cleves1996anewpathway pages 6-6, cleves1996anewpathway pages 6-8)</td>
+</tr>
+<tr>
+<td>Domain/family</td>
+<td><strong>NCE101 family</strong>; fungal-specific family including PF11654 / IPR024242; poorly characterized experimentally (family assignment from prompt; primary literature establishes the NCE1 small-protein class) (cleves1996anewpathway pages 6-6)</td>
+<td><strong>MARVEL-domain / Nce102-family tetraspan membrane protein</strong> associated with MCC/eisosomes (athanasopoulos2019fungalplasmamembrane pages 6-7, lanze2020plasmamembranemcceisosome pages 5-6)</td>
+</tr>
+<tr>
+<td>Transmembrane domains</td>
+<td><strong>Not established directly in the cited primary literature</strong> for <em>S. cerevisiae</em> Nce1; small protein with limited structural characterization (cleves1996anewpathway pages 6-6)</td>
+<td><strong>4 transmembrane domains</strong> predicted for <em>S. cerevisiae</em> Nce102/Nce2 (cleves1996anewpathway pages 6-8, athanasopoulos2019fungalplasmamembrane pages 6-7)</td>
+</tr>
+<tr>
+<td>Subcellular localization</td>
+<td><strong>Unclear / poorly characterized</strong> for Nce1; original work did not define a precise localization (cleves1996anewpathway pages 8-9, cleves1996anewpathway pages 6-6)</td>
+<td><strong>Plasma membrane MCC/eisosome domain</strong>; localizes to plasma-membrane invaginations/furrows (kim2016theplasmamembrane pages 1-2, grossmann2008plasmamembranemicrodomains pages 2-4, lanze2020plasmamembranemcceisosome pages 5-6)</td>
+</tr>
+<tr>
+<td>Known function</td>
+<td>Implicated in <strong>non-classical protein export</strong>; may be part of export machinery or itself a non-classical export substrate, but remains poorly defined (cleves1996anewpathway pages 4-6, cleves1996anewpathway pages 8-9, cleves1996anewpathway pages 6-6)</td>
+<td><strong>Sphingolipid-responsive MCC/eisosome organizer and sensor</strong>; regulates transporter partitioning, endocytosis protection, and signaling linked to lipid homeostasis (frohlich2010analysisofsphingolipidsignaling pages 81-82, zahumensky2019roleofmcceisosome pages 7-9, athanasopoulos2019fungalplasmamembrane pages 8-9, grossmann2008plasmamembranemicrodomains pages 4-5)</td>
+</tr>
+<tr>
+<td>Role in eisosomes</td>
+<td><strong>No direct evidence for a defined eisosome role</strong>; should not be conflated with Nce102 (cleves1996anewpathway pages 8-9, cleves1996anewpathway pages 6-6)</td>
+<td><strong>Core functional MCC/eisosome protein</strong>; required for proper eisosome assembly and stability in budding yeast, and its homolog is required in fission yeast (athanasopoulos2019fungalplasmamembrane pages 6-7)</td>
+</tr>
+<tr>
+<td><em>S. pombe</em> ortholog name</td>
+<td><strong>nce101</strong> (same family/gene designation in fission yeast)</td>
+<td><strong>SpFhn1</strong> (the Nce102 homolog in fission yeast) (athanasopoulos2019fungalplasmamembrane pages 6-7)</td>
+</tr>
+<tr>
+<td>UniProt accession (<em>S. pombe</em>)</td>
+<td><strong>C6Y4B6</strong> (from prompt)</td>
+<td><strong>Not established in the cited contexts</strong></td>
+</tr>
+<tr>
+<td>Characterization status</td>
+<td><strong>Poorly characterized</strong>; literature is sparse and largely inferential beyond the original export screen (cleves1996anewpathway pages 8-9, cleves1996anewpathway pages 6-6)</td>
+<td><strong>Well characterized</strong> relative to Nce1; extensively studied in plasma-membrane domain and eisosome biology (frohlich2010analysisofsphingolipidsignaling pages 81-82, athanasopoulos2019fungalplasmamembrane pages 6-7, athanasopoulos2019fungalplasmamembrane pages 8-9, lanze2020plasmamembranemcceisosome pages 5-6)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table contrasts the poorly characterized NCE101/Nce1 family with the well-studied NCE102/Nce102 family in budding and fission yeast. It is useful for avoiding a common annotation error: Nce101 and Nce102 are distinct proteins with different sizes, families, and biological roles.</em></p>
+<h2 id="4-functional-annotation-by-inference-from-the-s-cerevisiae-ortholog">4. Functional Annotation by Inference from the S. cerevisiae Ortholog</h2>
+<h3 id="41-non-classical-protein-export">4.1 Non-Classical Protein Export</h3>
+<p>The primary function attributed to NCE101 family proteins derives from the Cleves et al. (1996) genetic screen. Overexpression of the <em>NCE1</em> cDNA (along with <em>NCE2</em>) caused a ~10-fold increase in galectin-1 export from a Δ<em>ste6</em> background, increasing high-pH-extractable galectin-1 from 0.5% to approximately 6.8% (cleves1996anewpathway pages 4-6). This indicates that NCE1 gene products affect the non-classical protein secretion machinery. The NCE1 gene was described as "involved in protein secretion" in subsequent transcriptomic studies (miura2006alargescalefulllength pages 4-5). However, it remains unclear whether NCE1 is a component of the export machinery itself or an indirect modulator.</p>
+<p>Non-classical protein export in yeast appears to involve redundant pathways. Deletion of individual components (such as NCE2 or STE6) does not eliminate all non-classical export, and the profile of exported proteins in <em>sec18</em>ts/<em>nce2</em>Δ double mutants was not significantly different from <em>sec18</em>ts alone (cleves1996anewpathway pages 8-9, cleves1996anewpathway pages 9-10). This redundancy makes it difficult to assign a precise mechanistic role to NCE1 alone.</p>
+<h3 id="42-possible-relationship-to-membrane-organization">4.2 Possible Relationship to Membrane Organization</h3>
+<p>While NCE102 (Nce102) is well-established as a critical MCC/eisosome protein in <em>S. cerevisiae</em>—functioning as a sphingolipid sensor that regulates eisosome assembly through inhibition of Pkh1/2 kinases (frohlich2010analysisofsphingolipidsignaling pages 81-82, athanasopoulos2019fungalplasmamembrane pages 6-7, athanasopoulos2019fungalplasmamembrane pages 8-9)—there is no direct evidence placing NCE101 in the eisosome complex. The MCC/eisosome literature consistently lists Nce102 (not Nce101) among the integral membrane proteins of the MCC domain, alongside Sur7 family tetraspans and nutrient transporters (grossmann2008plasmamembranemicrodomains pages 2-4, lanze2020plasmamembranemcceisosome pages 5-6).</p>
+<h2 id="5-context-in-s-pombe-eisosome-biology-and-membrane-organization">5. Context in <em>S. pombe</em>: Eisosome Biology and Membrane Organization</h2>
+<p>Although direct literature on <em>S. pombe</em> nce101 is essentially absent, the broader context of eisosome biology in fission yeast is relevant for understanding the cellular environment in which this protein may function.</p>
+<p>In <em>S. pombe</em>, eisosomes are multiprotein structures that generate linear invaginations at the plasma membrane (cansado2021thefissionyeast pages 6-8). The scaffold proteins Pil1 and Pil2 (Lsp1 homologs) are the core structural components, containing BAR domains that promote membrane curvature (athanasopoulos2019fungalplasmamembrane pages 5-6). The Nce102 homolog in <em>S. pombe</em> is called <strong>SpFhn1</strong>, and it is required for proper eisosome assembly—deletion of SpFhn1 reduces Pil1 foci to approximately 15% (athanasopoulos2019fungalplasmamembrane pages 6-7). SpFhn1, like <em>S. cerevisiae</em> Nce102, contains a conserved MARVEL transmembrane domain and is the only transmembrane protein known to be required for eisosome assembly (athanasopoulos2019fungalplasmamembrane pages 6-7).</p>
+<p>Eisosomes in <em>S. pombe</em> have been implicated in several cellular processes:</p>
+<ul>
+<li><strong>Membrane reservoir function</strong>: Eisosomes provide membrane reservoirs for rapid expansion of the plasma membrane.</li>
+<li><strong>Lipid homeostasis</strong>: MCC/eisosome domains form contact sites between the cortical endoplasmic reticulum and the plasma membrane, likely important for lipid homeostasis (lanze2020plasmamembranemcceisosome pages 16-17).</li>
+<li><strong>Cell integrity signaling</strong>: Eisosomes modulate the cell integrity pathway (CIP) through regulation of Rho2 localization and phosphoinositide turnover, affecting Pmk1 MAPK activation during osmotic stress (cansado2021thefissionyeast pages 6-8).</li>
+<li><strong>PI(4,5)P₂ regulation</strong>: MCC/eisosomes regulate PI(4,5)P₂ levels, which play a central role in recruiting plasma membrane components that regulate cell wall synthesis and morphogenesis (lanze2020plasmamembranemcceisosome pages 16-17).</li>
+</ul>
+<h2 id="6-domain-and-structural-considerations">6. Domain and Structural Considerations</h2>
+<p>The <em>S. pombe</em> Nce101 protein belongs to the NCE101 family (PF11654/IPR024242), a fungal-specific protein family. Based on the <em>S. cerevisiae</em> ortholog, the protein is small (~53 amino acids) and contains at least one predicted hydrophobic region, though the original study by Cleves et al. did not report transmembrane domain predictions for NCE1 (the four-transmembrane domain model was reported only for NCE2) (cleves1996anewpathway pages 6-6, cleves1996anewpathway pages 6-8). The small size of the protein and its association with a non-classical export pathway suggest it may function as either a small membrane-associated accessory factor or as a substrate for non-classical secretion.</p>
+<h2 id="7-subcellular-localization">7. Subcellular Localization</h2>
+<p>No direct experimental localization data for <em>S. pombe</em> Nce101 were identified in the literature surveyed. Based on its implication in non-classical export and its annotation as a membrane-associated protein, the protein likely localizes to the plasma membrane or is exported through non-classical mechanisms. However, this inference should be treated with caution in the absence of direct experimental evidence such as fluorescence microscopy or subcellular fractionation studies.</p>
+<h2 id="8-summary-and-limitations">8. Summary and Limitations</h2>
+<p>The <em>S. pombe</em> nce101 gene (SPAC12G12.17, UniProt C6Y4B6) encodes a small protein of the NCE101 family that is implicated in non-classical protein export based on studies of its <em>S. cerevisiae</em> ortholog. The gene was originally identified in a genetic screen for components of a novel protein secretion pathway that operates independently of the classical ER-Golgi secretory pathway and the Ste6p ABC transporter (cleves1996anewpathway pages 1-2, cleves1996anewpathway pages 8-9). The protein is <strong>distinct from Nce102</strong>, which is a well-characterized MARVEL-domain tetraspan protein critical for eisosome/MCC assembly and sphingolipid sensing. In <em>S. pombe</em>, the Nce102 homolog is SpFhn1, not Nce101.</p>
+<p><strong>Key limitations of this report</strong>: Direct experimental studies on <em>S. pombe</em> nce101 are essentially absent from the literature. The functional annotation is primarily inferred from the <em>S. cerevisiae</em> ortholog NCE1, which itself remains poorly characterized beyond its identification in the non-classical export screen. The precise biochemical function, subcellular localization, interaction partners, and pathway context of Nce101 in <em>S. pombe</em> remain open questions requiring targeted experimental investigation.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(cleves1996anewpathway pages 1-2): A E Cleves, D N Cooper, S H Barondes, and R B Kelly. A new pathway for protein export in saccharomyces cerevisiae. The Journal of Cell Biology, 133:1017-1026, Jun 1996. URL: https://doi.org/10.1083/jcb.133.5.1017, doi:10.1083/jcb.133.5.1017. This article has 269 citations.</p>
+</li>
+<li>
+<p>(cleves1996anewpathway pages 4-6): A E Cleves, D N Cooper, S H Barondes, and R B Kelly. A new pathway for protein export in saccharomyces cerevisiae. The Journal of Cell Biology, 133:1017-1026, Jun 1996. URL: https://doi.org/10.1083/jcb.133.5.1017, doi:10.1083/jcb.133.5.1017. This article has 269 citations.</p>
+</li>
+<li>
+<p>(cleves1996anewpathway pages 8-9): A E Cleves, D N Cooper, S H Barondes, and R B Kelly. A new pathway for protein export in saccharomyces cerevisiae. The Journal of Cell Biology, 133:1017-1026, Jun 1996. URL: https://doi.org/10.1083/jcb.133.5.1017, doi:10.1083/jcb.133.5.1017. This article has 269 citations.</p>
+</li>
+<li>
+<p>(cleves1996anewpathway pages 6-6): A E Cleves, D N Cooper, S H Barondes, and R B Kelly. A new pathway for protein export in saccharomyces cerevisiae. The Journal of Cell Biology, 133:1017-1026, Jun 1996. URL: https://doi.org/10.1083/jcb.133.5.1017, doi:10.1083/jcb.133.5.1017. This article has 269 citations.</p>
+</li>
+<li>
+<p>(cleves1996anewpathway pages 6-8): A E Cleves, D N Cooper, S H Barondes, and R B Kelly. A new pathway for protein export in saccharomyces cerevisiae. The Journal of Cell Biology, 133:1017-1026, Jun 1996. URL: https://doi.org/10.1083/jcb.133.5.1017, doi:10.1083/jcb.133.5.1017. This article has 269 citations.</p>
+</li>
+<li>
+<p>(athanasopoulos2019fungalplasmamembrane pages 6-7): Alexandros Athanasopoulos, Bruno André, Vicky Sophianopoulou, and Christos Gournas. Fungal plasma membrane domains. FEMS Microbiology Reviews, 43:642-673, Aug 2019. URL: https://doi.org/10.1093/femsre/fuz022, doi:10.1093/femsre/fuz022. This article has 96 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(grossmann2008plasmamembranemicrodomains pages 4-5): Guido Grossmann, Jan Malinsky, Wiebke Stahlschmidt, Martin Loibl, Ina Weig-Meckl, Wolf B. Frommer, Miroslava Opekarová, and Widmar Tanner. Plasma membrane microdomains regulate turnover of transport proteins in yeast. The Journal of Cell Biology, 183:1075-1088, Dec 2008. URL: https://doi.org/10.1083/jcb.200806035, doi:10.1083/jcb.200806035. This article has 284 citations.</p>
+</li>
+<li>
+<p>(lanze2020plasmamembranemcceisosome pages 5-6): Carla E. Lanze, Rafael M. Gandra, Jenna E. Foderaro, Kara A. Swenson, Lois M. Douglas, and James B. Konopka. Plasma membrane mcc/eisosome domains promote stress resistance in fungi. Nov 2020. URL: https://doi.org/10.1128/mmbr.00063-19, doi:10.1128/mmbr.00063-19. This article has 68 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kim2016theplasmamembrane pages 1-2): Hyung J. Kim, Mi-Young Jeong, Timothy J. Parnell, Markus Babst, John D. Phillips, and Dennis R. Winge. The plasma membrane protein nce102 implicated in eisosome formation rescues a heme defect in mitochondria. Journal of Biological Chemistry, 291:17417-17426, Aug 2016. URL: https://doi.org/10.1074/jbc.m116.727743, doi:10.1074/jbc.m116.727743. This article has 11 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(grossmann2008plasmamembranemicrodomains pages 2-4): Guido Grossmann, Jan Malinsky, Wiebke Stahlschmidt, Martin Loibl, Ina Weig-Meckl, Wolf B. Frommer, Miroslava Opekarová, and Widmar Tanner. Plasma membrane microdomains regulate turnover of transport proteins in yeast. The Journal of Cell Biology, 183:1075-1088, Dec 2008. URL: https://doi.org/10.1083/jcb.200806035, doi:10.1083/jcb.200806035. This article has 284 citations.</p>
+</li>
+<li>
+<p>(frohlich2010analysisofsphingolipidsignaling pages 81-82): Florian Fröhlich. Analysis of sphingolipid-signaling at the plasma membrane of saccharomyces cerevisiae. Dissertation, Jan 2010. URL: https://doi.org/10.5282/edoc.12051, doi:10.5282/edoc.12051. This article has 1 citations.</p>
+</li>
+<li>
+<p>(zahumensky2019roleofmcceisosome pages 7-9): Jakub Zahumensky and Jan Malinsky. Role of mcc/eisosome in fungal lipid homeostasis. Biomolecules, 9:305, Jul 2019. URL: https://doi.org/10.3390/biom9080305, doi:10.3390/biom9080305. This article has 51 citations.</p>
+</li>
+<li>
+<p>(athanasopoulos2019fungalplasmamembrane pages 8-9): Alexandros Athanasopoulos, Bruno André, Vicky Sophianopoulou, and Christos Gournas. Fungal plasma membrane domains. FEMS Microbiology Reviews, 43:642-673, Aug 2019. URL: https://doi.org/10.1093/femsre/fuz022, doi:10.1093/femsre/fuz022. This article has 96 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(miura2006alargescalefulllength pages 4-5): Fumihito Miura, Noriko Kawaguchi, Jun Sese, Atsushi Toyoda, Masahira Hattori, Shinichi Morishita, and Takashi Ito. A large-scale full-length cdna analysis to explore the budding yeast transcriptome. Proceedings of the National Academy of Sciences, 103:17846-17851, Nov 2006. URL: https://doi.org/10.1073/pnas.0605645103, doi:10.1073/pnas.0605645103. This article has 295 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(cleves1996anewpathway pages 9-10): A E Cleves, D N Cooper, S H Barondes, and R B Kelly. A new pathway for protein export in saccharomyces cerevisiae. The Journal of Cell Biology, 133:1017-1026, Jun 1996. URL: https://doi.org/10.1083/jcb.133.5.1017, doi:10.1083/jcb.133.5.1017. This article has 269 citations.</p>
+</li>
+<li>
+<p>(cansado2021thefissionyeast pages 6-8): José Cansado, Teresa Soto, Alejandro Franco, Jero Vicente-Soler, and Marisa Madrid. The fission yeast cell integrity pathway: a functional hub for cell survival upon stress and beyond. Journal of Fungi, 8:32, Dec 2021. URL: https://doi.org/10.3390/jof8010032, doi:10.3390/jof8010032. This article has 42 citations.</p>
+</li>
+<li>
+<p>(athanasopoulos2019fungalplasmamembrane pages 5-6): Alexandros Athanasopoulos, Bruno André, Vicky Sophianopoulou, and Christos Gournas. Fungal plasma membrane domains. FEMS Microbiology Reviews, 43:642-673, Aug 2019. URL: https://doi.org/10.1093/femsre/fuz022, doi:10.1093/femsre/fuz022. This article has 96 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lanze2020plasmamembranemcceisosome pages 16-17): Carla E. Lanze, Rafael M. Gandra, Jenna E. Foderaro, Kara A. Swenson, Lois M. Douglas, and James B. Konopka. Plasma membrane mcc/eisosome domains promote stress resistance in fungi. Nov 2020. URL: https://doi.org/10.1128/mmbr.00063-19, doi:10.1128/mmbr.00063-19. This article has 68 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="nce101-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>cleves1996anewpathway pages 6-6</li>
+<li>cleves1996anewpathway pages 8-9</li>
+<li>athanasopoulos2019fungalplasmamembrane pages 6-7</li>
+<li>cleves1996anewpathway pages 4-6</li>
+<li>miura2006alargescalefulllength pages 4-5</li>
+<li>cansado2021thefissionyeast pages 6-8</li>
+<li>athanasopoulos2019fungalplasmamembrane pages 5-6</li>
+<li>lanze2020plasmamembranemcceisosome pages 16-17</li>
+<li>cleves1996anewpathway pages 1-2</li>
+<li>cleves1996anewpathway pages 6-8</li>
+<li>grossmann2008plasmamembranemicrodomains pages 4-5</li>
+<li>lanze2020plasmamembranemcceisosome pages 5-6</li>
+<li>kim2016theplasmamembrane pages 1-2</li>
+<li>grossmann2008plasmamembranemicrodomains pages 2-4</li>
+<li>frohlich2010analysisofsphingolipidsignaling pages 81-82</li>
+<li>zahumensky2019roleofmcceisosome pages 7-9</li>
+<li>athanasopoulos2019fungalplasmamembrane pages 8-9</li>
+<li>cleves1996anewpathway pages 9-10</li>
+<li>https://doi.org/10.1083/jcb.133.5.1017,</li>
+<li>https://doi.org/10.1093/femsre/fuz022,</li>
+<li>https://doi.org/10.1083/jcb.200806035,</li>
+<li>https://doi.org/10.1128/mmbr.00063-19,</li>
+<li>https://doi.org/10.1074/jbc.m116.727743,</li>
+<li>https://doi.org/10.5282/edoc.12051,</li>
+<li>https://doi.org/10.3390/biom9080305,</li>
+<li>https://doi.org/10.1073/pnas.0605645103,</li>
+<li>https://doi.org/10.3390/jof8010032,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(nce101-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="C6Y4B6" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="nce101-spac12g1217-s-pombe-research-notes">nce101 (SPAC12G12.17) — S. pombe — research notes</h1>
+<p>Journal / provenance log for the AI GO-annotation review. This is an<br />
+<strong>understudied ("dark") gene</strong>: the fission yeast protein itself has <strong>no direct<br />
+experimental functional characterization</strong>. All conclusions below are grounded in<br />
+the UniProt record, the GOA annotation set, PomBase curation, family/orthology<br />
+data, and the single foundational budding-yeast paper that defines the family.</p>
+<h2 id="1-identity-and-sequence-facts-from-uniprot-c6y4b6-do-not-edit-that-file">1. Identity and sequence facts (from UniProt C6Y4B6; do not edit that file)</h2>
+<ul>
+<li>UniProt: <strong>C6Y4B6</strong> (NCE1_SCHPO), Reviewed/Swiss-Prot, <strong>58 aa</strong>, MW ~6998 Da.</li>
+<li>Gene: <code>nce101</code>; systematic/ORF name <code>SPAC12G12.17</code>; chromosome I.</li>
+<li><strong>PE 2: Evidence at transcript level</strong> — i.e., the protein's existence is inferred<br />
+  from transcript evidence; there is <strong>no protein-level experimental evidence</strong> for<br />
+  this specific ORF beyond transcript detection.</li>
+<li>Only two primary references on the UniProt entry, and neither characterizes function:</li>
+<li>PMID:11859360 — the S. pombe genome sequence (Wood et al., 2002) [genomic DNA].</li>
+<li>PMID:18488015 — transcriptome at single-nucleotide resolution (Wilhelm et al.,<br />
+    2008) [IDENTIFICATION; confirms the transcript exists].</li>
+<li>Domain / topology (UniProt):</li>
+<li><code>TRANSMEM 10..27 /note="Helical" /evidence=ECO:0000255</code> — a single predicted TM<br />
+    helix (sequence-analysis prediction, not experimentally determined topology).</li>
+<li><code>SUBCELLULAR LOCATION: Membrane {ECO:0000305}; Single-pass membrane protein
+    {ECO:0000305}</code> — inferred (ECO:0000305 = curator inference), not experimentally shown.</li>
+<li>Keywords: Membrane, Protein transport, Transmembrane, Transmembrane helix, Transport.</li>
+<li><code>FUNCTION: Involved in a novel pathway of export of proteins that lack a cleavable
+  signal sequence. May be part of the export machinery or may also be a substrate for
+  non-classical export (By similarity). {ECO:0000250}</code> — <strong>ECO:0000250 = inferred from<br />
+  sequence/structural similarity ("By similarity")</strong>, i.e. transferred from the<br />
+  S. cerevisiae ortholog, NOT measured in S. pombe. Note the explicit hedge:<br />
+  machinery <strong>OR</strong> substrate.</li>
+<li><code>SIMILARITY: Belongs to the NCE101 family {ECO:0000305}.</code></li>
+<li>Family/domain databases: InterPro <strong>IPR024242</strong> (NCE101), Pfam <strong>PF11654</strong> (NCE101),<br />
+  PANTHER <strong>PTHR28011 / PTHR28011:SF1</strong> ("NON-CLASSICAL EXPORT PROTEIN 1").</li>
+<li>No AlphaFold-derived functional annotation beyond a model in AlphaFoldDB; SMR entry.</li>
+</ul>
+<p>Sequence:<br />
+<code>MSQPYLISKW MDPLFGIFVG TYGYYLYEKE HRPRGRSLRE LALRKWNKQA VSQQSMKN</code> (58 aa)<br />
+The TM helix (res 10–27) is the single obvious feature. Because the TM segment is<br />
+N-terminal (not near the C-terminus), the topology is more consistent with a<br />
+signal-anchor / type-II-like single-pass membrane protein than with a tail-anchored<br />
+protein; the ~30-residue post-TM segment is short and enriched in basic/charged residues<br />
+(…RPRGRSLRELALRKWNKQ…). No diagnostic catalytic motif is present. The precise orientation<br />
+(N-in vs N-out) is not experimentally determined.</p>
+<h2 id="2-family-orthology-from-interpro-panther-interpropantherpthr28011">2. Family / orthology (from InterPro + PANTHER; interpro/panther/PTHR28011/)</h2>
+<ul>
+<li><strong>InterPro IPR024242 (NCE101)</strong> description (fetched from InterPro API):<br />
+  "This entry represents the non classical export protein 1 family. Family members<br />
+  are involved in a novel pathway of export of proteins that lack a cleavable signal<br />
+  sequence."</li>
+<li>PANTHER PTHR28011 "NON-CLASSICAL EXPORT PROTEIN 1": 275 proteins, 1 subfamily<br />
+  (PTHR28011:SF1), 729 taxa, 236 AlphaFold models, 0 experimental structures,<br />
+  0 associated pathways. Reviewed members captured: only <strong>2</strong>:</li>
+<li>C6Y4B6 (S. pombe nce101, 58 aa) — this gene.</li>
+<li><strong>Q02820 (S. cerevisiae NCE101, 53 aa)</strong> — the reference ortholog.</li>
+<li>So the family is small microproteins, essentially unstudied outside the founding paper.</li>
+</ul>
+<h2 id="3-the-founding-paper-pmid8655575-cleves-cooper-barondes-kelly-1996">3. The founding paper: PMID:8655575 (Cleves, Cooper, Barondes, Kelly, 1996)</h2>
+<p>"A new pathway for protein export in Saccharomyces cerevisiae", J Cell Biol.<br />
+(Full text read via Europe PMC / PMC2120850.)</p>
+<ul>
+<li>Screen design: a mammalian non-classically-secreted reporter (<strong>galectin-1</strong>) was<br />
+  expressed in yeast; a <strong>multicopy cDNA library</strong> screen looked for clones whose<br />
+  overexpression modulated non-classical export of galectin-1.</li>
+<li>NCE1 = "clone07"; NCE2 = "clone17":<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/8655575" title="We have named the clone07 and clone17 genes NCE1 and NCE2 (nonclassical   _export), respectively.">PMID:8655575</a></li>
+<li>NCE1 encodes a small protein: <a href="https://pubmed.ncbi.nlm.nih.gov/8655575" title="The NCE1 cDNA encodes a 53-amino">PMID:8655575</a> (53 aa<br />
+  in S. cerevisiae). It was "one of four novel proteins smaller than 100 amino acids<br />
+  identified in this screen."</li>
+<li><strong>Crucial ambiguity of function</strong> — the paper explicitly does NOT resolve whether NCE1<br />
+  is machinery or cargo: <a href="https://pubmed.ncbi.nlm.nih.gov/8655575" title="The small NCE1 gene product may be part of the   export machinery, or, along with the other low molecular weight proteins identified in   the screen, may also be a substrate for nonclassical export.">PMID:8655575</a><br />
+  This is the exact hedge preserved in the UniProt FUNCTION line.</li>
+<li>The paper's <strong>mechanistic/genetic characterization (transmembrane topology model, null<br />
+  allele, essentiality, suppression of ste6Δ) is done on NCE2, not NCE1.</strong> NCE2 is the<br />
+  4-TM candidate machinery component; NCE1 was left essentially uncharacterized beyond<br />
+  the overexpression phenotype.</li>
+<li>The overall claim: yeast has a signal-sequence-independent ("non-classical") protein<br />
+  export pathway distinct from the classical ER/Golgi secretory route:<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/8655575" title="These findings demonstrate a new pathway for protein export that is   distinct from the classical secretory pathway in yeast.">PMID:8655575</a></li>
+</ul>
+<p>Nomenclature caution: the yeast "NCE" genes are a tangle. The well-studied<br />
+S. cerevisiae <strong>NCE102</strong> (an MCC/eisosome plasma-membrane microdomain protein) descends<br />
+from the NCE2 story, NOT from NCE1. <strong>NCE101 (Q02820) is the small NCE1 clone</strong>, and<br />
+remains poorly characterized. Do not conflate nce101 with the eisosomal Nce102 literature.</p>
+<h2 id="4-s-cerevisiae-ortholog-q02820-nce101-nce1-yjl205c-source-of-the-iba">4. S. cerevisiae ortholog Q02820 (NCE101 / NCE1 / YJL205C) — source of the IBA</h2>
+<ul>
+<li>FUNCTION identical hedged wording, but attributed <strong>{ECO:0000269|PubMed:8655575}</strong><br />
+  (experimental, from the founding paper).</li>
+<li>GOA-relevant GO on Q02820:</li>
+<li>GO:0009306 protein secretion — <strong>IGI:SGD</strong> (inferred from genetic interaction; the<br />
+    1996 overexpression screen).</li>
+<li>GO:0016020 membrane — IEA (UniProtKB-SubCell).</li>
+<li>GO:0005829 cytosol — HDA:SGD (high-throughput; note this contradicts a strict<br />
+    membrane-only view and reflects that localization is not firmly established).</li>
+<li>So the <strong>entire "protein secretion" evidence chain for fission yeast nce101 is an IBA<br />
+  propagated from a budding-yeast gene whose own support is a single indirect<br />
+  overexpression/genetic screen with explicitly ambiguous interpretation</strong> (machinery vs<br />
+  substrate). It is a legitimate phylogenetic inference but should be treated as<br />
+  low-confidence and non-core.</li>
+</ul>
+<h2 id="5-pombase-curation-pombase-api-dataset-latest">5. PomBase curation (PomBase API, dataset latest)</h2>
+<ul>
+<li>product: "non-classical export protein family Nce101"</li>
+<li><strong>characterisation_status: <code>conserved unknown</code></strong> — PomBase's explicit flag that the<br />
+  biological role is not known (dark gene).</li>
+<li>Manual GO in MF / BP / CC aspects: <strong>none</strong> (empty) — consistent with no experimental<br />
+  functional data.</li>
+<li>12 single-locus phenotype annotations, all on the <strong><code>nce101delta</code> (deletion) genotype</strong>,<br />
+  all from large-scale chemical-genomics/drug-sensitivity profiling (no reference-specific,<br />
+  mechanistically diagnostic phenotype):</li>
+<li>resistance to: amorolfine, egtazic acid (EGTA), lithium / LiCl+SDS,<br />
+    MgCl2+SDS, KCl+SDS, methyl methanesulfonate (MMS), tert-butyl hydroperoxide.</li>
+<li>sensitive to: cadmium, diamide, valproic acid, vanadate.<br />
+  These are pleiotropic stress/drug phenotypes typical of genome-wide screens; they do<br />
+<strong>not</strong> point to a specific molecular function and are not GO-BP annotated by PomBase.</li>
+</ul>
+<h2 id="6-known-vs-not-known-synthesis">6. KNOWN vs NOT-KNOWN (synthesis)</h2>
+<p>KNOWN / defensible:<br />
+- It is a <strong>small (58 aa) membrane-associated microprotein</strong> with <strong>one predicted TM<br />
+  helix</strong> (sequence prediction; ECO:0000255/0000305). Membrane association is a<br />
+  reasonable, if not experimentally proven, localization.<br />
+- It is the S. pombe member of the <strong>NCE101 family</strong> (IPR024242 / PF11654 / PTHR28011),<br />
+  orthologous to S. cerevisiae NCE101.<br />
+- The transcript is expressed (PMID:18488015).<br />
+- Deletion gives only broad, pleiotropic chemical-stress phenotypes; the gene is<br />
+  non-essential-behaving in screens (viable deletion collection member).</p>
+<p>NOT known (genuine knowledge gaps):<br />
+- <strong>Molecular function is unknown.</strong> There is no biochemical activity, no ligand/substrate,<br />
+  no interaction partner, no catalytic motif. "protein transport"/"protein secretion" is a<br />
+  family-level inference from an indirect budding-yeast overexpression screen, and even<br />
+  there the founding authors could not distinguish whether the protein is part of the<br />
+  export <strong>machinery</strong> or is itself an export <strong>substrate/cargo</strong>.<br />
+- <strong>Biological process is unknown</strong> for the fission yeast gene specifically; the<br />
+  non-classical export pathway has not been demonstrated to operate through nce101 in<br />
+  S. pombe.<br />
+- <strong>Precise localization is unknown</strong> (membrane inferred; the S. cerevisiae ortholog is<br />
+  also annotated cytosol by HDA — conflicting).<br />
+- <strong>Topology/orientation</strong> (N-in vs N-out, tail-anchored vs signal-anchored) is not<br />
+  experimentally determined.<br />
+- No loss-of-function phenotype that isolates a specific pathway.</p>
+<h2 id="7-annotation-review-plan-for-nce101-ai-reviewyaml">7. Annotation-review plan (for nce101-ai-review.yaml)</h2>
+<p>Six GOA annotations:<br />
+1. GO:0009306 protein secretion — IBA (GO_REF:0000033; from PANTHER PTN001997334 / SGD<br />
+   S000003742). Defensible as a family-level phylogenetic inference but weak and NOT the<br />
+   demonstrated core function → <strong>KEEP_AS_NON_CORE</strong> (do not elevate to core; it is an<br />
+   inference from an indirect screen). Keep per "don't overrule phylogenetic annotation<br />
+   without positive evidence against it."<br />
+2. GO:0009306 protein secretion — IEA (GO_REF:0000002; InterPro IPR024242). Same term<br />
+   from InterPro2GO mapping of the family signature; redundant with the IBA and equally<br />
+   family-level → <strong>KEEP_AS_NON_CORE</strong>.<br />
+3. GO:0016020 membrane — IEA (GO_REF:0000044; UniProtKB-SubCell). Supported by the single<br />
+   predicted TM helix and Membrane keyword; uninformative-but-not-wrong root-ish CC.<br />
+   → <strong>KEEP_AS_NON_CORE</strong> (accurate but low-information; membrane is only predicted).<br />
+4. GO:0003674 molecular_function (root) — ND (GO_REF:0000015). Correct use of ND: MF is<br />
+   genuinely unknown → <strong>ACCEPT</strong> (this honestly records the knowledge gap).<br />
+5. GO:0005575 cellular_component (root) — ND. → <strong>ACCEPT</strong> (but see #3; PomBase ND may<br />
+   predate/parallel the SubCell membrane call).<br />
+6. GO:0008150 biological_process (root) — ND. → <strong>ACCEPT</strong>.</p>
+<p>core_functions: minimal — at most a single, low-confidence entry, or empty, because no MF<br />
+is established. Lean toward NOT asserting a molecular_function id we cannot support; the<br />
+honest position is that MF is unknown (captured by the ND annotation and knowledge_gaps).</p>
+<p>knowledge_gaps (REQUIRED, primary deliverable): unknown MF, unknown BP role in S. pombe,<br />
+unproven localization/topology, machinery-vs-substrate ambiguity, no LOF phenotype<br />
+isolating a pathway.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: C6Y4B6
+gene_symbol: nce101
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:284812
+  label: Schizosaccharomyces pombe (strain 972 / ATCC 24843)
+description: &gt;-
+  nce101 (SPAC12G12.17) is a small (58 amino acid) membrane-associated microprotein of
+  fission yeast and the sole S. pombe member of the NCE101 family (InterPro IPR024242,
+  Pfam PF11654, PANTHER PTHR28011), orthologous to Saccharomyces cerevisiae NCE101 (NCE1).
+  The protein carries a single predicted transmembrane helix (residues 10-27) and a short,
+  basic-residue-enriched C-terminal tail, features consistent with a single-pass membrane
+  protein, though its topology and precise subcellular localization have not been
+  experimentally determined. The founding member of the family, budding yeast NCE1, was
+  recovered in a genetic screen for factors affecting a signal-sequence-independent
+  (&#34;non-classical&#34;) protein export pathway, and the family is therefore annotated to protein
+  secretion/transport; the original study could not distinguish whether the small protein
+  is part of the export machinery or is itself a non-classically secreted substrate. No
+  molecular activity, interaction partner, or catalytic motif has been identified for the
+  S. pombe protein, and it is classified as a conserved protein of unknown biological role.
+  Genome-wide deletion profiling of the nce101 deletion reports only broad, pleiotropic
+  chemical-stress sensitivity and resistance phenotypes, none of which isolate a specific
+  molecular function.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000015
+  title: Use of the ND evidence code for Gene Ontology (GO) terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: PMID:11859360
+  title: The genome sequence of Schizosaccharomyces pombe.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Background genome reference: the source of the SPAC12G12.17 gene model on chromosome I.
+      Establishes the gene&#39;s existence but says nothing about its function.
+- id: PMID:18488015
+  title: Dynamic repertoire of a eukaryotic transcriptome surveyed at single-nucleotide
+    resolution.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Background transcriptome reference underlying the UniProt &#34;Evidence at transcript level&#34;
+      (PE 2) status; confirms the transcript is expressed but provides no functional evidence.
+- id: PMID:8655575
+  title: A new pathway for protein export in Saccharomyces cerevisiae.
+  findings:
+  - statement: &gt;-
+      Defines the non-classical (signal-sequence-independent) protein export pathway in
+      budding yeast and, through a genetic screen, identified the founding NCE genes
+      including NCE1/NCE101, the ortholog of S. pombe nce101. Establishes the family-level
+      basis for the protein secretion / protein transport annotations, but the paper&#39;s
+      molecular characterization is performed on NCE2, not on the small NCE1 gene product,
+      whose role (machinery versus exported substrate) was left unresolved.
+    supporting_text: &gt;-
+      A screen for components of the export machinery has identified genes that are
+      involved in nonclassical export. These findings demonstrate a new pathway for
+      protein export that is distinct from the classical secretory pathway in yeast.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified (Cleves et al., J Cell Biol 1996; PMC2120850); correctly the primary
+      source behind the NCE101 family and the IBA/InterPro protein secretion annotations.
+      Relevance is MEDIUM rather than HIGH because the S. pombe protein itself is not studied
+      here: the abstract (the only cached text; full_text_available is false) does not name
+      NCE1 individually, and in the full text NCE1 is one of four small proteins recovered in
+      an overexpression screen whose function (export machinery versus export substrate) is
+      explicitly left ambiguous.
+existing_annotations:
+- term:
+    id: GO:0009306
+    label: protein secretion
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) propagation of protein secretion across the NCE101 family (PANTHER
+      PTN001997334), seeded by S. cerevisiae NCE101 whose own annotation derives from the
+      Cleves et al. 1996 non-classical export screen (IGI:SGD, PMID:8655575). This is a
+      defensible family-level inference and there is no positive evidence against it, so it
+      is retained; however it is an indirect inference for a gene with no direct functional
+      data, and even in the founding study the protein&#39;s role (machinery versus substrate)
+      was ambiguous, so it should not be treated as an experimentally established core
+      function.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Reasonable phylogenetic inference for an uncharacterized family member, but not
+      demonstrated for the S. pombe protein and interpretively ambiguous at source; keep as
+      a non-core, low-confidence functional context rather than a core function.
+    additional_reference_ids:
+    - PMID:8655575
+    propagation_review:
+      root_cause: NO_FAILURE_NON_CORE
+      failure_modes:
+      - SOURCE_EVIDENCE_WEAK
+      source_entities:
+      - source_id: UniProtKB:Q02820
+        source_label: S. cerevisiae NCE101 (NCE1)
+        source_status: SOURCE_WEAK_OR_INFERRED
+        comment: &gt;-
+          Seed annotation is IGI from a single overexpression screen (PMID:8655575) in which
+          the small NCE1 protein&#39;s role was ambiguous (machinery versus exported substrate).
+- term:
+    id: GO:0009306
+    label: protein secretion
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      InterPro2GO mapping of the NCE101 family signature (IPR024242) to protein secretion.
+      This is the same family-level inference as the IBA annotation, mapped from the domain
+      model rather than the phylogenetic tree, and is redundant with it. Accurate at the
+      family level but uninformative about the specific molecular function of the S. pombe
+      protein.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct family-signature-to-GO mapping but redundant with the IBA and not evidence of
+      a demonstrated function; retain as non-core.
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Membrane localization mapped from the UniProtKB subcellular-location keyword, which
+      itself rests on a single predicted transmembrane helix (residues 10-27, ECO:0000255)
+      and the curator-inferred single-pass membrane assignment (ECO:0000305). Consistent with
+      the sequence but not experimentally verified; note the S. cerevisiae ortholog also
+      carries a cytosol (HDA) annotation, so the localization is not firmly established. This
+      is an accurate but low-information cellular-component term.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Localization is only predicted (single TM helix) and not experimentally confirmed; the
+      term is not wrong but is uninformative and non-core.
+- term:
+    id: GO:0003674
+    label: molecular_function
+  evidence_type: ND
+  original_reference_id: GO_REF:0000015
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Root molecular_function term with the ND (no biological data) evidence code, correctly
+      recording that no molecular function has been experimentally determined for nce101.
+      There is no biochemical activity, ligand, substrate, or catalytic motif described for
+      this protein or its family, so ND is the honest and appropriate annotation.
+    action: ACCEPT
+    reason: &gt;-
+      ND correctly captures a genuine molecular-function knowledge gap; retaining it is the
+      accurate curatorial choice for a dark gene.
+- term:
+    id: GO:0005575
+    label: cellular_component
+  evidence_type: ND
+  original_reference_id: GO_REF:0000015
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Root cellular_component term with ND evidence, from PomBase. The only localization
+      signal is the predicted transmembrane helix (captured separately by the UniProt SubCell
+      membrane IEA); no experimental localization has been reported, so PomBase&#39;s ND
+      annotation reflects the absence of curated CC evidence. Retained as an honest record of
+      the gap.
+    action: ACCEPT
+    reason: &gt;-
+      Accurately records that no experimentally supported cellular component is curated;
+      consistent with a conserved-unknown-function gene.
+- term:
+    id: GO:0008150
+    label: biological_process
+  evidence_type: ND
+  original_reference_id: GO_REF:0000015
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Root biological_process term with ND evidence. No biological process has been
+      experimentally established for the S. pombe gene; deletion phenotypes are limited to
+      broad, pleiotropic chemical-stress sensitivities and resistances that do not define a
+      specific pathway, and the family-level protein secretion inference is captured by the
+      IBA/IEA annotations. ND appropriately marks the absence of a curated process.
+    action: ACCEPT
+    reason: &gt;-
+      ND honestly records an unknown biological process; the pleiotropic drug phenotypes do
+      not support a specific BP annotation.
+core_functions:
+- description: &gt;-
+    No molecular function can be assigned with confidence. nce101 is a small single-pass
+    membrane microprotein of the NCE101 family whose only functional association, protein
+    secretion / non-classical protein export, is a family-level phylogenetic inference
+    (IBA/InterPro) transferred from budding yeast NCE101 and is interpretively ambiguous at
+    its experimental source (the founding study could not distinguish an export-machinery
+    role from an export-substrate role). No molecular_function term is asserted here because
+    none is supported by direct evidence; the molecular function is an open question (see
+    knowledge_gaps).
+  supported_by:
+  - reference_id: PMID:8655575
+    supporting_text: &gt;-
+      A screen for components of the export machinery has identified genes that are
+      involved in nonclassical export. These findings demonstrate a new pathway for
+      protein export that is distinct from the classical secretory pathway in yeast.
+knowledge_gaps:
+- gap_statement: &gt;-
+    The molecular function of nce101 is undetermined: no biochemical activity, ligand,
+    substrate, catalytic residue, or diagnostic sequence motif has been identified for the
+    protein or the NCE101 family.
+  boundary: &gt;-
+    The protein is a defined 58-aa NCE101-family member with a single predicted transmembrane
+    helix; its only functional association (protein secretion / non-classical export) is an
+    indirect inference from an overexpression/genetic screen of the S. cerevisiae ortholog,
+    in which the founding authors could not determine whether the small protein acts as part
+    of the export machinery or is itself a non-classically secreted substrate.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+- gap_statement: &gt;-
+    The biological process in which nce101 participates in S. pombe is unknown, and it has
+    not been shown that fission yeast operates a non-classical protein export pathway through
+    nce101.
+  boundary: &gt;-
+    Genome-wide deletion profiling of nce101-delta reports only broad, pleiotropic
+    chemical-stress phenotypes (sensitivity to cadmium, diamide, valproate and vanadate;
+    resistance to lithium, MMS, tert-butyl hydroperoxide, EGTA, amorolfine, and various
+    salt/SDS combinations) that do not point to a single pathway.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: BP_DARK
+  status: OPEN
+- gap_statement: &gt;-
+    The subcellular localization and membrane topology of Nce101 are experimentally
+    undetermined: it is unclear whether the protein is stably membrane-integral, which
+    membrane it occupies, and in what orientation (N-in versus N-out, signal-anchored versus
+    tail-anchored).
+  boundary: &gt;-
+    Membrane association is inferred solely from a single predicted transmembrane helix
+    (residues 10-27) and a curator-assigned single-pass membrane annotation; the
+    S. cerevisiae ortholog additionally carries a high-throughput cytosol annotation.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: CC_DARK
+  status: OPEN
+- gap_statement: &gt;-
+    No loss-of-function phenotype isolates a specific molecular or cellular role, and no
+    interacting partners, complex membership, or regulatory context are known; it is also
+    unresolved whether nce101 is functionally redundant with other small membrane
+    microproteins, which would mask deletion phenotypes.
+  boundary: &gt;-
+    A viable deletion strain exists and has been chemically profiled, but the resulting
+    phenotypes are pleiotropic and non-diagnostic.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: WHOLLY_DARK
+  status: OPEN
+suggested_questions:
+- question: &gt;-
+    Does S. pombe possess a non-classical (signal-sequence-independent) protein export
+    pathway, and if so does nce101 contribute to it?
+- question: &gt;-
+    Is nce101 a component of a transport/export machinery or is it itself a secreted or
+    membrane-cargo substrate, as the ambiguity in the founding budding-yeast study implies?
+- question: &gt;-
+    What is the true subcellular localization and membrane topology of the Nce101 protein?
+suggested_experiments:
+- experiment_type: Fluorescence microscopy and membrane fractionation
+  description: &gt;-
+    Determine the endogenous subcellular localization and membrane topology of Nce101 by
+    tagging (avoiding tag-induced mislocalization of a 58-aa protein), fluorescence
+    microscopy, and protease-protection / carbonate-extraction membrane fractionation.
+- experiment_type: Affinity purification / mass spectrometry and secretome analysis
+  description: &gt;-
+    Identify physical interaction partners by co-immunoprecipitation/mass spectrometry or
+    proximity labeling to test the export-machinery hypothesis, and perform secretome
+    analysis of nce101-delta versus wild type to test whether it affects non-classical
+    protein secretion.
+- experiment_type: Genetic / phenotypic characterization
+  description: &gt;-
+    Characterize nce101-delta (and combinations with related small membrane proteins, to
+    control for redundancy) under the stress conditions flagged by chemical-genomics screens
+    to connect the pleiotropic phenotypes to a defined cellular process.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

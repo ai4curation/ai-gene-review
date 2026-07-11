@@ -1,0 +1,3311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>nlp-29 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>nlp-29</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O44664" target="_blank" class="term-link">
+                        O44664
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Caenorhabditis elegans</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "nlp-29";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O44664" data-a="DESCRIPTION: nlp-29 encodes a small (73-residue) secreted precu..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>nlp-29 encodes a small (73-residue) secreted precursor of the YARP (YGGW-amide related peptide) / NLP-CNC antimicrobial-peptide family in Caenorhabditis elegans. The precursor carries an N-terminal signal peptide and is predicted to be processed on pairs of basic residues into several short, glycine/tyrosine-rich, C-terminally amidated peptides (QWGYGGY-amide, GYGGYGGY-amide and repeated GMYGGY/GMYGGW-amide motifs). It is produced in the epidermis (hyp7 syncytium), where its transcription is strongly and rapidly induced by infection with the natural fungal pathogen Drechmeria coniospora, by bacterial infection (Serratia marcescens), by sterile wounding, and by osmotic stress. Infection- and wound-induced expression requires an epidermal signaling cassette (a GPCR/G-protein and PKCdelta/TPA-1 input converging on the TIR-1/SARM-NSY-1-SEK-1-PMK-1 p38 MAPK cascade and the STAT-like factor STA-2 with SNF-12 and the GATA factor ELT-3), whereas the osmotic response is largely p38-independent. nlp-29 lies in a rapidly evolving, positively selected multigene cluster (nlp-27 to nlp-34) of co-regulated antimicrobial peptides that contribute to antifungal host defense. Beyond its role as a putative immune effector, secreted NLP-29 also acts as a cross-tissue signaling ligand for the neuronal orphan G protein-coupled receptor NPR-12, promoting protective sleep after wounding or infection and driving age- and infection-associated dendrite degeneration of PVD and FLP sensory neurons.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O44664" data-a="GO:0005576" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Localization to the extracellular region, mapped from the UniProt &#34;Secreted&#34; subcellular-location keyword. Consistent with the N-terminal signal peptide (residues 1-22) and with experimental evidence that epidermally produced NLP-29 acts non-cell-autonomously on distant neurons, implying it is secreted.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> NLP-29 is a signal-peptide-bearing secreted peptide; the SubCell-derived extracellular annotation is well supported. Secretion is corroborated experimentally because epidermally expressed NLP-29 must reach neurons expressing its receptor NPR-12 to signal.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29301098" target="_blank" class="term-link">
+                                        PMID:29301098
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">direct access to the epidermis was required for NPR-12 to receive NLP-29</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003674" target="_blank" class="term-link">
+                                    GO:0003674
+                                </a>
+                            </span>
+                            <span class="term-label">molecular_function</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="O44664" data-a="GO:0003674" data-r="GO_REF:0000015" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root molecular_function with the ND (&#34;no biological data&#34;) evidence code, a WormBase placeholder recorded in 2019 indicating no molecular-function data were curated at that time.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The ND root placeholder is uninformative and is now superseded: a specific molecular function (neuropeptide receptor binding, GO:0071855) is annotated and has since been experimentally corroborated by demonstration that NLP-29 is a ligand/agonist of the neuronal GPCR NPR-12. Per GO ND conventions, the root &#34;no data&#34; placeholder should be removed once informative molecular-function evidence exists.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29301098" target="_blank" class="term-link">
+                                        PMID:29301098
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">we conclude that NPR-12 is the receptor for NLP-29 in mediating aging-associated PVD dendrite degeneration</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISM</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11717458" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11717458
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification of neuropeptide-like protein gene families in...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O44664" data-a="GO:0005576" data-r="PMID:11717458" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sequence-model (ISM) prediction of extracellular localization, based on the preproprotein/signal-peptide architecture identified for the nlp genes. Redundant with the SubCell-derived IEA annotation but biologically valid.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The prediction is sound: NLP-29 has a cleavable signal peptide and is a processed, secreted peptide, consistent with an extracellular location. Retained as a valid duplicate of the SubCell IEA annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11717458" target="_blank" class="term-link">
+                                        PMID:11717458
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">peptidergic neurotransmitters are encoded as preproproteins that are posttranslationally processed to yield bioactive neuropeptides</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071855" target="_blank" class="term-link">
+                                    GO:0071855
+                                </a>
+                            </span>
+                            <span class="term-label">neuropeptide receptor binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISM</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11717458" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11717458
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification of neuropeptide-like protein gene families in...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O44664" data-a="GO:0071855" data-r="PMID:11717458" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Neuropeptide receptor binding, originally a family-based sequence-model prediction (NLP-29 was named for its similarity to YGGWamide neuropeptides). This prediction is now directly corroborated: synthetic NLP-29 activates the neuronal orphan GPCR NPR-12 (calcium mobilization in NPR-12-transfected cells, specific relative to the related peptide NLP-31 and to NPR-32/beta2-AR), and genetic epistasis places NLP-29 upstream of NPR-12 in both protective-sleep and dendrite-degeneration signaling.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the single molecular activity of NLP-29 with direct experimental support and represents a core function. The ISM annotation remains formally correct, and later work identifies NPR-12 as a bona fide NLP-29 receptor, upgrading confidence in the term without changing it. Retained as core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29301098" target="_blank" class="term-link">
+                                        PMID:29301098
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">induced a significant elevation of calcium, while the solvent-only control did not cause any changes</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33259791" target="_blank" class="term-link">
+                                        PMID:33259791
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">it acts through the neuropeptide receptor NPR-12 in locomotion-controlling neurons that are presynaptic to RIS and that depolarize this neuron to induce sleep</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050832" target="_blank" class="term-link">
+                                    GO:0050832
+                                </a>
+                            </span>
+                            <span class="term-label">defense response to fungus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18636113" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18636113
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Anti-fungal innate immunity in C. elegans is enhanced by evo...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="O44664" data-a="GO:0050832" data-r="PMID:18636113" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> nlp-29 is strongly and specifically induced in the epidermis by the natural fungal pathogen Drechmeria coniospora and belongs to a co-regulated antimicrobial-peptide cluster whose overexpression increases resistance to D. coniospora, supporting involvement in antifungal defense. This antifungal role is the flagship, most-studied aspect of nlp-29 biology and is captured by UniProt only as a keyword-derived IEA.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> A defense-response-to-fungus annotation for nlp-29 is well motivated by infection-induced expression plus cluster-level gain-of-function resistance, and matches the UniProt keyword annotation. Added as an expression/genetics-based (IEP) annotation. Important caveat: the nlp-29 single-gene null shows no marked resistance phenotype, so this is an involvement, not a demonstration of individual necessity (see knowledge gaps).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18636113" target="_blank" class="term-link">
+                                        PMID:18636113
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">These results indicate that the nlp genes can contribute in vivo to increased resistance to fungal infection, but probably not to osmotic stress.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15048112" target="_blank" class="term-link">
+                                        PMID:15048112
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We report here the identification of infection-inducible antimicrobial peptides in Caenorhabditis elegans.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007218" target="_blank" class="term-link">
+                                    GO:0007218
+                                </a>
+                            </span>
+                            <span class="term-label">neuropeptide signaling pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33259791" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33259791
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Innate Immunity Promotes Sleep through Epidermal Antimicrobi...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="O44664" data-a="GO:0007218" data-r="PMID:33259791" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NLP-29 acts as a secreted neuropeptide-like ligand in a cross-tissue signaling pathway: it activates the neuronal GPCR NPR-12, and nlp-29/npr-12 genetic epistasis places NLP-29 upstream of NPR-12 in sleep-promoting and dendrite-degeneration signaling.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The neuropeptide-signaling role is now experimentally supported (direct NPR-12 activation by synthetic NLP-29 and loss-of-function/epistasis phenotypes for sleep and dendrite degeneration), and matches the UniProt keyword-derived annotation. Added to capture the demonstrated signaling function alongside the antimicrobial-effector role.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33259791" target="_blank" class="term-link">
+                                        PMID:33259791
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">it acts through the neuropeptide receptor NPR-12 in locomotion-controlling neurons that are presynaptic to RIS and that depolarize this neuron to induce sleep</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29301098" target="_blank" class="term-link">
+                                        PMID:29301098
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">we conclude that NPR-12 is the receptor for NLP-29 in mediating aging-associated PVD dendrite degeneration</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Secreted epidermal antimicrobial peptide of the NLP/YARP cluster whose expression is induced by fungal (D. coniospora) and bacterial infection, wounding and osmotic stress; contributes to antifungal host defense as a member of the co-regulated nlp-27 to nlp-34 cluster. Direct microbicidal activity of the mature NLP-29 peptides has not itself been demonstrated, so there is no molecular-function term capturing an antimicrobial activity (see knowledge gaps).</h3>
+                <span class="vote-buttons" data-g="O44664" data-a="FUNCTION: Secreted epidermal antimicrobial peptide of the NL..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050832" target="_blank" class="term-link">
+                                defense response to fungus
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                extracellular region
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18636113" target="_blank" class="term-link">
+                                PMID:18636113
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">These results indicate that the nlp genes can contribute in vivo to increased resistance to fungal infection, but probably not to osmotic stress.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15048112" target="_blank" class="term-link">
+                                PMID:15048112
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Expression of two of these peptides, NLP-29 and NLP-31, was differentially regulated by fungal and bacterial infection and was controlled in part by tir-1</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Secreted NLP-29 also functions as a signaling ligand for the neuronal orphan GPCR NPR-12. This receptor interaction is demonstrated directly (calcium mobilization in NPR-12-expressing cells and genetic epistasis) and mediates cross-tissue neuroimmune signaling: it promotes protective sleep after wounding/infection and drives age- and infection-associated sensory dendrite degeneration.</h3>
+                <span class="vote-buttons" data-g="O44664" data-a="FUNCTION: Secreted NLP-29 also functions as a signaling liga..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071855" target="_blank" class="term-link">
+                            neuropeptide receptor binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007218" target="_blank" class="term-link">
+                                neuropeptide signaling pathway
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                extracellular region
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29301098" target="_blank" class="term-link">
+                                PMID:29301098
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">induced a significant elevation of calcium, while the solvent-only control did not cause any changes</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33259791" target="_blank" class="term-link">
+                                PMID:33259791
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">it acts through the neuropeptide receptor NPR-12 in locomotion-controlling neurons that are presynaptic to RIS and that depolarize this neuron to induce sleep</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000015.md" target="_blank" class="term-link">
+                            GO_REF:0000015
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Use of the ND evidence code for Gene Ontology (GO) terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11717458" target="_blank" class="term-link">
+                            PMID:11717458
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Identification of neuropeptide-like protein gene families in Caenorhabditiselegans and other species.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15048112" target="_blank" class="term-link">
+                            PMID:15048112
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TLR-independent control of innate immunity in Caenorhabditis elegans by the TIR domain adaptor protein TIR-1, an ortholog of human SARM.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18394898" target="_blank" class="term-link">
+                            PMID:18394898
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Distinct innate immune responses to infection and wounding in the C. elegans epidermis.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18636113" target="_blank" class="term-link">
+                            PMID:18636113
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Anti-fungal innate immunity in C. elegans is enhanced by evolutionary diversification of antimicrobial peptides.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19380113" target="_blank" class="term-link">
+                            PMID:19380113
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Antifungal innate immunity in C. elegans: PKCdelta links G protein signaling and a conserved p38 MAPK cascade.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/29301098" target="_blank" class="term-link">
+                            PMID:29301098
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">An Antimicrobial Peptide and Its Neuronal Receptor Regulate Dendrite Degeneration in Aging and Infection.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22870075" target="_blank" class="term-link">
+                            PMID:22870075
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The Origin and Function of Anti-Fungal Peptides in C. elegans: Open Questions.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33259791" target="_blank" class="term-link">
+                            PMID:33259791
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Innate Immunity Promotes Sleep through Epidermal Antimicrobial Peptides.</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Do the individual mature amidated NLP-29 peptides have intrinsic microbicidal activity against D. coniospora or S. marcescens in vitro, and if so by what mechanism?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Nathalie Pujol, Jonathan J. Ewbank</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="O44664" data-a="Q: Do the individual mature amidated NLP-29 peptides ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is any single nlp gene in the nlp-29 cluster individually required for pathogen resistance, or is the effector function fully redundant?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Nathalie Pujol, Jonathan J. Ewbank</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="O44664" data-a="Q: Is any single nlp gene in the nlp-29 cluster indiv..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Synthesize each predicted amidated NLP-29 peptide and the full-length mature peptide, and test dose-dependent inhibition of D. coniospora hyphal growth and S. marcescens viability in standard microbicidal/MIC assays, with membrane-permeabilization and nucleic-acid-binding readouts.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The mature NLP-29 peptides directly inhibit or kill fungi/bacteria.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: in vitro antimicrobial assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O44664" data-a="EXPERIMENT: Synthesize each predicted amidated NLP-29 peptide ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Generate precise single and higher-order CRISPR deletions across the nlp-27 to nlp-34 cluster and compare survival after D. coniospora infection, distinguishing single-gene necessity from cluster-level redundancy.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: nlp-29 contributes non-redundantly to antifungal survival only in combination with its cluster paralogs.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: combinatorial genetics / survival assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O44664" data-a="EXPERIMENT: Generate precise single and higher-order CRISPR de..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> Whether the mature amidated NLP-29 peptides themselves directly kill or inhibit microbes, and by what mechanism (membrane permeabilization, DNA binding as reported for the paralog NLP-31, or another target), has not been demonstrated. Every C. elegans study uses nlp-29 as an induced-expression readout, and the in-vivo antifungal evidence comes from overexpression of the whole nlp-29 cluster rather than a purified-peptide killing assay for NLP-29.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span><span class="badge">ONTOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> nlp-29 is a bona fide secreted AMP-family gene, strongly induced in the epidermis by fungal/bacterial infection and wounding, and overexpression of the nlp-29 cluster increases resistance to D. coniospora. Its one biochemically demonstrated molecular activity is as a ligand/agonist of the neuronal GPCR NPR-12, not a microbicidal activity.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> This is why nlp-29 carries no molecular-function annotation for antimicrobial activity: such activity is both unproven for NLP-29 itself and lacks an adequate GO molecular-function term. Closing it would define the effector arm of the flagship C. elegans epidermal immune pathway.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> In vitro microbicidal, membrane-permeabilization and nucleic-acid-binding assays with the individual synthetic mature NLP-29 peptides against D. coniospora and S. marcescens, plus structural characterization.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"These results indicate that the nlp genes can contribute in vivo to increased resistance to fungal infection, but probably not to osmotic stress."</em> — PMID:18636113</li>
+
+            </ul>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Proposed term (ontology gap):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><strong>antimicrobial peptide activity</strong> — Antimicrobial peptides such as NLP-29 and its cluster paralogs have no adequate GO molecular-function term for their effector activity; they are annotatable only at the process level (defense response) or as the uninformative &#39;protein binding&#39;, leaving them MF-dark despite a well-defined defensive role.</li>
+
+            </ul>
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The specific contribution of nlp-29 alone to pathogen resistance and survival is undetermined: the nlp-29(tm1931) null shows no marked change in resistance to D. coniospora, consistent with functional redundancy within the nlp-27 to nlp-34 cluster, so single-gene loss-of-function has not established necessity.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">RESIDUAL_SUBGAP</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Loss of upstream regulators (e.g. tir-1, pmk-1, sta-2) abolishes nlp-29 induction and reduces antifungal resistance, and cluster overexpression increases resistance; but these manipulate the signaling pathway or the whole AMP cluster, not nlp-29 individually.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Determines whether nlp-29 is an individually important effector or a redundant member of a buffered AMP battery, which is central to interpreting the widely used Pnlp-29 immune reporter.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Higher-order combinatorial deletions across the cluster and quantitative survival assays of precise single and compound nlp mutants under D. coniospora and S. marcescens challenge.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"When we assayed the survival of the null mutant strain nlp-29(tm1931), which cannot make any NLP-29, we saw no marked change in its resistance to D. coniospora infection nor its lifespan in the absence of infection"</em> — PMID:18636113</li>
+
+                <li><em>"this could reflect a redundancy in the function of single nlp genes in the nlp-29 cluster"</em> — PMID:18636113</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> It is unknown which of the several distinct amidated peptides cleaved from the NLP-29 precursor mediate antimicrobial activity versus which engage NPR-12, and the predicted proprotein processing and C-terminal amidation have not been directly demonstrated for NLP-29.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> The precursor sequence, signal peptide, predicted cleavage on paired basic residues and the Tyr/Trp-amidation motifs are annotated by UniProt sequence analysis; synthetic full-length NLP-29 peptide activates NPR-12 and induces dendrite degeneration, whereas the related NLP-31 does not.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Distinguishing effector peptides from signaling peptides within a single precursor would clarify whether the antimicrobial and neuroimmune functions of NLP-29 are molecularly separable.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Mass-spectrometric identification of the endogenous mature peptides and structure-activity assays of individual synthetic peptides against microbes and against NPR-12.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"To further confirm the essential role of NLP-29 in PVD dendrite degeneration, we microinjected synthetic NLP-29 peptide into control animals"</em> — PMID:29301098</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> Whether NLP-29&#39;s antimicrobial action is receptor-mediated or a direct physicochemical effect on microbes is unresolved. NPR-12 is the only demonstrated receptor and mediates host neuroimmune signaling (sleep, dendrite degeneration), not microbial killing, so any receptor or target underlying an effector function is unidentified.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> NPR-12 is a validated NLP-29 receptor for cross-tissue host signaling and is expressed in neurons, not microbes; no microbial or host target for a direct antimicrobial effect is known.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Clarifies whether the same peptide uses distinct molecular mechanisms for host signaling versus pathogen defense.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Target-identification (pulldown/photo-crosslinking) with labeled NLP-29 peptides on microbial and host membranes, and testing whether antimicrobial protection requires any host receptor.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"we conclude that NPR-12 is the receptor for NLP-29 in mediating aging-associated PVD dendrite degeneration"</em> — PMID:29301098</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(nlp-29-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O44664" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Comprehensive Research Report: NLP-29 (Neuropeptide-Like Protein 29) in *Caenorhabditis elegans*</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">43 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-03T21:42:09.501321</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="nlp-29-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="nlp-29-deep-research-falcon_artifacts/artifact-01.md" class="term-link">Edison artifact artifact-01</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="comprehensive-research-report-nlp-29-neuropeptide-like-protein-29-in-caenorhabditis-elegans">Comprehensive Research Report: NLP-29 (Neuropeptide-Like Protein 29) in <em>Caenorhabditis elegans</em></h1>
+<p><strong>Gene:</strong> <em>nlp-29</em> (B0213.4) | <strong>UniProt:</strong> O44664 | <strong>Organism:</strong> <em>Caenorhabditis elegans</em></p>
+<h2 id="1-geneprotein-identity-and-structure">1. Gene/Protein Identity and Structure</h2>
+<p>NLP-29 (Neuropeptide-Like Protein 29) is an antimicrobial peptide (AMP) encoded by the <em>nlp-29</em> gene on chromosome V of <em>C. elegans</em>. It belongs to the YARP (YGGW-amide related peptide) family and is synthesized as a precursor protein that is proteolytically processed to yield multiple mature amidated peptides, including QWGYGGY-amide, GYGGYGGY-amide, GMYGGY-amide, and GMYGGW-amide. The NLP-29 precursor contains an N-terminal signal peptide characteristic of secreted proteins (dierking2016antimicrobialeffectorsin pages 4-5). The mature NLP-29 peptide is 51 amino acids long with the sequence QWGYGGYGRGYGGYGGYGRGMYGGYGRGMYGGYGRGMYGGYGRGMYGGWGK, which is notably rich in glycine, tyrosine, and aromatic residues (e2018anantimicrobialpeptide pages 17-19). These structural features — a basic charge, glycine/tyrosine-rich composition, and C-terminal amidation — are hallmarks of antimicrobial peptides in the NLP class (dierking2016antimicrobialeffectorsin pages 4-5).</p>
+<h2 id="2-primary-function-epidermal-antimicrobial-defense">2. Primary Function: Epidermal Antimicrobial Defense</h2>
+<p>The primary function of NLP-29 is as an antimicrobial effector molecule in the epidermal innate immune response of <em>C. elegans</em>. NLP-29 is one of six AMP genes (nlp-27, nlp-28, nlp-29, nlp-30, nlp-31, and nlp-34) in the "nlp-29 cluster," which spans less than 12 kb on chromosome V (pujol2008antifungalinnateimmunity pages 2-3, dierking2016antimicrobialeffectorsin pages 4-5). Expression of these genes is strongly upregulated in the epidermis upon infection by the natural fungal pathogen <em>Drechmeria coniospora</em> (pujol2008antifungalinnateimmunity pages 10-11, pujol2012theoriginand pages 1-2). Transgenic worms carrying a cosmid that spans the nlp-29 locus demonstrated significantly increased resistance to <em>D. coniospora</em> infection compared to non-transgenic siblings (p &lt; 0.001 survival difference over 6 days), establishing that the nlp-29 cluster enhances pathogen resistance <em>in vivo</em> (pujol2008antifungalinnateimmunity pages 10-11). Overexpression of nlp AMPs more broadly also leads to increased resistance to fungal infection (pujol2012theoriginand pages 1-2).</p>
+<p>While direct antimicrobial assays on NLP-29 itself are limited, the closely related cluster member NLP-31 has been extensively characterized. Synthetic NLP-31 at 200 µM completely inhibits hyphal growth of <em>D. coniospora</em> in vitro, confirming direct antifungal activity (dierking2016antimicrobialeffectorsin pages 3-4). NLP-31 also demonstrates antibacterial activity against both Gram-positive (<em>Micrococcus luteus</em>) and Gram-negative (<em>E. coli</em>, <em>Burkholderia pseudomallei</em>) bacteria in a dose-dependent manner (lim2016nematodepeptideswith pages 8-9). Mechanistically, NLP-31 acts through a non-membranolytic mechanism: rather than disrupting cell membranes, the peptide binds DNA and interferes with bacterial DNA synthesis machinery, as evidenced by gel retardation assays and induction of cellular filamentation in treated bacteria (lim2016nematodepeptideswith pages 5-7, lim2016nematodepeptideswith pages 9-11). This DNA-binding activity is consistent with the glycine/tyrosine-rich composition shared across the nlp-29 cluster peptides (lim2016nematodepeptideswith pages 9-11).</p>
+<h2 id="3-tissue-localization-and-secretion">3. Tissue Localization and Secretion</h2>
+<p>NLP-29 is predominantly expressed in the <em>C. elegans</em> epidermis, specifically in the hyp7 syncytium, which comprises nearly all of the epidermal surface (pujol2008distinctinnateimmune pages 3-4, pujol2008distinctinnateimmune pages 2-3). This localization is significant because the epidermis is the first barrier tissue encountered by fungal pathogens such as <em>D. coniospora</em>, which infect through the cuticle (dierking2016antimicrobialeffectorsin pages 4-5). Using a <em>pnlp-29::GFP</em> fluorescent reporter construct, researchers have demonstrated that nlp-29 expression is induced in epidermal cells after both infection and wounding (pujol2008antifungalinnateimmunity pages 6-7, pujol2008distinctinnateimmune pages 2-3). After epidermal injury, GFP fluorescence appears within approximately 1 hour and is sustained for several hours before declining (pujol2008distinctinnateimmune pages 2-3).</p>
+<p>The presence of a signal peptide at the N-terminus indicates that NLP-29 is secreted from epidermal cells (dierking2016antimicrobialeffectorsin pages 4-5). Experimental evidence strongly supports its secreted nature: epidermally-produced NLP-29 acts non-cell-autonomously on distant PVD sensory neurons via the receptor NPR-12, and on locomotion-controlling interneurons in sleep circuits (e2018anantimicrobialpeptide pages 5-6, e2018anantimicrobialpeptide pages 7-8, sinner2021innateimmunitypromotes pages 1-4). Epidermis-specific expression using the <em>col-19</em> promoter is sufficient to rescue <em>nlp-29</em> mutant phenotypes, confirming that the epidermis is the functionally relevant tissue of origin (e2018anantimicrobialpeptide pages 5-6).</p>
+<h2 id="4-signaling-pathways-regulating-nlp-29-expression">4. Signaling Pathways Regulating NLP-29 Expression</h2>
+<p>The regulation of <em>nlp-29</em> involves a well-characterized signaling cascade that is among the best-studied innate immune pathways in <em>C. elegans</em>. Multiple stimuli — fungal infection, sterile wounding, and osmotic stress — induce <em>nlp-29</em> through overlapping but distinct signaling branches.</p>
+<h3 id="41-the-core-infectionwounding-pathway-dcar-1-p38-mapk-sta-2">4.1 The Core Infection/Wounding Pathway: DCAR-1 → p38 MAPK → STA-2</h3>
+<p>Upon fungal infection or epidermal damage, the endogenous ligand 4-hydroxyphenyllactic acid (HPLA) is detected by DCAR-1, a G protein-coupled receptor (GPCR) expressed in the epidermis (dierking2016antimicrobialeffectorsin pages 4-5, taffoni2015mechanismsofinnate pages 5-6, zugasti2016aquantitativegenomewide pages 5-6). DCAR-1 activates the Gα protein GPA-12 and the scaffolding protein RACK-1, which in turn activate TPA-1, a PKCδ family protein kinase (taffoni2015mechanismsofinnate pages 5-6, kim2018signalinginthe pages 9-12). TPA-1 signals downstream to the TIR-1 adaptor protein (an ortholog of mammalian SARM), which activates the core p38 MAPK cascade consisting of NSY-1 (MAP3K) → SEK-1 (MAP2K) → PMK-1 (p38 MAPK) (taffoni2015mechanismsofinnate pages 5-6, kim2018signalinginthe pages 9-12, pujol2008antifungalinnateimmunity pages 3-5, pujol2008distinctinnateimmune pages 3-4). This pathway acts cell-autonomously within the epidermis; expression of <em>sek-1</em> specifically in the epidermis is sufficient to restore <em>nlp-29::GFP</em> expression in <em>sek-1</em> mutants (pujol2008distinctinnateimmune pages 4-5).</p>
+<p>At the transcriptional level, the STAT-like transcription factor STA-2 is a critical effector downstream of PMK-1 and is a potential direct substrate of activated PMK-1 (kim2018signalinginthe pages 9-12). STA-2 inactivation completely abolishes infection-induced <em>nlp-29</em> and <em>cnc-2</em> upregulation (zhang2015structuraldamagein pages 6-7). The GATA transcription factor ELT-3 is also required for <em>nlp</em> transcription (taffoni2015mechanismsofinnate pages 5-6). Interestingly, STA-2 has been found to localize to apical membrane attachment structures (hemidesmosomes/CeHDs) in the epidermis, where it may serve as a sensor of structural integrity; upon structural damage, STA-2 is released to activate AMP gene expression (zhang2015structuraldamagein pages 6-7).</p>
+<h3 id="42-infection-specific-regulation-by-nipi-3">4.2 Infection-Specific Regulation by NIPI-3</h3>
+<p>The Tribbles-like kinase NIPI-3 is required specifically for infection-induced <em>nlp-29</em> expression but is dispensable for wound-induced expression, thereby distinguishing infection from damage responses (pujol2008distinctinnateimmune pages 4-5, pujol2008distinctinnateimmune pages 3-4). NIPI-3 acts upstream of both TPA-1 and the p38 MAPK pathway specifically upon fungal infection (taffoni2015mechanismsofinnate pages 5-6). Mutants in <em>nipi-3</em> show reduced resistance to fungal infection and shortened lifespan (pujol2008distinctinnateimmune pages 4-5).</p>
+<h3 id="43-the-dbl-1tgf-pathway">4.3 The DBL-1/TGF-β Pathway</h3>
+<p>A parallel regulatory input comes from the neuronally-derived TGF-β ligand DBL-1 signaling through a noncanonical pathway. This pathway, described by Zugasti and Ewbank (2009) in <em>Nature Immunology</em>, primarily regulates the <em>cnc</em> (caenacin) class of AMP genes rather than the <em>nlp-29</em> cluster itself. Notably, <em>dbl-1</em> is not required for upregulation of <em>nlp-29</em> cluster genes following <em>D. coniospora</em> infection (zugasti2009neuroimmuneregulationof pages 5-11). However, both the p38 MAPK pathway and the DBL-1/TGF-β-SMAD signaling pathway contribute to sleep-promoting functions downstream of AMP expression (sinner2021innateimmunitypromotes pages 8-9). The TGF-β pathway component SMA-6 must function in the epidermis for proper AMP gene regulation (zugasti2009neuroimmuneregulationof pages 5-11, taffoni2015mechanismsofinnate pages 5-6).</p>
+<h3 id="44-osmotic-stress-a-p38-mapk-independent-branch">4.4 Osmotic Stress: A p38 MAPK-Independent Branch</h3>
+<p>Osmotic stress also induces <em>nlp-29</em> expression, but this response is independent of the p38 MAPK cascade (PMK-1) (pujol2008antifungalinnateimmunity pages 10-11). Importantly, ELT-3 is still required for osmotic-stress-induced <em>nlp-29</em> expression, indicating that the osmotic and infection pathways converge at the level of transcription factors even though they diverge upstream (taffoni2015mechanismsofinnate pages 5-6).</p>
+<p>The following table summarizes the components of the signaling pathway regulating <em>nlp-29</em>:</p>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Type/Function</th>
+<th>Role in <em>nlp-29</em> regulation</th>
+<th>Specificity (infection/wounding/osmotic stress)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HPLA</td>
+<td>Endogenous damage-associated ligand (4-hydroxyphenyllactic acid)</td>
+<td>Activates the upstream receptor DCAR-1 to trigger epidermal innate immune signaling leading to AMP induction including <em>nlp-29</em> (dierking2016antimicrobialeffectorsin pages 4-5, taffoni2015mechanismsofinnate pages 5-6)</td>
+<td>Infection and wounding; not established as the osmotic-stress signal for <em>nlp-29</em> (dierking2016antimicrobialeffectorsin pages 4-5, taffoni2015mechanismsofinnate pages 5-6)</td>
+</tr>
+<tr>
+<td>DCAR-1</td>
+<td>GPCR receptor</td>
+<td>Functions at the top of the epidermal AMP pathway; acts upstream of GPA-12/RACK-1 and TPA-1 to induce <em>nlp-29</em> after fungal infection or epidermal injury (taffoni2015mechanismsofinnate pages 5-6, zugasti2016aquantitativegenomewide pages 5-6)</td>
+<td>Infection and wounding; not implicated in the p38-independent osmotic-stress branch (taffoni2015mechanismsofinnate pages 5-6, zugasti2016aquantitativegenomewide pages 5-6)</td>
+</tr>
+<tr>
+<td>GPA-12</td>
+<td>Gα protein</td>
+<td>Acts downstream of DCAR-1 and upstream of TPA-1/TIR-1-p38 MAPK; epidermal activation is sufficient to promote <em>nlp-29</em> expression (taffoni2015mechanismsofinnate pages 5-6, kim2018signalinginthe pages 9-12)</td>
+<td>Infection and wounding; no evidence here for osmotic-stress-specific control (taffoni2015mechanismsofinnate pages 5-6, kim2018signalinginthe pages 9-12)</td>
+</tr>
+<tr>
+<td>RACK-1</td>
+<td>Scaffolding/signaling adaptor</td>
+<td>Acts with/near GPA-12 upstream of TPA-1 in the epidermal signaling cascade that induces <em>nlp</em> AMP genes including <em>nlp-29</em> (taffoni2015mechanismsofinnate pages 5-6)</td>
+<td>Infection and wounding; osmotic-stress role not defined in the cited evidence (taffoni2015mechanismsofinnate pages 5-6)</td>
+</tr>
+<tr>
+<td>TPA-1</td>
+<td>PKCδ family protein kinase</td>
+<td>Key upstream kinase required to relay GPCR/G protein signaling to the TIR-1–NSY-1–SEK-1–PMK-1 cascade for <em>nlp-29</em> induction (taffoni2015mechanismsofinnate pages 5-6, kim2018signalinginthe pages 9-12)</td>
+<td>Infection and wounding; not part of the known p38-independent osmotic branch (taffoni2015mechanismsofinnate pages 5-6, kim2018signalinginthe pages 9-12)</td>
+</tr>
+<tr>
+<td>NIPI-3</td>
+<td>Tribbles-like kinase/regulator</td>
+<td>Infection-specific regulator acting upstream of both TPA-1 and the p38 MAPK cassette; required for full <em>nlp-29</em> induction after fungal infection but dispensable for wound-induced expression (taffoni2015mechanismsofinnate pages 5-6, pujol2008distinctinnateimmune pages 4-5, pujol2008distinctinnateimmune pages 3-4)</td>
+<td>Infection-specific; not required for wounding response; no osmotic-stress role established here (taffoni2015mechanismsofinnate pages 5-6, pujol2008distinctinnateimmune pages 4-5, pujol2008distinctinnateimmune pages 3-4)</td>
+</tr>
+<tr>
+<td>TIR-1</td>
+<td>TIR-domain adaptor protein</td>
+<td>Adaptor upstream of NSY-1/SEK-1/PMK-1; essential for epidermal innate immune induction of <em>nlp-29</em> after infection and wounding (kim2018signalinginthe pages 9-12, pujol2008antifungalinnateimmunity pages 3-5, pujol2008distinctinnateimmune pages 3-4)</td>
+<td>Infection and wounding; not required for the p38-independent osmotic response (by inference from pathway separation) (kim2018signalinginthe pages 9-12, pujol2008antifungalinnateimmunity pages 3-5)</td>
+</tr>
+<tr>
+<td>NSY-1</td>
+<td>MAP3K</td>
+<td>MAP kinase kinase kinase in the core p38 cascade downstream of TIR-1; required for <em>nlp-29</em> induction (taffoni2015mechanismsofinnate pages 5-6, pujol2008antifungalinnateimmunity pages 3-5)</td>
+<td>Infection and wounding; not part of the osmotic-stress branch (taffoni2015mechanismsofinnate pages 5-6, pujol2008antifungalinnateimmunity pages 3-5)</td>
+</tr>
+<tr>
+<td>SEK-1</td>
+<td>MAP2K</td>
+<td>MAP kinase kinase in the p38 pathway; acts cell-autonomously in the epidermis and is sufficient there to restore <em>nlp-29</em> reporter induction in mutants (pujol2008distinctinnateimmune pages 4-5, pujol2008distinctinnateimmune pages 3-4)</td>
+<td>Infection and wounding; no evidence for osmotic-stress dependence (pujol2008distinctinnateimmune pages 4-5, pujol2008distinctinnateimmune pages 3-4)</td>
+</tr>
+<tr>
+<td>PMK-1</td>
+<td>p38 MAPK</td>
+<td>Terminal MAPK of the core innate immune cascade; required for infection- and wound-induced <em>nlp-29</em> expression, and high constitutive <em>nlp-29</em> in epidermal damage backgrounds is largely PMK-1-dependent (pujol2008antifungalinnateimmunity pages 10-11, kim2018signalinginthe pages 9-12, pujol2008antifungalinnateimmunity pages 3-5)</td>
+<td>Infection and wounding; notably dispensable for osmotic-stress-induced <em>nlp-29</em> expression (pujol2008antifungalinnateimmunity pages 10-11, kim2018signalinginthe pages 9-12)</td>
+</tr>
+<tr>
+<td>STA-2</td>
+<td>STAT-like transcription factor</td>
+<td>Essential transcriptional effector downstream of/with PMK-1 for <em>nlp-29</em> expression; also mediates AMP induction after structural epidermal damage and can be regulated at apical attachment structures (taffoni2015mechanismsofinnate pages 5-6, kim2018signalinginthe pages 9-12, zhang2015structuraldamagein pages 6-7)</td>
+<td>Infection and wounding/structural damage; no specific osmotic-stress role established in the cited evidence (taffoni2015mechanismsofinnate pages 5-6, zhang2015structuraldamagein pages 6-7)</td>
+</tr>
+<tr>
+<td>ELT-3</td>
+<td>GATA transcription factor</td>
+<td>Required transcription factor for <em>nlp</em> AMP transcription, including <em>nlp-29</em>; notably shared between fungus-induced and osmotic-stress-induced regulation, even though the latter is PMK-1-independent (taffoni2015mechanismsofinnate pages 5-6, pujol2008antifungalinnateimmunity pages 10-11)</td>
+<td>Infection and osmotic stress; likely contributes to wound-responsive epidermal AMP transcription as a shared epidermal regulator (taffoni2015mechanismsofinnate pages 5-6, pujol2008antifungalinnateimmunity pages 10-11)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the best-supported epidermal signaling cascade controlling </em>nlp-29<em> expression in </em>C. elegans<em>, from upstream ligand/receptor inputs to downstream transcription factors. It also distinguishes which components are specific to fungal infection or wounding versus the separate osmotic-stress branch.</em></p>
+<h2 id="5-downstream-signaling-nlp-29-as-a-neuroimmune-signal">5. Downstream Signaling: NLP-29 as a Neuroimmune Signal</h2>
+<p>Beyond its direct antimicrobial function, NLP-29 has emerged as an important neuroimmune signaling molecule with at least two well-characterized downstream functions:</p>
+<h3 id="51-dendrite-degeneration">5.1 Dendrite Degeneration</h3>
+<p>E et al. (2018) demonstrated in <em>Neuron</em> that epidermally secreted NLP-29 promotes age- and infection-associated degeneration of PVD sensory neuron dendrites. NLP-29 acts through the neuropeptide receptor NPR-12, which is expressed on PVD neurons (e2018anantimicrobialpeptide pages 10-11). The NLP-29–NPR-12 interaction activates autophagy pathways cell-autonomously in neurons, leading to dendritic morphology changes (e2018anantimicrobialpeptide pages 10-11). Epidermis-specific knockdown of <em>nlp-29</em> delayed PVD dendrite degeneration, while epidermal overexpression using the <em>col-19</em> promoter induced early-onset degeneration (e2018anantimicrobialpeptide pages 5-6, e2018anantimicrobialpeptide pages 7-8). This finding reveals that the progressive upregulation of <em>nlp-29</em> during aging contributes to neuronal aging phenotypes.</p>
+<h3 id="52-sleep-promotion">5.2 Sleep Promotion</h3>
+<p>Sinner et al. (2021) showed that NLP-29 functions as a somnogen — a sleep-promoting molecule. Upon immune activation, wounding, or during developmental lethargus (larval sleep), epidermally-produced AMPs including NLP-29 are released and signal through NPR-12 on locomotion-controlling interneurons (PVC, RIM) that synapse onto the RIS sleep-active neuron (sinner2021innateimmunitypromotes pages 1-4, sinner2021innateimmunitypromotes pages 10-11). NLP-29 overexpression increased movement quiescence to 93.3%, and this effect was suppressed by approximately 50% when NPR-12 was knocked out (sinner2021innateimmunitypromotes pages 10-11). The sleep-promoting function requires EGFR signaling in neurons (sinner2021innateimmunitypromotes pages 10-11). Animals lacking multiple <em>nlp</em> and <em>cnc</em> AMP genes showed both impaired sleep and significantly reduced survival after injury, indicating that AMP-mediated sleep promotion is adaptive (sinner2021innateimmunitypromotes pages 11-12). NLP-29 expression correlates with sleep duration, and the NAS-38 metalloprotease promotes sleep by increasing epidermal AMP expression including <em>nlp-29</em> through both the p38 MAPK and DBL-1/TGF-β-SMAD pathways (sinner2021innateimmunitypromotes pages 8-9, sinner2021innateimmunitypromotes pages 5-8).</p>
+<p>The following table summarizes the major biological functions of NLP-29:</p>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Description</th>
+<th>Key Evidence</th>
+<th>References</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Antimicrobial defense</td>
+<td>NLP-29 is an epidermally induced antimicrobial peptide (AMP) in the nlp-29 cluster that contributes to antifungal defense, especially against the natural pathogen <em>Drechmeria coniospora</em>. The primary function supported by genetics is host defense after epidermal infection.</td>
+<td>The nlp-29 cluster is strongly induced by fungal infection; transgenic worms carrying a cosmid spanning the nlp-29 locus showed significantly increased resistance to <em>D. coniospora</em> infection in vivo. Reviews of nematode AMPs classify NLP-29 as a bona fide AMP in epidermal innate immunity.</td>
+<td>(pujol2008antifungalinnateimmunity pages 10-11, pujol2012theoriginand pages 1-2, dierking2016antimicrobialeffectorsin pages 4-5)</td>
+</tr>
+<tr>
+<td>Dendrite degeneration regulation</td>
+<td>Beyond host defense, secreted epidermal NLP-29 functions as a neuroimmune signal that promotes age- and infection-associated degeneration of PVD sensory dendrites by acting on the neuronal receptor NPR-12.</td>
+<td>Epidermis-specific knockdown of <em>nlp-29</em> delayed PVD dendrite degeneration, whereas epidermal expression restored the phenotype. Exogenous or overexpressed NLP-29 induced degeneration through NPR-12 and downstream autophagy-related mechanisms in neurons.</td>
+<td>(e2018anantimicrobialpeptide pages 10-11, e2018anantimicrobialpeptide pages 5-6, e2018anantimicrobialpeptide pages 7-8)</td>
+</tr>
+<tr>
+<td>Sleep promotion</td>
+<td>NLP-29 also acts as a somnogenic immune signal: epidermally produced NLP-29 promotes movement quiescence/sleep by signaling through NPR-12 in neurons upstream of the RIS sleep neuron.</td>
+<td>Overexpression of <em>nlp-29</em> increased movement quiescence, and loss of <em>npr-12</em> substantially suppressed this effect. Immune activation and wounding induce AMP expression, including <em>nlp-29</em>, and animals lacking AMP genes show reduced sleep and reduced survival after injury.</td>
+<td>(sinner2021innateimmunitypromotes pages 8-9, sinner2021innateimmunitypromotes pages 11-12, sinner2021innateimmunitypromotes pages 9-10, sinner2021innateimmunitypromotes pages 10-11)</td>
+</tr>
+<tr>
+<td>Wound response</td>
+<td><em>nlp-29</em> is rapidly induced in the epidermis after sterile epidermal injury, making it part of the acute wound-response program as well as the infection response.</td>
+<td>A <em>pnlp-29::GFP</em> reporter is induced within about 1 hour after epidermal wounding and remains elevated for several hours. The wound-induced response occurs in epidermal cells/hyp7 and depends on the epidermal p38 MAPK immune pathway.</td>
+<td>(pujol2008antifungalinnateimmunity pages 6-7, pujol2008distinctinnateimmune pages 3-4, pujol2008distinctinnateimmune pages 2-3)</td>
+</tr>
+<tr>
+<td>Osmotic stress response</td>
+<td><em>nlp-29</em> is also activated by osmotic stress and epidermal damage states, showing that it is a broader epidermal stress-response effector, not only an infection marker. This osmotic-stress induction is largely independent of the canonical PMK-1/p38 infection pathway but still requires epidermal transcriptional control.</td>
+<td>The nlp-29 cluster is induced under high osmolarity conditions; this induction differs from fungus-induced expression because it does not require the p38 MAPK cascade, while shared epidermal regulators such as ELT-3 remain important. <em>nlp-28</em> and <em>nlp-29</em> are specifically highlighted as strongly osmotic-stress inducible members of the cluster.</td>
+<td>(pujol2012theoriginand pages 1-2, taffoni2015mechanismsofinnate pages 5-6, pujol2008antifungalinnateimmunity pages 7-9)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the major experimentally supported biological functions of NLP-29 in </em>C. elegans<em>, spanning innate immunity, neuroimmune signaling, wound responses, and stress responses. It is useful for distinguishing NLP-29's primary antimicrobial role from its later-discovered signaling functions.</em></p>
+<h2 id="6-evolutionary-diversification">6. Evolutionary Diversification</h2>
+<p>The <em>nlp-29</em> gene cluster has undergone rapid evolutionary diversification driven by natural selection from pathogen pressure. In <em>C. elegans</em>, the ancestral <em>nlp-27</em> gene expanded to five genes (nlp-28 through nlp-31), while in <em>C. briggsae</em> the ancestral <em>nlp-34</em> expanded to three genes (pujol2008antifungalinnateimmunity pages 7-9). Comparative analysis across <em>C. elegans</em>, <em>C. briggsae</em>, <em>C. remanei</em>, and <em>C. japonica</em> reveals species-specific patterns of gene duplication and loss, with <em>C. japonica</em> having 10 predicted paralogs from a single <em>C. remanei</em> gene (pujol2012theoriginand pages 1-2). Phylogenetic analysis using dN/dS ratios demonstrates that non-synonymous changes are favored over synonymous changes in several branches, indicative of positive Darwinian selection (pujol2008antifungalinnateimmunity pages 10-10). The <em>nlp-28</em> and <em>nlp-29</em> genes are <em>C. elegans</em>-specific and show distinctive regulation, being upregulated by infection, wounding, and osmotic stress (pujol2008antifungalinnateimmunity pages 7-9). This rapid evolutionary diversification, driven by intra-genomic gene duplication and adaptive sequence evolution, suggests that selective pressure from pathogens has shaped the AMP repertoire (pujol2008antifungalinnateimmunity pages 1-2).</p>
+<h2 id="7-summary">7. Summary</h2>
+<p>NLP-29 is a multifunctional glycine/tyrosine-rich antimicrobial peptide produced in the <em>C. elegans</em> epidermis. Its primary function is as an effector of epidermal innate immunity against fungal pathogens, where it contributes to host defense as part of a cluster of co-regulated AMPs. Expression of <em>nlp-29</em> is controlled by a well-defined signaling cascade: the GPCR DCAR-1 detects the damage-associated ligand HPLA, activating GPA-12/RACK-1 → TPA-1 → TIR-1 → NSY-1 → SEK-1 → PMK-1 (p38 MAPK), culminating in STA-2 and ELT-3-mediated transcription in the epidermis. The infection-specific kinase NIPI-3 provides an additional layer of specificity. Beyond antimicrobial defense, secreted NLP-29 acts as a long-range neuroimmune signal through the NPR-12 receptor, promoting dendrite degeneration during aging and sleep after immune activation or injury. The <em>nlp-29</em> gene cluster has undergone rapid evolutionary diversification through gene duplication and positive selection across <em>Caenorhabditis</em> species, reflecting ongoing selective pressure from fungal pathogens. These findings position NLP-29 at the intersection of innate immunity, neuroimmune communication, and organismal homeostasis in <em>C. elegans</em>.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(dierking2016antimicrobialeffectorsin pages 4-5): Katja Dierking, Wentao Yang, and Hinrich Schulenburg. Antimicrobial effectors in the nematode caenorhabditis elegans: an outgroup to the arthropoda. Philosophical Transactions of the Royal Society B: Biological Sciences, 371:20150299, May 2016. URL: https://doi.org/10.1098/rstb.2015.0299, doi:10.1098/rstb.2015.0299. This article has 107 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(e2018anantimicrobialpeptide pages 17-19): Lezi E, Ting Zhou, Sehwon Koh, Marian Chuang, Ruchira Sharma, Nathalie Pujol, Andrew D. Chisholm, Cagla Eroglu, Hiroaki Matsunami, and Dong Yan. An antimicrobial peptide and its neuronal receptor regulate dendrite degeneration in aging and infection. Neuron, 97:125-138.e5, Jan 2018. URL: https://doi.org/10.1016/j.neuron.2017.12.001, doi:10.1016/j.neuron.2017.12.001. This article has 112 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pujol2008antifungalinnateimmunity pages 2-3): Nathalie Pujol, Olivier Zugasti, Daniel Wong, Carole Couillault, C. Léopold Kurz, Hinrich Schulenburg, and Jonathan J. Ewbank. Anti-fungal innate immunity in c. elegans is enhanced by evolutionary diversification of antimicrobial peptides. PLoS Pathogens, 4:e1000105, Jul 2008. URL: https://doi.org/10.1371/journal.ppat.1000105, doi:10.1371/journal.ppat.1000105. This article has 300 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pujol2008antifungalinnateimmunity pages 10-11): Nathalie Pujol, Olivier Zugasti, Daniel Wong, Carole Couillault, C. Léopold Kurz, Hinrich Schulenburg, and Jonathan J. Ewbank. Anti-fungal innate immunity in c. elegans is enhanced by evolutionary diversification of antimicrobial peptides. PLoS Pathogens, 4:e1000105, Jul 2008. URL: https://doi.org/10.1371/journal.ppat.1000105, doi:10.1371/journal.ppat.1000105. This article has 300 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pujol2012theoriginand pages 1-2): Nathalie Pujol, Paul A. Davis, and Jonathan J. Ewbank. The origin and function of anti-fungal peptides in c. elegans: open questions. Frontiers in Immunology, Aug 2012. URL: https://doi.org/10.3389/fimmu.2012.00237, doi:10.3389/fimmu.2012.00237. This article has 38 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(dierking2016antimicrobialeffectorsin pages 3-4): Katja Dierking, Wentao Yang, and Hinrich Schulenburg. Antimicrobial effectors in the nematode caenorhabditis elegans: an outgroup to the arthropoda. Philosophical Transactions of the Royal Society B: Biological Sciences, 371:20150299, May 2016. URL: https://doi.org/10.1098/rstb.2015.0299, doi:10.1098/rstb.2015.0299. This article has 107 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lim2016nematodepeptideswith pages 8-9): Mei-Perng Lim, Mohd Firdaus-Raih, and Sheila Nathan. Nematode peptides with host-directed anti-inflammatory activity rescue caenorhabditis elegans from a burkholderia pseudomallei infection. Frontiers in Microbiology, Sep 2016. URL: https://doi.org/10.3389/fmicb.2016.01436, doi:10.3389/fmicb.2016.01436. This article has 20 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lim2016nematodepeptideswith pages 5-7): Mei-Perng Lim, Mohd Firdaus-Raih, and Sheila Nathan. Nematode peptides with host-directed anti-inflammatory activity rescue caenorhabditis elegans from a burkholderia pseudomallei infection. Frontiers in Microbiology, Sep 2016. URL: https://doi.org/10.3389/fmicb.2016.01436, doi:10.3389/fmicb.2016.01436. This article has 20 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lim2016nematodepeptideswith pages 9-11): Mei-Perng Lim, Mohd Firdaus-Raih, and Sheila Nathan. Nematode peptides with host-directed anti-inflammatory activity rescue caenorhabditis elegans from a burkholderia pseudomallei infection. Frontiers in Microbiology, Sep 2016. URL: https://doi.org/10.3389/fmicb.2016.01436, doi:10.3389/fmicb.2016.01436. This article has 20 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pujol2008distinctinnateimmune pages 3-4): Nathalie Pujol, Sophie Cypowyj, Katja Ziegler, Anne Millet, Aline Astrain, Alexandr Goncharov, Yishi Jin, Andrew D. Chisholm, and Jonathan J. Ewbank. Distinct innate immune responses to infection and wounding in the c. elegans epidermis. Current Biology, 18:481-489, Apr 2008. URL: https://doi.org/10.1016/j.cub.2008.02.079, doi:10.1016/j.cub.2008.02.079. This article has 388 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pujol2008distinctinnateimmune pages 2-3): Nathalie Pujol, Sophie Cypowyj, Katja Ziegler, Anne Millet, Aline Astrain, Alexandr Goncharov, Yishi Jin, Andrew D. Chisholm, and Jonathan J. Ewbank. Distinct innate immune responses to infection and wounding in the c. elegans epidermis. Current Biology, 18:481-489, Apr 2008. URL: https://doi.org/10.1016/j.cub.2008.02.079, doi:10.1016/j.cub.2008.02.079. This article has 388 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pujol2008antifungalinnateimmunity pages 6-7): Nathalie Pujol, Olivier Zugasti, Daniel Wong, Carole Couillault, C. Léopold Kurz, Hinrich Schulenburg, and Jonathan J. Ewbank. Anti-fungal innate immunity in c. elegans is enhanced by evolutionary diversification of antimicrobial peptides. PLoS Pathogens, 4:e1000105, Jul 2008. URL: https://doi.org/10.1371/journal.ppat.1000105, doi:10.1371/journal.ppat.1000105. This article has 300 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(e2018anantimicrobialpeptide pages 5-6): Lezi E, Ting Zhou, Sehwon Koh, Marian Chuang, Ruchira Sharma, Nathalie Pujol, Andrew D. Chisholm, Cagla Eroglu, Hiroaki Matsunami, and Dong Yan. An antimicrobial peptide and its neuronal receptor regulate dendrite degeneration in aging and infection. Neuron, 97:125-138.e5, Jan 2018. URL: https://doi.org/10.1016/j.neuron.2017.12.001, doi:10.1016/j.neuron.2017.12.001. This article has 112 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(e2018anantimicrobialpeptide pages 7-8): Lezi E, Ting Zhou, Sehwon Koh, Marian Chuang, Ruchira Sharma, Nathalie Pujol, Andrew D. Chisholm, Cagla Eroglu, Hiroaki Matsunami, and Dong Yan. An antimicrobial peptide and its neuronal receptor regulate dendrite degeneration in aging and infection. Neuron, 97:125-138.e5, Jan 2018. URL: https://doi.org/10.1016/j.neuron.2017.12.001, doi:10.1016/j.neuron.2017.12.001. This article has 112 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sinner2021innateimmunitypromotes pages 1-4): Marina P. Sinner, Florentin Masurat, Jonathan J. Ewbank, Nathalie Pujol, and Henrik Bringmann. Innate immunity promotes sleep through epidermal antimicrobial peptides. Feb 2021. URL: https://doi.org/10.1016/j.cub.2020.10.076, doi:10.1016/j.cub.2020.10.076. This article has 72 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(taffoni2015mechanismsofinnate pages 5-6): Clara Taffoni and Nathalie Pujol. Mechanisms of innate immunity in c. elegans epidermis. Tissue Barriers, 3:e1078432, Oct 2015. URL: https://doi.org/10.1080/21688370.2015.1078432, doi:10.1080/21688370.2015.1078432. This article has 75 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(zugasti2016aquantitativegenomewide pages 5-6): Olivier Zugasti, Nishant Thakur, Jérôme Belougne, Barbara Squiban, C. Léopold Kurz, Julien Soulé, Shizue Omi, Laurent Tichit, Nathalie Pujol, and Jonathan J. Ewbank. A quantitative genome-wide rnai screen in c. elegans for antifungal innate immunity genes. BMC Biology, Apr 2016. URL: https://doi.org/10.1186/s12915-016-0256-3, doi:10.1186/s12915-016-0256-3. This article has 69 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kim2018signalinginthe pages 9-12): Dennis H. Kim and J. Ewbank. Signaling in the innate immune response. WormBook : the online review of C. elegans biology, 2018:1-35, Aug 2018. URL: https://doi.org/10.1895/wormbook.1.83.2, doi:10.1895/wormbook.1.83.2. This article has 152 citations.</p>
+</li>
+<li>
+<p>(pujol2008antifungalinnateimmunity pages 3-5): Nathalie Pujol, Olivier Zugasti, Daniel Wong, Carole Couillault, C. Léopold Kurz, Hinrich Schulenburg, and Jonathan J. Ewbank. Anti-fungal innate immunity in c. elegans is enhanced by evolutionary diversification of antimicrobial peptides. PLoS Pathogens, 4:e1000105, Jul 2008. URL: https://doi.org/10.1371/journal.ppat.1000105, doi:10.1371/journal.ppat.1000105. This article has 300 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pujol2008distinctinnateimmune pages 4-5): Nathalie Pujol, Sophie Cypowyj, Katja Ziegler, Anne Millet, Aline Astrain, Alexandr Goncharov, Yishi Jin, Andrew D. Chisholm, and Jonathan J. Ewbank. Distinct innate immune responses to infection and wounding in the c. elegans epidermis. Current Biology, 18:481-489, Apr 2008. URL: https://doi.org/10.1016/j.cub.2008.02.079, doi:10.1016/j.cub.2008.02.079. This article has 388 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(zhang2015structuraldamagein pages 6-7): Yun Zhang, Wenna Li, Linfeng Li, Yuanbao Li, Rong Fu, Yi Zhu, Jie Li, Yanfeng Zhou, Sidong Xiong, and Huimin Zhang. Structural damage in the c. elegans epidermis causes release of sta-2 and induction of an innate immune response. Immunity, 42 2:309-320, Feb 2015. URL: https://doi.org/10.1016/j.immuni.2015.01.014, doi:10.1016/j.immuni.2015.01.014. This article has 86 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(zugasti2009neuroimmuneregulationof pages 5-11): Olivier Zugasti and Jonathan J Ewbank. Neuroimmune regulation of antimicrobial peptide expression by a noncanonical tgf-β signaling pathway in caenorhabditis elegans epidermis. Nature Immunology, 10:249-256, Mar 2009. URL: https://doi.org/10.1038/ni.1700, doi:10.1038/ni.1700. This article has 260 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sinner2021innateimmunitypromotes pages 8-9): Marina P. Sinner, Florentin Masurat, Jonathan J. Ewbank, Nathalie Pujol, and Henrik Bringmann. Innate immunity promotes sleep through epidermal antimicrobial peptides. Feb 2021. URL: https://doi.org/10.1016/j.cub.2020.10.076, doi:10.1016/j.cub.2020.10.076. This article has 72 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(e2018anantimicrobialpeptide pages 10-11): Lezi E, Ting Zhou, Sehwon Koh, Marian Chuang, Ruchira Sharma, Nathalie Pujol, Andrew D. Chisholm, Cagla Eroglu, Hiroaki Matsunami, and Dong Yan. An antimicrobial peptide and its neuronal receptor regulate dendrite degeneration in aging and infection. Neuron, 97:125-138.e5, Jan 2018. URL: https://doi.org/10.1016/j.neuron.2017.12.001, doi:10.1016/j.neuron.2017.12.001. This article has 112 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sinner2021innateimmunitypromotes pages 10-11): Marina P. Sinner, Florentin Masurat, Jonathan J. Ewbank, Nathalie Pujol, and Henrik Bringmann. Innate immunity promotes sleep through epidermal antimicrobial peptides. Feb 2021. URL: https://doi.org/10.1016/j.cub.2020.10.076, doi:10.1016/j.cub.2020.10.076. This article has 72 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sinner2021innateimmunitypromotes pages 11-12): Marina P. Sinner, Florentin Masurat, Jonathan J. Ewbank, Nathalie Pujol, and Henrik Bringmann. Innate immunity promotes sleep through epidermal antimicrobial peptides. Feb 2021. URL: https://doi.org/10.1016/j.cub.2020.10.076, doi:10.1016/j.cub.2020.10.076. This article has 72 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sinner2021innateimmunitypromotes pages 5-8): Marina P. Sinner, Florentin Masurat, Jonathan J. Ewbank, Nathalie Pujol, and Henrik Bringmann. Innate immunity promotes sleep through epidermal antimicrobial peptides. Feb 2021. URL: https://doi.org/10.1016/j.cub.2020.10.076, doi:10.1016/j.cub.2020.10.076. This article has 72 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sinner2021innateimmunitypromotes pages 9-10): Marina P. Sinner, Florentin Masurat, Jonathan J. Ewbank, Nathalie Pujol, and Henrik Bringmann. Innate immunity promotes sleep through epidermal antimicrobial peptides. Feb 2021. URL: https://doi.org/10.1016/j.cub.2020.10.076, doi:10.1016/j.cub.2020.10.076. This article has 72 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pujol2008antifungalinnateimmunity pages 7-9): Nathalie Pujol, Olivier Zugasti, Daniel Wong, Carole Couillault, C. Léopold Kurz, Hinrich Schulenburg, and Jonathan J. Ewbank. Anti-fungal innate immunity in c. elegans is enhanced by evolutionary diversification of antimicrobial peptides. PLoS Pathogens, 4:e1000105, Jul 2008. URL: https://doi.org/10.1371/journal.ppat.1000105, doi:10.1371/journal.ppat.1000105. This article has 300 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pujol2008antifungalinnateimmunity pages 10-10): Nathalie Pujol, Olivier Zugasti, Daniel Wong, Carole Couillault, C. Léopold Kurz, Hinrich Schulenburg, and Jonathan J. Ewbank. Anti-fungal innate immunity in c. elegans is enhanced by evolutionary diversification of antimicrobial peptides. PLoS Pathogens, 4:e1000105, Jul 2008. URL: https://doi.org/10.1371/journal.ppat.1000105, doi:10.1371/journal.ppat.1000105. This article has 300 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pujol2008antifungalinnateimmunity pages 1-2): Nathalie Pujol, Olivier Zugasti, Daniel Wong, Carole Couillault, C. Léopold Kurz, Hinrich Schulenburg, and Jonathan J. Ewbank. Anti-fungal innate immunity in c. elegans is enhanced by evolutionary diversification of antimicrobial peptides. PLoS Pathogens, 4:e1000105, Jul 2008. URL: https://doi.org/10.1371/journal.ppat.1000105, doi:10.1371/journal.ppat.1000105. This article has 300 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="nlp-29-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+<li><a href="nlp-29-deep-research-falcon_artifacts/artifact-01.md">Edison artifact artifact-01</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>dierking2016antimicrobialeffectorsin pages 4-5</li>
+<li>e2018anantimicrobialpeptide pages 17-19</li>
+<li>pujol2008antifungalinnateimmunity pages 10-11</li>
+<li>pujol2012theoriginand pages 1-2</li>
+<li>dierking2016antimicrobialeffectorsin pages 3-4</li>
+<li>lim2016nematodepeptideswith pages 8-9</li>
+<li>lim2016nematodepeptideswith pages 9-11</li>
+<li>pujol2008distinctinnateimmune pages 2-3</li>
+<li>e2018anantimicrobialpeptide pages 5-6</li>
+<li>pujol2008distinctinnateimmune pages 4-5</li>
+<li>kim2018signalinginthe pages 9-12</li>
+<li>zhang2015structuraldamagein pages 6-7</li>
+<li>taffoni2015mechanismsofinnate pages 5-6</li>
+<li>zugasti2009neuroimmuneregulationof pages 5-11</li>
+<li>sinner2021innateimmunitypromotes pages 8-9</li>
+<li>e2018anantimicrobialpeptide pages 10-11</li>
+<li>sinner2021innateimmunitypromotes pages 10-11</li>
+<li>sinner2021innateimmunitypromotes pages 11-12</li>
+<li>pujol2008antifungalinnateimmunity pages 7-9</li>
+<li>pujol2008antifungalinnateimmunity pages 10-10</li>
+<li>pujol2008antifungalinnateimmunity pages 1-2</li>
+<li>pujol2008antifungalinnateimmunity pages 2-3</li>
+<li>lim2016nematodepeptideswith pages 5-7</li>
+<li>pujol2008distinctinnateimmune pages 3-4</li>
+<li>pujol2008antifungalinnateimmunity pages 6-7</li>
+<li>e2018anantimicrobialpeptide pages 7-8</li>
+<li>sinner2021innateimmunitypromotes pages 1-4</li>
+<li>zugasti2016aquantitativegenomewide pages 5-6</li>
+<li>pujol2008antifungalinnateimmunity pages 3-5</li>
+<li>sinner2021innateimmunitypromotes pages 5-8</li>
+<li>sinner2021innateimmunitypromotes pages 9-10</li>
+<li>https://doi.org/10.1098/rstb.2015.0299,</li>
+<li>https://doi.org/10.1016/j.neuron.2017.12.001,</li>
+<li>https://doi.org/10.1371/journal.ppat.1000105,</li>
+<li>https://doi.org/10.3389/fimmu.2012.00237,</li>
+<li>https://doi.org/10.3389/fmicb.2016.01436,</li>
+<li>https://doi.org/10.1016/j.cub.2008.02.079,</li>
+<li>https://doi.org/10.1016/j.cub.2020.10.076,</li>
+<li>https://doi.org/10.1080/21688370.2015.1078432,</li>
+<li>https://doi.org/10.1186/s12915-016-0256-3,</li>
+<li>https://doi.org/10.1895/wormbook.1.83.2,</li>
+<li>https://doi.org/10.1016/j.immuni.2015.01.014,</li>
+<li>https://doi.org/10.1038/ni.1700,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(nlp-29-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O44664" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="nlp-29-caenorhabditis-elegans-research-notes">nlp-29 (Caenorhabditis elegans) — research notes</h1>
+<p>UniProt: O44664 (NLP29_CAEEL). WormBase: WBGene00003767 / B0213.4. Chromosome V.<br />
+Gene: neuropeptide-like protein 29. Part of the <em>nlp-29</em> cluster (nlp-27..nlp-34) of the<br />
+YARP (YGGW-amide related peptide) family. Flagship project: CAEEL_SURVEILLANCE_IMMUNITY.</p>
+<p>This is a small, secreted, infection/wounding-inducible antimicrobial-peptide (AMP) precursor.<br />
+Notes below separate what is KNOWN (with provenance) from what is NOT known (the deliverable<br />
+for a "dark" effector peptide).</p>
+<h2 id="protein-architecture-from-uniprot-o44664">Protein architecture (from UniProt O44664)</h2>
+<ul>
+<li>73-aa precursor (PE 2, evidence at transcript level). Signal peptide 1–22; SUBCELLULAR<br />
+  LOCATION: Secreted.</li>
+<li>The precursor is predicted (ECO:0000255) to be cleaved on pairs of basic residues into<br />
+  several short amidated peptides: QWGYGGY-amide (23–29), GYGGYGGY-amide (32–39), and<br />
+  four GMYGGY/GMYGGW-amide repeats (42–71). All the mature peptides are Tyr/Trp-amidated<br />
+  glycine/tyrosine-rich motifs — hence "YGGW-amide related peptide" (YARP) family.</li>
+<li>KEYWORDS: Amidation; Antibiotic; Antimicrobial; Fungicide; Neuropeptide; Secreted; Signal;<br />
+  Repeat; Cleavage on pair of basic residues.</li>
+<li>Note: the peptide cleavage sites, amidation, and "Antimicrobial/Fungicide/Neuropeptide"<br />
+  keywords are all UniProt <em>predictions/keyword-transfers</em> (ECO:0000255 / keyword), not direct<br />
+  biochemical demonstration for NLP-29 peptides themselves.</li>
+</ul>
+<h2 id="known-expression-regulation-well-supported-experimentally">KNOWN — expression &amp; regulation (well supported experimentally)</h2>
+<p>nlp-29 is an infection- and damage-inducible epidermal (hypodermal) AMP gene. It is the<br />
+canonical transcriptional <em>readout</em> of the C. elegans epidermal antifungal immune pathway.</p>
+<ul>
+<li>Identified as one of 32 C. elegans <em>nlp</em> neuropeptide-like genes; placed by sequence in the<br />
+  YGGWamide family <a href="https://pubmed.ncbi.nlm.nih.gov/11717458" title="The nlp genes define at least 11 families of putative   neuropeptides with unique motifs">PMID:11717458</a>. This paper is purely a bioinformatic<br />
+  family/preproprotein prediction; it is the ISM basis for the GOA "neuropeptide receptor<br />
+  binding" and "extracellular" annotations. Note that its general statement "Most C. elegans<br />
+  nlp gene expression is in neurons" does NOT apply to nlp-29, whose expression is epidermal.</li>
+<li>Infection-inducible AMP whose expression is differentially regulated by fungal vs bacterial<br />
+  infection and depends in part on the TIR-domain adaptor tir-1/SARM<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/15048112" title="Expression of two of these peptides, NLP-29 and NLP-31, was differentially   regulated by fungal and bacterial infection and was controlled in part by tir-1">PMID:15048112</a>.</li>
+<li>Induced in the epidermis by both infection (fungus <em>Drechmeria coniospora</em>) AND sterile<br />
+  physical wounding; a conserved p38-MAPK (PMK-1) cascade is required in the epidermis for<br />
+  both responses [PMID:18394898 "Injury induces a wound-healing response in C. elegans that<br />
+  includes induction of nlp-29 in the epidermis"; "a conserved p38-MAP kinase cascade is<br />
+  required in the epidermis for the response to both infection and wounding"].</li>
+<li>The tribbles-like kinase NIPI-3 is required for nlp-29 induction after infection but not<br />
+  after wounding — infection and wounding converge on the same p38 cassette via distinct<br />
+  upstream inputs <a href="https://pubmed.ncbi.nlm.nih.gov/18394898" title="We find NIPI-3 is required only for nlp-29 induction after   infection and not after wounding">PMID:18394898</a>.</li>
+<li>Upstream of p38: G-protein signaling and PKCδ (tpa-1), with pkc-3 acting nonredundantly, and<br />
+  specific C-type phospholipases; identified in a forward screen for mutants failing to express<br />
+  nlp-29 after fungal infection [PMID:19380113 "In a screen for mutants that fail to express<br />
+  nlp-29 following fungal infection, we isolated alleles of tpa-1, homologous to the mammalian<br />
+  protein kinase C (PKC) delta"; "C. elegans PKC acts through the p38 MAPK pathway to regulate<br />
+  nlp-29"; "the tribbles-like kinase nipi-3 acts upstream of PKCdelta"].</li>
+<li>Also induced by osmotic stress and physical injury, not only infection<br />
+  [PMID:19380113 "Upon physical injury and osmotic stress" — INDUCTION, per UniProt CC].</li>
+<li>Expression is transcriptionally driven by the STAT-like factor STA-2 (with the SLC6<br />
+  transporter SNF-12) during molting and after adult epidermal injury; nlp-29 is part of a<blockquote>
+<p>dozen-AMP module <a href="https://pubmed.ncbi.nlm.nih.gov/33259791" title="STAT/STA-2 and SLC6 (solute carrier)/SNF-12-dependent   expression of antimicrobial peptide (AMP) genes">PMID:33259791</a>. (UniProt records this as<br />
+  "Transcriptionally regulated by the transcription factor sta-2".)</p>
+</blockquote>
+</li>
+<li>Developmentally, nlp-29 oscillates with the molting cycle, peaking during lethargus<br />
+  [UniProt DEVELOPMENTAL STAGE, ECO:0000269|PMID:33259791: "expressed in an oscillating<br />
+  pattern with expression increasing during the lethargus phase"].</li>
+<li>Tissue: weakly/not expressed without infection; upon <em>D. coniospora</em> infection expressed in<br />
+  hypoderm and in perivulval cells where spores adhere [UniProt TISSUE SPECIFICITY, PMIDs<br />
+  11717458/15048112/18394898/19380113]. The nlp-29 promoter (Pnlp-29::GFP, the "IFB" reporter)<br />
+  is a standard immune reporter.</li>
+</ul>
+<h2 id="known-a-downstream-signaling-somnogen-role-via-npr-12">KNOWN — a downstream signaling (somnogen) role via NPR-12</h2>
+<p>Beyond being an effector, secreted NLP-29 peptide has a demonstrated cross-tissue signaling<br />
+function: after wounding/infection it promotes protective sleep.</p>
+<ul>
+<li>NLP-29 acts through the neuropeptide receptor NPR-12 on locomotion-controlling neurons that<br />
+  are presynaptic to the sleep-active RIS neuron, depolarizing RIS to induce sleep<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/33259791" title="for one AMP, neuropeptide-like protein (NLP)-29, that it acts through the   neuropeptide receptor NPR-12 in locomotion-controlling neurons that are presynaptic to RIS   and that depolarize this neuron to induce sleep">PMID:33259791</a>.</li>
+<li>This is the strongest direct evidence that (a) NLP-29 engages a specific GPCR (NPR-12), and<br />
+  (b) it functions as a signaling ligand, not only as a putative microbicide. It retrospectively<br />
+  supports the family-predicted "neuropeptide receptor binding" annotation with a named receptor.</li>
+<li>UniProt FUNCTION summarizes: "Through the neuropeptide receptor nlp-29, induces sleep..." —<br />
+  this phrasing is garbled (the receptor is NPR-12, not "nlp-29"); the CC provenance is<br />
+  PMID:33259791.</li>
+</ul>
+<h2 id="not-known-the-load-bearing-gaps-deliverable">NOT KNOWN — the load-bearing gaps (deliverable)</h2>
+<ol>
+<li>
+<p><strong>Direct microbicidal activity &amp; mechanism (MF-dark).</strong> Whether the mature amidated NLP-29<br />
+   peptides <em>themselves</em> directly kill or inhibit microbes — and by what mechanism (membrane<br />
+   permeabilization? specific target?) — is not established in the cached primary literature.<br />
+   Every C. elegans study above uses nlp-29 as an <em>induced-expression readout</em>; the "antibacterial<br />
+   against S. marcescens / antifungal against D. coniospora" statements in UniProt FUNCTION are<br />
+   attributed to PMID:15048112/PMID:19380113, which demonstrate infection-dependent <em>induction</em><br />
+   and genetic <em>requirement of the pathway</em>, not a purified-peptide killing assay for NLP-29.<br />
+   (The related family member NLP-31 has been the one more often tested biochemically in the<br />
+   literature; NLP-29 itself is comparatively unassayed.) → BIOLOGY gap, MF_DARK.<br />
+   NOTE: this is exactly why GO MF for nlp-29 is essentially only the family-predicted<br />
+   "neuropeptide receptor binding"; there is no curated MF term capturing "antimicrobial peptide<br />
+   activity".</p>
+</li>
+<li>
+<p><strong>In-vivo necessity of nlp-29 itself.</strong> Because nlp-29 sits in a redundant multigene AMP<br />
+   cluster (nlp-27–34, plus the cnc caenacins), the phenotypic contribution of <em>nlp-29 alone</em><br />
+   (single-gene loss of function) to pathogen resistance/survival is not cleanly established in<br />
+   the cached literature — most functional genetics manipulates upstream regulators or the whole<br />
+   cluster. → BIOLOGY gap (redundancy).</p>
+</li>
+<li>
+<p><strong>Which mature peptide does what.</strong> The precursor yields ≥6 distinct amidated peptides; which<br />
+   one(s) mediate antimicrobial activity vs which engage NPR-12 (the somnogen role) is unknown.<br />
+   The processing itself (proprotein convertase, amidation) is predicted, not directly shown for<br />
+   NLP-29. → BIOLOGY gap.</p>
+</li>
+<li>
+<p><strong>Receptor scope.</strong> NPR-12 is the only demonstrated receptor (sleep role, PMID:33259791).<br />
+   Whether NLP-29 peptides have additional receptors/targets in the antimicrobial context, or act<br />
+   receptor-independently as a microbicide, is unresolved. → BIOLOGY gap.</p>
+</li>
+</ol>
+<h2 id="existing-goa-annotations-to-review-4">Existing GOA annotations to review (4)</h2>
+<ol>
+<li>GO:0005576 extracellular region — IEA (GO_REF:0000044, from SubCell "Secreted"). Consistent<br />
+   with signal peptide + Secreted. ACCEPT.</li>
+<li>GO:0003674 molecular_function (root) — ND (GO_REF:0000015). "No data" placeholder from<br />
+   WormBase. Root/ND is uninformative; a more specific MF (neuropeptide receptor binding) is<br />
+   annotated. Mark as over-annotated placeholder / remove-worthy per ND conventions.</li>
+<li>GO:0005576 extracellular region — ISM (PMID:11717458). Same location, sequence-model basis.<br />
+   ACCEPT (redundant with #1 but valid).</li>
+<li>GO:0071855 neuropeptide receptor binding — ISM (PMID:11717458). Family-based prediction;<br />
+   now corroborated by NPR-12 interaction (PMID:33259791). ACCEPT (keep; evidence upgraded by<br />
+   later work but GOA record remains ISM).</li>
+</ol>
+<p>BP terms present in UniProt DR-GO but NOT in the GOA TSV (dropped after GO_REF:0000043 SPKW<br />
+retirement): defense response to bacterium (GO:0042742), defense response to fungus (GO:0050832),<br />
+killing of cells of another organism (GO:0031640), neuropeptide signaling pathway (GO:0007218) —<br />
+all IEA:UniProtKB-KW. These are biologically well-motivated but are not in existing_annotations<br />
+(only GOA annotations are reviewed here); captured instead in core_functions/knowledge_gaps.</p>
+<h2 id="provenance-caveat">Provenance caveat</h2>
+<p>The five <em>core-pathway</em> primary publications (11717458, 15048112, 18394898, 19380113, 33259791)<br />
+are cached ABSTRACT-ONLY (full_text_available: false). Reviews must therefore not REMOVE<br />
+experimental-style annotations on the basis of abstract wording alone; where the abstract does not<br />
+let me verify a specific claim I defer (ACCEPT/UNDECIDED) rather than overrule curators. THREE<br />
+publications are cached FULL-TEXT (full_text_available: true) and were used for verbatim provenance:<br />
+PMID:18636113 (Pujol 2008 PLoS Pathogens), PMID:29301098 (E 2018 Neuron), PMID:22870075 (Pujol 2012<br />
+Front Immunol, open-questions review).</p>
+<h2 id="review-completed-key-direct-evidence-and-decisions-journal">Review completed — key direct evidence and decisions (journal)</h2>
+<ul>
+<li>STRONGEST DIRECT MF EVIDENCE (upgrades the ISM neuropeptide-receptor-binding annotation):<br />
+  E 2018 shows synthetic NLP-29 activates the neuronal orphan GPCR NPR-12 in a heterologous cell<br />
+  assay — <a href="https://pubmed.ncbi.nlm.nih.gov/29301098" title="induced a significant elevation of calcium, while the solvent-only control   did not cause any changes">PMID:29301098</a> — with specificity vs the paralog NLP-31 and vs NPR-32/beta2-AR, plus<br />
+  genetic epistasis (nlp-29;npr-12). This is why GO:0071855 is ACCEPTed as core rather than left as a<br />
+  bare family prediction.</li>
+<li>DIRECT-MICROBICIDAL activity for NLP-29 itself remains UNPROVEN in the cached literature: the<br />
+  in-vivo antifungal effect is shown only by whole-cluster overexpression — <a href="https://pubmed.ncbi.nlm.nih.gov/18636113" title="These   results indicate that the nlp genes can contribute in vivo to increased resistance to fungal   infection">PMID:18636113</a> — and the nlp-29 single null is phenotypically silent — <a href="https://pubmed.ncbi.nlm.nih.gov/18636113" title="we saw no marked   change in its resistance to D. coniospora infection">PMID:18636113</a>. Hence the MF_DARK + in-vivo-necessity<br />
+  knowledge gaps; no MF antimicrobial-activity term is asserted (proposed as an ONTOLOGY gap instead).</li>
+<li>Annotation decisions (4 PENDING resolved + 2 NEW): GO:0005576 extracellular IEA -&gt; ACCEPT;<br />
+  GO:0003674 ND root -&gt; REMOVE (superseded placeholder); GO:0005576 extracellular ISM -&gt; ACCEPT;<br />
+  GO:0071855 neuropeptide receptor binding ISM -&gt; ACCEPT (core); + NEW GO:0050832 defense response to<br />
+  fungus (IEP); + NEW GO:0007218 neuropeptide signaling pathway (IMP).</li>
+<li>VALIDATION FLAKINESS: the pre-edit hook re-fetches references over the network; PMID:22870075<br />
+  full-text fetch (openalex/cell.com) intermittently 403s/times out and falls back to abstract-only,<br />
+  which fails otherwise-valid full-text quotes. Kept 22870075 as a reviewed reference only (no<br />
+  supporting_text) and anchored all provenance to PMID:18636113 / PMID:29301098 full text instead.<br />
+<code>just validate worm nlp-29</code>, <code>validate-references</code>, and <code>validate-terms</code> all pass.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O44664
+gene_symbol: nlp-29
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:6239
+  label: Caenorhabditis elegans
+description: &gt;-
+  nlp-29 encodes a small (73-residue) secreted precursor of the YARP (YGGW-amide
+  related peptide) / NLP-CNC antimicrobial-peptide family in Caenorhabditis elegans.
+  The precursor carries an N-terminal signal peptide and is predicted to be processed
+  on pairs of basic residues into several short, glycine/tyrosine-rich, C-terminally
+  amidated peptides (QWGYGGY-amide, GYGGYGGY-amide and repeated GMYGGY/GMYGGW-amide
+  motifs). It is produced in the epidermis (hyp7 syncytium), where its transcription
+  is strongly and rapidly induced by infection with the natural fungal pathogen
+  Drechmeria coniospora, by bacterial infection (Serratia marcescens), by sterile
+  wounding, and by osmotic stress. Infection- and wound-induced expression requires an
+  epidermal signaling cassette (a GPCR/G-protein and PKCdelta/TPA-1 input converging on
+  the TIR-1/SARM-NSY-1-SEK-1-PMK-1 p38 MAPK cascade and the STAT-like factor STA-2 with
+  SNF-12 and the GATA factor ELT-3), whereas the osmotic response is largely p38-independent.
+  nlp-29 lies in a rapidly evolving, positively selected multigene cluster (nlp-27 to
+  nlp-34) of co-regulated antimicrobial peptides that contribute to antifungal host
+  defense. Beyond its role as a putative immune effector, secreted NLP-29 also acts as a
+  cross-tissue signaling ligand for the neuronal orphan G protein-coupled receptor NPR-12,
+  promoting protective sleep after wounding or infection and driving age- and
+  infection-associated dendrite degeneration of PVD and FLP sensory neurons.
+references:
+- id: GO_REF:0000015
+  title: Use of the ND evidence code for Gene Ontology (GO) terms
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: PMID:11717458
+  title: Identification of neuropeptide-like protein gene families in Caenorhabditiselegans
+    and other species.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Bioinformatic identification of the 32 C. elegans nlp genes and the YGGWamide
+      family; this is the sequence-model (ISM) basis for the extracellular-region and
+      neuropeptide-receptor-binding annotations. PubMed-verified; note its general
+      &#34;most nlp expression is in neurons&#34; statement does NOT apply to epidermal nlp-29.
+- id: PMID:15048112
+  title: TLR-independent control of innate immunity in Caenorhabditis elegans by the
+    TIR domain adaptor protein TIR-1, an ortholog of human SARM.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Identifies NLP-29/NLP-31 as infection-inducible AMPs differentially regulated by
+      fungal vs bacterial infection and controlled in part by tir-1. Establishes nlp-29 as
+      an immune-inducible effector; does not itself assay purified-peptide microbicidal
+      activity. Abstract-only in cache.
+- id: PMID:18394898
+  title: Distinct innate immune responses to infection and wounding in the C. elegans
+    epidermis.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Shows nlp-29 is induced by sterile wounding as well as infection and that a p38 MAPK
+      cascade is required in the epidermis for both; NIPI-3 is required only for the
+      infection response. Abstract-only in cache.
+- id: PMID:18636113
+  title: Anti-fungal innate immunity in C. elegans is enhanced by evolutionary diversification
+    of antimicrobial peptides.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full-text verified. Key source for the in-vivo host-defense evidence and its limits:
+      the nlp-29(tm1931) single null shows no marked change in D. coniospora resistance
+      (redundancy), and the direct in-vivo antifungal effect is demonstrated only by
+      overexpression of the whole nlp-29 cluster. Anchors the in-vivo-necessity and
+      direct-microbicidal knowledge gaps.
+- id: PMID:19380113
+  title: &#39;Antifungal innate immunity in C. elegans: PKCdelta links G protein signaling
+    and a conserved p38 MAPK cascade.&#39;
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Forward screen for mutants failing to express nlp-29 after fungal infection; places
+      G-protein signaling and PKCdelta (tpa-1, with pkc-3) and nipi-3 upstream of the p38
+      cascade that drives nlp-29. Regulation of nlp-29, not its biochemical activity.
+      Abstract-only in cache.
+- id: PMID:29301098
+  title: An Antimicrobial Peptide and Its Neuronal Receptor Regulate Dendrite Degeneration
+    in Aging and Infection.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full-text verified. Provides the direct experimental evidence that NLP-29 is a ligand
+      for the neuronal GPCR NPR-12 (calcium mobilization in NPR-12-transfected HEK293T cells,
+      specific relative to NLP-31/NPR-32/beta2-AR) and that synthetic/overexpressed NLP-29
+      drives NPR-12- and autophagy-dependent PVD/FLP dendrite degeneration. Upgrades the ISM
+      neuropeptide-receptor-binding annotation.
+- id: PMID:22870075
+  title: &#39;The Origin and Function of Anti-Fungal Peptides in C. elegans: Open Questions.&#39;
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full-text review by the group that characterized these genes; explicitly frames the
+      precise mode of action of the NLP/CNC AMPs and possible regulatory (receptor) roles as
+      open questions (&#34;Future studies should yield more insights into ... their precise mode of
+      action ...&#34;), corroborating that the mechanistic knowledge gaps are real, not merely
+      uncurated.
+- id: PMID:33259791
+  title: Innate Immunity Promotes Sleep through Epidermal Antimicrobial Peptides.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Shows epidermal AMPs act as cross-tissue somnogens and that NLP-29 specifically acts
+      through NPR-12 in locomotion-controlling neurons presynaptic to the sleep-active RIS
+      neuron. Corroborates the NPR-12 signaling-ligand function. Abstract-only in cache.
+existing_annotations:
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Localization to the extracellular region, mapped from the UniProt &#34;Secreted&#34;
+      subcellular-location keyword. Consistent with the N-terminal signal peptide (residues
+      1-22) and with experimental evidence that epidermally produced NLP-29 acts
+      non-cell-autonomously on distant neurons, implying it is secreted.
+    action: ACCEPT
+    reason: &gt;-
+      NLP-29 is a signal-peptide-bearing secreted peptide; the SubCell-derived extracellular
+      annotation is well supported. Secretion is corroborated experimentally because
+      epidermally expressed NLP-29 must reach neurons expressing its receptor NPR-12 to signal.
+    supported_by:
+    - reference_id: PMID:29301098
+      supporting_text: direct access to the epidermis was required for NPR-12 to receive NLP-29
+      reference_section_type: RESULTS
+- term:
+    id: GO:0003674
+    label: molecular_function
+  evidence_type: ND
+  original_reference_id: GO_REF:0000015
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Root molecular_function with the ND (&#34;no biological data&#34;) evidence code, a WormBase
+      placeholder recorded in 2019 indicating no molecular-function data were curated at
+      that time.
+    action: REMOVE
+    reason: &gt;-
+      The ND root placeholder is uninformative and is now superseded: a specific molecular
+      function (neuropeptide receptor binding, GO:0071855) is annotated and has since been
+      experimentally corroborated by demonstration that NLP-29 is a ligand/agonist of the
+      neuronal GPCR NPR-12. Per GO ND conventions, the root &#34;no data&#34; placeholder should be
+      removed once informative molecular-function evidence exists.
+    supported_by:
+    - reference_id: PMID:29301098
+      supporting_text: we conclude that NPR-12 is the receptor for NLP-29 in mediating aging-associated
+        PVD dendrite degeneration
+      reference_section_type: RESULTS
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: ISM
+  original_reference_id: PMID:11717458
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Sequence-model (ISM) prediction of extracellular localization, based on the
+      preproprotein/signal-peptide architecture identified for the nlp genes. Redundant with
+      the SubCell-derived IEA annotation but biologically valid.
+    action: ACCEPT
+    reason: &gt;-
+      The prediction is sound: NLP-29 has a cleavable signal peptide and is a processed,
+      secreted peptide, consistent with an extracellular location. Retained as a valid
+      duplicate of the SubCell IEA annotation.
+    supported_by:
+    - reference_id: PMID:11717458
+      supporting_text: peptidergic neurotransmitters are encoded as preproproteins that are
+        posttranslationally processed to yield bioactive neuropeptides
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0071855
+    label: neuropeptide receptor binding
+  evidence_type: ISM
+  original_reference_id: PMID:11717458
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Neuropeptide receptor binding, originally a family-based sequence-model prediction
+      (NLP-29 was named for its similarity to YGGWamide neuropeptides). This prediction is now
+      directly corroborated: synthetic NLP-29 activates the neuronal orphan GPCR NPR-12
+      (calcium mobilization in NPR-12-transfected cells, specific relative to the related
+      peptide NLP-31 and to NPR-32/beta2-AR), and genetic epistasis places NLP-29 upstream of
+      NPR-12 in both protective-sleep and dendrite-degeneration signaling.
+    action: ACCEPT
+    reason: &gt;-
+      This is the single molecular activity of NLP-29 with direct experimental support and
+      represents a core function. The ISM annotation remains formally correct, and later work
+      identifies NPR-12 as a bona fide NLP-29 receptor, upgrading confidence in the term
+      without changing it. Retained as core.
+    supported_by:
+    - reference_id: PMID:29301098
+      supporting_text: induced a significant elevation of calcium, while the solvent-only control
+        did not cause any changes
+      reference_section_type: RESULTS
+    - reference_id: PMID:33259791
+      supporting_text: it acts through the neuropeptide receptor NPR-12 in locomotion-controlling
+        neurons that are presynaptic to RIS and that depolarize this neuron to induce sleep
+      reference_section_type: ABSTRACT
+    additional_reference_ids:
+    - PMID:29301098
+    - PMID:33259791
+- term:
+    id: GO:0050832
+    label: defense response to fungus
+  evidence_type: IEP
+  original_reference_id: PMID:18636113
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      nlp-29 is strongly and specifically induced in the epidermis by the natural fungal
+      pathogen Drechmeria coniospora and belongs to a co-regulated antimicrobial-peptide
+      cluster whose overexpression increases resistance to D. coniospora, supporting
+      involvement in antifungal defense. This antifungal role is the flagship, most-studied
+      aspect of nlp-29 biology and is captured by UniProt only as a keyword-derived IEA.
+    action: NEW
+    reason: &gt;-
+      A defense-response-to-fungus annotation for nlp-29 is well motivated by infection-induced
+      expression plus cluster-level gain-of-function resistance, and matches the UniProt
+      keyword annotation. Added as an expression/genetics-based (IEP) annotation. Important
+      caveat: the nlp-29 single-gene null shows no marked resistance phenotype, so this is an
+      involvement, not a demonstration of individual necessity (see knowledge gaps).
+    supported_by:
+    - reference_id: PMID:18636113
+      supporting_text: These results indicate that the nlp genes can contribute in vivo to
+        increased resistance to fungal infection, but probably not to osmotic stress.
+      reference_section_type: RESULTS
+    - reference_id: PMID:15048112
+      supporting_text: We report here the identification of infection-inducible antimicrobial
+        peptides in Caenorhabditis elegans.
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0007218
+    label: neuropeptide signaling pathway
+  evidence_type: IMP
+  original_reference_id: PMID:33259791
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      NLP-29 acts as a secreted neuropeptide-like ligand in a cross-tissue signaling pathway:
+      it activates the neuronal GPCR NPR-12, and nlp-29/npr-12 genetic epistasis places NLP-29
+      upstream of NPR-12 in sleep-promoting and dendrite-degeneration signaling.
+    action: NEW
+    reason: &gt;-
+      The neuropeptide-signaling role is now experimentally supported (direct NPR-12 activation
+      by synthetic NLP-29 and loss-of-function/epistasis phenotypes for sleep and dendrite
+      degeneration), and matches the UniProt keyword-derived annotation. Added to capture the
+      demonstrated signaling function alongside the antimicrobial-effector role.
+    supported_by:
+    - reference_id: PMID:33259791
+      supporting_text: it acts through the neuropeptide receptor NPR-12 in locomotion-controlling
+        neurons that are presynaptic to RIS and that depolarize this neuron to induce sleep
+      reference_section_type: ABSTRACT
+    - reference_id: PMID:29301098
+      supporting_text: we conclude that NPR-12 is the receptor for NLP-29 in mediating aging-associated
+        PVD dendrite degeneration
+      reference_section_type: RESULTS
+    additional_reference_ids:
+    - PMID:29301098
+core_functions:
+- description: &gt;-
+    Secreted epidermal antimicrobial peptide of the NLP/YARP cluster whose expression is
+    induced by fungal (D. coniospora) and bacterial infection, wounding and osmotic stress;
+    contributes to antifungal host defense as a member of the co-regulated nlp-27 to nlp-34
+    cluster. Direct microbicidal activity of the mature NLP-29 peptides has not itself been
+    demonstrated, so there is no molecular-function term capturing an antimicrobial activity
+    (see knowledge gaps).
+  directly_involved_in:
+  - id: GO:0050832
+    label: defense response to fungus
+  locations:
+  - id: GO:0005576
+    label: extracellular region
+  supported_by:
+  - reference_id: PMID:18636113
+    supporting_text: These results indicate that the nlp genes can contribute in vivo to
+      increased resistance to fungal infection, but probably not to osmotic stress.
+    reference_section_type: RESULTS
+  - reference_id: PMID:15048112
+    supporting_text: Expression of two of these peptides, NLP-29 and NLP-31, was differentially
+      regulated by fungal and bacterial infection and was controlled in part by tir-1
+    reference_section_type: ABSTRACT
+- description: &gt;-
+    Secreted NLP-29 also functions as a signaling ligand for the neuronal orphan GPCR NPR-12.
+    This receptor interaction is demonstrated directly (calcium mobilization in NPR-12-expressing
+    cells and genetic epistasis) and mediates cross-tissue neuroimmune signaling: it promotes
+    protective sleep after wounding/infection and drives age- and infection-associated sensory
+    dendrite degeneration.
+  molecular_function:
+    id: GO:0071855
+    label: neuropeptide receptor binding
+  directly_involved_in:
+  - id: GO:0007218
+    label: neuropeptide signaling pathway
+  locations:
+  - id: GO:0005576
+    label: extracellular region
+  supported_by:
+  - reference_id: PMID:29301098
+    supporting_text: induced a significant elevation of calcium, while the solvent-only control
+      did not cause any changes
+    reference_section_type: RESULTS
+  - reference_id: PMID:33259791
+    supporting_text: it acts through the neuropeptide receptor NPR-12 in locomotion-controlling
+      neurons that are presynaptic to RIS and that depolarize this neuron to induce sleep
+    reference_section_type: ABSTRACT
+proposed_new_terms: []
+knowledge_gaps:
+- gap_statement: &gt;-
+    Whether the mature amidated NLP-29 peptides themselves directly kill or inhibit microbes,
+    and by what mechanism (membrane permeabilization, DNA binding as reported for the paralog
+    NLP-31, or another target), has not been demonstrated. Every C. elegans study uses nlp-29
+    as an induced-expression readout, and the in-vivo antifungal evidence comes from
+    overexpression of the whole nlp-29 cluster rather than a purified-peptide killing assay
+    for NLP-29.
+  boundary: &gt;-
+    nlp-29 is a bona fide secreted AMP-family gene, strongly induced in the epidermis by
+    fungal/bacterial infection and wounding, and overexpression of the nlp-29 cluster increases
+    resistance to D. coniospora. Its one biochemically demonstrated molecular activity is as a
+    ligand/agonist of the neuronal GPCR NPR-12, not a microbicidal activity.
+  gap_kind:
+  - BIOLOGY
+  - ONTOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    This is why nlp-29 carries no molecular-function annotation for antimicrobial activity: such
+    activity is both unproven for NLP-29 itself and lacks an adequate GO molecular-function term.
+    Closing it would define the effector arm of the flagship C. elegans epidermal immune pathway.
+  resolution: &gt;-
+    In vitro microbicidal, membrane-permeabilization and nucleic-acid-binding assays with the
+    individual synthetic mature NLP-29 peptides against D. coniospora and S. marcescens, plus
+    structural characterization.
+  provenance:
+  - reference_id: PMID:18636113
+    supporting_text: These results indicate that the nlp genes can contribute in vivo to
+      increased resistance to fungal infection, but probably not to osmotic stress.
+    reference_section_type: RESULTS
+  proposed_terms:
+  - proposed_name: antimicrobial peptide activity
+    proposed_definition: &gt;-
+      A molecular function of a small secreted peptide that directly inhibits the growth of or
+      kills microorganisms, for example by permeabilizing microbial membranes or binding a
+      microbial macromolecular target, distinct from the biological process &#39;defense response&#39;
+      and from receptor-mediated host signaling functions of the same peptide.
+    justification: &gt;-
+      Antimicrobial peptides such as NLP-29 and its cluster paralogs have no adequate GO
+      molecular-function term for their effector activity; they are annotatable only at the
+      process level (defense response) or as the uninformative &#39;protein binding&#39;, leaving them
+      MF-dark despite a well-defined defensive role.
+    proposed_parent:
+      id: GO:0003674
+      label: molecular_function
+- gap_statement: &gt;-
+    The specific contribution of nlp-29 alone to pathogen resistance and survival is
+    undetermined: the nlp-29(tm1931) null shows no marked change in resistance to D. coniospora,
+    consistent with functional redundancy within the nlp-27 to nlp-34 cluster, so single-gene
+    loss-of-function has not established necessity.
+  boundary: &gt;-
+    Loss of upstream regulators (e.g. tir-1, pmk-1, sta-2) abolishes nlp-29 induction and
+    reduces antifungal resistance, and cluster overexpression increases resistance; but these
+    manipulate the signaling pathway or the whole AMP cluster, not nlp-29 individually.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: RESIDUAL_SUBGAP
+  status: OPEN
+  significance: &gt;-
+    Determines whether nlp-29 is an individually important effector or a redundant member of a
+    buffered AMP battery, which is central to interpreting the widely used Pnlp-29 immune reporter.
+  resolution: &gt;-
+    Higher-order combinatorial deletions across the cluster and quantitative survival assays of
+    precise single and compound nlp mutants under D. coniospora and S. marcescens challenge.
+  provenance:
+  - reference_id: PMID:18636113
+    supporting_text: When we assayed the survival of the null mutant strain nlp-29(tm1931),
+      which cannot make any NLP-29, we saw no marked change in its resistance to D. coniospora
+      infection nor its lifespan in the absence of infection
+    reference_section_type: RESULTS
+  - reference_id: PMID:18636113
+    supporting_text: this could reflect a redundancy in the function of single nlp genes in the
+      nlp-29 cluster
+    reference_section_type: RESULTS
+- gap_statement: &gt;-
+    It is unknown which of the several distinct amidated peptides cleaved from the NLP-29
+    precursor mediate antimicrobial activity versus which engage NPR-12, and the predicted
+    proprotein processing and C-terminal amidation have not been directly demonstrated for NLP-29.
+  boundary: &gt;-
+    The precursor sequence, signal peptide, predicted cleavage on paired basic residues and the
+    Tyr/Trp-amidation motifs are annotated by UniProt sequence analysis; synthetic full-length
+    NLP-29 peptide activates NPR-12 and induces dendrite degeneration, whereas the related NLP-31
+    does not.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    Distinguishing effector peptides from signaling peptides within a single precursor would
+    clarify whether the antimicrobial and neuroimmune functions of NLP-29 are molecularly separable.
+  resolution: &gt;-
+    Mass-spectrometric identification of the endogenous mature peptides and structure-activity
+    assays of individual synthetic peptides against microbes and against NPR-12.
+  provenance:
+  - reference_id: PMID:29301098
+    supporting_text: To further confirm the essential role of NLP-29 in PVD dendrite degeneration,
+      we microinjected synthetic NLP-29 peptide into control animals
+    reference_section_type: RESULTS
+- gap_statement: &gt;-
+    Whether NLP-29&#39;s antimicrobial action is receptor-mediated or a direct physicochemical effect
+    on microbes is unresolved. NPR-12 is the only demonstrated receptor and mediates host
+    neuroimmune signaling (sleep, dendrite degeneration), not microbial killing, so any receptor
+    or target underlying an effector function is unidentified.
+  boundary: &gt;-
+    NPR-12 is a validated NLP-29 receptor for cross-tissue host signaling and is expressed in
+    neurons, not microbes; no microbial or host target for a direct antimicrobial effect is known.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    Clarifies whether the same peptide uses distinct molecular mechanisms for host signaling versus
+    pathogen defense.
+  resolution: &gt;-
+    Target-identification (pulldown/photo-crosslinking) with labeled NLP-29 peptides on microbial
+    and host membranes, and testing whether antimicrobial protection requires any host receptor.
+  provenance:
+  - reference_id: PMID:29301098
+    supporting_text: we conclude that NPR-12 is the receptor for NLP-29 in mediating aging-associated
+      PVD dendrite degeneration
+    reference_section_type: RESULTS
+suggested_questions:
+- question: &gt;-
+    Do the individual mature amidated NLP-29 peptides have intrinsic microbicidal activity against
+    D. coniospora or S. marcescens in vitro, and if so by what mechanism?
+  experts:
+  - Nathalie Pujol
+  - Jonathan J. Ewbank
+- question: &gt;-
+    Is any single nlp gene in the nlp-29 cluster individually required for pathogen resistance, or
+    is the effector function fully redundant?
+  experts:
+  - Nathalie Pujol
+  - Jonathan J. Ewbank
+suggested_experiments:
+- hypothesis: &gt;-
+    The mature NLP-29 peptides directly inhibit or kill fungi/bacteria.
+  description: &gt;-
+    Synthesize each predicted amidated NLP-29 peptide and the full-length mature peptide, and test
+    dose-dependent inhibition of D. coniospora hyphal growth and S. marcescens viability in standard
+    microbicidal/MIC assays, with membrane-permeabilization and nucleic-acid-binding readouts.
+  experiment_type: in vitro antimicrobial assay
+- hypothesis: &gt;-
+    nlp-29 contributes non-redundantly to antifungal survival only in combination with its cluster paralogs.
+  description: &gt;-
+    Generate precise single and higher-order CRISPR deletions across the nlp-27 to nlp-34 cluster and
+    compare survival after D. coniospora infection, distinguishing single-gene necessity from
+    cluster-level redundancy.
+  experiment_type: combinatorial genetics / survival assay
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

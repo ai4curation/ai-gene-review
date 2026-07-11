@@ -1,20 +1,70 @@
 """Tests for the render_projects module."""
 
-
 import pytest
 
 from ai_gene_review.render_projects import (
     build_symbol_to_species_index,
+    is_slides_markdown,
     link_uniprot_code_spans,
     parse_frontmatter,
     process_markdown_content,
+    project_bundle_markdown_files,
     replace_gene_tags,
     replace_gene_symbols,
     replace_species_qualified_symbols,
     render_project,
     render_project_bundle,
+    resolve_frontmatter_gene_links,
     should_autolink_gene_symbols,
 )
+
+
+class TestSlidesExclusion:
+    """Marp slide decks must not be rendered as plain pages.
+
+    Decks are named either ``*-slides.md`` (the ``just gen-project-slides``
+    convention) or bare ``slides.md`` (a manually built Marp deck living
+    alongside its ``slides.html``). Rendering either through the project
+    renderer produced a mangled single-page output that overwrote the real
+    deck on every run, so both are excluded from project-page collection.
+    """
+
+    @pytest.mark.parametrize(
+        "name,expected",
+        [
+            ("FOO-slides.md", True),
+            ("FOO-slides.markdown", True),
+            ("FOO.md", False),
+            ("FOO-pathway.md", False),
+            ("slides.md", True),
+            ("slides.markdown", True),
+        ],
+    )
+    def test_is_slides_markdown(self, tmp_path, name, expected):
+        assert is_slides_markdown(tmp_path / name) is expected
+
+    def test_bundle_excludes_marp_slides(self, tmp_path):
+        projects = tmp_path / "projects"
+        (projects / "FOO" / "slides").mkdir(parents=True)
+        (projects / "FOO" / "article").mkdir(parents=True)
+        foo = projects / "FOO.md"
+        foo.write_text("---\ntitle: FOO\n---\n# FOO\n")
+        (projects / "FOO" / "sub.md").write_text("# sub\n")
+        (projects / "FOO" / "slides" / "FOO-slides.md").write_text(
+            "---\nmarp: true\n---\n# deck\n"
+        )
+        # A bare ``slides.md`` deck (built manually to slides.html) must also be
+        # excluded so its rendered plain page does not overwrite the real deck.
+        (projects / "FOO" / "article" / "slides.md").write_text(
+            "---\nmarp: true\n---\n# bare deck\n"
+        )
+
+        names = {p.name for p in project_bundle_markdown_files(foo, projects)}
+
+        assert "FOO.md" in names
+        assert "sub.md" in names
+        assert "FOO-slides.md" not in names
+        assert "slides.md" not in names
 
 
 class TestBuildSymbolToSpeciesIndex:
@@ -135,8 +185,12 @@ class TestAutolinkGeneSymbolsFrontmatter:
         assert should_autolink_gene_symbols({"autolink_gene_symbols": "false"}) is False
 
     def test_supports_inverse_suppress_alias(self):
-        assert should_autolink_gene_symbols({"suppress_gene_symbol_links": True}) is False
-        assert should_autolink_gene_symbols({"suppress_gene_symbol_links": "yes"}) is False
+        assert (
+            should_autolink_gene_symbols({"suppress_gene_symbol_links": True}) is False
+        )
+        assert (
+            should_autolink_gene_symbols({"suppress_gene_symbol_links": "yes"}) is False
+        )
 
 
 class TestReplaceGeneSymbols:
@@ -177,9 +231,7 @@ class TestReplaceGeneSymbols:
         """Ambiguous symbol with matching hint is linked."""
         index = {"ATG7": ["human", "yeast"]}
         content = "ATG7 is involved in autophagy."
-        result, warnings = replace_gene_symbols(
-            content, index, species_hints=["human"]
-        )
+        result, warnings = replace_gene_symbols(content, index, species_hints=["human"])
 
         assert "[ATG7]" in result
         assert "human/ATG7" in result
@@ -189,9 +241,7 @@ class TestReplaceGeneSymbols:
         """Ambiguous symbol with non-matching hint generates warning."""
         index = {"ATG7": ["human", "yeast"]}
         content = "ATG7 is involved in autophagy."
-        result, warnings = replace_gene_symbols(
-            content, index, species_hints=["mouse"]
-        )
+        result, warnings = replace_gene_symbols(content, index, species_hints=["mouse"])
 
         # "mouse" doesn't match any available species for ATG7
         assert "[ATG7]" not in result
@@ -320,9 +370,7 @@ class TestReplaceGeneSymbols:
         """Links use correct relative path."""
         index = {"GPX4": ["human"]}
         content = "GPX4"
-        result, warnings = replace_gene_symbols(
-            content, index, base_path="../../genes"
-        )
+        result, warnings = replace_gene_symbols(content, index, base_path="../../genes")
 
         assert "../../genes/human/GPX4/GPX4-ai-review.html" in result
 
@@ -371,6 +419,52 @@ class TestReplaceGeneSymbols:
 
         assert "[ManY](../../genes/ECOLI/manY/manY-ai-review.html)" in result
         assert warnings == []
+
+
+class TestFrontmatterGeneLinks:
+    """Tests for resolving ``genes:`` frontmatter into project-page links."""
+
+    def test_priority_ordered_species_hints(self, tmp_path):
+        genes_dir = tmp_path / "genes"
+        (genes_dir / "human" / "CRYAA").mkdir(parents=True)
+        (genes_dir / "BOVIN" / "CRYAA").mkdir(parents=True)
+
+        index = build_symbol_to_species_index(genes_dir)
+        links, warnings = resolve_frontmatter_gene_links(
+            ["CRYAA"],
+            index,
+            species_hints=["human", "BOVIN"],
+            genes_dir=genes_dir,
+            base_path="../../genes",
+        )
+
+        assert warnings == []
+        assert links == [
+            {
+                "label": "CRYAA",
+                "species": "human",
+                "symbol": "CRYAA",
+                "url": "../../genes/human/CRYAA/CRYAA-ai-review.html",
+            }
+        ]
+
+    def test_species_qualified_entry(self, tmp_path):
+        genes_dir = tmp_path / "genes"
+        (genes_dir / "MYCTU" / "cds1").mkdir(parents=True)
+        (genes_dir / "VIBCH" / "cds1").mkdir(parents=True)
+
+        index = build_symbol_to_species_index(genes_dir)
+        links, warnings = resolve_frontmatter_gene_links(
+            ["VIBCH/cds1"],
+            index,
+            species_hints=["MYCTU"],
+            genes_dir=genes_dir,
+            base_path="../../genes",
+        )
+
+        assert warnings == []
+        assert links[0]["label"] == "VIBCH/cds1"
+        assert links[0]["url"] == "../../genes/VIBCH/cds1/cds1-ai-review.html"
 
 
 class TestReplaceGeneTags:
@@ -435,8 +529,14 @@ class TestReplaceSpeciesQualifiedSymbols:
         content = "Compare POPTR/CASPL4C1 and ARATH/CASPL4C1."
         result, warnings = replace_species_qualified_symbols(content, genes_dir)
 
-        assert "[POPTR/CASPL4C1](../../genes/POPTR/CASPL4C1/CASPL4C1-ai-review.html)" in result
-        assert "[ARATH/CASPL4C1](../../genes/ARATH/CASPL4C1/CASPL4C1-ai-review.html)" in result
+        assert (
+            "[POPTR/CASPL4C1](../../genes/POPTR/CASPL4C1/CASPL4C1-ai-review.html)"
+            in result
+        )
+        assert (
+            "[ARATH/CASPL4C1](../../genes/ARATH/CASPL4C1/CASPL4C1-ai-review.html)"
+            in result
+        )
         assert warnings == []
 
     def test_links_lowercase_exception_code(self, tmp_path):
@@ -456,7 +556,9 @@ class TestReplaceSpeciesQualifiedSymbols:
         genes_dir = tmp_path / "genes"
         (genes_dir / "and" / "or").mkdir(parents=True)  # contrived; must not link
 
-        result, warnings = replace_species_qualified_symbols("read and/or skim", genes_dir)
+        result, warnings = replace_species_qualified_symbols(
+            "read and/or skim", genes_dir
+        )
 
         assert result == "read and/or skim"
         assert warnings == []
@@ -480,7 +582,9 @@ class TestReplaceSpeciesQualifiedSymbols:
         genes_dir = tmp_path / "genes"
         genes_dir.mkdir()
 
-        result, warnings = replace_species_qualified_symbols("ABOUT/CONFIG here", genes_dir)
+        result, warnings = replace_species_qualified_symbols(
+            "ABOUT/CONFIG here", genes_dir
+        )
 
         assert result == "ABOUT/CONFIG here"
         assert warnings == []
@@ -519,8 +623,7 @@ class TestLinkUniprotCodeSpans:
 
         assert "[MCP/P06491](https://www.uniprot.org/uniprotkb/P06491/entry)" in result
         assert (
-            "[OPG108/A0A7H0DN80]"
-            "(https://www.uniprot.org/uniprotkb/A0A7H0DN80/entry)"
+            "[OPG108/A0A7H0DN80](https://www.uniprot.org/uniprotkb/A0A7H0DN80/entry)"
         ) in result
         assert "[Q9G044](https://www.uniprot.org/uniprotkb/Q9G044/entry)" in result
 
@@ -963,7 +1066,9 @@ class TestRenderProjectsTable:
             "    notes: needs more evidence\n    todos:\n      - cite PMID:123\n---\n# Gamma\n"
         )
         out, _ = render_project(
-            md, output_dir=tmp_path / "out", genes_dir=tmp_path / "genes",
+            md,
+            output_dir=tmp_path / "out",
+            genes_dir=tmp_path / "genes",
             projects_dir=projects,
         )
         html = out.read_text()

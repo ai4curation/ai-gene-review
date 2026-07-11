@@ -39,7 +39,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -286,14 +286,26 @@ jobs:
             echo "Created regeneration PR #$PR_NUMBER."
           fi
 
-          # Publish automatically: enable auto-merge so the regeneration PR
-          # lands on main once required checks (if any) pass, instead of sitting
-          # unmerged until it expires. The PR only contains generated artifacts
-          # (enforced by the safety guard above), so merging it cannot clobber
-          # source files. Non-fatal if the repo does not allow auto-merge -- in
-          # that case the PR simply stays open for a maintainer to merge.
-          gh pr merge "$PR_NUMBER" \
+          merge_state="$(gh pr view "$PR_NUMBER" \
             --repo "$GITHUB_REPOSITORY" \
-            --auto \
-            --squash \
-            || echo "Auto-merge could not be enabled; PR #$PR_NUMBER left open for manual merge."
+            --json mergeStateStatus \
+            --jq '.mergeStateStatus')"
+
+          if [ "$merge_state" = "CLEAN" ]; then
+            echo "Regeneration PR #$PR_NUMBER is clean; merging generated artifacts directly."
+            gh pr merge "$PR_NUMBER" \
+              --repo "$GITHUB_REPOSITORY" \
+              --squash
+          else
+            # Publish automatically: enable auto-merge so the regeneration PR
+            # lands on main once required checks or reviews pass, instead of
+            # sitting unmerged. The PR only contains generated artifacts
+            # (enforced by the safety guard above), so merging it cannot clobber
+            # source files. Non-fatal if the repo does not allow auto-merge -- in
+            # that case the PR simply stays open for a maintainer to merge.
+            gh pr merge "$PR_NUMBER" \
+              --repo "$GITHUB_REPOSITORY" \
+              --auto \
+              --squash \
+              || echo "Auto-merge could not be enabled; PR #$PR_NUMBER left open for manual merge."
+          fi

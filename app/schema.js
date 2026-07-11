@@ -5,6 +5,7 @@ window.searchSchema = {
   "id": "https://example.org/gene-annotation-review",
   "itemsPerPage": 50,
   "facetItemsToShow": 15,
+  "defaultView": "table",
   "customCss": ".sidebar { width: 340px; min-width: 340px; } .results-grid { grid-template-columns: 1fr; }",
   "searchableFields": [
     "gene_symbol",
@@ -102,6 +103,86 @@ window.searchSchema = {
       "label": "Tags",
       "type": "array",
       "sortBy": "count"
+    }
+  ],
+  "tableFields": [
+    {
+      "label": "Gene",
+      "type": "compound",
+      "key": "gene",
+      "parts": [
+        {
+          "field": "review_html_link",
+          "label": "Gene",
+          "type": "url",
+          "linkTextField": "gene_symbol",
+          "role": "primary"
+        },
+        {
+          "field": "protein_id",
+          "label": "ID",
+          "type": "string",
+          "role": "secondary"
+        }
+      ]
+    },
+    {
+      "label": "GO Term",
+      "type": "compound",
+      "key": "go_term",
+      "parts": [
+        {
+          "field": "term_id",
+          "label": "GO ID",
+          "type": "curie",
+          "linkTextField": "term_label",
+          "role": "primary"
+        }
+      ]
+    },
+    {
+      "field": "evidence_type",
+      "label": "Evidence",
+      "type": "string"
+    },
+    {
+      "label": "Reference",
+      "type": "compound",
+      "key": "reference",
+      "parts": [
+        {
+          "field": "original_reference_id",
+          "label": "Orig Ref",
+          "type": "curie",
+          "linkTextField": "original_reference_title",
+          "role": "primary"
+        }
+      ]
+    },
+    {
+      "field": "review.action",
+      "label": "Action",
+      "type": "string"
+    },
+    {
+      "field": "review.summary",
+      "label": "Summary",
+      "type": "string"
+    },
+    {
+      "field": "review.reason",
+      "label": "Reason",
+      "type": "string"
+    },
+    {
+      "field": "review.proposed_replacement_terms",
+      "label": "Replacements",
+      "type": "string"
+    },
+    {
+      "field": "status",
+      "label": "Status",
+      "type": "string"
     }
   ],
   "displayFields": [

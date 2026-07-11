@@ -1,0 +1,2680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FSH3 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>FSH3</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q99369" target="_blank" class="term-link">
+                        Q99369
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Saccharomyces cerevisiae</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "FSH3";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q99369" data-a="DESCRIPTION: FSH3 (YOR280C, &#34;Family of Serine Hydrolases 3&#34;) is..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>FSH3 (YOR280C, &#34;Family of Serine Hydrolases 3&#34;) is a 266-residue serine hydrolase of the alpha/beta-hydrolase fold (AB-hydrolase-3 / Pfam FSH1 family) in the budding yeast Saccharomyces cerevisiae. It carries a complete, canonical Ser-Asp-His catalytic triad, with the nucleophilic serine (Ser117) in a classic GXSXG &#34;nucleophile elbow&#34; motif, and was directly detected as a catalytically active serine hydrolase in yeast by activity-based protein profiling. Its physiological substrate and specific reaction are undetermined; UniProt assigns only the uncommitted esterase activity EC 3.1.-.- and describes it as a &#34;serine hydrolase of unknown specificity&#34;. FSH3 is one of three paralogous S. cerevisiae FSH proteins (with FSH1 and FSH2) and is the yeast counterpart of the human candidate tumor-suppressor esterase OVCA2. It localizes to the peroxisome and to cytoplasmic pools; its expression is induced by the DNA-damage-checkpoint effector Crt1/RFX1 and by oxidative (H2O2) stress. Overexpression of FSH3 perturbs cellular lipid content (notably reducing phosphatidylcholine) and triggers a NUC1-dependent apoptotic phenotype. Single deletion causes no growth defect under standard conditions, but a double mutant lacking both FSH3 and the peroxisomal lipase Lpx1 has reduced peroxisomal fatty-acid beta-oxidation activity, implicating FSH3 (redundantly with Lpx1) in peroxisomal lipid/fatty-acid metabolism; its precise molecular contribution and physiological substrate remain unresolved.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q99369" data-a="GO:0005634" data-r="GO_REF:0000033" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically inferred (IBA) nuclear localization propagated across the OVCA2/FSH family. It is not supported by the yeast-specific experimental evidence, which places FSH3 in the peroxisome (IDA), nor by any FSH3 assay. This is a weak, over-propagated location for this gene.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> IBA-only nuclear localization with no experimental support in yeast; the experimentally verified compartment is the peroxisome (GO:0005777, IDA). Family-wide phylogenetic propagation of a nuclear location is not substantiated for FSH3.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">PROPAGATION BAD</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">COMPARTMENT OR COMPLEX MISMATCH</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:Q8WZ82</span>
+
+                                    &middot; OVCA2 (human)
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                    <div class="propagation-comment">PANTHER OVCA2 subfamily (PTHR48070:SF6) seed; a nuclear location for the family is not substantiated for yeast FSH3, whose experimental compartment is the peroxisome.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q99369" data-a="GO:0005737" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically inferred (IBA) cytoplasmic localization. FSH3 has cytoplasmic/stress-granule associations (CD-CODE stress granule cross-ref) and a soluble alpha/beta-hydrolase is consistent with a cytoplasmic pool, so this general location is plausible, but it is non-core relative to the experimentally established peroxisomal localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> General, phylogenetically inferred location that is plausible for a soluble hydrolase but is not the informative, experimentally supported compartment; retained as non-core alongside the IDA peroxisome annotation.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016787" target="_blank" class="term-link">
+                                    GO:0016787
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q99369" data-a="GO:0016787" data-r="GO_REF:0000033" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but uninformatively general. FSH3 has a complete, canonical Ser-Asp-His catalytic triad (Ser117 in a GXSXG motif, Asp180, His209) on an alpha/beta-hydrolase scaffold, and was detected as a catalytically active serine hydrolase by activity-based proteomics. These support the more specific mechanism-defined term serine hydrolase activity (GO:0017171).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The generic hydrolase activity term should be replaced by the mechanism-specific GO:0017171 (serine hydrolase activity), which is directly supported by the intact Ser-Asp-His triad, the diagnostic GXSXG nucleophile-elbow motif, and the activity-based proteomic detection of FSH3 as an active serine hydrolase. The specific substrate/reaction remains unknown (EC 3.1.-.-), so a more specific catalytic term is not yet justified.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">TERM SCOPING PROBLEM</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">GRANULARITY MISMATCH</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:Q8WZ82</span>
+
+                                    &middot; OVCA2 (human)
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                    <div class="propagation-comment">The IBA hydrolase-activity transfer from the OVCA2 esterase subfamily is correct in branch but too general; the intact Ser-Asp-His triad and GXSXG motif in FSH3 support the more specific serine hydrolase activity.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0017171" target="_blank" class="term-link">
+                                    serine hydrolase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14645503" target="_blank" class="term-link">
+                                        PMID:14645503
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Three of the previously uncharacterized proteins are members of a eukaryotic serine hydrolase family</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005777" target="_blank" class="term-link">
+                                    GO:0005777
+                                </a>
+                            </span>
+                            <span class="term-label">peroxisome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36164978" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:36164978
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Systematic multi-level analysis of an organelle proteome rev...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q99369" data-a="GO:0005777" data-r="PMID:36164978" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimentally determined (IDA) peroxisomal localization from a systematic peroxisome-proteome analysis in which FSH3 is one of the newly identified peroxisomal proteins. This is the informative, experimentally supported compartment for FSH3 and is retained as a core localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct experimental evidence (IDA) from a systematic peroxisome-proteome study; the curator had access to the full dataset. This is the strongest localization annotation for FSH3.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/36164978" target="_blank" class="term-link">
+                                        PMID:36164978
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Lipidomic analysis on mutants of 10 newly identified peroxisomal proteins whose molecular function in the yeast cell is putative or unknown shows that cells overexpressing FSH3 had the most significant change in all conditions compared to the control strain, with a reduction of PC</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003674" target="_blank" class="term-link">
+                                    GO:0003674
+                                </a>
+                            </span>
+                            <span class="term-label">molecular_function</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q99369" data-a="GO:0003674" data-r="GO_REF:0000015" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root-level placeholder (ND, &#34;no biological data&#34;) reflecting the historical absence of a curated molecular function. It is superseded by the informative serine hydrolase activity now supported by the domain/triad analysis and the IBA hydrolase annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ND root placeholder is superseded by informative molecular-function evidence (serine hydrolase activity); root ND annotations should not be retained once a real function is available.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008150" target="_blank" class="term-link">
+                                    GO:0008150
+                                </a>
+                            </span>
+                            <span class="term-label">biological_process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q99369" data-a="GO:0008150" data-r="GO_REF:0000015" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root-level placeholder (ND) for biological process. FSH3&#39;s native biological process is genuinely unresolved (no deletion phenotype under standard conditions), so this remains a real knowledge gap rather than a curatable term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ND root placeholder; uninformative. The genuine uncertainty about FSH3&#39;s biological role is recorded in knowledge_gaps rather than as a root-term ND annotation.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Serine hydrolase (alpha/beta-hydrolase fold, AB-hydrolase-3 / Fsh family) with a complete, canonical Ser-Asp-His catalytic triad: the nucleophilic Ser117 sits in a diagnostic GXSXG motif (G115-F-S-Q-G119), with Asp180 and His209 completing the charge-relay system. FSH3 was directly detected as a catalytically active serine hydrolase in yeast by activity-based protein profiling, confirming the triad is functional. The specific physiological substrate and reaction are undetermined (UniProt EC 3.1.-.-, &#34;serine hydrolase of unknown specificity&#34;), so only the mechanism-defined activity is asserted here.</h3>
+                <span class="vote-buttons" data-g="Q99369" data-a="FUNCTION: Serine hydrolase (alpha/beta-hydrolase fold, AB-hy..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0017171" target="_blank" class="term-link">
+                            serine hydrolase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005777" target="_blank" class="term-link">
+                                peroxisome
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14645503" target="_blank" class="term-link">
+                                PMID:14645503
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Three of the previously uncharacterized proteins are members of a eukaryotic serine hydrolase family</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36164978" target="_blank" class="term-link">
+                                PMID:36164978
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">cells overexpressing FSH3 had the most significant change in all conditions compared to the control strain, with a reduction of PC</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000015.md" target="_blank" class="term-link">
+                            GO_REF:0000015
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Use of the ND evidence code for Gene Ontology (GO) terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/14645503" target="_blank" class="term-link">
+                            PMID:14645503
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Synergistic computational and experimental proteomics approaches for more accurate detection of active serine hydrolases in yeast.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15494396" target="_blank" class="term-link">
+                            PMID:15494396
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Identification of new genes regulated by the Crt1 transcription factor, an effector of the DNA damage checkpoint pathway in Saccharomyces cerevisiae.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/36164978" target="_blank" class="term-link">
+                            PMID:36164978
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Systematic multi-level analysis of an organelle proteome reveals new peroxisomal functions.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/30776074" target="_blank" class="term-link">
+                            PMID:30776074
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">FSH3 mediated cell death is dependent on NUC1 in Saccharomyces cerevisiae.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24187129" target="_blank" class="term-link">
+                            PMID:24187129
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Screening for hydrolytic enzymes reveals Ayr1p as a novel triacylglycerol lipase in Saccharomyces cerevisiae.</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the natural substrate of FSH3, and does the S117A catalytic-dead mutant lose the overexpression phenotypes (apoptosis, PC reduction)?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q99369" data-a="Q: What is the natural substrate of FSH3, and does th..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is FSH3 functionally redundant with FSH2 (its OVCA2-subfamily paralog) and/or FSH1, and does a triple fsh deletion reveal a phenotype absent in single mutants?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q99369" data-a="Q: Is FSH3 functionally redundant with FSH2 (its OVCA..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does FSH3 act in peroxisomal glycerophospholipid metabolism, and is the OVCA2 human ortholog&#39;s function conserved?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q99369" data-a="Q: Does FSH3 act in peroxisomal glycerophospholipid m..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Compare wild-type FSH3, catalytic-dead FSH3(S117A), and empty-vector strains for the overexpression phenotypes (ROS accumulation, viability, PC levels). Loss of phenotype in S117A would establish that they depend on catalytic serine-hydrolase activity.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: FSH3 is a catalytically active serine hydrolase whose in-cell phenotypes require the Ser117 nucleophile.</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q99369" data-a="EXPERIMENT: Compare wild-type FSH3, catalytic-dead FSH3(S117A)..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Purify recombinant FSH3 and assay activity against fluorogenic ester panels and defined lipids (including phosphatidylcholine) in vitro; combine with untargeted lipidomics/metabolomics of fsh3-delta vs wild type to identify accumulating candidate substrates.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: FSH3 hydrolyzes a peroxisomal glycerophospholipid or ester substrate.</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q99369" data-a="EXPERIMENT: Purify recombinant FSH3 and assay activity against..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Construct single, double and triple fsh deletions and phenotype across oxidative, DNA-damage and oleate (peroxisome-inducing) conditions, with epistasis to NUC1.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Single-deletion silence of FSH3 is due to redundancy with FSH1/FSH2.</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q99369" data-a="EXPERIMENT: Construct single, double and triple fsh deletions ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The physiological substrate of FSH3 and the specific reaction it catalyzes are undetermined. Only an uncommitted esterase activity (EC 3.1.-.-) is assigned, and UniProt describes FSH3 as a &#34;serine hydrolase of unknown specificity&#34;.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> FSH3 has a complete, canonical Ser-Asp-His serine-hydrolase catalytic triad (Ser117 in a GXSXG motif, Asp180, His209) on an alpha/beta-hydrolase fold and was detected as a catalytically active serine hydrolase by activity-based proteomics in yeast; the class of chemistry (serine-nucleophile ester/amide hydrolysis) is therefore known, but no natural substrate has been identified.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> FSH3 is the yeast counterpart of the human candidate tumor-suppressor esterase OVCA2; identifying its substrate would define the molecular function of a conserved but functionally dark eukaryotic serine-hydrolase family.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> In-vitro substrate profiling (e.g. fluorogenic ester/lipid panels, competitive activity-based protein profiling with FP-probes) of recombinant FSH3 and a catalytic-serine (S117A) mutant, paired with untargeted metabolomics/lipidomics of fsh3-delta vs wild type to identify accumulating candidate substrates.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Three of the previously uncharacterized proteins are members of a eukaryotic serine hydrolase family"</em> — PMID:14645503</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The precise biological role/pathway of FSH3 is not fully resolved. Its single deletion causes no growth defect under standard conditions, and its overexpression phenotypes (PC reduction, NUC1-dependent apoptosis) cannot be read as its native role. A loss-of-function clue does exist: a double mutant lacking both FSH3 and the peroxisomal lipase Lpx1 (but neither single mutant) has reduced peroxisomal fatty-acid beta-oxidation activity, implicating FSH3 in peroxisomal fatty-acid beta-oxidation (GO:0006635; peroxisomal in yeast) redundantly with Lpx1 -- but FSH3&#39;s specific molecular step in that pathway is undetermined.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">NARROWING</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">BP_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> FSH3 localizes to the peroxisome, is induced by the DNA-damage-checkpoint effector Crt1/RFX1 and by H2O2, its overexpression reduces phosphatidylcholine and triggers NUC1-dependent apoptosis, and a double deletion of FSH3 with LPX1 shows a significant reduction in beta-oxidation activity relative to control and both single mutants (an overlapping role for Fsh3 with Lpx1). Single-deletion growth is silent, so the specific pathway step and whether the beta-oxidation contribution is direct (an acyl-ester hydrolase step) or indirect remain open.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> The Fsh3/Lpx1 double-mutant beta-oxidation defect provides a candidate pathway (peroxisomal fatty-acid beta-oxidation / lipid mobilization) and explains why single deletions look silent (redundancy with Lpx1); resolving FSH3&#39;s specific role there would move it from BP-dark to an annotatable biological process (candidate GO:0006635 fatty acid beta-oxidation), and let the overexpression apoptosis phenotype be interpreted.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Condition-specific phenotyping of fsh3-delta and fsh3/lpx1 combinations on fatty-acid (oleate) growth and direct beta-oxidation-flux assays, epistasis with FSH1/FSH2 and NUC1, to define FSH3&#39;s step in peroxisomal fatty-acid metabolism and justify a GO:0006635 (fatty acid beta-oxidation) annotation.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"The deletion of FSH3 improved the yeast growth rate under H2O2-induction as compared to WT control cells."</em> — PMID:30776074</li>
+
+                <li><em>"suggesting an overlapping role for Fsh3 with Lpx1"</em> — PMID:36164978</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The degree and direction of functional redundancy among the three paralogous S. cerevisiae serine hydrolases FSH1, FSH2 and FSH3 is unresolved; whether they share substrates or act in overlapping/opposing pathways is unknown.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> All three are members of the Fsh serine-hydrolase family sharing conservation with human OVCA2, and fsh double deletions (fsh1 fsh2, fsh1 fsh3, fsh2 fsh3) grow faster than wild type, indicating some shared or overlapping influence on growth; but no shared molecular substrate or pathway has been established.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Redundancy among paralogs is the most likely reason single deletions are silent; resolving it is a prerequisite for detecting loss-of-function phenotypes and for assigning family-level function.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Comparative biochemistry of purified FSH1/FSH2/FSH3 on shared substrate panels and phenotyping of single, double, and triple fsh deletions across stress conditions.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"The double deletions fsh1Δ fsh2Δ, fsh1Δ fsh3Δ and fsh2Δ fsh3Δ displayed increased growth compared to WT cells."</em> — PMID:30776074</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> It is unknown whether peroxisomal FSH3 acts directly on a glycerophospholipid substrate (e.g. phosphatidylcholine) or whether the phosphatidylcholine reduction seen on FSH3 overexpression is an indirect consequence of a different activity.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> FSH3 overexpression produces the strongest lipidome change (PC reduction) among a panel of dark peroxisomal proteins, and FSH3 has the catalytic machinery of a serine ester hydrolase; but no in-vitro assay has shown FSH3 hydrolyzing PC or any defined lipid.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> A direct link between FSH3 and glycerophospholipid turnover would give the family a concrete molecular function and connect it to peroxisomal lipid metabolism.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Direct in-vitro lipase/phospholipase assays on recombinant FSH3 (and S117A) against PC and related glycerophospholipids, with lipidomics of fsh3-delta to test for the reciprocal (accumulation) effect.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"cells overexpressing FSH3 had the most significant change in all conditions compared to the control strain, with a reduction of PC"</em> — PMID:36164978</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(FSH3-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q99369" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="fsh3-yor280c-research-notes">FSH3 (YOR280C) research notes</h1>
+<p>Gene: FSH3 / YOR280C, <em>Saccharomyces cerevisiae</em> (S288C), UniProt Q99369, SGD S000005806.<br />
+Name: "Family of Serine Hydrolases 3". 266 aa. UniProt EC=3.1.-.- (esterase, generic).<br />
+This is a functionally dark gene: a putative serine hydrolase of <strong>unknown physiological<br />
+substrate / reaction / in-vivo role</strong>.</p>
+<h2 id="summary-of-what-is-known-vs-not-known">Summary of what is KNOWN vs NOT KNOWN</h2>
+<p>KNOWN (defensible):<br />
+- Belongs to the α/β-hydrolase fold, AB-hydrolase-3 family; Pfam FSH1 (PF03959),<br />
+  InterPro AB_hydrolase_fold (IPR029058) + FSH-like domain (IPR005645); PANTHER family<br />
+  PTHR48070 subfamily SF6 "ESTERASE OVCA2"; SCOP/SUPFAM alpha/beta-Hydrolases (SSF53474).<br />
+- Has an intact, canonical serine-hydrolase catalytic triad (Ser-Asp-His) with the<br />
+  nucleophile in a classic GXSXG motif (see domain analysis below).<br />
+- Was directly detected as an <em>active</em> serine hydrolase by activity-based protein profiling<br />
+  (chemical + computational proteomics) in yeast — i.e. the catalytic serine is chemically<br />
+  reactive in vivo <a href="https://pubmed.ncbi.nlm.nih.gov/14645503">PMID:14645503</a>.<br />
+- Transcriptionally induced as a target of the Crt1/RFX1 repressor (DNA-damage-checkpoint<br />
+  effector) <a href="https://pubmed.ncbi.nlm.nih.gov/15494396">PMID:15494396</a>, and induced by H2O2/oxidative stress <a href="https://pubmed.ncbi.nlm.nih.gov/30776074">PMID:30776074</a>.<br />
+- Localizes to the peroxisome (IDA, SGD) <a href="https://pubmed.ncbi.nlm.nih.gov/36164978">PMID:36164978</a>; is one of a set of newly identified<br />
+  peroxisomal proteins of unknown molecular function.<br />
+- Overexpression phenotypes: overexpression causes an apoptotic/ROS phenotype dependent on<br />
+  NUC1 <a href="https://pubmed.ncbi.nlm.nih.gov/30776074">PMID:30776074</a>, and overexpression produces the strongest lipidome change (reduction<br />
+  of phosphatidylcholine, PC) among a panel of dark peroxisomal proteins <a href="https://pubmed.ncbi.nlm.nih.gov/36164978">PMID:36164978</a>.</p>
+<p>NOT KNOWN (the gaps — primary deliverable):<br />
+- The physiological substrate and the specific reaction it catalyzes. UniProt states<br />
+  "Serine hydrolase of unknown specificity" and assigns only EC 3.1.-.- (uncommitted esterase).<br />
+- The in-vivo biological role / pathway. Single deletion has no reported <em>growth</em> phenotype<br />
+  under standard conditions, but a double-deletion (Δlpx1Δfsh3) shows reduced peroxisomal<br />
+  β-oxidation activity <a href="https://pubmed.ncbi.nlm.nih.gov/36164978">PMID:36164978</a>, implicating FSH3 (redundantly with Lpx1) in<br />
+  peroxisomal fatty-acid β-oxidation. The specific molecular step/substrate remains unassigned.<br />
+- Functional redundancy with paralogs FSH1 and FSH2 (double-deletion data below suggest<br />
+  partial redundancy / opposing roles but do not assign a molecular function).<br />
+- Whether the PC reduction on overexpression reflects a direct enzymatic activity on a<br />
+  glycerophospholipid substrate, or an indirect consequence.</p>
+<h2 id="domain-catalytic-triad-analysis-inline-from-fsh3-uniprottxt-sequence">Domain / catalytic-triad analysis (inline, from FSH3-uniprot.txt sequence)</h2>
+<p>UniProt annotates three "Charge relay system" active-site residues (by similarity, ECO:0000250):<br />
+- ACT_SITE 117, 180, 209.</p>
+<p>Mapping onto the 266-aa sequence (verified computationally, see below):<br />
+- Position 117 = <strong>Ser</strong> (nucleophile), embedded in <strong>G115-F116-S117-Q118-G119 = GFSQG</strong>, a<br />
+  textbook <strong>GXSXG</strong> "nucleophile elbow" motif of α/β-hydrolases.<br />
+- Position 180 = <strong>Asp</strong> (acid of the triad).<br />
+- Position 209 = <strong>His</strong> (base of the triad).</p>
+<p>So FSH3 carries a <strong>complete, canonical Ser-Asp-His serine-hydrolase catalytic triad</strong> on an<br />
+α/β-hydrolase scaffold, with the nucleophilic serine in the diagnostic GXSXG motif. The triad<br />
+is intact (this is NOT a pseudoenzyme). Consistent with this, activity-based profiling detected<br />
+FSH3 as a <em>catalytically active</em> serine hydrolase in vivo <a href="https://pubmed.ncbi.nlm.nih.gov/14645503">PMID:14645503</a>. This makes a generic<br />
+serine-hydrolase molecular function (GO:0017171 serine hydrolase activity) domain-defensible;<br />
+a <em>specific</em> substrate/reaction remains a genuine gap.</p>
+<p>Verification (residue identity + motif), reproducible:</p>
+<div class="codehilite"><pre><span></span><code><span class="n">seq</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;MSEKKKVLMLHGFVQSDKIFSAKTGGLRKNLKKLGYDLYYPCAPHSIDKKALFQSESEKG&quot;</span>
+       <span class="s2">&quot;RDAAKEFNTSATSDEVYGWFFRNPESFNSFQIDQKVFNYLRNYVLENGPFDGVIGFSQGA&quot;</span>
+       <span class="s2">&quot;GLGGYLVTDFNRILNLTDEQQPALKFFISFSGFKLEDQSYQKEYHRIIQVPSLHVRGELD&quot;</span>
+       <span class="s2">&quot;EVVAESRIMALYESWPDNKRTLLVHPGAHFVPNSKPFVSQVCNWIQGITSKEGQEHNAQP&quot;</span>
+       <span class="s2">&quot;EVDRKQFDKPQLEDDLLDMIDSLGKL&quot;</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">seq</span><span class="p">[</span><span class="mi">116</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;S&quot;</span> <span class="ow">and</span> <span class="n">seq</span><span class="p">[</span><span class="mi">179</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;D&quot;</span> <span class="ow">and</span> <span class="n">seq</span><span class="p">[</span><span class="mi">208</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;H&quot;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span><span class="p">;</span> <span class="k">assert</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;G.S.G&quot;</span><span class="p">,</span> <span class="n">seq</span><span class="p">)</span><span class="o">.</span><span class="n">start</span><span class="p">()</span><span class="o">+</span><span class="mi">1</span> <span class="o">==</span> <span class="mi">115</span>  <span class="c1"># GFSQG, Ser at 117</span>
+</code></pre></div>
+
+<h2 id="fsh3-vs-paralogs-fsh1-fsh2-and-human-ovca2-keep-these-separate">FSH3 vs paralogs FSH1 / FSH2 and human OVCA2 (keep these separate)</h2>
+<p><em>S. cerevisiae</em> has three FSH paralogs, all named for this "Family of Serine Hydrolases":<br />
+- <strong>FSH1</strong> = P38777 / YHR049W (243 aa). PANTHER subfamily <strong>SF9</strong> (distinct from FSH3).<br />
+  The crystal structure 1YCD is FSH1/YHR049W, "a member of the serine hydrolase family"<br />
+  (PANTHER PTHR48070 representative structure).<br />
+- <strong>FSH2</strong> = Q05015 / YMR222C (223 aa). PANTHER subfamily <strong>SF6</strong> (same subfamily as FSH3).<br />
+- <strong>FSH3</strong> = Q99369 / YOR280C (266 aa). PANTHER subfamily <strong>SF6</strong> "ESTERASE OVCA2".</p>
+<p>So FSH3 is in the OVCA2 subfamily (SF6) together with FSH2 and human OVCA2, and is more<br />
+distantly related to FSH1 (SF9). The human ortholog is <strong>OVCA2 (Q8WZ82)</strong>, a candidate ovarian<br />
+tumor-suppressor esterase; OVCA2 is the source of the phylogenetic (IBA) inferences in GOA<br />
+(GOA IBA uses UniProtKB:Q8WZ82 and PANTHER:PTN000512658 as with/from). The <em>S. pombe</em> member of<br />
+this family is DYR-SCHPO / SPAC22A12.06c.</p>
+<p>Provenance for the family framing:<br />
+- <a href="https://pubmed.ncbi.nlm.nih.gov/14645503" title="Three of the previously uncharacterized proteins are members of a eukaryotic   serine hydrolase family, designated as Fsh (family of serine hydrolase), identified here for   the first time. OVCA2, a potential human tumor suppressor, and DYR-SCHPO, a dihydrofolate   reductase from Schizosaccharomyces pombe, are members of this family.">PMID:14645503</a><br />
+- <a href="https://pubmed.ncbi.nlm.nih.gov/30776074" title="Family of Serine Hydrolases (FSH) members FSH1, FSH2 and FSH3 in   Saccharomyces cerevisiae share conserved sequences with the human candidate tumor suppressor   OVCA2.">PMID:30776074</a></p>
+<p>CAUTION: The DYR-SCHPO/DHFR association in <a href="https://pubmed.ncbi.nlm.nih.gov/14645503">PMID:14645503</a> and the speculation in<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/15494396">PMID:15494396</a> that "FSH3p ... may be involved in folate metabolism ... by carrying serine<br />
+hydrolase activity required for the novel metabolic pathway involving dihydrofolate reductase<br />
+(DHFR) or by directly interacting with the DHFR enzyme" is <strong>speculation from sequence<br />
+similarity</strong>, not experimental evidence for a FSH3 DHFR/folate function. Do not annotate folate<br />
+metabolism from this.</p>
+<h2 id="evidence-by-reference">Evidence by reference</h2>
+<h3 id="pmid14645503-baxter-et-al-2004-mol-cell-proteomics-function-abpp">PMID:14645503 (Baxter et al. 2004, Mol Cell Proteomics) — FUNCTION (ABPP)</h3>
+<p>Activity-based/computational proteomics identifying active serine hydrolases in yeast; defines<br />
+the Fsh family and detects FSH3 as an active serine hydrolase. This is the source cited by<br />
+UniProt for FUNCTION "Serine hydrolase of unknown specificity" (ECO:0000269|PubMed:14645503).<br />
+- Supports: serine hydrolase activity (catalytically active in vivo), family definition.<br />
+- Abstract-only in cache (full_text_available: false).</p>
+<h3 id="pmid15494396-zaim-et-al-2005-j-biol-chem-induction-crt1rfx1">PMID:15494396 (Zaim et al. 2005, J Biol Chem) — INDUCTION (Crt1/RFX1)</h3>
+<p>FSH3 is a confirmed transcriptional target of Crt1p (RFX1), the DNA-damage-checkpoint effector.<br />
+- <a href="https://pubmed.ncbi.nlm.nih.gov/15494396" title="Our results indicated that FSH3, YLR345W, and NTH2 are indeed under the   regulation of Crt1p.">PMID:15494396</a><br />
+- The DHFR/folate idea here is speculative (see CAUTION above).<br />
+- Source of UniProt INDUCTION "Regulated by RFX1/CRT1".</p>
+<h3 id="pmid36164978-yifrach-et-al-2022-embo-j-family-peroxisome-ida-lipidome">PMID:36164978 (Yifrach et al. 2022, EMBO J-family) — peroxisome IDA + lipidome</h3>
+<p>Systematic multi-level analysis of the peroxisome proteome. FSH3 is a newly identified<br />
+peroxisomal protein (basis of the SGD IDA C:peroxisome annotation).<br />
+- <a href="https://pubmed.ncbi.nlm.nih.gov/36164978" title="Lipidomic analysis on mutants of 10 newly identified peroxisomal proteins   whose molecular function in the yeast cell is putative or unknown shows that cells   overexpressing FSH3 had the most significant change in all conditions compared to the control   strain, with a reduction of PC (raw data is in Dataset EV7).">PMID:36164978</a><br />
+- Supports: C:peroxisome (IDA); a lipid-metabolism-linked phenotype on overexpression<br />
+  (reduction of phosphatidylcholine). Note this is an overexpression lipidome effect, not<br />
+  proof of a direct PC-hydrolase activity.<br />
+- IMPORTANT (deletion-based phenotype, from full text): a peroxisomal β-oxidation activity<br />
+  assay of single and double deletions shows Δfsh3 contributes to β-oxidation:<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/36164978" title="A β‐oxidation activity assay of Δlpx1, Δfsh3, and Δlpx1Δfsh3 strains   supplemented with labeled 8 carbon‐ or 18 carbon‐free fatty acids in media supplemented   with 0.5% glucose shows a significant reduction in β‐oxidation activity compared to the   control strain and the two single mutants, suggesting an overlapping role for Fsh3 with   Lpx1.">PMID:36164978</a>. Lpx1 is the peroxisomal lipase; the double mutant Δlpx1Δfsh3 (but not either<br />
+  single mutant) has reduced β-oxidation. This is a concrete deletion (loss-of-function)<br />
+  clue that FSH3 has a redundant/overlapping role in peroxisomal fatty-acid β-oxidation —<br />
+  consistent with the peroxisomal localization and the PC-reduction lipidome result. It<br />
+  refines the "no deletion phenotype" statement: single-deletion <em>growth</em> is silent, but<br />
+  a biochemical double-mutant β-oxidation phenotype exists and points to a candidate<br />
+  pathway (GO:0006635 fatty acid beta-oxidation; in yeast this is exclusively peroxisomal).<br />
+  This is why single fsh/lpx1 deletions look silent (redundancy). The molecular role of<br />
+  FSH3 in that pathway (which acyl-ester substrate it hydrolyzes) is still unassigned.</p>
+<h3 id="pmid30776074-gowsalya-et-al-2019-fems-yeast-res-overexpression-apoptosis-nuc1">PMID:30776074 (Gowsalya et al. 2019, FEMS Yeast Res) — overexpression apoptosis, NUC1</h3>
+<ul>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/30776074" title="hydrogen peroxide (H2O2) exposure increased the expression of both mRNA and   protein levels of FSH3">PMID:30776074</a> — H2O2/oxidative-stress induction.</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/30776074" title="The overexpression of FSH3 in WT yeast cells caused an apoptotic phenotype,   including accumulation of reaction oxygen species, decreased cell viability and cell death.">PMID:30776074</a></li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/30776074" title="Our results suggest that FSH3 induced apoptosis of yeast in a NUC1 dependent   manner.">PMID:30776074</a></li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/30776074" title="The deletion of FSH3 improved the yeast growth rate under H2O2-induction as   compared to WT control cells.">PMID:30776074</a> — deletion is not required for viability; gives a growth<br />
+  benefit under H2O2.</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/30776074" title="The double deletions fsh1Δ fsh2Δ, fsh1Δ fsh3Δ and fsh2Δ fsh3Δ displayed   increased growth compared to WT cells.">PMID:30776074</a> — partial redundancy / shared pathway among paralogs.</li>
+</ul>
+<h3 id="pmid24187129-ploier-et-al-2013-j-biol-chem-background-on-yeast-peroxisomalld-hydrolases">PMID:24187129 (Ploier et al. 2013, J Biol Chem) — background on yeast peroxisomal/LD hydrolases</h3>
+<p>Screen for hydrolytic enzymes in yeast peroxisomes and lipid droplets using GXSXG-motif serine<br />
+hydrolases; identifies Ayr1p as a TG lipase and confirms Lpx1p. Provides context for the class<br />
+of GXSXG serine hydrolases acting in peroxisomal/lipid metabolism (not a FSH3-specific paper).<br />
+- <a href="https://pubmed.ncbi.nlm.nih.gov/24187129" title="All of these proteins contain the consensus sequence for a classical lipase   (G X S X G motif) with a classical catalytic triad containing a nucleophile serine.">PMID:24187129</a><br />
+- Relevance: contextual (LOW/MEDIUM) — supports plausibility of a peroxisomal lipid-related<br />
+  serine-hydrolase role, does not assign FSH3 a substrate.</p>
+<h2 id="annotation-decisions-rationale">Annotation decisions (rationale)</h2>
+<ul>
+<li>GO:0016787 hydrolase activity (IBA, MF): correct but too general. The intact Ser-His-Asp<br />
+  triad + GXSXG + ABPP reactivity support the more specific GO:0017171 serine hydrolase<br />
+  activity. MODIFY → GO:0017171.</li>
+<li>GO:0005777 peroxisome (IDA, PMID:36164978): ACCEPT (experimental, curator-verified).</li>
+<li>GO:0005634 nucleus (IBA), GO:0005737 cytoplasm (IBA): phylogenetically-inferred locations<br />
+  from the OVCA2 family. Cytoplasm is plausible/general; nucleus is not supported by the<br />
+  yeast-specific IDA evidence (which places it in peroxisome) and is a weak IBA. Keep as<br />
+  non-core (cytoplasm) / mark over-annotated (nucleus) rather than REMOVE — these are IBA, not<br />
+  experimental. FSH3 is also reported in stress granules (CD-CODE E03F929F) consistent with<br />
+  cytoplasmic pools.</li>
+<li>GO:0003674 molecular_function ND, GO:0008150 biological_process ND: root placeholders; REMOVE<br />
+  (superseded by informative annotations we now have / the IBA hydrolase annotation).</li>
+</ul>
+<h2 id="open-questions-gaps-primary-deliverable">Open questions / gaps (primary deliverable)</h2>
+<ol>
+<li>Physiological substrate + specific reaction (only EC 3.1.-.-; "unknown specificity"). The<br />
+   Δlpx1Δfsh3 β-oxidation phenotype nudges this toward a fatty-acyl/lipid ester substrate.</li>
+<li>In-vivo biological role/pathway. Refined: single-deletion growth is silent, but a<br />
+   double-mutant (Δlpx1Δfsh3) β-oxidation defect implicates FSH3 in peroxisomal fatty-acid<br />
+   β-oxidation (GO:0006635, peroxisomal in yeast), overlapping with the lipase Lpx1. The<br />
+   precise molecular contribution is still unknown.</li>
+<li>Redundancy vs paralogs and vs Lpx1: fsh double deletions grow faster <a href="https://pubmed.ncbi.nlm.nih.gov/30776074">PMID:30776074</a>,<br />
+   and Δlpx1Δfsh3 (but not single mutants) reduces β-oxidation <a href="https://pubmed.ncbi.nlm.nih.gov/36164978">PMID:36164978</a> — redundancy<br />
+   is the likely reason single deletions look silent; molecular function still unassigned.</li>
+<li>Whether peroxisomal FSH3 acts directly on a glycerophospholipid (PC) / fatty-acyl ester,<br />
+   or the PC/β-oxidation effects are indirect.<br />
+</content><br />
+</invoke></li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q99369
+gene_symbol: FSH3
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:559292
+  label: Saccharomyces cerevisiae
+description: &gt;-
+  FSH3 (YOR280C, &#34;Family of Serine Hydrolases 3&#34;) is a 266-residue serine
+  hydrolase of the alpha/beta-hydrolase fold (AB-hydrolase-3 / Pfam FSH1 family)
+  in the budding yeast Saccharomyces cerevisiae. It carries a complete, canonical
+  Ser-Asp-His catalytic triad, with the nucleophilic serine (Ser117) in a classic
+  GXSXG &#34;nucleophile elbow&#34; motif, and was directly detected as a catalytically
+  active serine hydrolase in yeast by activity-based protein profiling. Its
+  physiological substrate and specific reaction are undetermined; UniProt assigns
+  only the uncommitted esterase activity EC 3.1.-.- and describes it as a &#34;serine
+  hydrolase of unknown specificity&#34;. FSH3 is one of three paralogous S. cerevisiae
+  FSH proteins (with FSH1 and FSH2) and is the yeast counterpart of the human
+  candidate tumor-suppressor esterase OVCA2. It localizes to the peroxisome and to
+  cytoplasmic pools; its expression is induced by the DNA-damage-checkpoint
+  effector Crt1/RFX1 and by oxidative (H2O2) stress. Overexpression of FSH3
+  perturbs cellular lipid content (notably reducing phosphatidylcholine) and
+  triggers a NUC1-dependent apoptotic phenotype. Single deletion causes no growth
+  defect under standard conditions, but a double mutant lacking both FSH3 and the
+  peroxisomal lipase Lpx1 has reduced peroxisomal fatty-acid beta-oxidation
+  activity, implicating FSH3 (redundantly with Lpx1) in peroxisomal lipid/fatty-acid
+  metabolism; its precise molecular contribution and physiological substrate remain
+  unresolved.
+references:
+- id: GO_REF:0000015
+  title: Use of the ND evidence code for Gene Ontology (GO) terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: PMID:14645503
+  title: Synergistic computational and experimental proteomics approaches for more
+    accurate detection of active serine hydrolases in yeast.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Defines the eukaryotic Fsh (family of serine hydrolase) group and detects FSH3
+      as a catalytically active serine hydrolase by combined chemical/computational
+      activity-based proteomics. This is the paper UniProt cites for FUNCTION
+      (&#34;Serine hydrolase of unknown specificity&#34;). Abstract-only in cache; the FSH3
+      identification is in the full text/supplementary of this yeast serine-hydrolase
+      survey. Anchored to the yeast serine-hydrolase-family framing and the UniProt
+      FUNCTION evidence tag ECO:0000269|PubMed:14645503.
+- id: PMID:15494396
+  title: Identification of new genes regulated by the Crt1 transcription factor, an
+    effector of the DNA damage checkpoint pathway in Saccharomyces cerevisiae.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Experimentally confirms FSH3 is a transcriptional target of Crt1p (RFX1) by
+      RT-PCR in wild-type vs crt1-delta strains (source of UniProt INDUCTION).
+      NOTE: this paper&#39;s suggestion that FSH3 acts in folate metabolism / with DHFR
+      is explicit speculation from OVCA2/DYR-SCHPO sequence similarity, not
+      experimental data; it must not be used to annotate folate metabolism.
+- id: PMID:36164978
+  title: Systematic multi-level analysis of an organelle proteome reveals new peroxisomal
+    functions.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Systematic peroxisome-proteome study; basis of the SGD IDA C:peroxisome
+      annotation for FSH3 and reports that FSH3 overexpression gives the strongest
+      lipidome change (reduction of phosphatidylcholine) among dark peroxisomal
+      proteins. It also reports a deletion-based phenotype: a Fsh3/Lpx1 double
+      deletion (but neither single mutant) has reduced peroxisomal beta-oxidation
+      activity, suggesting FSH3 has an overlapping role with the peroxisomal lipase
+      Lpx1 in fatty-acid beta-oxidation. The PC lipid effect is an overexpression
+      phenotype, not proof of a direct PC-hydrolase activity.
+- id: PMID:30776074
+  title: FSH3 mediated cell death is dependent on NUC1 in Saccharomyces cerevisiae.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      FSH3-specific study: H2O2 induces FSH3; overexpression causes ROS
+      accumulation and NUC1-dependent apoptosis; single deletion is viable (grows
+      better under H2O2); fsh double deletions grow faster, indicating partial
+      redundancy among FSH paralogs. Establishes phenotype without assigning a
+      molecular substrate.
+- id: PMID:24187129
+  title: Screening for hydrolytic enzymes reveals Ayr1p as a novel triacylglycerol
+    lipase in Saccharomyces cerevisiae.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Background/contextual: characterizes GXSXG serine-hydrolase enzymes acting in
+      yeast peroxisomal and lipid-droplet lipid metabolism (Ayr1p, Lpx1p). Does not
+      assay FSH3 or assign it a substrate; supports the plausibility of a peroxisomal
+      serine-hydrolase acting in lipid metabolism.
+existing_annotations:
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetically inferred (IBA) nuclear localization propagated across the
+      OVCA2/FSH family. It is not supported by the yeast-specific experimental
+      evidence, which places FSH3 in the peroxisome (IDA), nor by any FSH3 assay.
+      This is a weak, over-propagated location for this gene.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      IBA-only nuclear localization with no experimental support in yeast; the
+      experimentally verified compartment is the peroxisome (GO:0005777, IDA).
+      Family-wide phylogenetic propagation of a nuclear location is not
+      substantiated for FSH3.
+    propagation_review:
+      root_cause: PROPAGATION_BAD
+      failure_modes:
+      - COMPARTMENT_OR_COMPLEX_MISMATCH
+      source_entities:
+      - source_id: UniProtKB:Q8WZ82
+        source_label: OVCA2 (human)
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+        comment: &gt;-
+          PANTHER OVCA2 subfamily (PTHR48070:SF6) seed; a nuclear location for the
+          family is not substantiated for yeast FSH3, whose experimental compartment
+          is the peroxisome.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetically inferred (IBA) cytoplasmic localization. FSH3 has
+      cytoplasmic/stress-granule associations (CD-CODE stress granule cross-ref)
+      and a soluble alpha/beta-hydrolase is consistent with a cytoplasmic pool, so
+      this general location is plausible, but it is non-core relative to the
+      experimentally established peroxisomal localization.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      General, phylogenetically inferred location that is plausible for a soluble
+      hydrolase but is not the informative, experimentally supported compartment;
+      retained as non-core alongside the IDA peroxisome annotation.
+- term:
+    id: GO:0016787
+    label: hydrolase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Correct but uninformatively general. FSH3 has a complete, canonical
+      Ser-Asp-His catalytic triad (Ser117 in a GXSXG motif, Asp180, His209) on an
+      alpha/beta-hydrolase scaffold, and was detected as a catalytically active
+      serine hydrolase by activity-based proteomics. These support the more
+      specific mechanism-defined term serine hydrolase activity (GO:0017171).
+    action: MODIFY
+    proposed_replacement_terms:
+    - id: GO:0017171
+      label: serine hydrolase activity
+    reason: &gt;-
+      The generic hydrolase activity term should be replaced by the mechanism-specific
+      GO:0017171 (serine hydrolase activity), which is directly supported by the intact
+      Ser-Asp-His triad, the diagnostic GXSXG nucleophile-elbow motif, and the
+      activity-based proteomic detection of FSH3 as an active serine hydrolase. The
+      specific substrate/reaction remains unknown (EC 3.1.-.-), so a more specific
+      catalytic term is not yet justified.
+    supported_by:
+    - reference_id: PMID:14645503
+      supporting_text: &gt;-
+        Three of the previously uncharacterized proteins are members of a eukaryotic
+        serine hydrolase family
+    propagation_review:
+      root_cause: TERM_SCOPING_PROBLEM
+      failure_modes:
+      - GRANULARITY_MISMATCH
+      source_entities:
+      - source_id: UniProtKB:Q8WZ82
+        source_label: OVCA2 (human)
+        source_status: SUPPORTS_TRANSFER
+        comment: &gt;-
+          The IBA hydrolase-activity transfer from the OVCA2 esterase subfamily is
+          correct in branch but too general; the intact Ser-Asp-His triad and GXSXG
+          motif in FSH3 support the more specific serine hydrolase activity.
+- term:
+    id: GO:0005777
+    label: peroxisome
+  evidence_type: IDA
+  original_reference_id: PMID:36164978
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Experimentally determined (IDA) peroxisomal localization from a systematic
+      peroxisome-proteome analysis in which FSH3 is one of the newly identified
+      peroxisomal proteins. This is the informative, experimentally supported
+      compartment for FSH3 and is retained as a core localization.
+    action: ACCEPT
+    reason: &gt;-
+      Direct experimental evidence (IDA) from a systematic peroxisome-proteome study;
+      the curator had access to the full dataset. This is the strongest localization
+      annotation for FSH3.
+    supported_by:
+    - reference_id: PMID:36164978
+      supporting_text: &gt;-
+        Lipidomic analysis on mutants of 10 newly identified peroxisomal proteins
+        whose molecular function in the yeast cell is putative or unknown shows that
+        cells overexpressing FSH3 had the most significant change in all conditions
+        compared to the control strain, with a reduction of PC
+- term:
+    id: GO:0003674
+    label: molecular_function
+  evidence_type: ND
+  original_reference_id: GO_REF:0000015
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Root-level placeholder (ND, &#34;no biological data&#34;) reflecting the historical
+      absence of a curated molecular function. It is superseded by the informative
+      serine hydrolase activity now supported by the domain/triad analysis and the
+      IBA hydrolase annotation.
+    action: REMOVE
+    reason: &gt;-
+      ND root placeholder is superseded by informative molecular-function evidence
+      (serine hydrolase activity); root ND annotations should not be retained once a
+      real function is available.
+- term:
+    id: GO:0008150
+    label: biological_process
+  evidence_type: ND
+  original_reference_id: GO_REF:0000015
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Root-level placeholder (ND) for biological process. FSH3&#39;s native biological
+      process is genuinely unresolved (no deletion phenotype under standard
+      conditions), so this remains a real knowledge gap rather than a curatable term.
+    action: REMOVE
+    reason: &gt;-
+      ND root placeholder; uninformative. The genuine uncertainty about FSH3&#39;s
+      biological role is recorded in knowledge_gaps rather than as a root-term ND
+      annotation.
+core_functions:
+- description: &gt;-
+    Serine hydrolase (alpha/beta-hydrolase fold, AB-hydrolase-3 / Fsh family) with a
+    complete, canonical Ser-Asp-His catalytic triad: the nucleophilic Ser117 sits in
+    a diagnostic GXSXG motif (G115-F-S-Q-G119), with Asp180 and His209 completing the
+    charge-relay system. FSH3 was directly detected as a catalytically active serine
+    hydrolase in yeast by activity-based protein profiling, confirming the triad is
+    functional. The specific physiological substrate and reaction are undetermined
+    (UniProt EC 3.1.-.-, &#34;serine hydrolase of unknown specificity&#34;), so only the
+    mechanism-defined activity is asserted here.
+  molecular_function:
+    id: GO:0017171
+    label: serine hydrolase activity
+  locations:
+  - id: GO:0005777
+    label: peroxisome
+  supported_by:
+  - reference_id: PMID:14645503
+    supporting_text: &gt;-
+      Three of the previously uncharacterized proteins are members of a eukaryotic
+      serine hydrolase family
+  - reference_id: PMID:36164978
+    supporting_text: &gt;-
+      cells overexpressing FSH3 had the most significant change in all conditions
+      compared to the control strain, with a reduction of PC
+knowledge_gaps:
+- gap_statement: &gt;-
+    The physiological substrate of FSH3 and the specific reaction it catalyzes are
+    undetermined. Only an uncommitted esterase activity (EC 3.1.-.-) is assigned, and
+    UniProt describes FSH3 as a &#34;serine hydrolase of unknown specificity&#34;.
+  boundary: &gt;-
+    FSH3 has a complete, canonical Ser-Asp-His serine-hydrolase catalytic triad
+    (Ser117 in a GXSXG motif, Asp180, His209) on an alpha/beta-hydrolase fold and was
+    detected as a catalytically active serine hydrolase by activity-based proteomics
+    in yeast; the class of chemistry (serine-nucleophile ester/amide hydrolysis) is
+    therefore known, but no natural substrate has been identified.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    FSH3 is the yeast counterpart of the human candidate tumor-suppressor esterase
+    OVCA2; identifying its substrate would define the molecular function of a
+    conserved but functionally dark eukaryotic serine-hydrolase family.
+  resolution: &gt;-
+    In-vitro substrate profiling (e.g. fluorogenic ester/lipid panels, competitive
+    activity-based protein profiling with FP-probes) of recombinant FSH3 and a
+    catalytic-serine (S117A) mutant, paired with untargeted metabolomics/lipidomics
+    of fsh3-delta vs wild type to identify accumulating candidate substrates.
+  provenance:
+  - reference_id: PMID:14645503
+    supporting_text: &gt;-
+      Three of the previously uncharacterized proteins are members of a eukaryotic
+      serine hydrolase family
+- gap_statement: &gt;-
+    The precise biological role/pathway of FSH3 is not fully resolved. Its single
+    deletion causes no growth defect under standard conditions, and its overexpression
+    phenotypes (PC reduction, NUC1-dependent apoptosis) cannot be read as its native
+    role. A loss-of-function clue does exist: a double mutant lacking both FSH3 and the
+    peroxisomal lipase Lpx1 (but neither single mutant) has reduced peroxisomal
+    fatty-acid beta-oxidation activity, implicating FSH3 in peroxisomal fatty-acid
+    beta-oxidation (GO:0006635; peroxisomal in yeast) redundantly with Lpx1 -- but
+    FSH3&#39;s specific molecular step in that pathway is undetermined.
+  boundary: &gt;-
+    FSH3 localizes to the peroxisome, is induced by the DNA-damage-checkpoint effector
+    Crt1/RFX1 and by H2O2, its overexpression reduces phosphatidylcholine and triggers
+    NUC1-dependent apoptosis, and a double deletion of FSH3 with LPX1 shows a
+    significant reduction in beta-oxidation activity relative to control and both single
+    mutants (an overlapping role for Fsh3 with Lpx1). Single-deletion growth is silent,
+    so the specific pathway step and whether the beta-oxidation contribution is direct
+    (an acyl-ester hydrolase step) or indirect remain open.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: BP_DARK
+  status: NARROWING
+  significance: &gt;-
+    The Fsh3/Lpx1 double-mutant beta-oxidation defect provides a candidate pathway
+    (peroxisomal fatty-acid beta-oxidation / lipid mobilization) and explains why single
+    deletions look silent (redundancy with Lpx1); resolving FSH3&#39;s specific role there
+    would move it from BP-dark to an annotatable biological process (candidate
+    GO:0006635 fatty acid beta-oxidation), and let the overexpression apoptosis
+    phenotype be interpreted.
+  resolution: &gt;-
+    Condition-specific phenotyping of fsh3-delta and fsh3/lpx1 combinations on
+    fatty-acid (oleate) growth and direct beta-oxidation-flux assays, epistasis with
+    FSH1/FSH2 and NUC1, to define FSH3&#39;s step in peroxisomal fatty-acid metabolism and
+    justify a GO:0006635 (fatty acid beta-oxidation) annotation.
+  provenance:
+  - reference_id: PMID:30776074
+    supporting_text: &gt;-
+      The deletion of FSH3 improved the yeast growth rate under H2O2-induction as
+      compared to WT control cells.
+  - reference_id: PMID:36164978
+    supporting_text: &gt;-
+      suggesting an overlapping role for Fsh3 with Lpx1
+- gap_statement: &gt;-
+    The degree and direction of functional redundancy among the three paralogous
+    S. cerevisiae serine hydrolases FSH1, FSH2 and FSH3 is unresolved; whether they
+    share substrates or act in overlapping/opposing pathways is unknown.
+  boundary: &gt;-
+    All three are members of the Fsh serine-hydrolase family sharing conservation with
+    human OVCA2, and fsh double deletions (fsh1 fsh2, fsh1 fsh3, fsh2 fsh3) grow faster
+    than wild type, indicating some shared or overlapping influence on growth; but no
+    shared molecular substrate or pathway has been established.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    Redundancy among paralogs is the most likely reason single deletions are silent;
+    resolving it is a prerequisite for detecting loss-of-function phenotypes and for
+    assigning family-level function.
+  resolution: &gt;-
+    Comparative biochemistry of purified FSH1/FSH2/FSH3 on shared substrate panels and
+    phenotyping of single, double, and triple fsh deletions across stress conditions.
+  provenance:
+  - reference_id: PMID:30776074
+    supporting_text: &gt;-
+      The double deletions fsh1Δ fsh2Δ, fsh1Δ fsh3Δ and fsh2Δ fsh3Δ displayed
+      increased growth compared to WT cells.
+- gap_statement: &gt;-
+    It is unknown whether peroxisomal FSH3 acts directly on a glycerophospholipid
+    substrate (e.g. phosphatidylcholine) or whether the phosphatidylcholine reduction
+    seen on FSH3 overexpression is an indirect consequence of a different activity.
+  boundary: &gt;-
+    FSH3 overexpression produces the strongest lipidome change (PC reduction) among a
+    panel of dark peroxisomal proteins, and FSH3 has the catalytic machinery of a
+    serine ester hydrolase; but no in-vitro assay has shown FSH3 hydrolyzing PC or any
+    defined lipid.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    A direct link between FSH3 and glycerophospholipid turnover would give the family
+    a concrete molecular function and connect it to peroxisomal lipid metabolism.
+  resolution: &gt;-
+    Direct in-vitro lipase/phospholipase assays on recombinant FSH3 (and S117A) against
+    PC and related glycerophospholipids, with lipidomics of fsh3-delta to test for the
+    reciprocal (accumulation) effect.
+  provenance:
+  - reference_id: PMID:36164978
+    supporting_text: &gt;-
+      cells overexpressing FSH3 had the most significant change in all conditions
+      compared to the control strain, with a reduction of PC
+suggested_questions:
+- question: &gt;-
+    What is the natural substrate of FSH3, and does the S117A catalytic-dead mutant
+    lose the overexpression phenotypes (apoptosis, PC reduction)?
+- question: &gt;-
+    Is FSH3 functionally redundant with FSH2 (its OVCA2-subfamily paralog) and/or
+    FSH1, and does a triple fsh deletion reveal a phenotype absent in single mutants?
+- question: &gt;-
+    Does FSH3 act in peroxisomal glycerophospholipid metabolism, and is the OVCA2
+    human ortholog&#39;s function conserved?
+suggested_experiments:
+- hypothesis: &gt;-
+    FSH3 is a catalytically active serine hydrolase whose in-cell phenotypes require
+    the Ser117 nucleophile.
+  description: &gt;-
+    Compare wild-type FSH3, catalytic-dead FSH3(S117A), and empty-vector strains for
+    the overexpression phenotypes (ROS accumulation, viability, PC levels). Loss of
+    phenotype in S117A would establish that they depend on catalytic serine-hydrolase
+    activity.
+- hypothesis: &gt;-
+    FSH3 hydrolyzes a peroxisomal glycerophospholipid or ester substrate.
+  description: &gt;-
+    Purify recombinant FSH3 and assay activity against fluorogenic ester panels and
+    defined lipids (including phosphatidylcholine) in vitro; combine with untargeted
+    lipidomics/metabolomics of fsh3-delta vs wild type to identify accumulating
+    candidate substrates.
+- hypothesis: &gt;-
+    Single-deletion silence of FSH3 is due to redundancy with FSH1/FSH2.
+  description: &gt;-
+    Construct single, double and triple fsh deletions and phenotype across oxidative,
+    DNA-damage and oleate (peroxisome-inducing) conditions, with epistasis to NUC1.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

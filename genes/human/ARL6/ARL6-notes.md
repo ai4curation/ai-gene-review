@@ -114,3 +114,40 @@ UniProt: Q9H0F7. ADP-ribosylation factor-like protein 6 / Bardet-Biedl syndrome 
 - plasma membrane (GO:0005886) TAS Reactome x2: ARL6 acts at ciliary/plasma membrane interface; the
   GTP-bound form is on membranes. KEEP_AS_NON_CORE.
 - NOT cilium (GO:0005929) PMID:17646400: keep negated annotation (assay-specific); ACCEPT as recorded.
+
+## Falcon deep research integration (2026-06-21)
+
+Falcon (Edison) deep research generated in `ARL6-deep-research-falcon.md` (23 citations). It is
+strongly consistent with the existing COMPLETE review; no annotation actions need changing. New or
+refined points worth recording (citations are from the falcon report's primary sources; not yet
+independently verified against full text, so not marked VERIFIED):
+
+- **Composite BBS1+BBS7 binding interface.** Cryo-EM of the BBSome (Singh et al. 2020, eLife
+  10.7554/elife.53322) shows ARL6:GTP binds a *composite* site formed by the β-propellers of **BBS1
+  and BBS7**, not BBS1 alone, and that the BBSome is autoinhibited (closed) in solution; activation
+  requires the BBS1 β-propeller to swivel and expose the ARL6 site. This refines the existing
+  notes/description, which cite only the BBS1 N-terminus (PMID:20603001, Jin 2010). Both are
+  compatible — the older work mapped the minimal interaction; the cryo-EM adds the BBS7 contribution
+  and the autoinhibition→activation mechanism. Consider citing Singh 2020 in the description if
+  verified.
+- **BBSome is primarily an export/retrieval coat, not an import coat.** Falcon emphasizes the now-
+  prevailing view that the ARL6/BBSome system mainly *removes* signaling GPCRs from cilia (with IFT-A
+  mediating entry). This is consistent with the existing "cargo trafficking into and out of cilia"
+  framing but sharpens the directionality (export-dominant).
+- **Signal-dependent, ubiquitin-marked GPCR exit.** Shinde, Nager & Nachury 2020 (JCB
+  10.1083/jcb.202003020): activated ciliary GPCRs are tagged with K63-linked ubiquitin chains in a
+  β-arrestin-dependent manner, earmarking them for BBSome/ARL6-mediated removal (GPR161, SSTR3, SMO
+  as cargo). Adds mechanistic detail to the existing SMO/MCHR1/SSTR3 trafficking annotations.
+- **Post-translational control of the ARL6–BBSome interaction.** Chiuso et al. 2023 (EMBO Rep
+  10.15252/embr.202255571): the E3 ligase PJA2 ubiquitylates BBS1 at K143 upon GPCR-cAMP stimulation,
+  increasing BBSome stability and its binding to BBS3/ARL6; a BBS1-K143R mutant impairs GPCR
+  trafficking and Shh-dependent transcription. New regulatory axis not in current notes.
+- **BBS9 reinforces the ARL6–BBS1 interaction** within the intact BBSome core (Nozaki et al. 2018,
+  PLoS ONE 10.1371/journal.pone.0195005); BBS1 knockout blocks ciliary entry of ARL6 and other
+  subunits.
+- **Knowledge gap:** the GEF(s) and GAP(s) that activate/inactivate ARL6 remain undefined (Fisher
+  et al. 2020, Am J Physiol Cell Physiol 10.1152/ajpcell.00188.2020). Good candidate for
+  suggested_experiments.
+- **Clinical nuance:** BBS3/ARL6 genotypes show lower penetrance of renal anomalies and a lower
+  syndromic score than other BBS genes (Dollfus et al. 2024 ERN consensus; Melluso et al. 2023).
+  Background only; does not affect GO annotations.

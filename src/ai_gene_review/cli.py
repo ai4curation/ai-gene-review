@@ -3304,6 +3304,435 @@ def analyze_evidence_sources(
     typer.echo(f"Report written to {report_path}")
 
 
+@app.command()
+def fetch_panther_paint(
+    family: Annotated[
+        Optional[str],
+        typer.Argument(help="PANTHER family id (e.g., PTHR10177). Omit with --all."),
+    ] = None,
+    all_families: Annotated[
+        bool,
+        typer.Option(
+            "--all",
+            help="Process every cached family under interpro/panther/ in a single "
+            "leaf-GAF pass (skips families with no node annotations).",
+        ),
+    ] = False,
+    output_dir: Annotated[
+        Optional[Path],
+        typer.Option(
+            "--output-dir",
+            "-o",
+            help="Repo root (default: current directory). Slice is written to "
+            "interpro/panther/<FAMILY>/.",
+        ),
+    ] = None,
+    cache_dir: Annotated[
+        Optional[Path],
+        typer.Option(
+            "--cache-dir",
+            help="Where to cache the downloaded PAINT GAFs (default: <repo>/.cache/panther).",
+        ),
+    ] = None,
+    extra_uniprot: Annotated[
+        Optional[List[str]],
+        typer.Option(
+            "--extra-uniprot",
+            help="Extra member UniProt id(s) to include when resolving nodes "
+            "(repeatable). Single-family mode only.",
+        ),
+    ] = None,
+    force_download: Annotated[
+        bool,
+        typer.Option("--force-download", help="Re-download source GAFs even if cached."),
+    ] = False,
+):
+    """Fetch PANTHER PAINT (PTN node-level) annotations for a family (or --all).
+
+    Resolves the family's PTN tree nodes (from its cached ``<FAM>-entries.csv``
+    member list joined against the leaf IBA GAF), then slices the node-level
+    ``IBD.gaf`` (IBD/IRD/IKR annotations) for those nodes. Writes:
+
+        interpro/panther/<FAMILY>/<FAMILY>-paint.tsv   (one row per node annotation)
+
+    Run ``fetch-gene`` for a member first (or otherwise populate the family's
+    ``<FAMILY>-entries.csv``) so the member list is available.
+
+    Examples:
+        ai-gene-review fetch-panther-paint PTHR10177
+        ai-gene-review fetch-panther-paint PTHR35730 --extra-uniprot Q67XT3
+        ai-gene-review fetch-panther-paint --all
+    """
+    from ai_gene_review.etl.panther_paint import (
+        fetch_family_paint,
+        fetch_all_family_paint,
+    )
+
+    repo_root = output_dir or Path.cwd()
+    cache = cache_dir or (repo_root / ".cache" / "panther")
+    panther_root = repo_root / "interpro" / "panther"
+
+    if all_families:
+        if family:
+            typer.echo("❌ Pass either a FAMILY or --all, not both.")
+            raise typer.Exit(code=1)
+        typer.echo(
+            "Resolving PTN nodes for ALL cached families (single leaf-GAF pass; "
+            "this downloads/caches PAINT GAFs)..."
+        )
+        counts = fetch_all_family_paint(
+            panther_root, cache_dir=cache, force_download=force_download
+        )
+        total = sum(counts.values())
+        typer.echo(
+            f"✓ Wrote PAINT slices for {len(counts)} family/families "
+            f"({total} node-level annotations total)."
+        )
+        return
+
+    if not family:
+        typer.echo("❌ Provide a FAMILY id or use --all.")
+        raise typer.Exit(code=1)
+
+    family_dir = panther_root / family
+    entries_csv = family_dir / f"{family}-entries.csv"
+    if not entries_csv.exists():
+        typer.echo(
+            f"❌ {entries_csv} not found. Fetch the family first "
+            f"(e.g. via fetch-gene for a member of {family})."
+        )
+        raise typer.Exit(code=1)
+
+    typer.echo(f"Resolving PTN nodes for {family} (this downloads/caches PAINT GAFs)...")
+    tsv_path, nodes = fetch_family_paint(
+        family,
+        entries_csv=entries_csv,
+        out_dir=family_dir,
+        cache_dir=cache,
+        extra_uniprot=extra_uniprot,
+        force_download=force_download,
+    )
+    n_annotations = sum(1 for _ in tsv_path.read_text().splitlines()) - 1
+    typer.echo(
+        f"✓ {family}: {len(nodes)} node(s), {n_annotations} node-level annotation(s)"
+    )
+    typer.echo(f"  {tsv_path}")
+
+
+@app.command()
+def fetch_gocam(
+    model_id: Annotated[
+        str,
+        typer.Argument(
+            help="GO-CAM model id (bare, gomodel: CURIE, or model URL)"
+        ),
+    ],
+    cache_dir: Annotated[
+        Path,
+        typer.Option("--cache-dir", help="Top-level GO-CAM cache directory"),
+    ] = Path("gocams"),
+    force: Annotated[
+        bool,
+        typer.Option("--force", "-f", help="Re-fetch even if already cached"),
+    ] = False,
+):
+    """Fetch and cache a single GO-CAM model as gocams/<id>/<id>-src.yaml.
+
+    The model is downloaded as low-level Minerva JSON and translated into the
+    activity-centric gocam-py YAML representation.
+
+    Examples:
+        ai-gene-review fetch-gocam gomodel:568b0f9600000284
+        ai-gene-review fetch-gocam 568b0f9600000284 --force
+    """
+    from ai_gene_review.etl.gocam import cache_gocam_model, normalize_gocam_id
+
+    mid = normalize_gocam_id(model_id)
+    out = cache_gocam_model(mid, cache_dir=cache_dir, force=force)
+    typer.echo(f"✓ Cached GO-CAM {mid}: {out}")
+
+
+@app.command()
+def cache_gocams(
+    cache_dir: Annotated[
+        Path,
+        typer.Option("--cache-dir", help="Top-level GO-CAM cache directory"),
+    ] = Path("gocams"),
+    force: Annotated[
+        bool,
+        typer.Option("--force", "-f", help="Re-fetch models already cached"),
+    ] = False,
+    limit: Annotated[
+        Optional[int],
+        typer.Option("--limit", help="Only fetch the first N models (for testing)"),
+    ] = None,
+    no_index: Annotated[
+        bool,
+        typer.Option("--no-index", help="Skip rebuilding gocams/index.tsv afterwards"),
+    ] = False,
+):
+    """Cache all ~2k production GO-CAM models, then rebuild the gene index.
+
+    Each model is written to gocams/<id>/<id>-src.yaml. After caching, a
+    gocams/index.tsv mapping gene products to GO-CAM activities is rebuilt
+    (unless --no-index is given).
+
+    Examples:
+        ai-gene-review cache-gocams
+        ai-gene-review cache-gocams --limit 50
+    """
+    from ai_gene_review.etl.gocam import (
+        build_gene_index,
+        cache_all_production_models,
+    )
+
+    def progress(done: int, total: int, ok: int, failed: int) -> None:
+        if done % 50 == 0 or done == total:
+            typer.echo(f"  {done}/{total} (ok={ok}, failed={failed})")
+
+    summary = cache_all_production_models(
+        cache_dir=cache_dir, force=force, limit=limit, progress=progress
+    )
+    typer.echo(
+        f"✓ Cached {summary['ok']}/{summary['total']} GO-CAM models"
+        f" ({summary['failed']} failed)"
+    )
+    for mid, err in summary["failures"][:20]:
+        typer.echo(f"  ✗ {mid}: {err}")
+
+    if not no_index:
+        index = build_gene_index(cache_dir=cache_dir)
+        n_rows = len(index.read_text().strip().splitlines()) - 1
+        typer.echo(f"✓ Wrote {index} ({n_rows} activity rows)")
+
+
+@app.command()
+def seed_gocam_review(
+    model_id: Annotated[
+        str,
+        typer.Argument(help="GO-CAM model id (must already be cached)"),
+    ],
+    cache_dir: Annotated[
+        Path,
+        typer.Option("--cache-dir", help="Top-level GO-CAM cache directory"),
+    ] = Path("gocams"),
+    force: Annotated[
+        bool,
+        typer.Option("--force", "-f", help="Overwrite an existing review stub"),
+    ] = False,
+):
+    """Seed a GoCamReview stub at gocams/<id>/<id>-review.yaml.
+
+    One activity_reviews entry is created per cached annoton, pre-filled with the
+    gene product / MF / BP / CC and PENDING assessments to be completed by a
+    reviewer. Validate with:
+    `uv run linkml-validate -s src/ai_gene_review/schema/gene_review.yaml -C GoCamReview <file>`
+    """
+    from ai_gene_review.etl.gocam import seed_gocam_review as _seed
+
+    out = _seed(model_id, cache_dir=cache_dir, force=force)
+    typer.echo(f"✓ Seeded GO-CAM review stub: {out}")
+
+
+@app.command()
+def gocam_index(
+    cache_dir: Annotated[
+        Path,
+        typer.Option("--cache-dir", help="Top-level GO-CAM cache directory"),
+    ] = Path("gocams"),
+):
+    """Rebuild gocams/index.tsv from the cached GO-CAM models.
+
+    Produces one row per activity (annoton): gene product, model, taxon,
+    molecular function, biological process, and cellular component.
+    """
+    from ai_gene_review.etl.gocam import build_gene_index
+
+    index = build_gene_index(cache_dir=cache_dir)
+    n_rows = len(index.read_text().strip().splitlines()) - 1
+    typer.echo(f"✓ Wrote {index} ({n_rows} activity rows)")
+
+
+@app.command()
+def subtraction_report(
+    paths: Annotated[
+        Optional[List[Path]],
+        typer.Argument(help="Gene review YAML files or directories (default: genes/)"),
+    ] = None,
+    reference: Annotated[
+        Optional[List[str]],
+        typer.Option(
+            "--ref",
+            "-r",
+            help="Reference id(s) to subtract, e.g. GO_REF:0000033 (repeatable)",
+        ),
+    ] = None,
+    evidence: Annotated[
+        Optional[List[str]],
+        typer.Option(
+            "--evidence",
+            "-e",
+            help="Evidence code(s) to subtract, e.g. IBA (repeatable)",
+        ),
+    ] = None,
+    mode: Annotated[
+        str,
+        typer.Option(
+            help="When both --ref and --evidence are given: 'any' (match either) or 'all' (match both)"
+        ),
+    ] = "any",
+    keep_only: Annotated[
+        bool,
+        typer.Option(
+            "--keep-only",
+            help="Invert: subtract everything EXCEPT the filter (e.g. --keep-only -e IBA "
+            "removes all non-IBA annotations, showing what is lost if IBA were the only "
+            "evidence -- i.e. where IBA is too conservative)",
+        ),
+    ] = False,
+    exclude_branch: Annotated[
+        Optional[List[str]],
+        typer.Option(
+            "--exclude-branch",
+            help="Drop terms under this branch from the report, e.g. GO:0005488 to "
+            "suppress low-information 'binding' molecular functions (repeatable)",
+        ),
+    ] = None,
+    output: Annotated[
+        Optional[Path],
+        typer.Option(
+            "--output",
+            "-o",
+            help="Output path. For markdown a file; for tsv a prefix "
+            "(writes <prefix>-lost-annotations.tsv and <prefix>-core-functions.tsv)",
+        ),
+    ] = None,
+    output_format: Annotated[
+        str,
+        typer.Option("--format", "-f", help="Output format: markdown or tsv"),
+    ] = "markdown",
+    adapter: Annotated[
+        str,
+        typer.Option(help="OAK adapter for GO closure"),
+    ] = "sqlite:obo:go",
+    no_closure: Annotated[
+        bool,
+        typer.Option(
+            "--no-closure",
+            help="Disable ontology closure (exact-term matching only)",
+        ),
+    ] = False,
+    max_detail_genes: Annotated[
+        Optional[int],
+        typer.Option(help="Limit per-gene detail in the markdown report"),
+    ] = None,
+):
+    """Report what is lost if a REF/evidence-code is removed from reviews.
+
+    For the chosen reference id(s) and/or evidence code(s) (e.g. IBA /
+    GO_REF:0000033), simulates removing the matching annotations and reports:
+
+    \b
+    1. Endorsed (ACCEPT/KEEP_AS_NON_CORE) annotations that disappear, flagged
+       UNIQUE (no survivor covers the term) or REDUNDANT (a surviving annotation
+       still asserts the term or a more specific descendant).
+    2. Each core_functions GO term as RETAINED (still grounded by a survivor),
+       LOST (only the subtracted evidence grounded it), or UNSUPPORTED.
+
+    Closure (is_a + part_of) is applied so a specific surviving annotation can
+    ground a more general core-function term.
+
+    Use --keep-only to invert the scenario: subtract everything EXCEPT the
+    filter. ``--keep-only -e IBA`` removes all non-IBA annotations, so LOST
+    core_functions are the biology that IBA alone would miss (IBA too
+    conservative).
+
+    Examples:
+
+    \b
+        ai-gene-review subtraction-report -e IBA
+        ai-gene-review subtraction-report -r GO_REF:0000033 -o reports/iba --format tsv
+        ai-gene-review subtraction-report genes/human -e IBA -e ISS
+        ai-gene-review subtraction-report genes/human --keep-only -e IBA
+    """
+    from ai_gene_review.analysis.subtraction_report import (
+        SubtractionFilter,
+        SubtractionReporter,
+        iter_review_files,
+        make_go_ancestor_fn,
+        render_markdown,
+        summarize,
+        write_tsv_reports,
+    )
+
+    if not reference and not evidence:
+        typer.echo(
+            "Error: provide at least one --ref or --evidence to subtract.", err=True
+        )
+        raise typer.Exit(code=1)
+
+    filt = SubtractionFilter.create(
+        reference_ids=reference or [],
+        evidence_codes=evidence or [],
+        mode=mode,
+        complement=keep_only,
+    )
+
+    search_paths = paths if paths else [Path("genes")]
+    files = iter_review_files(search_paths)
+    if not files:
+        typer.echo("Error: no *-ai-review.yaml files found.", err=True)
+        raise typer.Exit(code=1)
+    typer.echo(
+        f"Analyzing {len(files)} review files (filter: {filt.describe()})...", err=True
+    )
+
+    exclude_branches = frozenset(exclude_branch or [])
+    if no_closure:
+        if exclude_branches:
+            typer.echo(
+                "Error: --exclude-branch requires ontology closure (drop --no-closure).",
+                err=True,
+            )
+            raise typer.Exit(code=1)
+        reporter = SubtractionReporter()
+    else:
+        reporter = SubtractionReporter(
+            ancestors=make_go_ancestor_fn(adapter),
+            exclude_branches=exclude_branches,
+        )
+
+    results = reporter.analyze_files(files, filt)
+
+    if output_format == "tsv":
+        prefix = output if output else Path("reports/subtraction")
+        lost_path, cf_path = write_tsv_reports(results, prefix)
+        typer.echo(f"✓ Wrote {lost_path}")
+        typer.echo(f"✓ Wrote {cf_path}")
+    elif output_format == "markdown":
+        md = render_markdown(results, filt, max_detail_genes=max_detail_genes)
+        if output:
+            output.parent.mkdir(parents=True, exist_ok=True)
+            output.write_text(md)
+            typer.echo(f"✓ Wrote {output}")
+        else:
+            typer.echo(md)
+    else:
+        typer.echo(f"Error: unknown format {output_format!r}", err=True)
+        raise typer.Exit(code=1)
+
+    summary = summarize(results, filt)
+    sc = summary["core_function_status_counts"]
+    typer.echo(
+        f"Summary: {summary['n_subtracted_annotations']} annotations subtracted; "
+        f"{summary['n_lost_endorsed']} endorsed lost "
+        f"({summary['n_lost_endorsed_unique']} unique); "
+        f"core_functions terms RETAINED {sc['RETAINED']} / LOST {sc['LOST']} / "
+        f"UNSUPPORTED {sc['UNSUPPORTED']}",
+        err=True,
+    )
+
+
 def main():
     """Main entry point for the CLI."""
     app()

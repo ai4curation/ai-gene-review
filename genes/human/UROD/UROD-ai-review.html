@@ -1,0 +1,4837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UROD - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>UROD</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P06132" target="_blank" class="term-link">
+                        P06132
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "UROD";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P06132" data-a="DESCRIPTION: UROD encodes uroporphyrinogen decarboxylase (URO-D..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>UROD encodes uroporphyrinogen decarboxylase (URO-D; EC 4.1.1.37), the enzyme that catalyzes the fifth step of heme biosynthesis. It performs the sequential decarboxylation of the four acetate side chains of uroporphyrinogen III to methyl groups, releasing four molecules of CO2 and producing coproporphyrinogen III. The enzyme is cofactor-independent and acts as a homodimer with a single active-site aspartate (Asp86) that binds and activates the substrate and all partially decarboxylated intermediates at one catalytic center. Although either the I or III isomer of uroporphyrinogen can serve as substrate in vitro (the III isomer being processed more efficiently), only coproporphyrinogen III can ultimately be converted to heme. UROD is a soluble, cytosolic protein. Deficiency of UROD causes porphyria cutanea tarda (PCT), the commonest human porphyria, of which the familial form (FPCT) is autosomal dominant with low penetrance; complete/biallelic deficiency causes the severe childhood-onset hepatoerythropoietic porphyria (HEP), regarded as the homozygous form of PCT.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P06132" data-a="GO:0005829" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) assertion that UROD is active in the cytosol. UROD is a soluble cytosolic enzyme of heme biosynthesis, consistent with the UniProt subcellular location and Reactome.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct and well supported. UROD localizes to the cytosol where the fifth step of heme biosynthesis occurs; the IBA is concordant with experimental and UniProt evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/UROD/UROD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm, cytosol</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-189425
+
+                                </span>
+
+                                <div class="support-text">Cytosolic uroporphyrinogen decarboxylase (UROD) catalyzes the sequntial removal of four carboxylic groups from the acetic acid side chains of uroporphyrinogen III (URO3) to form coproporphyrinogen III (COPRO3)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006783" target="_blank" class="term-link">
+                                    GO:0006783
+                                </a>
+                            </span>
+                            <span class="term-label">heme biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P06132" data-a="GO:0006783" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) assertion that UROD is involved in heme biosynthesis. UROD catalyzes the fifth step of the heme biosynthetic pathway.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the core biological process for UROD. The decarboxylation of uroporphyrinogen III to coproporphyrinogen III is an obligate step of heme biosynthesis.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/UROD/UROD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">participates in the fifth step in the heme biosynthetic pathway</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1634232" target="_blank" class="term-link">
+                                        PMID:1634232
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">uroporphyrinogen decarboxylase (UROD), the fifth</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004853" target="_blank" class="term-link">
+                                    GO:0004853
+                                </a>
+                            </span>
+                            <span class="term-label">uroporphyrinogen decarboxylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P06132" data-a="GO:0004853" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) assertion of uroporphyrinogen decarboxylase activity. This is the defining molecular function of UROD, supported experimentally and structurally.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core molecular function. The IBA is at the correct level of specificity and matches the EC 4.1.1.37 activity assayed for the human enzyme and its orthologs.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14633982" target="_blank" class="term-link">
+                                        PMID:14633982
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the heme biosynthetic pathway, catalyzes decarboxylation of all four acetate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004853" target="_blank" class="term-link">
+                                    GO:0004853
+                                </a>
+                            </span>
+                            <span class="term-label">uroporphyrinogen decarboxylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P06132" data-a="GO:0004853" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (IEA) assertion of uroporphyrinogen decarboxylase activity from InterPro/ARBA family membership and the RHEA:19865 / EC 4.1.1.37 mapping. Consistent with the experimentally established function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The IEA family/EC mapping correctly recovers the core molecular function; UROD carries the URO-D fold and catalytic residues.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/UROD/UROD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">side chains of uroporphyrinogen to form coproporphyrinogen and</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P06132" data-a="GO:0005829" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (IEA) location in cytosol derived from the UniProt subcellular-location vocabulary mapping. Matches the established cytosolic localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct; the UniProt SubCell mapping reproduces the experimentally supported cytosolic localization of this soluble enzyme.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/UROD/UROD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm, cytosol</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006779" target="_blank" class="term-link">
+                                    GO:0006779
+                                </a>
+                            </span>
+                            <span class="term-label">porphyrin-containing compound biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P06132" data-a="GO:0006779" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (IEA) assertion that UROD is involved in porphyrin-containing compound biosynthesis. This is a correct parent-level biosynthetic term (coproporphyrinogen III is a porphyrin-containing compound produced en route to heme).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Biologically correct, though more general than the specific heme biosynthetic process term. Acceptable as a broader IEA parent; the core, more informative term is GO:0006783 (heme biosynthetic process).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/UROD/UROD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">coproporphyrinogen-III from 5-aminolevulinate: step 4/4.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25416956
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A proteome-scale map of the human interactome network.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P06132" data-a="GO:0005515" data-r="PMID:25416956" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Non-specific protein-binding (IPI) from a proteome-scale interactome screen (interaction with Q96KN1/LRATD2). Bare protein binding is uninformative and no functional partnership is established.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Per curation guidelines, bare &#39;protein binding&#39; derived from a high-throughput interactome map does not convey a molecular function. Not removed (experimental IPI is retained) but flagged as over-annotation; not a core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/UROD/UROD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">P06132; Q96KN1: LRATD2</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28514442
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Architecture of the human interactome defines protein commun...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P06132" data-a="GO:0005515" data-r="PMID:28514442" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Non-specific protein-binding (IPI) from a proteome-scale interactome analysis. No informative molecular function is conveyed and no biologically meaningful partner is established for UROD.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Bare &#39;protein binding&#39; from a high-throughput dataset; retained as experimental IPI but flagged as an uninformative over-annotation, not a core function.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31515488" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31515488
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Extensive disruption of protein interactions by genetic vari...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P06132" data-a="GO:0005515" data-r="PMID:31515488" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Non-specific protein-binding (IPI) from a systematic interaction-perturbation screen (interaction with Q96KN1). Uninformative bare protein binding.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Bare &#39;protein binding&#39; from a high-throughput interactome study; retained but flagged as over-annotation, not a core molecular function.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P06132" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Non-specific protein-binding (IPI) from the HuRI binary reference interactome (several partners including C9JJ79/PILRA, P46019/PHKA2, Q96KN1/LRATD2, Q96PN8/TSSK3). Bare protein binding without functional context.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Bare &#39;protein binding&#39; from a large-scale Y2H map; retained as experimental IPI but flagged as uninformative over-annotation, not a core function.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33961781
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dual proteome-scale networks reveal cell-specific remodeling...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P06132" data-a="GO:0005515" data-r="PMID:33961781" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Non-specific protein-binding (IPI) from the BioPlex dual cell-line AP-MS interactome (partners including A5A3E0/POTEF, Q08752/PPID). Bare protein binding, no functional partnership established.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Bare &#39;protein binding&#39; from a high-throughput dataset; retained but flagged as over-annotation, not a core molecular function.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006785" target="_blank" class="term-link">
+                                    GO:0006785
+                                </a>
+                            </span>
+                            <span class="term-label">heme B biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11069625" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11069625
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Co-inheritance of mutations in the uroporphyrinogen decarbox...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P06132" data-a="GO:0006785" data-r="PMID:11069625" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation that UROD is involved in heme B (protoheme/heme b) biosynthesis. UROD produces coproporphyrinogen III, an obligate intermediate on the route to heme b, so this is biologically correct and more specific than the parent heme biosynthetic process term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct and appropriately specific; heme b is the standard heme produced by the pathway and UROD deficiency causes accumulation of upstream porphyrins (porphyria cutanea tarda), confirming its role in the biosynthetic route. Experimental annotation whose full text was read by the curator; retained.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11069625" target="_blank" class="term-link">
+                                        PMID:11069625
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">deficiency of hepatic uroporphyrin-</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005654" target="_blank" class="term-link">
+                                    GO:0005654
+                                </a>
+                            </span>
+                            <span class="term-label">nucleoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000052
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P06132" data-a="GO:0005654" data-r="GO_REF:0000052" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HPA immunofluorescence (IDA) placing UROD in the nucleoplasm. UROD is a soluble cytosolic heme-biosynthesis enzyme with no established nuclear function; a nucleoplasmic signal in an antibody-based screen most likely reflects diffuse/incidental staining rather than a functional nuclear localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Not the established or functionally relevant localization. The enzyme acts in the cytosol (UniProt, Reactome, IBA/ISS/TAS all agree). The HPA IDA is retained but flagged as an over-annotation; it is not a core localization for UROD.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/UROD/UROD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm, cytosol</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000052
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P06132" data-a="GO:0005829" data-r="GO_REF:0000052" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HPA immunofluorescence (IDA) placing UROD in the cytosol. Concordant with the established cytosolic localization of this soluble enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct localization, directly supported by experimental immunofluorescence and consistent with all other lines of evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/UROD/UROD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm, cytosol</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P06132" data-a="GO:0005829" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS assertion (transferred from mouse Urod, MGI:98916) that the enzyme is active in the cytosol. Consistent with the cytosolic localization of the mammalian enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct; the sequence-similarity transfer recovers the established cytosolic site of activity of UROD.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/UROD/UROD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm, cytosol</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004853" target="_blank" class="term-link">
+                                    GO:0004853
+                                </a>
+                            </span>
+                            <span class="term-label">uroporphyrinogen decarboxylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11069625" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11069625
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Co-inheritance of mutations in the uroporphyrinogen decarbox...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P06132" data-a="GO:0004853" data-r="PMID:11069625" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA for uroporphyrinogen decarboxylase activity from a study of FPCT-causing UROD mutations, in which hepatic UROD activity deficiency underlies the disease.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly supports the core molecular function; experimental annotation curated from the full text.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11069625" target="_blank" class="term-link">
+                                        PMID:11069625
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">deficiency of hepatic uroporphyrin-</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004853" target="_blank" class="term-link">
+                                    GO:0004853
+                                </a>
+                            </span>
+                            <span class="term-label">uroporphyrinogen decarboxylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11719352" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11719352
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Functional consequences of naturally occurring mutations in ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P06132" data-a="GO:0004853" data-r="PMID:11719352" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA for uroporphyrinogen decarboxylase activity; recombinant wild-type and mutant URO-D proteins were expressed and their enzymatic activity measured (29-94% of normal for missense mutants).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly supports the core molecular function via recombinant enzymatic assay of the human protein.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11719352" target="_blank" class="term-link">
+                                        PMID:11719352
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">ranged from 29% to 94% of normal</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004853" target="_blank" class="term-link">
+                                    GO:0004853
+                                </a>
+                            </span>
+                            <span class="term-label">uroporphyrinogen decarboxylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12071824" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12071824
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Description of a new mutation in hepatoerythropoietic porphy...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P06132" data-a="GO:0004853" data-r="PMID:12071824" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA for uroporphyrinogen decarboxylase activity; HEP patient with F46L UROD showed low UROD activity and recombinant expression confirmed the deleterious effect.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Supports the core molecular function; enzymatic activity measured directly and confirmed by recombinant expression.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12071824" target="_blank" class="term-link">
+                                        PMID:12071824
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We found low levels of UROD enzymatic activity</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004853" target="_blank" class="term-link">
+                                    GO:0004853
+                                </a>
+                            </span>
+                            <span class="term-label">uroporphyrinogen decarboxylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14633982" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14633982
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structural basis for tetrapyrrole coordination by uroporphyr...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P06132" data-a="GO:0004853" data-r="PMID:14633982" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA for uroporphyrinogen decarboxylase activity backed by crystal structures of URO-D in complex with its coproporphyrinogen I and III products, defining how one catalytic center decarboxylates all four acetate groups.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Strong structural/biochemical support for the core molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14633982" target="_blank" class="term-link">
+                                        PMID:14633982
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the heme biosynthetic pathway, catalyzes decarboxylation of all four acetate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004853" target="_blank" class="term-link">
+                                    GO:0004853
+                                </a>
+                            </span>
+                            <span class="term-label">uroporphyrinogen decarboxylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21668429" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21668429
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Hepatoerythropoietic porphyria due to a novel mutation in th...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P06132" data-a="GO:0004853" data-r="PMID:21668429" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA for uroporphyrinogen decarboxylase activity; recombinant UROD (wild-type and G170D HEP variant) purified and assayed against uroporphyrinogen I and III substrates.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly supports the core molecular function with a purified-protein enzymatic assay on both isomer substrates.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21668429" target="_blank" class="term-link">
+                                        PMID:21668429
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The recombinant UROD protein showed a relative activity of 17% and 60%</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006778" target="_blank" class="term-link">
+                                    GO:0006778
+                                </a>
+                            </span>
+                            <span class="term-label">porphyrin-containing compound metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12071824" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12071824
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Description of a new mutation in hepatoerythropoietic porphy...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P06132" data-a="GO:0006778" data-r="PMID:12071824" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA that UROD is involved in porphyrin-containing compound metabolism, from a HEP study showing UROD deficiency and abnormal (poly-carboxylated) porphyrin excretion.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Biologically correct, though this is a high-level parent (metabolic) term. The more informative and core biological process is heme biosynthesis (GO:0006783); this parent is acceptable and retained.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12071824" target="_blank" class="term-link">
+                                        PMID:12071824
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">profound deficiency (&lt;10% of normal activity) of uroporphyrinogen decarboxylase</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006787" target="_blank" class="term-link">
+                                    GO:0006787
+                                </a>
+                            </span>
+                            <span class="term-label">porphyrin-containing compound catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11069625" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11069625
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Co-inheritance of mutations in the uroporphyrinogen decarbox...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P06132" data-a="GO:0006787" data-r="PMID:11069625" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotating UROD to porphyrin-containing compound CATABOLIC process. This is directionally incorrect: UROD is an anabolic enzyme. Its decarboxylation of uroporphyrinogen III to coproporphyrinogen III is a heme-biosynthetic step, not degradation of a porphyrin-containing compound.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The enzymatic reaction is genuine, but the process branch is wrong. UROD contributes to biosynthesis (production of coproporphyrinogen III on the route to heme), not catabolism. This appears to be a systematic mis-mapping applied to several UROD disease/structural papers. Replace with the biosynthetic terms that the reaction actually supports.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006783" target="_blank" class="term-link">
+                                    heme biosynthetic process
+                                </a>
+                            </span>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006779" target="_blank" class="term-link">
+                                    porphyrin-containing compound biosynthetic process
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/UROD/UROD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">participates in the fifth step in the heme biosynthetic pathway</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11069625" target="_blank" class="term-link">
+                                        PMID:11069625
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">deficiency of hepatic uroporphyrin-</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006787" target="_blank" class="term-link">
+                                    GO:0006787
+                                </a>
+                            </span>
+                            <span class="term-label">porphyrin-containing compound catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11719352" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11719352
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Functional consequences of naturally occurring mutations in ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P06132" data-a="GO:0006787" data-r="PMID:11719352" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotating UROD to porphyrin-containing compound CATABOLIC process. As above, this is directionally wrong for an enzyme whose reaction is part of heme biosynthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The recombinant enzymatic-activity data in this paper support decarboxylase activity, but the correct process is biosynthetic, not catabolic. Replace with heme / porphyrin biosynthetic process.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006783" target="_blank" class="term-link">
+                                    heme biosynthetic process
+                                </a>
+                            </span>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006779" target="_blank" class="term-link">
+                                    porphyrin-containing compound biosynthetic process
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11719352" target="_blank" class="term-link">
+                                        PMID:11719352
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">ranged from 29% to 94% of normal</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006787" target="_blank" class="term-link">
+                                    GO:0006787
+                                </a>
+                            </span>
+                            <span class="term-label">porphyrin-containing compound catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14633982" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14633982
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structural basis for tetrapyrrole coordination by uroporphyr...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P06132" data-a="GO:0006787" data-r="PMID:14633982" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotating UROD to porphyrin-containing compound CATABOLIC process. The structural paper establishes decarboxylase activity, but the biological process direction is wrong.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Decarboxylation of uroporphyrinogen to coproporphyrinogen is a biosynthetic step of heme synthesis, not porphyrin catabolism. Replace with the biosynthetic process terms.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006783" target="_blank" class="term-link">
+                                    heme biosynthetic process
+                                </a>
+                            </span>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006779" target="_blank" class="term-link">
+                                    porphyrin-containing compound biosynthetic process
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14633982" target="_blank" class="term-link">
+                                        PMID:14633982
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the heme biosynthetic pathway, catalyzes decarboxylation of all four acetate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006787" target="_blank" class="term-link">
+                                    GO:0006787
+                                </a>
+                            </span>
+                            <span class="term-label">porphyrin-containing compound catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21668429" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21668429
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Hepatoerythropoietic porphyria due to a novel mutation in th...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P06132" data-a="GO:0006787" data-r="PMID:21668429" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotating UROD to porphyrin-containing compound CATABOLIC process. The HEP study supports decarboxylase activity, but this catabolic BP is directionally incorrect.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UROD acts in heme biosynthesis; the reaction produces coproporphyrinogen III on the route to heme rather than degrading a porphyrin. Replace with heme / porphyrin biosynthetic process.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006783" target="_blank" class="term-link">
+                                    heme biosynthetic process
+                                </a>
+                            </span>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006779" target="_blank" class="term-link">
+                                    porphyrin-containing compound biosynthetic process
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21668429" target="_blank" class="term-link">
+                                        PMID:21668429
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">results from a deficiency of uroporphyrinogen decarboxylase (UROD)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-189425
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P06132" data-a="GO:0005829" data-r="Reactome:R-HSA-189425" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TAS (Reactome) location in cytosol for the UROD reaction converting uroporphyrinogen III to coproporphyrinogen III. Consistent with the established cytosolic localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct; Reactome explicitly describes cytosolic UROD.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-189425
+
+                                </span>
+
+                                <div class="support-text">Cytosolic uroporphyrinogen decarboxylase (UROD) catalyzes the sequntial removal of four carboxylic groups from the acetic acid side chains of uroporphyrinogen III (URO3) to form coproporphyrinogen III (COPRO3)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-190182
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P06132" data-a="GO:0005829" data-r="Reactome:R-HSA-190182" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TAS (Reactome) location in cytosol for the UROD reaction converting uroporphyrinogen I to coproporphyrinogen I (the less-efficient isomer I reaction). Consistent with the established cytosolic localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct; Reactome describes cytosolic UROD activity on the isomer I substrate.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-190182
+
+                                </span>
+
+                                <div class="support-text">Cytosolic uroporphyrinogen decarboxylase (UROD) catalyzes the sequential removal of four carboxylic groups from the acetic acid side chains of uroporphyrinogen I (URO1) to form coproporphyrinogen I (COPRO1)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006783" target="_blank" class="term-link">
+                                    GO:0006783
+                                </a>
+                            </span>
+                            <span class="term-label">heme biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IC</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18004775" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18004775
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Human uroporphyrinogen III synthase: NMR-based mapping of th...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P06132" data-a="GO:0006783" data-r="PMID:18004775" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IC (inferred by curator) that UROD is involved in heme biosynthesis, based on its uroporphyrinogen decarboxylase activity (with:GO:0004853). UROD is one of the cytosolic heme-biosynthesis enzymes.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core biological process, correctly inferred from the enzymatic activity. Although this paper&#39;s primary subject is uroporphyrinogen III synthase, it treats UROD as one of the cytosolic heme-biosynthesis enzymes; the curator inference to heme biosynthesis is sound.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18004775" target="_blank" class="term-link">
+                                        PMID:18004775
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">cytosolic enzymes of heme biosynthesis</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/UROD/UROD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">participates in the fifth step in the heme biosynthetic pathway</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004853" target="_blank" class="term-link">
+                                    GO:0004853
+                                </a>
+                            </span>
+                            <span class="term-label">uroporphyrinogen decarboxylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18004775" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18004775
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Human uroporphyrinogen III synthase: NMR-based mapping of th...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P06132" data-a="GO:0004853" data-r="PMID:18004775" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA for uroporphyrinogen decarboxylase activity anchored to a study that expressed and purified the cytosolic heme-biosynthesis enzymes (including URO-decarboxylase) and probed a possible URO-synthase/URO-decarboxylase complex.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Supports the core molecular function. The paper foregrounds uroporphyrinogen III synthase in its title, but per policy an experimental annotation whose full text the curator read is not overruled from the abstract alone; the abstract confirms preparation of purified URO-decarboxylase. Retained as supporting the enzymatic activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18004775" target="_blank" class="term-link">
+                                        PMID:18004775
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">cytosolic enzymes of heme biosynthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004853" target="_blank" class="term-link">
+                                    GO:0004853
+                                </a>
+                            </span>
+                            <span class="term-label">uroporphyrinogen decarboxylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/1634232" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:1634232
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Characterization of a new mutation (R292G) and a deletion at...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P06132" data-a="GO:0004853" data-r="PMID:1634232" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TAS for uroporphyrinogen decarboxylase activity; the paper describes UROD as the fifth enzyme of the heme biosynthetic pathway and studies HEP-causing mutations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Supports the core molecular function; author statement (TAS) that UROD is the fifth heme biosynthetic enzyme.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1634232" target="_blank" class="term-link">
+                                        PMID:1634232
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">uroporphyrinogen decarboxylase (UROD), the fifth</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Uroporphyrinogen decarboxylase: catalyzes the fifth step of heme biosynthesis, the sequential, cofactor-independent decarboxylation of the four acetate side chains of uroporphyrinogen III to methyl groups, yielding coproporphyrinogen III (and 4 CO2), in the cytosol.</h3>
+                <span class="vote-buttons" data-g="P06132" data-a="FUNCTION: Uroporphyrinogen decarboxylase: catalyzes the fift..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004853" target="_blank" class="term-link">
+                            uroporphyrinogen decarboxylase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006783" target="_blank" class="term-link">
+                                heme biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14633982" target="_blank" class="term-link">
+                                PMID:14633982
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">the heme biosynthetic pathway, catalyzes decarboxylation of all four acetate</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/UROD/UROD-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">participates in the fifth step in the heme biosynthetic pathway</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11069625" target="_blank" class="term-link">
+                            PMID:11069625
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Co-inheritance of mutations in the uroporphyrinogen decarboxylase and hemochromatosis genes accelerates the onset of porphyria cutanea tarda.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11719352" target="_blank" class="term-link">
+                            PMID:11719352
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Functional consequences of naturally occurring mutations in human uroporphyrinogen decarboxylase.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12071824" target="_blank" class="term-link">
+                            PMID:12071824
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Description of a new mutation in hepatoerythropoietic porphyria and prenatal exclusion of a homozygous fetus.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/14633982" target="_blank" class="term-link">
+                            PMID:14633982
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Structural basis for tetrapyrrole coordination by uroporphyrinogen decarboxylase.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/1634232" target="_blank" class="term-link">
+                            PMID:1634232
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Characterization of a new mutation (R292G) and a deletion at the human uroporphyrinogen decarboxylase locus in two patients with hepatoerythropoietic porphyria.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18004775" target="_blank" class="term-link">
+                            PMID:18004775
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Human uroporphyrinogen III synthase: NMR-based mapping of the active site.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21668429" target="_blank" class="term-link">
+                            PMID:21668429
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Hepatoerythropoietic porphyria due to a novel mutation in the uroporphyrinogen decarboxylase gene.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link">
+                            PMID:25416956
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A proteome-scale map of the human interactome network.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link">
+                            PMID:28514442
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Architecture of the human interactome defines protein communities and disease networks.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31515488" target="_blank" class="term-link">
+                            PMID:31515488
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Extensive disruption of protein interactions by genetic variants across the allele frequency spectrum in human populations.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                            PMID:33961781
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Dual proteome-scale networks reveal cell-specific remodeling of the human interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-189425
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UROD decarboxylates URO3 to COPRO3</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-190182
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UROD decarboxylates URO1 to COPRO1</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/UROD/UROD-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB P06132 (DCUP_HUMAN) uroporphyrinogen decarboxylase record</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does UROD have any biologically meaningful non-cytosolic (e.g. nuclear) pool or moonlighting function, or is the HPA nucleoplasmic immunofluorescence signal purely incidental?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P06132" data-a="Q: Does UROD have any biologically meaningful non-cyt..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Are any of the high-throughput interactome partners (e.g. PPID, PHKA2, LRATD2) reproducible and functionally relevant to UROD folding, stability, or heme-pathway channeling?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P06132" data-a="Q: Are any of the high-throughput interactome partner..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Metabolic-channeling / complex-formation assays (co-IP, proximity labeling, size-exclusion with purified proteins) to test whether UROD physically associates with adjacent cytosolic heme-biosynthesis enzymes (UROS, HMBS) under physiological conditions, given that NMR did not detect a stable URO-synthase/URO-decarboxylase complex.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="P06132" data-a="EXPERIMENT: Metabolic-channeling / complex-formation assays (c..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Quantitative subcellular fractionation and validated-antibody immunofluorescence to confirm that endogenous UROD is essentially confined to the cytosol and to assess the reported nucleoplasmic signal.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="P06132" data-a="EXPERIMENT: Quantitative subcellular fractionation and validat..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(UROD-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P06132" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="urod-uroporphyrinogen-decarboxylase-curation-notes">UROD (Uroporphyrinogen decarboxylase) — curation notes</h1>
+<p>UniProt: P06132 (DCUP_HUMAN). HGNC:12591. EC 4.1.1.37. 367 aa. Chromosome 1.</p>
+<h2 id="core-biology">Core biology</h2>
+<p>UROD catalyzes the <strong>fifth step of heme biosynthesis</strong>: the sequential decarboxylation of<br />
+the four acetate side chains of uroporphyrinogen III to methyl groups, yielding<br />
+coproporphyrinogen III (plus 4 CO2), in the <strong>cytosol</strong>.</p>
+<ul>
+<li>UniProt FUNCTION: "Catalyzes the sequential decarboxylation of the four acetate side<br />
+  chains of uroporphyrinogen to form coproporphyrinogen and participates in the fifth step<br />
+  in the heme biosynthetic pathway" [file:human/UROD/UROD-uniprot.txt].</li>
+<li>Reaction (Rhea:19865, EC 4.1.1.37): uroporphyrinogen III + 4 H(+) = coproporphyrinogen III</li>
+<li>4 CO2. Also acts on uroporphyrinogen I → coproporphyrinogen I (Rhea:31239), less<br />
+  efficiently, but only the III isomer feeds heme synthesis.</li>
+<li>Cofactor-independent decarboxylase; <strong>homodimer</strong> (PubMed:9194196, 9564029, 14633982).</li>
+<li>PATHWAY (UniProt): protoporphyrin-IX biosynthesis; coproporphyrinogen-III from<br />
+  5-aminolevulinate: step 4/4.</li>
+<li>Subcellular location: Cytoplasm, cytosol.</li>
+</ul>
+<h2 id="key-experimental-references-verbatim-anchors">Key experimental references (verbatim anchors)</h2>
+<ul>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/14633982" title="Uroporphyrinogen decarboxylase (URO-D), an essential enzyme that functions in \nthe heme biosynthetic pathway, catalyzes decarboxylation of all four acetate \ngroups of uroporphyrinogen to form coproporphyrinogen">PMID:14633982</a> — structural basis; Asp86 is the<br />
+  key catalytic residue; single active center decarboxylates all four acetate groups; crystal<br />
+  structures with coproporphyrinogen I and III products.</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/11719352">PMID:11719352</a> — 12 F-PCT mutations characterized; recombinant mutant activities 29–94%<br />
+  of normal; crystal structures of 3 mutants; confirms enzymatic activity (IDA).</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/21668429" title="Hepatoerythropoietic porphyria (HEP) is a rare form of porphyria that results from a deficient activity of the heme biosynthetic enzyme uroporphyrinogen decarboxylase (UROD)">PMID:21668429</a><br />
+  — G170D HEP variant; recombinant UROD purified and assayed on uroporphyrinogen I and III<br />
+  (IDA for activity).</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/11069625" title="deficiency of hepatic uroporphyrin-\nogen decarboxylase activity">PMID:11069625</a> — F-PCT<br />
+  mutations (A80S etc.); disease + hemochromatosis co-inheritance.</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/12071824" title="profound deficiency (&lt;10% of normal activity) of uroporphyrinogen decarboxylase \n(UROD) activity">PMID:12071824</a> — HEP F46L; recombinant expression confirms deleterious effect<br />
+  (IDA). Note: in vitro UROD also decarboxylates pentacarboxylate porphyrinogen I.</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/1634232" title="A deficiency in the activity of uroporphyrinogen decarboxylase (UROD), the fifth \nenzyme of the haem biosynthetic pathway">PMID:1634232</a> — R292G HEP; explicitly "the fifth enzyme"<br />
+  (TAS for MF).</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/18004775">PMID:18004775</a> — Primary focus is URO-synthase (UROS), but developed expression/<br />
+  purification for "these cytosolic enzymes of heme biosynthesis" including<br />
+  URO-decarboxylase, and probed the URO-decarboxylase complex by NMR; GOA anchors an IDA<br />
+  (GO:0004853) and IC (GO:0006783) here. Full text not in cache; curator judgment retained.</li>
+<li>Reactome R-HSA-189425 (URO3→COPRO3) and R-HSA-190182 (URO1→COPRO1): "Cytosolic<br />
+  uroporphyrinogen decarboxylase (UROD) catalyzes the seq[u]ential removal of four carboxylic<br />
+  groups from the acetic acid side chains of uroporphyrinogen ...". TAS cytosol.</li>
+</ul>
+<h2 id="disease">Disease</h2>
+<ul>
+<li><strong>Familial porphyria cutanea tarda (FPCT, MIM:176100)</strong>: autosomal dominant, low<br />
+  penetrance; commonest porphyria (~20% familial). Heterozygous UROD deficiency.</li>
+<li><strong>Hepatoerythropoietic porphyria (HEP)</strong>: homozygous/biallelic UROD deficiency<br />
+  (&lt;10–~40% residual activity); severe childhood-onset cutaneous porphyria; considered the<br />
+  homozygous form of PCT <a href="https://pubmed.ncbi.nlm.nih.gov/21668429">PMID:21668429</a>.</li>
+</ul>
+<h2 id="annotation-review-decisions">Annotation-review decisions</h2>
+<ul>
+<li>MF <strong>GO:0004853 uroporphyrinogen decarboxylase activity</strong> (IBA, IEA, multiple IDA, TAS):<br />
+  ACCEPT — this is the core MF, strongly supported experimentally and structurally.</li>
+<li>BP <strong>GO:0006783 heme biosynthetic process</strong> (IBA, IC): ACCEPT — core BP (fifth step of<br />
+  heme synthesis).</li>
+<li>BP <strong>GO:0006785 heme B biosynthetic process</strong> (IDA): ACCEPT — correct, coproporphyrinogen<br />
+  III feeds heme b synthesis; more specific but valid.</li>
+<li>BP <strong>GO:0006779 porphyrin-containing compound biosynthetic process</strong> (IEA): ACCEPT — correct<br />
+  parent-level biosynthetic term.</li>
+<li>BP <strong>GO:0006778 porphyrin-containing compound metabolic process</strong> (IDA): ACCEPT (parent<br />
+  metabolic term; correct but general).</li>
+<li>BP <strong>GO:0006787 porphyrin-containing compound catabolic process</strong> (IDA x4): MODIFY — this is<br />
+  DIRECTIONALLY WRONG. UROD is anabolic (biosynthesis); decarboxylating uroporphyrinogen III<br />
+  to coproporphyrinogen III is a heme-biosynthetic step, not porphyrin catabolism. Propose<br />
+  replacement GO:0006783 (heme biosynthetic process) / GO:0006779. Likely a systematic<br />
+  mis-mapping applied across the four disease/structural papers.</li>
+<li>CC <strong>GO:0005829 cytosol</strong> (IBA, IEA, IDA, ISS, TAS): ACCEPT — established localization.</li>
+<li>CC <strong>GO:0005654 nucleoplasm</strong> (IDA, HPA): MARK_AS_OVER_ANNOTATED — HPA immunofluorescence<br />
+  can detect nucleoplasmic signal, but UROD is a cytosolic heme-biosynthesis enzyme with no<br />
+  established nuclear function; not core.</li>
+<li>MF <strong>GO:0005515 protein binding</strong> (IPI x5, high-throughput interactome screens): all<br />
+  MARK_AS_OVER_ANNOTATED — uninformative bare protein-binding from proteome-scale Y2H/AP-MS<br />
+  maps (PMIDs 25416956, 28514442, 31515488, 32296183, 33961781); no functional partner<br />
+  established.</li>
+</ul>
+<h2 id="deep-research">Deep research</h2>
+<p>falcon deep-research provider is out of credits (HTTP 402); no -deep-research-falcon.md was<br />
+generated. Review grounded in UROD-uniprot.txt, the seeded GOA, and cached publications/PMID_*.md.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P06132
+gene_symbol: UROD
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: UROD encodes uroporphyrinogen decarboxylase (URO-D; EC 4.1.1.37), the enzyme that catalyzes
+  the fifth step of heme biosynthesis. It performs the sequential decarboxylation of the four acetate
+  side chains of uroporphyrinogen III to methyl groups, releasing four molecules of CO2 and producing
+  coproporphyrinogen III. The enzyme is cofactor-independent and acts as a homodimer with a single active-site
+  aspartate (Asp86) that binds and activates the substrate and all partially decarboxylated intermediates
+  at one catalytic center. Although either the I or III isomer of uroporphyrinogen can serve as substrate
+  in vitro (the III isomer being processed more efficiently), only coproporphyrinogen III can ultimately
+  be converted to heme. UROD is a soluble, cytosolic protein. Deficiency of UROD causes porphyria cutanea
+  tarda (PCT), the commonest human porphyria, of which the familial form (FPCT) is autosomal dominant
+  with low penetrance; complete/biallelic deficiency causes the severe childhood-onset hepatoerythropoietic
+  porphyria (HEP), regarded as the homozygous form of PCT.
+references:
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator
+    judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping,
+    accompanied by conservative changes to GO terms applied by UniProt
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:11069625
+  title: Co-inheritance of mutations in the uroporphyrinogen decarboxylase and hemochromatosis genes accelerates
+    the onset of porphyria cutanea tarda.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified. Establishes that PCT results from deficiency of hepatic UROD activity
+      and characterizes FPCT-causing UROD mutations; supports the disease context and (via curator full-text
+      reading) the IDA activity annotation.
+- id: PMID:11719352
+  title: Functional consequences of naturally occurring mutations in human uroporphyrinogen decarboxylase.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified. Recombinant expression and enzymatic assay of missense URO-D variants
+      (activities 29-94% of normal) plus mutant crystal structures; directly supports uroporphyrinogen
+      decarboxylase activity (IDA).
+- id: PMID:12071824
+  title: Description of a new mutation in hepatoerythropoietic porphyria and prenatal exclusion of a homozygous
+    fetus.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified. HEP case with homozygous F46L UROD mutation; low UROD activity and
+      recombinant expression confirm the deleterious effect; supports the enzymatic activity annotation.
+- id: PMID:14633982
+  title: Structural basis for tetrapyrrole coordination by uroporphyrinogen decarboxylase.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified. Crystal structures of URO-D with coproporphyrinogen I and III products;
+      defines Asp86 catalysis and how one active center decarboxylates all four acetate groups. Primary
+      structural/mechanistic reference for the MF.
+- id: PMID:1634232
+  title: Characterization of a new mutation (R292G) and a deletion at the human uroporphyrinogen decarboxylase
+    locus in two patients with hepatoerythropoietic porphyria.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified. Explicitly describes UROD as the fifth enzyme of the heme biosynthetic
+      pathway; source of the TAS molecular-function annotation.
+- id: PMID:18004775
+  title: &#39;Human uroporphyrinogen III synthase: NMR-based mapping of the active site.&#39;
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: PubMed-verified. Primary focus is uroporphyrinogen III synthase (UROS), but the study
+      developed expression/purification for the cytosolic heme biosynthesis enzymes including URO-decarboxylase
+      and probed a possible URO-synthase/URO-decarboxylase complex by NMR (none detected). GOA anchors
+      an IDA (GO:0004853) and an IC (GO:0006783) for UROD here; full text is not in the cache, so the
+      curator reading is retained rather than overruled.
+- id: PMID:21668429
+  title: Hepatoerythropoietic porphyria due to a novel mutation in the uroporphyrinogen decarboxylase
+    gene.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified with full text. Novel homozygous G170D HEP variant; recombinant UROD
+      purified and assayed against uroporphyrinogen I and III; directly supports the enzymatic activity
+      annotation and the heme-biosynthesis disease context.
+- id: PMID:25416956
+  title: A proteome-scale map of the human interactome network.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: PubMed-verified. High-throughput human interactome (HuRI/CCSB) screen; source of a non-specific
+      IPI protein-binding annotation, not an informative molecular function.
+- id: PMID:28514442
+  title: Architecture of the human interactome defines protein communities and disease networks.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: PubMed-verified. Proteome-scale interactome (BioPlex) analysis; source of non-specific
+      IPI protein-binding annotations.
+- id: PMID:31515488
+  title: Extensive disruption of protein interactions by genetic variants across the allele frequency
+    spectrum in human populations.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: PubMed-verified. Systematic interaction-perturbation (Y2H variant) screen; source of
+      a non-specific IPI protein-binding annotation.
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: PubMed-verified. Binary reference interactome (HuRI) Y2H screen; source of several non-specific
+      IPI protein-binding annotations.
+- id: PMID:33961781
+  title: Dual proteome-scale networks reveal cell-specific remodeling of the human interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: PubMed-verified. BioPlex dual cell-line AP-MS interactome; source of non-specific IPI
+      protein-binding annotations.
+- id: Reactome:R-HSA-189425
+  title: UROD decarboxylates URO3 to COPRO3
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Reactome reaction describing the physiological UROD step (uroporphyrinogen III to coproporphyrinogen
+      III) in the cytosol; supports both the MF and the cytosol location.
+- id: Reactome:R-HSA-190182
+  title: UROD decarboxylates URO1 to COPRO1
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Reactome reaction for the less-efficient decarboxylation of the isomer I substrate (uroporphyrinogen
+      I to coproporphyrinogen I) in the cytosol; corroborates the cytosolic decarboxylase activity.
+- id: file:human/UROD/UROD-uniprot.txt
+  title: UniProtKB P06132 (DCUP_HUMAN) uroporphyrinogen decarboxylase record
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Curated UniProt record; source of the FUNCTION, CATALYTIC ACTIVITY, PATHWAY, SUBUNIT
+      and SUBCELLULAR LOCATION statements used to ground this review.
+existing_annotations:
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: Phylogenetic (IBA) assertion that UROD is active in the cytosol. UROD is a soluble cytosolic
+      enzyme of heme biosynthesis, consistent with the UniProt subcellular location and Reactome.
+    action: ACCEPT
+    reason: Correct and well supported. UROD localizes to the cytosol where the fifth step of heme biosynthesis
+      occurs; the IBA is concordant with experimental and UniProt evidence.
+    supported_by:
+    - reference_id: file:human/UROD/UROD-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm, cytosol&#39;
+    - reference_id: Reactome:R-HSA-189425
+      supporting_text: Cytosolic uroporphyrinogen decarboxylase (UROD) catalyzes the sequntial removal
+        of four carboxylic groups from the acetic acid side chains of uroporphyrinogen III (URO3) to form
+        coproporphyrinogen III (COPRO3)
+- term:
+    id: GO:0006783
+    label: heme biosynthetic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: Phylogenetic (IBA) assertion that UROD is involved in heme biosynthesis. UROD catalyzes the
+      fifth step of the heme biosynthetic pathway.
+    action: ACCEPT
+    reason: This is the core biological process for UROD. The decarboxylation of uroporphyrinogen III
+      to coproporphyrinogen III is an obligate step of heme biosynthesis.
+    supported_by:
+    - reference_id: file:human/UROD/UROD-uniprot.txt
+      supporting_text: participates in the fifth step in the heme biosynthetic pathway
+    - reference_id: PMID:1634232
+      supporting_text: uroporphyrinogen decarboxylase (UROD), the fifth
+- term:
+    id: GO:0004853
+    label: uroporphyrinogen decarboxylase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: Phylogenetic (IBA) assertion of uroporphyrinogen decarboxylase activity. This is the defining
+      molecular function of UROD, supported experimentally and structurally.
+    action: ACCEPT
+    reason: Core molecular function. The IBA is at the correct level of specificity and matches the EC
+      4.1.1.37 activity assayed for the human enzyme and its orthologs.
+    supported_by:
+    - reference_id: PMID:14633982
+      supporting_text: the heme biosynthetic pathway, catalyzes decarboxylation of all four acetate
+- term:
+    id: GO:0004853
+    label: uroporphyrinogen decarboxylase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Electronic (IEA) assertion of uroporphyrinogen decarboxylase activity from InterPro/ARBA
+      family membership and the RHEA:19865 / EC 4.1.1.37 mapping. Consistent with the experimentally established
+      function.
+    action: ACCEPT
+    reason: The IEA family/EC mapping correctly recovers the core molecular function; UROD carries the
+      URO-D fold and catalytic residues.
+    supported_by:
+    - reference_id: file:human/UROD/UROD-uniprot.txt
+      supporting_text: side chains of uroporphyrinogen to form coproporphyrinogen and
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: Electronic (IEA) location in cytosol derived from the UniProt subcellular-location vocabulary
+      mapping. Matches the established cytosolic localization.
+    action: ACCEPT
+    reason: Correct; the UniProt SubCell mapping reproduces the experimentally supported cytosolic localization
+      of this soluble enzyme.
+    supported_by:
+    - reference_id: file:human/UROD/UROD-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm, cytosol&#39;
+- term:
+    id: GO:0006779
+    label: porphyrin-containing compound biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Electronic (IEA) assertion that UROD is involved in porphyrin-containing compound biosynthesis.
+      This is a correct parent-level biosynthetic term (coproporphyrinogen III is a porphyrin-containing
+      compound produced en route to heme).
+    action: ACCEPT
+    reason: Biologically correct, though more general than the specific heme biosynthetic process term.
+      Acceptable as a broader IEA parent; the core, more informative term is GO:0006783 (heme biosynthetic
+      process).
+    supported_by:
+    - reference_id: file:human/UROD/UROD-uniprot.txt
+      supporting_text: &#39;coproporphyrinogen-III from 5-aminolevulinate: step 4/4.&#39;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25416956
+  qualifier: enables
+  review:
+    summary: Non-specific protein-binding (IPI) from a proteome-scale interactome screen (interaction
+      with Q96KN1/LRATD2). Bare protein binding is uninformative and no functional partnership is established.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Per curation guidelines, bare &#39;protein binding&#39; derived from a high-throughput interactome
+      map does not convey a molecular function. Not removed (experimental IPI is retained) but flagged
+      as over-annotation; not a core function.
+    supported_by:
+    - reference_id: file:human/UROD/UROD-uniprot.txt
+      supporting_text: &#39;P06132; Q96KN1: LRATD2&#39;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:28514442
+  qualifier: enables
+  review:
+    summary: Non-specific protein-binding (IPI) from a proteome-scale interactome analysis. No informative
+      molecular function is conveyed and no biologically meaningful partner is established for UROD.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Bare &#39;protein binding&#39; from a high-throughput dataset; retained as experimental IPI but flagged
+      as an uninformative over-annotation, not a core function.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:31515488
+  qualifier: enables
+  review:
+    summary: Non-specific protein-binding (IPI) from a systematic interaction-perturbation screen (interaction
+      with Q96KN1). Uninformative bare protein binding.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Bare &#39;protein binding&#39; from a high-throughput interactome study; retained but flagged as over-annotation,
+      not a core molecular function.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: Non-specific protein-binding (IPI) from the HuRI binary reference interactome (several partners
+      including C9JJ79/PILRA, P46019/PHKA2, Q96KN1/LRATD2, Q96PN8/TSSK3). Bare protein binding without
+      functional context.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Bare &#39;protein binding&#39; from a large-scale Y2H map; retained as experimental IPI but flagged
+      as uninformative over-annotation, not a core function.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:33961781
+  qualifier: enables
+  review:
+    summary: Non-specific protein-binding (IPI) from the BioPlex dual cell-line AP-MS interactome (partners
+      including A5A3E0/POTEF, Q08752/PPID). Bare protein binding, no functional partnership established.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Bare &#39;protein binding&#39; from a high-throughput dataset; retained but flagged as over-annotation,
+      not a core molecular function.
+- term:
+    id: GO:0006785
+    label: heme B biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:11069625
+  qualifier: involved_in
+  review:
+    summary: IDA annotation that UROD is involved in heme B (protoheme/heme b) biosynthesis. UROD produces
+      coproporphyrinogen III, an obligate intermediate on the route to heme b, so this is biologically
+      correct and more specific than the parent heme biosynthetic process term.
+    action: ACCEPT
+    reason: Correct and appropriately specific; heme b is the standard heme produced by the pathway and
+      UROD deficiency causes accumulation of upstream porphyrins (porphyria cutanea tarda), confirming
+      its role in the biosynthetic route. Experimental annotation whose full text was read by the curator;
+      retained.
+    supported_by:
+    - reference_id: PMID:11069625
+      supporting_text: deficiency of hepatic uroporphyrin-
+- term:
+    id: GO:0005654
+    label: nucleoplasm
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: HPA immunofluorescence (IDA) placing UROD in the nucleoplasm. UROD is a soluble cytosolic
+      heme-biosynthesis enzyme with no established nuclear function; a nucleoplasmic signal in an antibody-based
+      screen most likely reflects diffuse/incidental staining rather than a functional nuclear localization.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Not the established or functionally relevant localization. The enzyme acts in the cytosol
+      (UniProt, Reactome, IBA/ISS/TAS all agree). The HPA IDA is retained but flagged as an over-annotation;
+      it is not a core localization for UROD.
+    supported_by:
+    - reference_id: file:human/UROD/UROD-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm, cytosol&#39;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: HPA immunofluorescence (IDA) placing UROD in the cytosol. Concordant with the established
+      cytosolic localization of this soluble enzyme.
+    action: ACCEPT
+    reason: Correct localization, directly supported by experimental immunofluorescence and consistent
+      with all other lines of evidence.
+    supported_by:
+    - reference_id: file:human/UROD/UROD-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm, cytosol&#39;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: is_active_in
+  review:
+    summary: ISS assertion (transferred from mouse Urod, MGI:98916) that the enzyme is active in the cytosol.
+      Consistent with the cytosolic localization of the mammalian enzyme.
+    action: ACCEPT
+    reason: Correct; the sequence-similarity transfer recovers the established cytosolic site of activity
+      of UROD.
+    supported_by:
+    - reference_id: file:human/UROD/UROD-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm, cytosol&#39;
+- term:
+    id: GO:0004853
+    label: uroporphyrinogen decarboxylase activity
+  evidence_type: IDA
+  original_reference_id: PMID:11069625
+  qualifier: enables
+  review:
+    summary: IDA for uroporphyrinogen decarboxylase activity from a study of FPCT-causing UROD mutations,
+      in which hepatic UROD activity deficiency underlies the disease.
+    action: ACCEPT
+    reason: Directly supports the core molecular function; experimental annotation curated from the full
+      text.
+    supported_by:
+    - reference_id: PMID:11069625
+      supporting_text: deficiency of hepatic uroporphyrin-
+- term:
+    id: GO:0004853
+    label: uroporphyrinogen decarboxylase activity
+  evidence_type: IDA
+  original_reference_id: PMID:11719352
+  qualifier: enables
+  review:
+    summary: IDA for uroporphyrinogen decarboxylase activity; recombinant wild-type and mutant URO-D proteins
+      were expressed and their enzymatic activity measured (29-94% of normal for missense mutants).
+    action: ACCEPT
+    reason: Directly supports the core molecular function via recombinant enzymatic assay of the human
+      protein.
+    supported_by:
+    - reference_id: PMID:11719352
+      supporting_text: ranged from 29% to 94% of normal
+- term:
+    id: GO:0004853
+    label: uroporphyrinogen decarboxylase activity
+  evidence_type: IDA
+  original_reference_id: PMID:12071824
+  qualifier: enables
+  review:
+    summary: IDA for uroporphyrinogen decarboxylase activity; HEP patient with F46L UROD showed low UROD
+      activity and recombinant expression confirmed the deleterious effect.
+    action: ACCEPT
+    reason: Supports the core molecular function; enzymatic activity measured directly and confirmed by
+      recombinant expression.
+    supported_by:
+    - reference_id: PMID:12071824
+      supporting_text: We found low levels of UROD enzymatic activity
+- term:
+    id: GO:0004853
+    label: uroporphyrinogen decarboxylase activity
+  evidence_type: IDA
+  original_reference_id: PMID:14633982
+  qualifier: enables
+  review:
+    summary: IDA for uroporphyrinogen decarboxylase activity backed by crystal structures of URO-D in
+      complex with its coproporphyrinogen I and III products, defining how one catalytic center decarboxylates
+      all four acetate groups.
+    action: ACCEPT
+    reason: Strong structural/biochemical support for the core molecular function.
+    supported_by:
+    - reference_id: PMID:14633982
+      supporting_text: the heme biosynthetic pathway, catalyzes decarboxylation of all four acetate
+- term:
+    id: GO:0004853
+    label: uroporphyrinogen decarboxylase activity
+  evidence_type: IDA
+  original_reference_id: PMID:21668429
+  qualifier: enables
+  review:
+    summary: IDA for uroporphyrinogen decarboxylase activity; recombinant UROD (wild-type and G170D HEP
+      variant) purified and assayed against uroporphyrinogen I and III substrates.
+    action: ACCEPT
+    reason: Directly supports the core molecular function with a purified-protein enzymatic assay on both
+      isomer substrates.
+    supported_by:
+    - reference_id: PMID:21668429
+      supporting_text: The recombinant UROD protein showed a relative activity of 17% and 60%
+- term:
+    id: GO:0006778
+    label: porphyrin-containing compound metabolic process
+  evidence_type: IDA
+  original_reference_id: PMID:12071824
+  qualifier: involved_in
+  review:
+    summary: IDA that UROD is involved in porphyrin-containing compound metabolism, from a HEP study showing
+      UROD deficiency and abnormal (poly-carboxylated) porphyrin excretion.
+    action: ACCEPT
+    reason: Biologically correct, though this is a high-level parent (metabolic) term. The more informative
+      and core biological process is heme biosynthesis (GO:0006783); this parent is acceptable and retained.
+    supported_by:
+    - reference_id: PMID:12071824
+      supporting_text: profound deficiency (&lt;10% of normal activity) of uroporphyrinogen decarboxylase
+- term:
+    id: GO:0006787
+    label: porphyrin-containing compound catabolic process
+  evidence_type: IDA
+  original_reference_id: PMID:11069625
+  qualifier: involved_in
+  review:
+    summary: &#39;IDA annotating UROD to porphyrin-containing compound CATABOLIC process. This is directionally
+      incorrect: UROD is an anabolic enzyme. Its decarboxylation of uroporphyrinogen III to coproporphyrinogen
+      III is a heme-biosynthetic step, not degradation of a porphyrin-containing compound.&#39;
+    action: MODIFY
+    reason: The enzymatic reaction is genuine, but the process branch is wrong. UROD contributes to biosynthesis
+      (production of coproporphyrinogen III on the route to heme), not catabolism. This appears to be
+      a systematic mis-mapping applied to several UROD disease/structural papers. Replace with the biosynthetic
+      terms that the reaction actually supports.
+    proposed_replacement_terms:
+    - id: GO:0006783
+      label: heme biosynthetic process
+    - id: GO:0006779
+      label: porphyrin-containing compound biosynthetic process
+    supported_by:
+    - reference_id: file:human/UROD/UROD-uniprot.txt
+      supporting_text: participates in the fifth step in the heme biosynthetic pathway
+    - reference_id: PMID:11069625
+      supporting_text: deficiency of hepatic uroporphyrin-
+- term:
+    id: GO:0006787
+    label: porphyrin-containing compound catabolic process
+  evidence_type: IDA
+  original_reference_id: PMID:11719352
+  qualifier: involved_in
+  review:
+    summary: IDA annotating UROD to porphyrin-containing compound CATABOLIC process. As above, this is
+      directionally wrong for an enzyme whose reaction is part of heme biosynthesis.
+    action: MODIFY
+    reason: The recombinant enzymatic-activity data in this paper support decarboxylase activity, but
+      the correct process is biosynthetic, not catabolic. Replace with heme / porphyrin biosynthetic process.
+    proposed_replacement_terms:
+    - id: GO:0006783
+      label: heme biosynthetic process
+    - id: GO:0006779
+      label: porphyrin-containing compound biosynthetic process
+    supported_by:
+    - reference_id: PMID:11719352
+      supporting_text: ranged from 29% to 94% of normal
+- term:
+    id: GO:0006787
+    label: porphyrin-containing compound catabolic process
+  evidence_type: IDA
+  original_reference_id: PMID:14633982
+  qualifier: involved_in
+  review:
+    summary: IDA annotating UROD to porphyrin-containing compound CATABOLIC process. The structural paper
+      establishes decarboxylase activity, but the biological process direction is wrong.
+    action: MODIFY
+    reason: Decarboxylation of uroporphyrinogen to coproporphyrinogen is a biosynthetic step of heme synthesis,
+      not porphyrin catabolism. Replace with the biosynthetic process terms.
+    proposed_replacement_terms:
+    - id: GO:0006783
+      label: heme biosynthetic process
+    - id: GO:0006779
+      label: porphyrin-containing compound biosynthetic process
+    supported_by:
+    - reference_id: PMID:14633982
+      supporting_text: the heme biosynthetic pathway, catalyzes decarboxylation of all four acetate
+- term:
+    id: GO:0006787
+    label: porphyrin-containing compound catabolic process
+  evidence_type: IDA
+  original_reference_id: PMID:21668429
+  qualifier: involved_in
+  review:
+    summary: IDA annotating UROD to porphyrin-containing compound CATABOLIC process. The HEP study supports
+      decarboxylase activity, but this catabolic BP is directionally incorrect.
+    action: MODIFY
+    reason: UROD acts in heme biosynthesis; the reaction produces coproporphyrinogen III on the route
+      to heme rather than degrading a porphyrin. Replace with heme / porphyrin biosynthetic process.
+    proposed_replacement_terms:
+    - id: GO:0006783
+      label: heme biosynthetic process
+    - id: GO:0006779
+      label: porphyrin-containing compound biosynthetic process
+    supported_by:
+    - reference_id: PMID:21668429
+      supporting_text: results from a deficiency of uroporphyrinogen decarboxylase (UROD)
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-189425
+  qualifier: located_in
+  review:
+    summary: TAS (Reactome) location in cytosol for the UROD reaction converting uroporphyrinogen III
+      to coproporphyrinogen III. Consistent with the established cytosolic localization.
+    action: ACCEPT
+    reason: Correct; Reactome explicitly describes cytosolic UROD.
+    supported_by:
+    - reference_id: Reactome:R-HSA-189425
+      supporting_text: Cytosolic uroporphyrinogen decarboxylase (UROD) catalyzes the sequntial removal
+        of four carboxylic groups from the acetic acid side chains of uroporphyrinogen III (URO3) to form
+        coproporphyrinogen III (COPRO3)
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-190182
+  qualifier: located_in
+  review:
+    summary: TAS (Reactome) location in cytosol for the UROD reaction converting uroporphyrinogen I to
+      coproporphyrinogen I (the less-efficient isomer I reaction). Consistent with the established cytosolic
+      localization.
+    action: ACCEPT
+    reason: Correct; Reactome describes cytosolic UROD activity on the isomer I substrate.
+    supported_by:
+    - reference_id: Reactome:R-HSA-190182
+      supporting_text: Cytosolic uroporphyrinogen decarboxylase (UROD) catalyzes the sequential removal
+        of four carboxylic groups from the acetic acid side chains of uroporphyrinogen I (URO1) to form
+        coproporphyrinogen I (COPRO1)
+- term:
+    id: GO:0006783
+    label: heme biosynthetic process
+  evidence_type: IC
+  original_reference_id: PMID:18004775
+  qualifier: involved_in
+  review:
+    summary: IC (inferred by curator) that UROD is involved in heme biosynthesis, based on its uroporphyrinogen
+      decarboxylase activity (with:GO:0004853). UROD is one of the cytosolic heme-biosynthesis enzymes.
+    action: ACCEPT
+    reason: Core biological process, correctly inferred from the enzymatic activity. Although this paper&#39;s
+      primary subject is uroporphyrinogen III synthase, it treats UROD as one of the cytosolic heme-biosynthesis
+      enzymes; the curator inference to heme biosynthesis is sound.
+    supported_by:
+    - reference_id: PMID:18004775
+      supporting_text: cytosolic enzymes of heme biosynthesis
+    - reference_id: file:human/UROD/UROD-uniprot.txt
+      supporting_text: participates in the fifth step in the heme biosynthetic pathway
+- term:
+    id: GO:0004853
+    label: uroporphyrinogen decarboxylase activity
+  evidence_type: IDA
+  original_reference_id: PMID:18004775
+  qualifier: enables
+  review:
+    summary: IDA for uroporphyrinogen decarboxylase activity anchored to a study that expressed and purified
+      the cytosolic heme-biosynthesis enzymes (including URO-decarboxylase) and probed a possible URO-synthase/URO-decarboxylase
+      complex.
+    action: ACCEPT
+    reason: Supports the core molecular function. The paper foregrounds uroporphyrinogen III synthase
+      in its title, but per policy an experimental annotation whose full text the curator read is not
+      overruled from the abstract alone; the abstract confirms preparation of purified URO-decarboxylase.
+      Retained as supporting the enzymatic activity.
+    supported_by:
+    - reference_id: PMID:18004775
+      supporting_text: cytosolic enzymes of heme biosynthesis
+- term:
+    id: GO:0004853
+    label: uroporphyrinogen decarboxylase activity
+  evidence_type: TAS
+  original_reference_id: PMID:1634232
+  qualifier: enables
+  review:
+    summary: TAS for uroporphyrinogen decarboxylase activity; the paper describes UROD as the fifth enzyme
+      of the heme biosynthetic pathway and studies HEP-causing mutations.
+    action: ACCEPT
+    reason: Supports the core molecular function; author statement (TAS) that UROD is the fifth heme biosynthetic
+      enzyme.
+    supported_by:
+    - reference_id: PMID:1634232
+      supporting_text: uroporphyrinogen decarboxylase (UROD), the fifth
+core_functions:
+- description: &#39;Uroporphyrinogen decarboxylase: catalyzes the fifth step of heme biosynthesis, the sequential,
+    cofactor-independent decarboxylation of the four acetate side chains of uroporphyrinogen III to methyl
+    groups, yielding coproporphyrinogen III (and 4 CO2), in the cytosol.&#39;
+  molecular_function:
+    id: GO:0004853
+    label: uroporphyrinogen decarboxylase activity
+  directly_involved_in:
+  - id: GO:0006783
+    label: heme biosynthetic process
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: PMID:14633982
+    supporting_text: the heme biosynthetic pathway, catalyzes decarboxylation of all four acetate
+  - reference_id: file:human/UROD/UROD-uniprot.txt
+    supporting_text: participates in the fifth step in the heme biosynthetic pathway
+proposed_new_terms: []
+suggested_questions:
+- question: Does UROD have any biologically meaningful non-cytosolic (e.g. nuclear) pool or moonlighting
+    function, or is the HPA nucleoplasmic immunofluorescence signal purely incidental?
+- question: Are any of the high-throughput interactome partners (e.g. PPID, PHKA2, LRATD2) reproducible
+    and functionally relevant to UROD folding, stability, or heme-pathway channeling?
+suggested_experiments:
+- description: Metabolic-channeling / complex-formation assays (co-IP, proximity labeling, size-exclusion
+    with purified proteins) to test whether UROD physically associates with adjacent cytosolic heme-biosynthesis
+    enzymes (UROS, HMBS) under physiological conditions, given that NMR did not detect a stable URO-synthase/URO-decarboxylase
+    complex.
+- description: Quantitative subcellular fractionation and validated-antibody immunofluorescence to confirm
+    that endogenous UROD is essentially confined to the cytosol and to assess the reported nucleoplasmic
+    signal.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

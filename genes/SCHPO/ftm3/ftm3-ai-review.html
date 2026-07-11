@@ -1,0 +1,2340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ftm3 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ftm3</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P0CU06" target="_blank" class="term-link">
+                        P0CU06
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Schizosaccharomyces pombe (strain 972 / ATCC 24843)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "ftm3";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P0CU06" data-a="DESCRIPTION: ftm3 (SPAC750.04c) is a small (146-residue, ~17 kD..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>ftm3 (SPAC750.04c) is a small (146-residue, ~17 kDa) membrane protein of the Schizosaccharomyces pombe Ftm (&#34;sub-telomeric 5Tm&#34;) protein family, a lineage-specific family encoded in the sub-telomeric regions of the fission-yeast genome (paralogs ftm1, ftm2, ftm4, ftm5, ftm6 and ftm7). It belongs to the UPF0742 family and carries the Pombe_5TM domain (Pfam PF09437, InterPro IPR018291, &#34;Pombe specific 5TM protein&#34;), a domain of unknown function essentially restricted to Schizosaccharomyces. The protein is predicted to be membrane-integral (at least one transmembrane helix) and, by similarity to its experimentally localized paralog ftm2, is assigned to the cytoplasm and the nuclear/nuclear-envelope membrane, where the family shows cytoplasmic puncta and nuclear-rim staining. No molecular activity, substrate, ligand or interaction partner has been established for ftm3 or any Ftm-family member; its biological role is undetermined, and it is classified as a conserved protein of unknown function.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P0CU06" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation mapping the UniProtKB/Swiss-Prot subcellular-location &#34;Cytoplasm&#34; to GO via GO_REF:0000044. It restates the same location that is assigned to ftm3 by ISS from its paralog ftm2. Localization is a defensible, conservative call for this otherwise uncharacterized protein, but it is not a core function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the UniProt SubCell location and with the ISS cytoplasm annotation below; redundant electronic restatement, retained as supporting localization evidence rather than a core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    UniProt:P0CU06
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031965" target="_blank" class="term-link">
+                                    GO:0031965
+                                </a>
+                            </span>
+                            <span class="term-label">nuclear membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P0CU06" data-a="GO:0031965" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation mapping the UniProtKB/Swiss-Prot subcellular-location &#34;Nucleus membrane&#34; to GO via GO_REF:0000044. It restates the nuclear-envelope localization assigned to ftm3 by ISS from paralog ftm2 (cytoplasmic dots and the nuclear envelope). Not a core function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the UniProt SubCell &#34;Nucleus membrane&#34; location and with the ISS nuclear-membrane annotation below; redundant electronic restatement retained as supporting localization evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    UniProt:P0CU06
+
+                                </span>
+
+                                <div class="support-text">C:nuclear membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003674" target="_blank" class="term-link">
+                                    GO:0003674
+                                </a>
+                            </span>
+                            <span class="term-label">molecular_function</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P0CU06" data-a="GO:0003674" data-r="GO_REF:0000015" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root molecular_function term with the ND (No biological Data available) evidence code, assigned by PomBase. The molecular function of ftm3 is genuinely unknown: the protein belongs to the UPF0742 / Pombe_5TM family, a Schizosaccharomyces-specific domain of unknown function with no established catalytic, transport, or binding activity, and no functional literature exists for ftm3 or any Ftm paralog.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The ND placeholder is the correct, honest representation for a conserved protein of unknown molecular function. No specific MF term is warranted from current evidence, and &#39;protein binding&#39; would be uninformative and unsupported.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008150" target="_blank" class="term-link">
+                                    GO:0008150
+                                </a>
+                            </span>
+                            <span class="term-label">biological_process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P0CU06" data-a="GO:0008150" data-r="GO_REF:0000015" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root biological_process term with the ND evidence code, assigned by PomBase. No biological process is experimentally attributed to ftm3. A high-throughput expression change under glucose availability exists at PomBase (GO:0042149, RNA-level), but it is a transcript-abundance observation, is not part of the GOA set reviewed here, and does not establish a functional role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ND correctly records that the biological process of ftm3 is unknown; no process term is supported by current evidence.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P0CU06" data-a="GO:0005737" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasmic localization transferred to ftm3 by curator sequence-similarity judgment (GO_REF:0000024) with:UniProtKB:P0CU07, i.e. from the paralog ftm2 (SPAC977.02), whose cytoplasm/nuclear-membrane localization was determined experimentally in the genome-wide YFP ORFeome study (PMID:16823372). A reasonable localization inference for a close paralog, but localization is not a core function and is by-similarity for ftm3 itself.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Grounded in experimental localization of a close paralog via a reliable genome-wide study; defensible as supporting localization evidence but not a core molecular/biological function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    UniProt:P0CU06
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031965" target="_blank" class="term-link">
+                                    GO:0031965
+                                </a>
+                            </span>
+                            <span class="term-label">nuclear membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P0CU06" data-a="GO:0031965" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Nuclear-membrane localization transferred to ftm3 by curator sequence-similarity judgment (GO_REF:0000024) with:UniProtKB:P0CU07 (paralog ftm2), whose nuclear-envelope localization was experimentally determined (PMID:16823372). The UniProt note records localization to cytoplasmic dots and the nuclear envelope. Localization inference, not a core function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the paralog&#39;s experimental nuclear-envelope localization; retained as supporting localization evidence rather than a core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    UniProt:P0CU06
+
+                                </span>
+
+                                <div class="support-text">C:nuclear membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>No core molecular or biological function can be assigned to ftm3 from current evidence. The only positive functional information is subcellular localization: ftm3 is a membrane-associated protein of the Ftm / UPF0742 / Pombe_5TM family localized (by similarity to its experimentally characterized paralog ftm2) to the cytoplasm and the nuclear-envelope membrane. This is a non-core localization statement, not an activity; the family&#39;s molecular function is undetermined.</h3>
+                <span class="vote-buttons" data-g="P0CU06" data-a="FUNCTION: No core molecular or biological function can be as..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031965" target="_blank" class="term-link">
+                                nuclear membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            UniProt:P0CU06
+
+                        </span>
+
+                        <div class="finding-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            UniProt:P0CU06
+
+                        </span>
+
+                        <div class="finding-text">C:nuclear membrane</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000015.md" target="_blank" class="term-link">
+                            GO_REF:0000015
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Use of the ND evidence code for Gene Ontology (GO) terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        UniProt:P0CU06
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UPF0742 protein SPAC750.04c (ftm3) - Schizosaccharomyces pombe</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16823372" target="_blank" class="term-link">
+                            PMID:16823372
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">ORFeome cloning and global analysis of protein localization in the fission yeast Schizosaccharomyces pombe.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34460892" target="_blank" class="term-link">
+                            PMID:34460892
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Transcriptome sequencing and screening of genes related to glucose availability in Schizosaccharomyces pombe by RNA-seq analysis</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does the Ftm / UPF0742 / Pombe_5TM family have a coherent shared molecular function, or are these rapidly-evolving sub-telomeric genes of low or conditional function?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P0CU06" data-a="Q: Does the Ftm / UPF0742 / Pombe_5TM family have a c..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is ftm3 functionally redundant with its paralogs, such that a phenotype only emerges in combinatorial ftm-family deletions?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P0CU06" data-a="Q: Is ftm3 functionally redundant with its paralogs, ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Construct single and combinatorial ftm-family deletion strains (ftm1-ftm7) and screen for growth, morphology, and stress/metabolic phenotypes (including glucose limitation) to detect redundant or conditional functions.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="P0CU06" data-a="EXPERIMENT: Construct single and combinatorial ftm-family dele..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Determine ftm3&#39;s direct subcellular localization (endogenous fluorescent tagging) and experimental membrane topology, and identify physical interaction partners (affinity purification-MS) to generate function hypotheses.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="P0CU06" data-a="EXPERIMENT: Determine ftm3&#39;s direct subcellular localization (..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The molecular function of ftm3 is completely unknown. No catalytic activity, transporter/channel activity, ligand, substrate, or biochemical activity has been demonstrated or is predictable for the protein.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> What is established is family and domain membership only: ftm3 belongs to the UPF0742 family and carries the Pombe_5TM domain (Pfam PF09437 / InterPro IPR018291, &#34;Pombe specific 5TM protein&#34;). This is a domain of unknown function with no functional annotation, essentially restricted to Schizosaccharomyces, so no cross-species orthology provides a functional hypothesis. PomBase records the molecular function as ND (&#34;No biological Data&#34;).</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> ftm3 is one of a lineage-specific, sub-telomeric family (ftm1-ftm7) of fission-yeast proteins with no assigned activity; establishing even the biochemical class (e.g. transporter, receptor, structural membrane protein) would open the whole family.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Biochemical characterization of purified/tagged ftm3 (or a family member), structure determination or confident structure-based fold/activity assignment, and assays guided by its membrane topology (e.g. transport/channel assays) to test candidate activities.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Belongs to the UPF0742 family."</em> — UniProt:P0CU06</li>
+
+                <li><em>"Pfam; PF09437; Pombe_5TM; 2."</em> — UniProt:P0CU06</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The biological process and cellular role of ftm3 are unknown. It is undetermined which pathway or process the protein participates in, and no loss-of-function phenotype has been reported for an ftm3 deletion.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">BP_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> ftm3 is expressed during vegetative growth and its transcript level changes with glucose availability (PomBase high-throughput expression annotation, GO:0042149, derived from RNA-seq), and the closely related paralog ftm2 is dispensable (ftm2delta viable with normal morphology). These are correlative/genetic observations only; PomBase records the biological process for ftm3 as ND.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Determining the process (e.g. a membrane/nuclear-envelope function, a stress or metabolic response, or a redundant/conditionally-required role) would move the Ftm family out of the conserved-unknown set.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Phenotypic profiling of single and combinatorial ftm-family deletions across stress and metabolic conditions (including glucose limitation), genetic-interaction mapping, and identification of physical interaction partners.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Belongs to the UPF0742 family."</em> — UniProt:P0CU06</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> ftm3&#39;s own subcellular localization and membrane topology have not been measured directly. Its cytoplasm/nuclear-membrane assignment is inferred entirely by similarity from the paralog ftm2, and although the family is named &#34;5TM&#34;, the UniProt feature table annotates only a single predicted transmembrane helix, so the true topology is unresolved.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span><span class="badge">CURATION</span>
+                <span class="badge">CC_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> The paralog ftm2 (P0CU07/SPAC977.02) was experimentally localized to the cytoplasm and nuclear membrane (cytoplasmic dots and the nuclear envelope) in a genome-wide YFP study (PMID:16823372), and ftm3&#39;s GO localization is transferred from it by ISS (with:UniProtKB:P0CU07). No direct ftm3 localization or topology experiment is on record.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Confirming ftm3&#39;s localization and topology directly (rather than by paralog transfer) would validate the propagated annotations and constrain candidate functions (e.g. nuclear-envelope vs general-membrane roles).</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Fluorescent tagging and imaging of ftm3 in S. pombe, and experimental membrane-topology mapping to resolve the transmembrane-helix count implied by the &#34;5TM&#34; family name.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"SUBCELLULAR LOCATION: Cytoplasm"</em> — UniProt:P0CU06</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ftm3-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P0CU06" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="ftm3-spac75004c-curation-notes">ftm3 (SPAC750.04c) — curation notes</h1>
+<p>UniProt: <strong>P0CU06</strong> (secondary AC Q9P332), entry name <code>YLZ4_SCHPO</code>.<br />
+PomBase: <strong>SPAC750.04c</strong>, standard name <strong>ftm3</strong>.<br />
+Taxon: <em>Schizosaccharomyces pombe</em> (strain 972 / ATCC 24843), NCBITaxon:284812.</p>
+<h2 id="summary-of-identity-known">Summary of identity (KNOWN)</h2>
+<ul>
+<li><strong>146 aa</strong>, MW ~17.2 kDa. RecName in UniProt: "UPF0742 protein SPAC750.04c".</li>
+<li>PomBase product description: <strong>"sub-telomeric 5Tm protein family Ftm3"</strong>; characterisation<br />
+  status <strong>"conserved unknown"</strong> (from PomBase gene page / API).</li>
+<li>Domain content: Pfam <strong>PF09437 (Pombe_5TM, "Pombe specific 5TM protein")</strong>, matched <strong>twice</strong><br />
+  in the sequence per the UniProt record (<code>Pfam; PF09437; 2</code>); InterPro <strong>IPR018291<br />
+  ("5TM-prot_SCHPO")</strong>. UniProt SIMILARITY: "Belongs to the <strong>UPF0742 family</strong>."<br />
+  [UniProt P0CU06 record: <code>DR Pfam; PF09437; Pombe_5TM; 2.</code>; <code>CC -!- SIMILARITY: Belongs to the UPF0742 family.</code>]</li>
+<li>UniProt annotates a single TMHMM-predicted transmembrane helix (TRANSMEM 38..60, ECO:0000255),<br />
+  despite the family being called "5TM" — the "5TM" is the family/Pfam name, not a per-protein<br />
+  UniProt feature count here.</li>
+<li>Genomic context: chromosome I, sub-telomeric region; part of a telomeric segmental duplication.<br />
+  Paralogs in the Ftm family: <strong>ftm1 (SPAC977.01), ftm2 (SPAC977.02), ftm4 (SPAC750.05c),<br />
+  ftm5, ftm6, ftm7</strong> (PomBase). Also related: SPBPB2B2.17c (UPF0742).<br />
+  [PomBase gene page SPAC750.04c: "Has paralogs: ftm4, ftm1, ftm2, ftm5, ftm6, ftm7"]</li>
+</ul>
+<h2 id="localization-evidence-known-by-homology-only-for-ftm3-itself">Localization evidence (KNOWN, by homology only for ftm3 itself)</h2>
+<ul>
+<li>UniProt SUBCELLULAR LOCATION for ftm3/P0CU06: "Cytoplasm {ECO:0000250|UniProtKB:P0CU07}.<br />
+  Nucleus membrane {ECO:0000250|UniProtKB:P0CU07}; Single-pass membrane protein {ECO:0000305}.<br />
+  Note=Localizes to cytoplasmic dots and the nuclear envelope. {ECO:0000250|UniProtKB:P0CU07}."<br />
+  — i.e. ftm3's own localization is <strong>inferred by similarity (ISS/ECO:0000250) from the paralog<br />
+  P0CU07 = ftm2 (SPAC977.02)</strong>, not measured directly on ftm3.</li>
+<li>The paralog <strong>ftm2/P0CU07/SPAC977.02</strong> has <strong>experimental</strong> localization to cytoplasm and<br />
+  nuclear/nucleus membrane from the genome-wide YFP ORFeome localization study<br />
+<strong>PMID:16823372</strong> (Matsuyama et al. 2006, "ORFeome cloning and global analysis of protein<br />
+  localization in the fission yeast Schizosaccharomyces pombe", ECO:0000269|PubMed:16823372<br />
+  on the P0CU07 record). The GOA ISS annotations on ftm3 carry <code>with: UniProtKB:P0CU07</code><br />
+  (QuickGO TSV) / <code>with: SPAC977.02 (ftm2)</code> (PomBase) — same source, family transfer.</li>
+<li>The two GOA IEA CC annotations (GO:0005737 cytoplasm, GO:0031965 nuclear membrane;<br />
+  GO_REF:0000044, UniProtKB-SubCell mapping) are electronic re-statements of the same<br />
+  UniProt SubCell locations, so they are consistent with — and derivative of — the ISS calls.</li>
+</ul>
+<h2 id="expression-process-context-known-high-throughput-only">Expression / process context (KNOWN, high-throughput only)</h2>
+<ul>
+<li>PomBase carries a biological-process annotation <strong>GO:0042149 "cellular response to glucose<br />
+  starvation"</strong> for ftm3, evidence <strong>ECO:0000058 (expression microarray/RNA-level)</strong>, reference<br />
+<strong>PMID:34460892</strong> (Tarhan &amp; Çakır 2021, "Transcriptome sequencing and screening of genes<br />
+  related to glucose availability in Schizosaccharomyces pombe by RNA-seq analysis"), qualified<br />
+  as "RNA level decreased." This is a <strong>transcript-abundance response</strong>, not a demonstrated<br />
+  functional role in the glucose-starvation program; the full text does not name ftm3.</li>
+<li><strong>This GO:0042149 annotation is NOT in the QuickGO GOA TSV pulled for this review</strong> (the TSV<br />
+  contains only the two CC IEA, two CC ISS, and the ND MF/BP placeholders). Since the review<br />
+  covers the GOA set, it is not added to <code>existing_annotations</code>; it is recorded here as context.</li>
+<li>ftm2 deletion (ftm2delta) is viable with normal cell morphology under standard conditions<br />
+  (PomBase phenotype), consistent with the family being dispensable/redundant. No ftm3-specific<br />
+  deletion phenotype is documented.</li>
+</ul>
+<h2 id="not-known-knowledge-gaps">NOT known (knowledge gaps)</h2>
+<ul>
+<li><strong>Molecular function</strong>: unknown. No enzymatic activity, no ligand/substrate, no binding partner<br />
+  is established. Pfam PF09437 (Pombe_5TM / UPF0742) has <strong>no functional annotation</strong> and is<br />
+  essentially <em>Schizosaccharomyces</em>-restricted ("Pombe specific"), so no cross-kingdom orthology<br />
+  informs function. PomBase MF = ND (GO_REF:0000015).</li>
+<li><strong>Biological process</strong>: unknown beyond the transcriptional glucose-availability response above;<br />
+  PomBase BP = ND in GOA. No pathway membership demonstrated.</li>
+<li><strong>Role of sub-telomeric location / family expansion</strong>: unknown; whether the Ftm family has a<br />
+  coherent shared function (e.g. in a membrane process) or represents rapidly-evolving<br />
+  sub-telomeric genes of low/conditional function is not established.</li>
+<li><strong>Topology / true TM count</strong>: family is named "5TM" but the UniProt feature table on ftm3<br />
+  lists only one predicted TM helix; membrane topology is not experimentally determined.</li>
+</ul>
+<h2 id="curation-decisions-rationale">Curation decisions (rationale)</h2>
+<ul>
+<li><strong>GO:0005737 cytoplasm (ISS, GO_REF:0000024, with P0CU07)</strong> and <strong>GO:0031965 nuclear membrane<br />
+  (ISS)</strong>: KEEP_AS_NON_CORE. Grounded in experimental localization of the paralog ftm2 via a<br />
+  reliable genome-wide study; a defensible localization call for an otherwise uncharacterized<br />
+  protein, but localization is not a "core function" and is by-similarity for ftm3 itself.</li>
+<li><strong>GO:0005737 cytoplasm (IEA, GO_REF:0000044)</strong> and <strong>GO:0031965 nuclear membrane (IEA)</strong>:<br />
+  KEEP_AS_NON_CORE. Electronic SubCell-&gt;GO restatements of the same UniProt locations; redundant<br />
+  with the ISS calls but not wrong.</li>
+<li><strong>GO:0003674 molecular_function (ND, GO_REF:0000015)</strong> and <strong>GO:0008150 biological_process<br />
+  (ND)</strong>: ACCEPT. ND placeholders correctly record that MF/BP are unknown; keeping them is the<br />
+  honest representation for a "conserved unknown" gene.</li>
+<li>No <code>protein binding</code> or speculative MF/BP terms are proposed. <code>core_functions</code> is intentionally<br />
+  minimal (localization only, non-core); <code>knowledge_gaps</code> carries the primary content.</li>
+</ul>
+<h2 id="provenance-of-sources-used">Provenance of sources used</h2>
+<ul>
+<li>UniProt P0CU06 record (<code>genes/SCHPO/ftm3/ftm3-uniprot.txt</code>) — domains, TM, subcell, family.</li>
+<li>QuickGO GOA TSV (<code>genes/SCHPO/ftm3/ftm3-goa.tsv</code>) — the 6 reviewed annotations.</li>
+<li>PomBase gene pages/API for SPAC750.04c (ftm3) and SPAC977.02 (ftm2) — standard name, product<br />
+  description, characterisation status "conserved unknown", paralog list, GO:0042149.</li>
+<li>UniProt P0CU07 record (rest.uniprot.org) — paralog ftm2 experimental localization (PMID:16823372).</li>
+<li>PMID:16823372 (cached, abstract-only) — genome-wide localization study underlying the ISS.</li>
+<li>PMID:34460892 (cached, full text) — glucose-availability RNA-seq behind GO:0042149 context.</li>
+<li>Pfam/InterPro PF09437 / IPR018291 — "Pombe specific 5TM protein", no functional annotation.</li>
+</ul>
+<p>Deep research: falcon and perplexity-lite both failed (falcon template-variable error;<br />
+perplexity 401 quota). Review grounded in UniProt + GOA + PomBase + cached literature per<br />
+CLAUDE.md fallback guidance; no fabricated content.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P0CU06
+gene_symbol: ftm3
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:284812
+  label: Schizosaccharomyces pombe (strain 972 / ATCC 24843)
+description: &gt;-
+  ftm3 (SPAC750.04c) is a small (146-residue, ~17 kDa) membrane protein of the
+  Schizosaccharomyces pombe Ftm (&#34;sub-telomeric 5Tm&#34;) protein family, a lineage-specific
+  family encoded in the sub-telomeric regions of the fission-yeast genome (paralogs
+  ftm1, ftm2, ftm4, ftm5, ftm6 and ftm7). It belongs to the UPF0742 family and carries
+  the Pombe_5TM domain (Pfam PF09437, InterPro IPR018291, &#34;Pombe specific 5TM protein&#34;),
+  a domain of unknown function essentially restricted to Schizosaccharomyces. The protein
+  is predicted to be membrane-integral (at least one transmembrane helix) and, by
+  similarity to its experimentally localized paralog ftm2, is assigned to the cytoplasm
+  and the nuclear/nuclear-envelope membrane, where the family shows cytoplasmic puncta and
+  nuclear-rim staining. No molecular activity, substrate, ligand or interaction partner has
+  been established for ftm3 or any Ftm-family member; its biological role is undetermined,
+  and it is classified as a conserved protein of unknown function.
+references:
+  - id: GO_REF:0000015
+    title: Use of the ND evidence code for Gene Ontology (GO) terms
+  - id: GO_REF:0000024
+    title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+      by curator judgment of sequence similarity
+  - id: GO_REF:0000044
+    title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+      vocabulary mapping, accompanied by conservative changes to GO terms applied by
+      UniProt
+  - id: UniProt:P0CU06
+    title: &#34;UPF0742 protein SPAC750.04c (ftm3) - Schizosaccharomyces pombe&#34;
+    reference_review:
+      relevance: HIGH
+      correctness: VERIFIED
+      review_notes: &gt;-
+        Primary source record for ftm3. Establishes the UPF0742 family membership, the
+        Pombe_5TM (PF09437 / IPR018291) domain content, the predicted transmembrane helix,
+        and the by-similarity subcellular localization (transferred from paralog P0CU07/ftm2).
+        Verified directly against the fetched UniProt record.
+  - id: PMID:16823372
+    title: ORFeome cloning and global analysis of protein localization in the fission
+      yeast Schizosaccharomyces pombe.
+    reference_review:
+      relevance: MEDIUM
+      correctness: VERIFIED
+      review_notes: &gt;-
+        Genome-wide YFP localization study (Matsuyama et al. 2006, Nat Biotechnol). It is
+        the experimental source of the cytoplasm/nuclear-membrane localization of the
+        paralog ftm2 (P0CU07/SPAC977.02), from which ftm3&#39;s localization is transferred by
+        ISS (GOA with:UniProtKB:P0CU07). Cached entry is abstract-only and does not name
+        ftm3 individually, so it is cited as provenance for the ISS transfer rather than as
+        direct ftm3 evidence. PubMed-verified title/authors.
+  - id: PMID:34460892
+    title: Transcriptome sequencing and screening of genes related to glucose availability
+      in Schizosaccharomyces pombe by RNA-seq analysis
+    reference_review:
+      relevance: LOW
+      correctness: VERIFIED
+      review_notes: &gt;-
+        RNA-seq study of glucose availability (Tarhan &amp; Çakır 2021). PomBase attaches a
+        high-throughput expression annotation (GO:0042149 cellular response to glucose
+        starvation, ECO:0000058, &#34;RNA level decreased&#34;) to ftm3 based on this dataset;
+        that annotation is NOT in the QuickGO GOA set reviewed here and the full text does
+        not name ftm3. Recorded only as transcript-level context, not functional evidence.
+existing_annotations:
+  - term:
+      id: GO:0005737
+      label: cytoplasm
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000044
+    qualifier: located_in
+    review:
+      summary: &gt;-
+        Electronic annotation mapping the UniProtKB/Swiss-Prot subcellular-location
+        &#34;Cytoplasm&#34; to GO via GO_REF:0000044. It restates the same location that is
+        assigned to ftm3 by ISS from its paralog ftm2. Localization is a defensible,
+        conservative call for this otherwise uncharacterized protein, but it is not a
+        core function.
+      action: KEEP_AS_NON_CORE
+      reason: &gt;-
+        Consistent with the UniProt SubCell location and with the ISS cytoplasm annotation
+        below; redundant electronic restatement, retained as supporting localization
+        evidence rather than a core function.
+      supported_by:
+        - reference_id: UniProt:P0CU06
+          supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm&#34;
+  - term:
+      id: GO:0031965
+      label: nuclear membrane
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000044
+    qualifier: located_in
+    review:
+      summary: &gt;-
+        Electronic annotation mapping the UniProtKB/Swiss-Prot subcellular-location &#34;Nucleus
+        membrane&#34; to GO via GO_REF:0000044. It restates the nuclear-envelope localization
+        assigned to ftm3 by ISS from paralog ftm2 (cytoplasmic dots and the nuclear
+        envelope). Not a core function.
+      action: KEEP_AS_NON_CORE
+      reason: &gt;-
+        Consistent with the UniProt SubCell &#34;Nucleus membrane&#34; location and with the ISS
+        nuclear-membrane annotation below; redundant electronic restatement retained as
+        supporting localization evidence.
+      supported_by:
+        - reference_id: UniProt:P0CU06
+          supporting_text: &#34;C:nuclear membrane&#34;
+  - term:
+      id: GO:0003674
+      label: molecular_function
+    evidence_type: ND
+    original_reference_id: GO_REF:0000015
+    qualifier: enables
+    review:
+      summary: &gt;-
+        Root molecular_function term with the ND (No biological Data available) evidence
+        code, assigned by PomBase. The molecular function of ftm3 is genuinely unknown: the
+        protein belongs to the UPF0742 / Pombe_5TM family, a Schizosaccharomyces-specific
+        domain of unknown function with no established catalytic, transport, or binding
+        activity, and no functional literature exists for ftm3 or any Ftm paralog.
+      action: ACCEPT
+      reason: &gt;-
+        The ND placeholder is the correct, honest representation for a conserved protein of
+        unknown molecular function. No specific MF term is warranted from current evidence,
+        and &#39;protein binding&#39; would be uninformative and unsupported.
+  - term:
+      id: GO:0008150
+      label: biological_process
+    evidence_type: ND
+    original_reference_id: GO_REF:0000015
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        Root biological_process term with the ND evidence code, assigned by PomBase. No
+        biological process is experimentally attributed to ftm3. A high-throughput
+        expression change under glucose availability exists at PomBase (GO:0042149,
+        RNA-level), but it is a transcript-abundance observation, is not part of the GOA set
+        reviewed here, and does not establish a functional role.
+      action: ACCEPT
+      reason: &gt;-
+        ND correctly records that the biological process of ftm3 is unknown; no process
+        term is supported by current evidence.
+  - term:
+      id: GO:0005737
+      label: cytoplasm
+    evidence_type: ISS
+    original_reference_id: GO_REF:0000024
+    qualifier: located_in
+    review:
+      summary: &gt;-
+        Cytoplasmic localization transferred to ftm3 by curator sequence-similarity judgment
+        (GO_REF:0000024) with:UniProtKB:P0CU07, i.e. from the paralog ftm2 (SPAC977.02),
+        whose cytoplasm/nuclear-membrane localization was determined experimentally in the
+        genome-wide YFP ORFeome study (PMID:16823372). A reasonable localization inference
+        for a close paralog, but localization is not a core function and is by-similarity for
+        ftm3 itself.
+      action: KEEP_AS_NON_CORE
+      reason: &gt;-
+        Grounded in experimental localization of a close paralog via a reliable
+        genome-wide study; defensible as supporting localization evidence but not a core
+        molecular/biological function.
+      supported_by:
+        - reference_id: UniProt:P0CU06
+          supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm&#34;
+  - term:
+      id: GO:0031965
+      label: nuclear membrane
+    evidence_type: ISS
+    original_reference_id: GO_REF:0000024
+    qualifier: located_in
+    review:
+      summary: &gt;-
+        Nuclear-membrane localization transferred to ftm3 by curator sequence-similarity
+        judgment (GO_REF:0000024) with:UniProtKB:P0CU07 (paralog ftm2), whose
+        nuclear-envelope localization was experimentally determined (PMID:16823372). The
+        UniProt note records localization to cytoplasmic dots and the nuclear envelope.
+        Localization inference, not a core function.
+      action: KEEP_AS_NON_CORE
+      reason: &gt;-
+        Consistent with the paralog&#39;s experimental nuclear-envelope localization; retained
+        as supporting localization evidence rather than a core function.
+      supported_by:
+        - reference_id: UniProt:P0CU06
+          supporting_text: &#34;C:nuclear membrane&#34;
+core_functions:
+  - description: &gt;-
+      No core molecular or biological function can be assigned to ftm3 from current evidence.
+      The only positive functional information is subcellular localization: ftm3 is a
+      membrane-associated protein of the Ftm / UPF0742 / Pombe_5TM family localized (by
+      similarity to its experimentally characterized paralog ftm2) to the cytoplasm and the
+      nuclear-envelope membrane. This is a non-core localization statement, not an activity;
+      the family&#39;s molecular function is undetermined.
+    locations:
+      - id: GO:0005737
+        label: cytoplasm
+      - id: GO:0031965
+        label: nuclear membrane
+    supported_by:
+      - reference_id: UniProt:P0CU06
+        supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm&#34;
+      - reference_id: UniProt:P0CU06
+        supporting_text: &#34;C:nuclear membrane&#34;
+knowledge_gaps:
+  - gap_statement: &gt;-
+      The molecular function of ftm3 is completely unknown. No catalytic activity,
+      transporter/channel activity, ligand, substrate, or biochemical activity has been
+      demonstrated or is predictable for the protein.
+    boundary: &gt;-
+      What is established is family and domain membership only: ftm3 belongs to the UPF0742
+      family and carries the Pombe_5TM domain (Pfam PF09437 / InterPro IPR018291, &#34;Pombe
+      specific 5TM protein&#34;). This is a domain of unknown function with no functional
+      annotation, essentially restricted to Schizosaccharomyces, so no cross-species
+      orthology provides a functional hypothesis. PomBase records the molecular function as
+      ND (&#34;No biological Data&#34;).
+    gap_kind:
+      - BIOLOGY
+    dark_aspect: MF_DARK
+    status: OPEN
+    significance: &gt;-
+      ftm3 is one of a lineage-specific, sub-telomeric family (ftm1-ftm7) of fission-yeast
+      proteins with no assigned activity; establishing even the biochemical class (e.g.
+      transporter, receptor, structural membrane protein) would open the whole family.
+    resolution: &gt;-
+      Biochemical characterization of purified/tagged ftm3 (or a family member), structure
+      determination or confident structure-based fold/activity assignment, and assays guided
+      by its membrane topology (e.g. transport/channel assays) to test candidate activities.
+    provenance:
+      - reference_id: UniProt:P0CU06
+        supporting_text: &#34;Belongs to the UPF0742 family.&#34;
+      - reference_id: UniProt:P0CU06
+        supporting_text: &#34;Pfam; PF09437; Pombe_5TM; 2.&#34;
+  - gap_statement: &gt;-
+      The biological process and cellular role of ftm3 are unknown. It is undetermined which
+      pathway or process the protein participates in, and no loss-of-function phenotype has
+      been reported for an ftm3 deletion.
+    boundary: &gt;-
+      ftm3 is expressed during vegetative growth and its transcript level changes with
+      glucose availability (PomBase high-throughput expression annotation, GO:0042149,
+      derived from RNA-seq), and the closely related paralog ftm2 is dispensable (ftm2delta
+      viable with normal morphology). These are correlative/genetic observations only; PomBase
+      records the biological process for ftm3 as ND.
+    gap_kind:
+      - BIOLOGY
+    dark_aspect: BP_DARK
+    status: OPEN
+    significance: &gt;-
+      Determining the process (e.g. a membrane/nuclear-envelope function, a stress or
+      metabolic response, or a redundant/conditionally-required role) would move the Ftm
+      family out of the conserved-unknown set.
+    resolution: &gt;-
+      Phenotypic profiling of single and combinatorial ftm-family deletions across stress
+      and metabolic conditions (including glucose limitation), genetic-interaction mapping,
+      and identification of physical interaction partners.
+    provenance:
+      - reference_id: UniProt:P0CU06
+        supporting_text: &#34;Belongs to the UPF0742 family.&#34;
+  - gap_statement: &gt;-
+      ftm3&#39;s own subcellular localization and membrane topology have not been measured
+      directly. Its cytoplasm/nuclear-membrane assignment is inferred entirely by similarity
+      from the paralog ftm2, and although the family is named &#34;5TM&#34;, the UniProt feature
+      table annotates only a single predicted transmembrane helix, so the true topology is
+      unresolved.
+    boundary: &gt;-
+      The paralog ftm2 (P0CU07/SPAC977.02) was experimentally localized to the cytoplasm and
+      nuclear membrane (cytoplasmic dots and the nuclear envelope) in a genome-wide YFP study
+      (PMID:16823372), and ftm3&#39;s GO localization is transferred from it by ISS
+      (with:UniProtKB:P0CU07). No direct ftm3 localization or topology experiment is on record.
+    gap_kind:
+      - BIOLOGY
+      - CURATION
+    dark_aspect: CC_DARK
+    status: OPEN
+    significance: &gt;-
+      Confirming ftm3&#39;s localization and topology directly (rather than by paralog transfer)
+      would validate the propagated annotations and constrain candidate functions (e.g.
+      nuclear-envelope vs general-membrane roles).
+    resolution: &gt;-
+      Fluorescent tagging and imaging of ftm3 in S. pombe, and experimental membrane-topology
+      mapping to resolve the transmembrane-helix count implied by the &#34;5TM&#34; family name.
+    provenance:
+      - reference_id: UniProt:P0CU06
+        supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm&#34;
+suggested_questions:
+  - question: &gt;-
+      Does the Ftm / UPF0742 / Pombe_5TM family have a coherent shared molecular function, or
+      are these rapidly-evolving sub-telomeric genes of low or conditional function?
+  - question: &gt;-
+      Is ftm3 functionally redundant with its paralogs, such that a phenotype only emerges in
+      combinatorial ftm-family deletions?
+suggested_experiments:
+  - description: &gt;-
+      Construct single and combinatorial ftm-family deletion strains (ftm1-ftm7) and screen
+      for growth, morphology, and stress/metabolic phenotypes (including glucose limitation)
+      to detect redundant or conditional functions.
+  - description: &gt;-
+      Determine ftm3&#39;s direct subcellular localization (endogenous fluorescent tagging) and
+      experimental membrane topology, and identify physical interaction partners (affinity
+      purification-MS) to generate function hypotheses.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

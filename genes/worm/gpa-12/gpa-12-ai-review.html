@@ -1,0 +1,3584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>gpa-12 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>gpa-12</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q19572" target="_blank" class="term-link">
+                        Q19572
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Caenorhabditis elegans</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "gpa-12";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q19572" data-a="DESCRIPTION: GPA-12 is a heterotrimeric guanine-nucleotide-bind..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>GPA-12 is a heterotrimeric guanine-nucleotide-binding protein (G protein) alpha subunit of the Galpha-12/13 subfamily, the C. elegans homolog of mammalian Galpha-12/Galpha-13. It has a canonical Galpha domain with intact G1-G5 nucleotide-binding motifs and functions as a GTP/GDP-regulated molecular switch that, in its GTP-bound state, engages downstream effectors to relay signals from the cell surface. Its best-characterized physiological role is in the epidermis (hypodermis), where GPA-12 signaling acts upstream of protein kinase C delta (TPA-1) and a conserved p38 MAPK cassette (TIR-1, NSY-1, SEK-1, PMK-1) and the STAT-like factor STA-2 to drive induction of antimicrobial peptide genes of the NLP (nlp-29 cluster) and CNC families in response to fungal infection and wounding. A constitutively active form (GPA-12 Q205L / G12QL) is sufficient to drive constitutive antimicrobial peptide gene expression, and, when hyperactivated more broadly, causes a developmental growth arrest through a pharyngeal-pumping (feeding) defect that also depends on TPA-1. gpa-12 loss-of-function animals are viable.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003925" target="_blank" class="term-link">
+                                    GO:0003925
+                                </a>
+                            </span>
+                            <span class="term-label">G protein activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q19572" data-a="GO:0003925" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct and core molecular function. GPA-12 is a heterotrimeric G protein alpha subunit (Galpha-12/13 subfamily) that cycles between GTP- and GDP-bound states to act as a signal-transducing molecular switch. GO:0003925 is the appropriate MF for such subunits, and its behavior is supported experimentally in worm by the constitutively active Q205L (catalytic-glutamine) mutant.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Best and most specific molecular-function term for a Galpha subunit; consistent with family membership, intact G1-G5 motifs, and the behavior of activated GPA-12.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12646136" target="_blank" class="term-link">
+                                        PMID:12646136
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We characterized a C. elegans Galpha subunit gene, gpa-12, which is a homolog of mammalian G(12)/G(13)alpha, and found that animals defective in gpa-12 are viable</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q19572" data-a="GO:0005737" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) localization to cytoplasm, independently corroborated by the experimental IDA cytoplasm annotation from PMID:12646136. This is a reasonable functional cellular compartment for a peripheral, membrane-associated Galpha subunit that cycles at the cytoplasmic face of the plasma membrane.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent, independently corroborated cellular localization for a Galpha subunit; accepted as the cellular compartment in which GPA-12 acts.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007188" target="_blank" class="term-link">
+                                    GO:0007188
+                                </a>
+                            </span>
+                            <span class="term-label">adenylate cyclase-modulating G protein-coupled receptor signaling pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q19572" data-a="GO:0007188" data-r="GO_REF:0000033" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Over-propagation from the pan-Galpha PANTHER family node. Adenylate cyclase/cAMP modulation is the defining function of the Gs (stimulatory) and Gi (inhibitory) subfamilies, not of the Galpha-12/13 subfamily to which GPA-12 belongs. There is no evidence that GPA-12 modulates adenylate cyclase, and this pathway type is biologically inappropriate for a G12/13 protein.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Biologically incorrect for the G12/13 subfamily; the term propagated electronically from Gs/Gi paralogs in the broad pan-Galpha tree and should not transfer to GPA-12.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">PROPAGATION BAD</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">WRONG ORTHOLOG OR PARALOG</span>
+
+                                <span class="badge">FUNCTIONAL DIVERGENCE</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTN000026392</span>
+
+                                    &middot; pan-Galpha family node
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007266" target="_blank" class="term-link">
+                                    GO:0007266
+                                </a>
+                            </span>
+                            <span class="term-label">Rho protein signal transduction</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q19572" data-a="GO:0007266" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Canonical mammalian Galpha-12/13 signaling activates RhoGEFs to relay signals through Rho GTPases, so this term is biologically apt at the family level and propagates from the G12/13 node (mouse Gna12/Gna13). However, the Rho effector arm has not been demonstrated for C. elegans GPA-12; the experimentally defined worm effector arm runs through phospholipase (PLC-3) and PKCdelta (TPA-1). Retained as a homology-based, non-core inference.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Homology-supported canonical G12/13 function, but not experimentally established in worm, where the demonstrated downstream arm is PLC/PKCdelta rather than Rho.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005834" target="_blank" class="term-link">
+                                    GO:0005834
+                                </a>
+                            </span>
+                            <span class="term-label">heterotrimeric G-protein complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q19572" data-a="GO:0005834" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct. As a Galpha subunit, GPA-12 assembles into a heterotrimeric G protein (Galpha-beta-gamma) complex; in the epidermal immune pathway it partners with the Gbeta RACK-1.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Accurate and well-supported complex membership for a Galpha subunit.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22470487" target="_blank" class="term-link">
+                                        PMID:22470487
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Wounding and infection require G-protein signaling, involving the Gα protein GPA-12 and the Gß RACK-1, while infection specifically involves the Tribbles-like kinase NIPI-3</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031526" target="_blank" class="term-link">
+                                    GO:0031526
+                                </a>
+                            </span>
+                            <span class="term-label">brush border membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q19572" data-a="GO:0031526" data-r="GO_REF:0000033" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Over-specific location propagated from mammalian (rat) orthologs. Brush border membrane is the plasma membrane of intestinal microvilli; GPA-12&#39;s demonstrated site of action is the epidermis/hypodermis. There is no C. elegans evidence for brush border localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Narrow mammalian-tissue location transferred by phylogenetic inference; not supported for the worm protein and inconsistent with its known site of action.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">PROPAGATION BAD</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">CONTEXT OR TISSUE MISMATCH</span>
+
+                                <span class="badge">COMPARTMENT OR COMPLEX MISMATCH</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTN000026689</span>
+
+                                    &middot; Galpha-12/13 node
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031752" target="_blank" class="term-link">
+                                    GO:0031752
+                                </a>
+                            </span>
+                            <span class="term-label">D5 dopamine receptor binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q19572" data-a="GO:0031752" data-r="GO_REF:0000033" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Hyper-specific molecular function propagated from a single mammalian ortholog annotation. Binding to a D5 dopamine receptor is not a plausible or supported activity for C. elegans GPA-12 (worms lack a D5 dopamine receptor ortholog), and there is no worm evidence for it.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Over-propagated, organism-specific receptor-binding annotation with no relevance or evidence for the worm protein.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">PROPAGATION BAD</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">WRONG ORTHOLOG OR PARALOG</span>
+
+                                <span class="badge">CONTEXT OR TISSUE MISMATCH</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTN000026689</span>
+
+                                    &middot; Galpha-12/13 node
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001664" target="_blank" class="term-link">
+                                    GO:0001664
+                                </a>
+                            </span>
+                            <span class="term-label">G protein-coupled receptor binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q19572" data-a="GO:0001664" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic InterPro-based inference. Galpha subunits are activated by, and physically couple to, GPCRs, so GPCR binding is a defensible general molecular function. However, the specific cognate receptor for GPA-12 is not established, so this remains a generic, non-core capability.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> True general Galpha property (more informative than &#39;protein binding&#39;) but generic; the actual GPA-12 receptor is unknown.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003924" target="_blank" class="term-link">
+                                    GO:0003924
+                                </a>
+                            </span>
+                            <span class="term-label">GTPase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q19572" data-a="GO:0003924" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Galpha subunits have intrinsic GTPase activity that terminates signaling by returning the switch to the GDP-bound state. Correct for GPA-12, whose G-box motifs are intact and whose catalytic-glutamine (Q205L) mutant behaves as a GTP-hydrolysis-defective, constitutively active protein. The more specific GO:0003925 (G protein activity) better captures the defining signaling-switch role, so this generic GTPase term is retained as a supporting, non-core activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct enzymatic capability for a Galpha subunit, but a supporting activity underlying the switch rather than the defining core function, which is better represented by GO:0003925 (G protein activity).
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007165" target="_blank" class="term-link">
+                                    GO:0007165
+                                </a>
+                            </span>
+                            <span class="term-label">signal transduction</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q19572" data-a="GO:0007165" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-level, generic biological process. True (GPA-12 is a signal transducer) but far less informative than the specific GPCR-signaling and immune-signaling processes it participates in.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct but uninformatively general; subsumed by more specific process terms.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007186" target="_blank" class="term-link">
+                                    GO:0007186
+                                </a>
+                            </span>
+                            <span class="term-label">G protein-coupled receptor signaling pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q19572" data-a="GO:0007186" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Appropriate mechanistic process term: Galpha subunits are the canonical transducers of GPCR signaling. This captures the pathway type through which GPA-12 relays signals in the epidermis, even though the specific receptor is not yet identified.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Accurate, mechanism-defining process for a Galpha subunit.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007266" target="_blank" class="term-link">
+                                    GO:0007266
+                                </a>
+                            </span>
+                            <span class="term-label">Rho protein signal transduction</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q19572" data-a="GO:0007266" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro-based duplicate of the IBA Rho protein signal transduction annotation, reflecting the canonical G12/13 -&gt; RhoGEF -&gt; Rho effector arm. As with the IBA version, this is homology-based and not experimentally demonstrated for worm GPA-12.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Redundant with the IBA annotation; homology-supported canonical function not demonstrated in worm.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019001" target="_blank" class="term-link">
+                                    GO:0019001
+                                </a>
+                            </span>
+                            <span class="term-label">guanyl nucleotide binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q19572" data-a="GO:0019001" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct supporting molecular function: GPA-12 binds guanine nucleotides (GTP/GDP) via its intact G-box motifs. This underlies the G protein switch but is a component capability rather than the core function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Accurate binding activity underpinning the GTPase/G-protein switch; supporting rather than core.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031683" target="_blank" class="term-link">
+                                    GO:0031683
+                                </a>
+                            </span>
+                            <span class="term-label">G-protein beta/gamma-subunit complex binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q19572" data-a="GO:0031683" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct: the Galpha subunit binds the Gbeta/gamma dimer to form the inactive heterotrimer, releasing it upon GTP loading. Consistent with the curated GO-CAM (gomodel:5b91dbd100002057), which models GPA-12&#39;s molecular function as Gbeta/gamma-subunit complex binding, partnered with the Gbeta RACK-1.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Accurate Galpha-Gbetagamma interaction supporting heterotrimer assembly; supporting rather than the core signaling function.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010628" target="_blank" class="term-link">
+                                    GO:0010628
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of gene expression</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22470487" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22470487
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The pseudokinase NIPI-4 is a novel regulator of antimicrobia...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q19572" data-a="GO:0010628" data-r="PMID:22470487" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimentally supported: epidermis-restricted active GPA-12* drives a marked constitutive increase in antimicrobial peptide gene expression (nlp-29, nlp-31, nlp-34 and cnc-1, cnc-4), an effect abolished in a nipi-4 mutant. This is the transcriptional-induction readout of GPA-12&#39;s epidermal immune signaling.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly supported by loss/gain-of-function transcriptional data; captures GPA-12&#39;s role in up-regulating immune-effector gene expression.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22470487" target="_blank" class="term-link">
+                                        PMID:22470487
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In uninfected transgenic worms carrying the Pcol-19::GPA-12* construct, we observed a very marked increase in the expression of Pnlp-29::GFP in the epidermis from the late L4 stage onwards</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22470487" target="_blank" class="term-link">
+                                        PMID:22470487
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the transgenic strain exhibited an elevated constitutive expression of nlp-29, nlp-31 and nlp-34, and cnc-1, cnc-4</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050832" target="_blank" class="term-link">
+                                    GO:0050832
+                                </a>
+                            </span>
+                            <span class="term-label">defense response to fungus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22470487" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22470487
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The pseudokinase NIPI-4 is a novel regulator of antimicrobia...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q19572" data-a="GO:0050832" data-r="PMID:22470487" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimentally supported core biological process. GPA-12 signaling is required for the epidermal antifungal defense program (nlp/cnc antimicrobial peptide induction) against the natural fungal pathogen Drechmeria coniospora.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Well-supported IMP annotation reflecting GPA-12&#39;s core physiological role in antifungal defense.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22470487" target="_blank" class="term-link">
+                                        PMID:22470487
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">When we crossed the Pcol-19::GPA-12* transgene into nipi-4(fr106) mutant, the elevated expression of the Pnlp-29::GFP reporter provoked by the active form of GPA-12 was abrogated</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061760" target="_blank" class="term-link">
+                                    GO:0061760
+                                </a>
+                            </span>
+                            <span class="term-label">antifungal innate immune response</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19380113" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19380113
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Antifungal innate immunity in C. elegans: PKCdelta links G p...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q19572" data-a="GO:0061760" data-r="PMID:19380113" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimentally supported and the most specific immune process term for GPA-12. Epidermal antifungal innate immunity (nlp-29 induction) requires G protein signaling acting through PKCdelta and the p38 MAPK cascade, with GPA-12 as the Galpha subunit; this is the same activity modeled in the curated GO-CAM (gomodel:5b91dbd100002057).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core, well-supported immune process; most specific and informative BP term for this gene.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19380113" target="_blank" class="term-link">
+                                        PMID:19380113
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">This involves G protein signaling and specific C-type phospholipases acting upstream of PKCdelta</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19380113" target="_blank" class="term-link">
+                                        PMID:19380113
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">C. elegans PKC acts through the p38 MAPK pathway to regulate nlp-29</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12646136" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12646136
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Hyperactivation of the G12-mediated signaling pathway in Cae...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q19572" data-a="GO:0005634" data-r="PMID:12646136" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> WormBase IDA nuclear localization from PMID:12646136. Nuclear localization is unusual for a Galpha subunit, and the primary imaging data are in the full text, which is not in the cache (abstract-only). Per curation guidance I do not overrule an experimental IDA I cannot fully verify; I retain it as a non-core localization and defer to the WormBase curator.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimental IDA from the curator (full text unavailable to verify); unusual for a Galpha and not a core function, but not to be removed on incomplete evidence.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12646136" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12646136
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Hyperactivation of the G12-mediated signaling pathway in Cae...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q19572" data-a="GO:0005737" data-r="PMID:12646136" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> WormBase IDA cytoplasmic localization from PMID:12646136, consistent with the expected peripheral/cytoplasmic disposition of a membrane-associated Galpha subunit and with the IBA cytoplasm annotation. Accepted as the cellular compartment in which GPA-12 acts.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimentally curated localization for a Galpha, corroborated by phylogenetic inference; accepted as GPA-12&#39;s cellular compartment of action.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050832" target="_blank" class="term-link">
+                                    GO:0050832
+                                </a>
+                            </span>
+                            <span class="term-label">defense response to fungus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19380113" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19380113
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Antifungal innate immunity in C. elegans: PKCdelta links G p...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q19572" data-a="GO:0050832" data-r="PMID:19380113" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimentally supported core process (duplicate term with a distinct primary reference). GPA-12 is required for the epidermal antifungal defense response, as shown by its position upstream of PKCdelta and the p38 cascade controlling nlp-29 induction after fungal infection.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Well-supported IMP annotation from the Ziegler et al. study; reinforces the core antifungal-defense role.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19380113" target="_blank" class="term-link">
+                                        PMID:19380113
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">This involves G protein signaling and specific C-type phospholipases acting upstream of PKCdelta</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>GPA-12 acts as a Galpha-12/13-type heterotrimeric G protein alpha subunit: a GTP/GDP-regulated molecular switch that transduces cell-surface (GPCR-type) signals in the C. elegans epidermis. Functioning upstream of PKCdelta (TPA-1) and the conserved TIR-1 -&gt; NSY-1 -&gt; SEK-1 -&gt; PMK-1 (p38) MAPK cascade and the STAT-like factor STA-2, GPA-12 signaling drives induction of NLP- and CNC-family antimicrobial peptide genes in the antifungal innate immune response and after wounding. It assembles into a heterotrimer with a Gbeta (RACK-1)/gamma dimer, and an activated form (Q205L) is sufficient to drive the antimicrobial peptide program.</h3>
+                <span class="vote-buttons" data-g="Q19572" data-a="FUNCTION: GPA-12 acts as a Galpha-12/13-type heterotrimeric ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003925" target="_blank" class="term-link">
+                            G protein activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061760" target="_blank" class="term-link">
+                                antifungal innate immune response
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007186" target="_blank" class="term-link">
+                                G protein-coupled receptor signaling pathway
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005834" target="_blank" class="term-link">
+                            heterotrimeric G-protein complex
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19380113" target="_blank" class="term-link">
+                                PMID:19380113
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">This involves G protein signaling and specific C-type phospholipases acting upstream of PKCdelta</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22470487" target="_blank" class="term-link">
+                                PMID:22470487
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Wounding and infection require G-protein signaling, involving the Gα protein GPA-12 and the Gß RACK-1, while infection specifically involves the Tribbles-like kinase NIPI-3</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12646136" target="_blank" class="term-link">
+                                PMID:12646136
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">We characterized a C. elegans Galpha subunit gene, gpa-12, which is a homolog of mammalian G(12)/G(13)alpha, and found that animals defective in gpa-12 are viable</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12646136" target="_blank" class="term-link">
+                            PMID:12646136
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Hyperactivation of the G12-mediated signaling pathway in Caenorhabditis elegans induces a developmental growth arrest via protein kinase C.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19380113" target="_blank" class="term-link">
+                            PMID:19380113
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Antifungal innate immunity in C. elegans: PKCdelta links G protein signaling and a conserved p38 MAPK cascade.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22470487" target="_blank" class="term-link">
+                            PMID:22470487
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The pseudokinase NIPI-4 is a novel regulator of antimicrobial peptide gene expression.</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The cognate receptor and activating input for GPA-12 are not biochemically defined. It is unknown which cell-surface receptor couples to GPA-12 to initiate epidermal immune signaling, what ligand/damage cue activates it, and whether GPA-12 engages such a receptor directly.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">RESIDUAL_SUBGAP</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Established: GPA-12 is a Galpha-12/13 subunit that acts upstream of PKCdelta (TPA-1) and the p38 MAPK cascade to drive antimicrobial peptide expression after fungal infection and wounding, and its activity is required for this response. Unknown: the identity of the activating receptor and whether coupling is direct.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Identifying the receptor that switches on GPA-12 would define the sensing step of epidermal surveillance immunity and connect damage/infection detection to the p38/PMK-1 defense program.</p>
+
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Our current understanding of both epidermal and intestinal innate immunity is far from complete"</em> — PMID:22470487</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The immediate downstream effector of GPA-12 is undetermined. Genetic epistasis places GPA-12 upstream of phospholipase (PLC-3) and PKCdelta (TPA-1), but it is not known whether GPA-12 directly activates a phospholipase, a RhoGEF/Rho module (the canonical mammalian Galpha-12/13 effector arm), or another target.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Established: GPA-12/G-protein signaling acts genetically upstream of C-type phospholipases and PKCdelta, and activated GPA-12 drives the p38-dependent antimicrobial peptide program. Unknown: the direct biochemical effector; the canonical G12/13 -&gt; RhoGEF -&gt; Rho arm has not been demonstrated in worm.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Whether worm GPA-12 signals through a Rho arm (like mammalian G12/13) or through a phospholipase/PKCdelta arm (more Gq-like) determines how this subfamily was wired into nematode epidermal immunity and would resolve an apparent divergence from the mammalian paradigm.</p>
+
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"This involves G protein signaling and specific C-type phospholipases acting upstream of PKCdelta"</em> — PMID:19380113</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The full endogenous tissue and physiological repertoire of GPA-12 is unresolved. Its immune requirement is epidermis/cell-type restricted, and hyperactive G12 separately perturbs pharyngeal pumping/feeding and growth, but why the immune requirement is tissue-restricted and what other endogenous processes GPA-12 normally controls are not defined.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">BP_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Established: active GPA-12 drives antimicrobial peptide expression in the epidermis and, when broadly hyperactivated, causes a growth arrest via a pharyngeal-pumping defect (with TPA-1 downstream); loss-of-function animals are viable. Unknown: the complete set of tissues/behaviors in which endogenous GPA-12 acts, and the basis of its tissue-restricted immune role.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Mapping GPA-12&#39;s endogenous functions would distinguish its dedicated immune role from its developmental/feeding role and clarify how one Galpha subunit is deployed across contexts.</p>
+
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Expression of activated GPA-12 (G(12)QL) results in a developmental growth arrest caused by a feeding behavior defect that is due to a dramatic reduction in pharyngeal pumping"</em> — PMID:12646136</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(gpa-12-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q19572" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="gpa-12-c-elegans-research-notes">gpa-12 (C. elegans) — research notes</h1>
+<p>UniProt: Q19572 (GPA12_CAEEL) · WormBase: WBGene00001674 / F18G5.3 · 355 aa · Chromosome X</p>
+<h2 id="summary-identity">Summary / identity</h2>
+<p>GPA-12 is a heterotrimeric guanine-nucleotide-binding protein alpha subunit of the<br />
+<strong>Gα12/13 subfamily</strong> (InterPro IPR000469 Gprotein_alpha_12/13; PRINTS PR00440 GPROTEINA12;<br />
+PANTHER PTHR10218 "GTP-binding protein alpha subunit"). It is the C. elegans homolog of<br />
+mammalian Gα12/Gα13 <a href="https://pubmed.ncbi.nlm.nih.gov/12646136" title="a C. elegans Galpha subunit gene, gpa-12, which is a homolog of mammalian G(12)/G(13)alpha, and found that animals defective in gpa-12 are viable">PMID:12646136</a>.<br />
+The protein has the canonical G-alpha domain with all five G-box GTP/Mg2+-binding motifs<br />
+(G1 31–44 … G5 325–330; UniProt) and N-terminal cysteines (…MVCCFGKK…) typical of<br />
+membrane-anchored Gα subunits.</p>
+<h2 id="known-well-supported">KNOWN (well supported)</h2>
+<h3 id="molecular-function">Molecular function</h3>
+<ul>
+<li><strong>G protein (Gα) GTP/GDP molecular switch — GO:0003925 G protein activity.</strong> Family<br />
+  membership and the intact G1–G5 nucleotide-binding motifs (UniProt) support intrinsic<br />
+  guanine-nucleotide binding and GTPase-based cycling. The functional read-out of the switch<br />
+  is demonstrated genetically: a Q205L substitution in the catalytic Gln (the residue whose<br />
+  mutation blocks GTP hydrolysis in Gα subunits) yields a <strong>constitutively active</strong> GPA-12<br />
+  that drives constitutive antimicrobial-peptide gene expression [UniProt MUTAGEN Q205L,<br />
+  ECO:0000269|PMID:22470487]. Intrinsic GTPase activity of the worm protein has not been<br />
+  measured biochemically (inferred from homology + the behavior of the GQ→L mutant).</li>
+<li>Assembles into a <strong>heterotrimeric G protein complex</strong> (Gα·Gβγ). The curated GO-CAM<br />
+  (gomodel:5b91dbd100002057) models GPA-12's molecular function as <strong>GO:0031683 G-protein<br />
+  beta/gamma-subunit complex binding</strong>, partnered in the pathway with the Gβ RACK-1.</li>
+</ul>
+<h3 id="biological-process-epidermal-antifungal-innate-immunity-the-core-physiological-role">Biological process — epidermal antifungal innate immunity (the core physiological role)</h3>
+<ul>
+<li>Required for <strong>antifungal innate immune response / defense response to fungus</strong> in the<br />
+  epidermis: GPA-12 signaling is needed for infection- and wounding-induced up-regulation of<br />
+  antimicrobial peptides of the NLP (nlp-29 cluster) and CNC families<br />
+  [PMID:19380113 IMP; PMID:22470487 IMP].</li>
+<li><strong>Genetic pathway position (epistasis):</strong> GPA-12/G-protein signaling acts <strong>upstream of</strong><br />
+  PKCδ (TPA-1) and a conserved p38 MAPK cassette (TIR-1 → NSY-1 → SEK-1 → PMK-1) →<br />
+  STAT-like STA-2, driving nlp/cnc gene expression [PMID:19380113 "This involves G protein<br />
+  signaling and specific C-type phospholipases acting upstream of PKCdelta"; "C. elegans PKC<br />
+  acts through the p38 MAPK pathway to regulate nlp-29"]. In PMID:22470487:<br />
+  "Wounding and infection require G-protein signaling, involving the Gα protein GPA-12 and the<br />
+  Gß RACK-1, while infection specifically involves the Tribbles-like kinase NIPI-3".</li>
+<li><strong>Gain-of-function drives the effector program:</strong> epidermis-restricted expression of active<br />
+  GPA-12<em> (Pcol-19::GPA-12</em>) causes marked constitutive Pnlp-29::GFP expression<br />
+  ["In uninfected transgenic worms carrying the Pcol-19::GPA-12<em> construct, we observed a very<br />
+  marked increase in the expression of Pnlp-29::GFP in the epidermis from the late L4 stage<br />
+  onwards"] and constitutive nlp/cnc transcript induction ["the transgenic strain exhibited an<br />
+  elevated constitutive expression of nlp-29, nlp-31 and nlp-34, and cnc-1, cnc-4"]; this<br />
+  effect is abrogated in a nipi-4 (downstream pseudokinase) mutant ["When we crossed the<br />
+  Pcol-19::GPA-12</em> transgene into nipi-4(fr106) mutant, the elevated expression of the<br />
+  Pnlp-29::GFP reporter provoked by the active form of GPA-12 was abrogated"] (all<br />
+  PMID:22470487). → supports <strong>positive regulation of gene expression (GO:0010628, IMP)</strong>.</li>
+<li><strong>GO-CAM causal structure</strong> (gomodel:5b91dbd100002057, "Antifungal innate immune response in<br />
+  the hypodermis via MAPK cascade"): GPA-12 activity is causally <strong>upstream, positive effect</strong><br />
+  (RO:0002304) of TPA-1 activity, within GO:0061760 antifungal innate immune response<br />
+  (evidence PMID:19380113). Consistent with the literature.</li>
+</ul>
+<h3 id="a-second-developmental-context-g12-gain-of-function">A second, developmental context (Gα12 gain-of-function)</h3>
+<ul>
+<li>Activated <strong>GPA-12 (G12QL) causes a developmental growth arrest</strong> via a feeding defect<br />
+  (reduced pharyngeal pumping); genetic suppressors map to <strong>tpa-1</strong> (PKCθ/δ), placing TPA-1<br />
+  downstream of G12 signaling here too [PMID:12646136 "Expression of activated GPA-12 (G(12)QL)<br />
+  results in a developmental growth arrest caused by a feeding behavior defect that is due to a<br />
+  dramatic reduction in pharyngeal pumping"; "TPA-1 is a downstream target of both G(12)<br />
+  signaling and PMA in modulating feeding and growth in C. elegans"]. gpa-12 loss-of-function<br />
+  animals are viable (i.e. not essential).</li>
+</ul>
+<h3 id="localization">Localization</h3>
+<ul>
+<li>WormBase IDA: <strong>cytoplasm (GO:0005737)</strong> and <strong>nucleus (GO:0005634)</strong> [PMID:12646136, IDA].<br />
+  Full text of PMID:12646136 is not in cache (abstract-only); the localization data are in the<br />
+  full text I cannot read. Cytoplasmic/peripheral-membrane localization is expected for a Gα;<br />
+  nuclear localization of a Gα is unusual — I defer to the WormBase curator but treat these as<br />
+  non-core.</li>
+</ul>
+<h2 id="not-known-genuine-knowledge-gaps">NOT known / genuine knowledge gaps</h2>
+<ul>
+<li><strong>Cognate receptor / activating input.</strong> The receptor(s) and ligand(s) that activate GPA-12<br />
+  to launch epidermal immune signaling, and whether GPA-12 couples directly to a damage-sensing<br />
+  GPCR, are not established from the cached primary literature. PMID:22470487 states the<br />
+  upstream elements are only partly defined ("Our current understanding of both epidermal and<br />
+  intestinal innate immunity is far from complete"). (A candidate epidermal GPCR, DCAR-1,<br />
+  has been reported elsewhere in the field, but that paper is not in the cache and the direct<br />
+  GPA-12↔receptor biochemical coupling is not shown here.)</li>
+<li><strong>Direct downstream effector.</strong> Genetic epistasis places GPA-12 upstream of PLC-3 / TPA-1<br />
+  (PKCδ) and the p38 cascade, but the <em>immediate biochemical</em> effector of GPA-12 is unproven.<br />
+  Notably, the canonical mammalian Gα12/13 effector arm (RhoGEF → Rho; GO:0007266 Rho protein<br />
+  signal transduction) has not been demonstrated for the worm protein; in worm the demonstrated<br />
+  arm runs through phospholipase/PKCδ, which is more Gq-like. Whether GPA-12 directly engages a<br />
+  RhoGEF, a phospholipase, or another effector is unresolved.</li>
+<li><strong>Tissue-restricted requirement / broader physiology.</strong> GPA-12 is required for AMP induction<br />
+  in the hyp7 epidermal syncytium (UniProt DISRUPTION PHENOTYPE, from PMID:19380113 full text),<br />
+  and activated G12 separately perturbs pharyngeal pumping/feeding (PMID:12646136). The full<br />
+  endogenous tissue/behavioral repertoire of GPA-12, and why the immune requirement is<br />
+  epidermis/cell-type restricted, are not resolved.</li>
+</ul>
+<h2 id="annotation-review-plan-existing_annotations-20-total">Annotation review plan (existing_annotations, 20 total)</h2>
+<ul>
+<li>ACCEPT (core): GO:0003925 G protein activity (IBA); GO:0061760 antifungal innate immune<br />
+  response (IMP); GO:0050832 defense response to fungus (IMP, ×2); GO:0007186 GPCR signaling<br />
+  pathway (IEA); GO:0007266 Rho protein signal transduction (IBA) [canonical G12/13 effector,<br />
+  homology]; GO:0005834 heterotrimeric G-protein complex (IBA, part_of); GO:0010628 positive<br />
+  regulation of gene expression (IMP).</li>
+<li>ACCEPT / KEEP_AS_NON_CORE (true but generic or supporting): GO:0003924 GTPase activity (IEA);<br />
+  GO:0019001 guanyl nucleotide binding (IEA); GO:0031683 G-protein beta/gamma-subunit complex<br />
+  binding (IEA); GO:0001664 GPCR binding (IEA); GO:0007165 signal transduction (IEA, generic);<br />
+  GO:0007266 Rho signal transduction (IEA, redundant with IBA); GO:0005737 cytoplasm (IBA &amp; IDA).</li>
+<li>KEEP_AS_NON_CORE / defer: GO:0005634 nucleus (IDA) — unusual for a Gα, full text unavailable.</li>
+<li>REMOVE / MARK_AS_OVER_ANNOTATED (over-propagated to this G12/13 worm protein):</li>
+<li>GO:0007188 adenylate cyclase-modulating GPCR signaling pathway (IBA) — REMOVE: cAMP/adenylate<br />
+    cyclase modulation is a Gs/Gi function; G12/13 subfamily does not signal this way (pan-Gα<br />
+    PANTHER node PTN000026392 over-propagation).</li>
+<li>GO:0031752 D5 dopamine receptor binding (IBA) — REMOVE: hyper-specific mammalian receptor;<br />
+    no worm ortholog/evidence.</li>
+<li>GO:0031526 brush border membrane (IBA) — MARK_AS_OVER_ANNOTATED: mammalian intestinal<br />
+    microvillar location; GPA-12 acts in epidermis; no worm evidence.</li>
+</ul>
+<h2 id="key-references-cached">Key references (cached)</h2>
+<ul>
+<li>PMID:12646136 — van der Linden et al. 2003, Curr Biol. gpa-12 = Gα12/13 homolog; active G12QL<br />
+  → growth arrest via feeding/pharyngeal-pumping defect; TPA-1/PKC downstream. (abstract-only)</li>
+<li>PMID:19380113 — Ziegler et al. 2009, Cell Host Microbe. PKCδ links G-protein signaling and the<br />
+  p38 MAPK cascade in antifungal immunity; GPA-12 upstream of TPA-1/p38 → nlp-29. (abstract-only)</li>
+<li>PMID:22470487 — Labed et al. 2012, PLoS One. NIPI-4 pseudokinase downstream of TPA-1;<br />
+  epidermal GPA-12* drives constitutive nlp/cnc AMP expression, nipi-4-dependent. (full text)</li>
+<li>GO-CAM gomodel:5b91dbd100002057 — antifungal innate immune response in the hypodermis via MAPK<br />
+  cascade; GPA-12 (Gβγ-binding) causally upstream (+) of TPA-1.<br />
+</content></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q19572
+gene_symbol: gpa-12
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:6239
+  label: Caenorhabditis elegans
+description: &gt;-
+  GPA-12 is a heterotrimeric guanine-nucleotide-binding protein (G protein) alpha
+  subunit of the Galpha-12/13 subfamily, the C. elegans homolog of mammalian
+  Galpha-12/Galpha-13. It has a canonical Galpha domain with intact G1-G5
+  nucleotide-binding motifs and functions as a GTP/GDP-regulated molecular switch
+  that, in its GTP-bound state, engages downstream effectors to relay signals from
+  the cell surface. Its best-characterized physiological role is in the epidermis
+  (hypodermis), where GPA-12 signaling acts upstream of protein kinase C delta
+  (TPA-1) and a conserved p38 MAPK cassette (TIR-1, NSY-1, SEK-1, PMK-1) and the
+  STAT-like factor STA-2 to drive induction of antimicrobial peptide genes of the
+  NLP (nlp-29 cluster) and CNC families in response to fungal infection and
+  wounding. A constitutively active form (GPA-12 Q205L / G12QL) is sufficient to
+  drive constitutive antimicrobial peptide gene expression, and, when hyperactivated
+  more broadly, causes a developmental growth arrest through a pharyngeal-pumping
+  (feeding) defect that also depends on TPA-1. gpa-12 loss-of-function animals are
+  viable.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+- id: PMID:12646136
+  title: Hyperactivation of the G12-mediated signaling pathway in Caenorhabditis elegans
+    induces a developmental growth arrest via protein kinase C.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Foundational characterization of gpa-12 as the C. elegans Galpha-12/13 homolog;
+      active G12QL causes growth arrest via a pharyngeal-pumping/feeding defect and
+      places TPA-1/PKC downstream of G12 signaling. Verified against the cached
+      abstract; this is also the IDA source for the cytoplasm/nucleus localization
+      annotations, whose primary data are in the full text (not in cache).
+- id: PMID:19380113
+  title: &#39;Antifungal innate immunity in C. elegans: PKCdelta links G protein signaling
+    and a conserved p38 MAPK cascade.&#39;
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Establishes that epidermal antifungal immunity (nlp-29 induction) requires G
+      protein signaling acting through PKCdelta (TPA-1) and the p38 MAPK cascade;
+      GPA-12 is the Galpha in this pathway. IMP source for the antifungal
+      innate immune response / defense response to fungus annotations.
+- id: PMID:22470487
+  title: The pseudokinase NIPI-4 is a novel regulator of antimicrobial peptide gene
+    expression.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full text available; epidermis-restricted active GPA-12* (Pcol-19::GPA-12*)
+      drives constitutive nlp/cnc antimicrobial peptide expression in a
+      nipi-4-dependent manner, and states GPA-12 (with the Gbeta RACK-1) is required
+      for wound/infection-induced signaling. IMP source for positive regulation of
+      gene expression and defense response to fungus.
+existing_annotations:
+- term:
+    id: GO:0003925
+    label: G protein activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Correct and core molecular function. GPA-12 is a heterotrimeric G protein alpha
+      subunit (Galpha-12/13 subfamily) that cycles between GTP- and GDP-bound states
+      to act as a signal-transducing molecular switch. GO:0003925 is the appropriate
+      MF for such subunits, and its behavior is supported experimentally in worm by
+      the constitutively active Q205L (catalytic-glutamine) mutant.
+    action: ACCEPT
+    reason: &gt;-
+      Best and most specific molecular-function term for a Galpha subunit; consistent
+      with family membership, intact G1-G5 motifs, and the behavior of activated
+      GPA-12.
+    supported_by:
+    - reference_id: PMID:12646136
+      supporting_text: &gt;-
+        We characterized a C. elegans Galpha subunit gene, gpa-12, which is a homolog
+        of mammalian G(12)/G(13)alpha, and found that animals defective in gpa-12 are
+        viable
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) localization to cytoplasm, independently corroborated by the
+      experimental IDA cytoplasm annotation from PMID:12646136. This is a reasonable
+      functional cellular compartment for a peripheral, membrane-associated Galpha
+      subunit that cycles at the cytoplasmic face of the plasma membrane.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent, independently corroborated cellular localization for a Galpha
+      subunit; accepted as the cellular compartment in which GPA-12 acts.
+- term:
+    id: GO:0007188
+    label: adenylate cyclase-modulating G protein-coupled receptor signaling pathway
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Over-propagation from the pan-Galpha PANTHER family node. Adenylate
+      cyclase/cAMP modulation is the defining function of the Gs (stimulatory) and Gi
+      (inhibitory) subfamilies, not of the Galpha-12/13 subfamily to which GPA-12
+      belongs. There is no evidence that GPA-12 modulates adenylate cyclase, and this
+      pathway type is biologically inappropriate for a G12/13 protein.
+    action: REMOVE
+    reason: &gt;-
+      Biologically incorrect for the G12/13 subfamily; the term propagated
+      electronically from Gs/Gi paralogs in the broad pan-Galpha tree and should not
+      transfer to GPA-12.
+    propagation_review:
+      root_cause: PROPAGATION_BAD
+      failure_modes:
+      - WRONG_ORTHOLOG_OR_PARALOG
+      - FUNCTIONAL_DIVERGENCE
+      source_entities:
+      - source_id: PANTHER:PTN000026392
+        source_label: pan-Galpha family node
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+- term:
+    id: GO:0007266
+    label: Rho protein signal transduction
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Canonical mammalian Galpha-12/13 signaling activates RhoGEFs to relay signals
+      through Rho GTPases, so this term is biologically apt at the family level and
+      propagates from the G12/13 node (mouse Gna12/Gna13). However, the Rho effector
+      arm has not been demonstrated for C. elegans GPA-12; the experimentally defined
+      worm effector arm runs through phospholipase (PLC-3) and PKCdelta (TPA-1).
+      Retained as a homology-based, non-core inference.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Homology-supported canonical G12/13 function, but not experimentally established
+      in worm, where the demonstrated downstream arm is PLC/PKCdelta rather than Rho.
+- term:
+    id: GO:0005834
+    label: heterotrimeric G-protein complex
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      Correct. As a Galpha subunit, GPA-12 assembles into a heterotrimeric G protein
+      (Galpha-beta-gamma) complex; in the epidermal immune pathway it partners with
+      the Gbeta RACK-1.
+    action: ACCEPT
+    reason: &gt;-
+      Accurate and well-supported complex membership for a Galpha subunit.
+    supported_by:
+    - reference_id: PMID:22470487
+      supporting_text: &gt;-
+        Wounding and infection require G-protein signaling, involving the Gα protein
+        GPA-12 and the Gß RACK-1, while infection specifically involves the
+        Tribbles-like kinase NIPI-3
+- term:
+    id: GO:0031526
+    label: brush border membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Over-specific location propagated from mammalian (rat) orthologs. Brush border
+      membrane is the plasma membrane of intestinal microvilli; GPA-12&#39;s demonstrated
+      site of action is the epidermis/hypodermis. There is no C. elegans evidence for
+      brush border localization.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Narrow mammalian-tissue location transferred by phylogenetic inference; not
+      supported for the worm protein and inconsistent with its known site of action.
+    propagation_review:
+      root_cause: PROPAGATION_BAD
+      failure_modes:
+      - CONTEXT_OR_TISSUE_MISMATCH
+      - COMPARTMENT_OR_COMPLEX_MISMATCH
+      source_entities:
+      - source_id: PANTHER:PTN000026689
+        source_label: Galpha-12/13 node
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+- term:
+    id: GO:0031752
+    label: D5 dopamine receptor binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Hyper-specific molecular function propagated from a single mammalian ortholog
+      annotation. Binding to a D5 dopamine receptor is not a plausible or supported
+      activity for C. elegans GPA-12 (worms lack a D5 dopamine receptor ortholog),
+      and there is no worm evidence for it.
+    action: REMOVE
+    reason: &gt;-
+      Over-propagated, organism-specific receptor-binding annotation with no relevance
+      or evidence for the worm protein.
+    propagation_review:
+      root_cause: PROPAGATION_BAD
+      failure_modes:
+      - WRONG_ORTHOLOG_OR_PARALOG
+      - CONTEXT_OR_TISSUE_MISMATCH
+      source_entities:
+      - source_id: PANTHER:PTN000026689
+        source_label: Galpha-12/13 node
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+- term:
+    id: GO:0001664
+    label: G protein-coupled receptor binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Generic InterPro-based inference. Galpha subunits are activated by, and
+      physically couple to, GPCRs, so GPCR binding is a defensible general molecular
+      function. However, the specific cognate receptor for GPA-12 is not established,
+      so this remains a generic, non-core capability.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      True general Galpha property (more informative than &#39;protein binding&#39;) but
+      generic; the actual GPA-12 receptor is unknown.
+- term:
+    id: GO:0003924
+    label: GTPase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Galpha subunits have intrinsic GTPase activity that terminates signaling by
+      returning the switch to the GDP-bound state. Correct for GPA-12, whose G-box
+      motifs are intact and whose catalytic-glutamine (Q205L) mutant behaves as a
+      GTP-hydrolysis-defective, constitutively active protein. The more specific
+      GO:0003925 (G protein activity) better captures the defining signaling-switch
+      role, so this generic GTPase term is retained as a supporting, non-core activity.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct enzymatic capability for a Galpha subunit, but a supporting activity
+      underlying the switch rather than the defining core function, which is better
+      represented by GO:0003925 (G protein activity).
+- term:
+    id: GO:0007165
+    label: signal transduction
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      High-level, generic biological process. True (GPA-12 is a signal transducer)
+      but far less informative than the specific GPCR-signaling and immune-signaling
+      processes it participates in.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct but uninformatively general; subsumed by more specific process terms.
+- term:
+    id: GO:0007186
+    label: G protein-coupled receptor signaling pathway
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Appropriate mechanistic process term: Galpha subunits are the canonical
+      transducers of GPCR signaling. This captures the pathway type through which
+      GPA-12 relays signals in the epidermis, even though the specific receptor is not
+      yet identified.
+    action: ACCEPT
+    reason: &gt;-
+      Accurate, mechanism-defining process for a Galpha subunit.
+- term:
+    id: GO:0007266
+    label: Rho protein signal transduction
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      InterPro-based duplicate of the IBA Rho protein signal transduction annotation,
+      reflecting the canonical G12/13 -&gt; RhoGEF -&gt; Rho effector arm. As with the IBA
+      version, this is homology-based and not experimentally demonstrated for worm
+      GPA-12.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Redundant with the IBA annotation; homology-supported canonical function not
+      demonstrated in worm.
+- term:
+    id: GO:0019001
+    label: guanyl nucleotide binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Correct supporting molecular function: GPA-12 binds guanine nucleotides
+      (GTP/GDP) via its intact G-box motifs. This underlies the G protein switch but
+      is a component capability rather than the core function.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Accurate binding activity underpinning the GTPase/G-protein switch; supporting
+      rather than core.
+- term:
+    id: GO:0031683
+    label: G-protein beta/gamma-subunit complex binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Correct: the Galpha subunit binds the Gbeta/gamma dimer to form the inactive
+      heterotrimer, releasing it upon GTP loading. Consistent with the curated GO-CAM
+      (gomodel:5b91dbd100002057), which models GPA-12&#39;s molecular function as
+      Gbeta/gamma-subunit complex binding, partnered with the Gbeta RACK-1.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Accurate Galpha-Gbetagamma interaction supporting heterotrimer assembly;
+      supporting rather than the core signaling function.
+- term:
+    id: GO:0010628
+    label: positive regulation of gene expression
+  evidence_type: IMP
+  original_reference_id: PMID:22470487
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Experimentally supported: epidermis-restricted active GPA-12* drives a marked
+      constitutive increase in antimicrobial peptide gene expression (nlp-29, nlp-31,
+      nlp-34 and cnc-1, cnc-4), an effect abolished in a nipi-4 mutant. This is the
+      transcriptional-induction readout of GPA-12&#39;s epidermal immune signaling.
+    action: ACCEPT
+    reason: &gt;-
+      Directly supported by loss/gain-of-function transcriptional data; captures
+      GPA-12&#39;s role in up-regulating immune-effector gene expression.
+    supported_by:
+    - reference_id: PMID:22470487
+      supporting_text: &gt;-
+        In uninfected transgenic worms carrying the Pcol-19::GPA-12* construct, we
+        observed a very marked increase in the expression of Pnlp-29::GFP in the
+        epidermis from the late L4 stage onwards
+    - reference_id: PMID:22470487
+      supporting_text: &gt;-
+        the transgenic strain exhibited an elevated constitutive expression of nlp-29,
+        nlp-31 and nlp-34, and cnc-1, cnc-4
+- term:
+    id: GO:0050832
+    label: defense response to fungus
+  evidence_type: IMP
+  original_reference_id: PMID:22470487
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Experimentally supported core biological process. GPA-12 signaling is required
+      for the epidermal antifungal defense program (nlp/cnc antimicrobial peptide
+      induction) against the natural fungal pathogen Drechmeria coniospora.
+    action: ACCEPT
+    reason: &gt;-
+      Well-supported IMP annotation reflecting GPA-12&#39;s core physiological role in
+      antifungal defense.
+    supported_by:
+    - reference_id: PMID:22470487
+      supporting_text: &gt;-
+        When we crossed the Pcol-19::GPA-12* transgene into nipi-4(fr106) mutant, the
+        elevated expression of the Pnlp-29::GFP reporter provoked by the active form of
+        GPA-12 was abrogated
+- term:
+    id: GO:0061760
+    label: antifungal innate immune response
+  evidence_type: IMP
+  original_reference_id: PMID:19380113
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Experimentally supported and the most specific immune process term for GPA-12.
+      Epidermal antifungal innate immunity (nlp-29 induction) requires G protein
+      signaling acting through PKCdelta and the p38 MAPK cascade, with GPA-12 as the
+      Galpha subunit; this is the same activity modeled in the curated GO-CAM
+      (gomodel:5b91dbd100002057).
+    action: ACCEPT
+    reason: &gt;-
+      Core, well-supported immune process; most specific and informative BP term for
+      this gene.
+    supported_by:
+    - reference_id: PMID:19380113
+      supporting_text: &gt;-
+        This involves G protein signaling and specific C-type phospholipases acting
+        upstream of PKCdelta
+    - reference_id: PMID:19380113
+      supporting_text: &gt;-
+        C. elegans PKC acts through the p38 MAPK pathway to regulate nlp-29
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IDA
+  original_reference_id: PMID:12646136
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      WormBase IDA nuclear localization from PMID:12646136. Nuclear localization is
+      unusual for a Galpha subunit, and the primary imaging data are in the full text,
+      which is not in the cache (abstract-only). Per curation guidance I do not
+      overrule an experimental IDA I cannot fully verify; I retain it as a non-core
+      localization and defer to the WormBase curator.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Experimental IDA from the curator (full text unavailable to verify); unusual for
+      a Galpha and not a core function, but not to be removed on incomplete evidence.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IDA
+  original_reference_id: PMID:12646136
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      WormBase IDA cytoplasmic localization from PMID:12646136, consistent with the
+      expected peripheral/cytoplasmic disposition of a membrane-associated Galpha
+      subunit and with the IBA cytoplasm annotation. Accepted as the cellular
+      compartment in which GPA-12 acts.
+    action: ACCEPT
+    reason: &gt;-
+      Experimentally curated localization for a Galpha, corroborated by phylogenetic
+      inference; accepted as GPA-12&#39;s cellular compartment of action.
+- term:
+    id: GO:0050832
+    label: defense response to fungus
+  evidence_type: IMP
+  original_reference_id: PMID:19380113
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Experimentally supported core process (duplicate term with a distinct primary
+      reference). GPA-12 is required for the epidermal antifungal defense response, as
+      shown by its position upstream of PKCdelta and the p38 cascade controlling
+      nlp-29 induction after fungal infection.
+    action: ACCEPT
+    reason: &gt;-
+      Well-supported IMP annotation from the Ziegler et al. study; reinforces the core
+      antifungal-defense role.
+    supported_by:
+    - reference_id: PMID:19380113
+      supporting_text: &gt;-
+        This involves G protein signaling and specific C-type phospholipases acting
+        upstream of PKCdelta
+core_functions:
+- description: &gt;-
+    GPA-12 acts as a Galpha-12/13-type heterotrimeric G protein alpha subunit: a
+    GTP/GDP-regulated molecular switch that transduces cell-surface (GPCR-type)
+    signals in the C. elegans epidermis. Functioning upstream of PKCdelta (TPA-1) and
+    the conserved TIR-1 -&gt; NSY-1 -&gt; SEK-1 -&gt; PMK-1 (p38) MAPK cascade and the
+    STAT-like factor STA-2, GPA-12 signaling drives induction of NLP- and CNC-family
+    antimicrobial peptide genes in the antifungal innate immune response and after
+    wounding. It assembles into a heterotrimer with a Gbeta (RACK-1)/gamma dimer, and
+    an activated form (Q205L) is sufficient to drive the antimicrobial peptide program.
+  molecular_function:
+    id: GO:0003925
+    label: G protein activity
+  directly_involved_in:
+  - id: GO:0061760
+    label: antifungal innate immune response
+  - id: GO:0007186
+    label: G protein-coupled receptor signaling pathway
+  in_complex:
+    id: GO:0005834
+    label: heterotrimeric G-protein complex
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+  supported_by:
+  - reference_id: PMID:19380113
+    supporting_text: &gt;-
+      This involves G protein signaling and specific C-type phospholipases acting
+      upstream of PKCdelta
+  - reference_id: PMID:22470487
+    supporting_text: &gt;-
+      Wounding and infection require G-protein signaling, involving the Gα protein
+      GPA-12 and the Gß RACK-1, while infection specifically involves the
+      Tribbles-like kinase NIPI-3
+  - reference_id: PMID:12646136
+    supporting_text: &gt;-
+      We characterized a C. elegans Galpha subunit gene, gpa-12, which is a homolog of
+      mammalian G(12)/G(13)alpha, and found that animals defective in gpa-12 are viable
+knowledge_gaps:
+- gap_statement: &gt;-
+    The cognate receptor and activating input for GPA-12 are not biochemically
+    defined. It is unknown which cell-surface receptor couples to GPA-12 to initiate
+    epidermal immune signaling, what ligand/damage cue activates it, and whether
+    GPA-12 engages such a receptor directly.
+  boundary: &gt;-
+    Established: GPA-12 is a Galpha-12/13 subunit that acts upstream of PKCdelta
+    (TPA-1) and the p38 MAPK cascade to drive antimicrobial peptide expression after
+    fungal infection and wounding, and its activity is required for this response.
+    Unknown: the identity of the activating receptor and whether coupling is direct.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: RESIDUAL_SUBGAP
+  status: OPEN
+  significance: &gt;-
+    Identifying the receptor that switches on GPA-12 would define the sensing step of
+    epidermal surveillance immunity and connect damage/infection detection to the
+    p38/PMK-1 defense program.
+  provenance:
+  - reference_id: PMID:22470487
+    supporting_text: &gt;-
+      Our current understanding of both epidermal and intestinal innate immunity is
+      far from complete
+- gap_statement: &gt;-
+    The immediate downstream effector of GPA-12 is undetermined. Genetic epistasis
+    places GPA-12 upstream of phospholipase (PLC-3) and PKCdelta (TPA-1), but it is
+    not known whether GPA-12 directly activates a phospholipase, a RhoGEF/Rho module
+    (the canonical mammalian Galpha-12/13 effector arm), or another target.
+  boundary: &gt;-
+    Established: GPA-12/G-protein signaling acts genetically upstream of C-type
+    phospholipases and PKCdelta, and activated GPA-12 drives the p38-dependent
+    antimicrobial peptide program. Unknown: the direct biochemical effector; the
+    canonical G12/13 -&gt; RhoGEF -&gt; Rho arm has not been demonstrated in worm.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    Whether worm GPA-12 signals through a Rho arm (like mammalian G12/13) or through a
+    phospholipase/PKCdelta arm (more Gq-like) determines how this subfamily was wired
+    into nematode epidermal immunity and would resolve an apparent divergence from the
+    mammalian paradigm.
+  provenance:
+  - reference_id: PMID:19380113
+    supporting_text: &gt;-
+      This involves G protein signaling and specific C-type phospholipases acting
+      upstream of PKCdelta
+- gap_statement: &gt;-
+    The full endogenous tissue and physiological repertoire of GPA-12 is unresolved.
+    Its immune requirement is epidermis/cell-type restricted, and hyperactive G12
+    separately perturbs pharyngeal pumping/feeding and growth, but why the immune
+    requirement is tissue-restricted and what other endogenous processes GPA-12
+    normally controls are not defined.
+  boundary: &gt;-
+    Established: active GPA-12 drives antimicrobial peptide expression in the
+    epidermis and, when broadly hyperactivated, causes a growth arrest via a
+    pharyngeal-pumping defect (with TPA-1 downstream); loss-of-function animals are
+    viable. Unknown: the complete set of tissues/behaviors in which endogenous GPA-12
+    acts, and the basis of its tissue-restricted immune role.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: BP_DARK
+  status: OPEN
+  significance: &gt;-
+    Mapping GPA-12&#39;s endogenous functions would distinguish its dedicated immune role
+    from its developmental/feeding role and clarify how one Galpha subunit is deployed
+    across contexts.
+  provenance:
+  - reference_id: PMID:12646136
+    supporting_text: &gt;-
+      Expression of activated GPA-12 (G(12)QL) results in a developmental growth arrest
+      caused by a feeding behavior defect that is due to a dramatic reduction in
+      pharyngeal pumping
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

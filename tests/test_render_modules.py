@@ -3,10 +3,14 @@
 from ai_gene_review.render_modules import (
     collect_anchor_map,
     collect_module_stats,
+    collect_module_taxa,
+    collect_ptn_ids,
     evidence_url,
+    make_summary,
     output_path_for_module,
     render_all_modules,
     render_module,
+    render_modules_index,
 )
 
 
@@ -18,6 +22,12 @@ module:
   id: test_module
   label: Test module
   module_type: METABOLIC_PATHWAY
+  context:
+    taxa:
+      - preferred_term: test taxon
+        term:
+          id: NCBITaxon:1
+          label: root
   concepts:
     - preferred_term: test pathway
       term:
@@ -46,6 +56,11 @@ module:
                         preferred_term: test enzyme family
                         representative_members:
                           - preferred_term: test representative enzyme
+                        ancestral_nodes:
+                          - preferred_term: test ancestral node
+                            term:
+                              id: PANTHER:PTN000000001
+                              label: test ancestral node
                     role: catalytic subunit
             function:
               preferred_term: catalytic activity
@@ -83,6 +98,15 @@ def test_collect_module_stats():
     assert stats["variants"] == 2
     assert stats["annotons"] == 1
     assert stats["connections"] == 1
+
+
+def test_collect_module_taxa_and_ptns():
+    import yaml
+
+    data = yaml.safe_load(MODULE_YAML)
+
+    assert collect_module_taxa(data) == ["test taxon"]
+    assert collect_ptn_ids(data) == ["PANTHER:PTN000000001"]
 
 
 def test_collect_anchor_map():
@@ -154,4 +178,74 @@ def test_render_all_modules_with_index(tmp_path):
     assert output_dir / "generic" / "test.html" in output_paths
     assert output_dir / "index.html" in output_paths
     assert (output_dir / "index.html").exists()
-    assert "Test module" in (output_dir / "index.html").read_text()
+
+    index_html = (output_dir / "index.html").read_text()
+    assert "Test module" in index_html
+    # The index renders as a sortable table of modules with derived metadata columns.
+    assert "<table" in index_html
+    assert "data-module-table" in index_html
+    assert "data-module-row" in index_html
+    for column in ("Nodes", "Annotons", "Parts", "Variant", "Variants", "Connections"):
+        assert column in index_html
+    assert "Taxon" in index_html
+    assert "PTNs" in index_html
+    assert "test taxon" in index_html
+    # Derived counts for the single test module should be present in the row.
+    assert "METABOLIC_PATHWAY".replace("_", " ").title() in index_html
+
+
+def test_render_modules_index_table_lists_all_modules(tmp_path):
+    """The index table renders one row per module with its derived stats."""
+    import yaml
+
+    modules_dir = tmp_path / "modules"
+    modules_dir.mkdir()
+    output_dir = tmp_path / "pages" / "modules"
+    output_dir.mkdir(parents=True)
+    index_path = output_dir / "index.html"
+
+    data = yaml.safe_load(MODULE_YAML)
+    summary = make_summary(
+        data,
+        modules_dir / "test.yaml",
+        output_dir / "test.html",
+        index_path,
+    )
+
+    render_modules_index([summary], output_dir=output_dir)
+    html = index_path.read_text()
+
+    # Exactly one data row for the one module summary.
+    assert html.count("<tr data-module-row>") == 1
+    # Derived numeric metadata surfaced in the table.
+    assert str(summary["stats"]["nodes"]) in html
+    assert str(summary["stats"]["connections"]) in html
+    assert str(len(summary["ptn_ids"])) in html
+    # Concepts derived from the module document appear.
+    assert "test pathway" in html
+
+
+def test_render_modules_index_collapses_long_descriptions(tmp_path):
+    import yaml
+
+    modules_dir = tmp_path / "modules"
+    modules_dir.mkdir()
+    output_dir = tmp_path / "pages" / "modules"
+    output_dir.mkdir(parents=True)
+    index_path = output_dir / "index.html"
+
+    data = yaml.safe_load(MODULE_YAML)
+    data["description"] = " ".join(["long description text"] * 40)
+    summary = make_summary(
+        data,
+        modules_dir / "test.yaml",
+        output_dir / "test.html",
+        index_path,
+    )
+
+    render_modules_index([summary], output_dir=output_dir)
+    html = index_path.read_text()
+
+    assert "module-desc-more" in html
+    assert "[more...]" in html
+    assert summary["description_preview"] in html

@@ -75,3 +75,31 @@ ATP6V1A facilitates Rabies virus uncoating in endosomes through interaction with
 - The NAS annotations from ComplexPortal (PMID:32001091) for multiple acidification processes are valid and core.
 - Regulation of macroautophagy (NAS, PMID:22982048) is an indirect effect of lysosome function; the paper studied lipofuscin, not V-ATPase function per se.
 - The guanyl nucleotide exchange factor activator activity (GO:0160124) annotation from the PMID:22053050 mTORC1 paper captures the functional role of V-ATPase in activating Rag GTPase GEF activity (Ragulator) — this is a legitimate but non-core moonlighting function.
+
+## Falcon deep research synthesis (2026-06-21)
+
+Falcon deep research has now completed (`file:human/ATP6V1A/ATP6V1A-deep-research-falcon.md`,
+37 citations). It strongly corroborates the catalytic-A-subunit core above and
+adds regulatory and disease detail.
+
+- **Core MF confirmed.** ATP6V1A is the catalytic A subunit of the A3B3 hexamer;
+  ATP hydrolysis at the A/B interface drives central-rotor rotation and proton
+  translocation (Abbas 2020; Wang 2020 PMID:33065002). No change to the
+  proton-transporting ATPase activity / ATP-hydrolysis core calls.
+- **Reversible-assembly regulation (proteostasis-relevant, new).** ATP6V1A-
+  containing V-ATPase is regulated by reversible V1–V0 (dis)assembly: **FBXO9**
+  ubiquitinates/sequesters ATP6V1A to limit assembly/activity (Liu 2024), while
+  **LAMTOR5** promotes assembly at the lysosome (Zhang 2024). Loss of LAMTOR5
+  drives SLE-like autoimmunity. These are regulatory inputs, not new ATP6V1A MFs,
+  but worth flagging for the PN regulation branch.
+- **Disease spectrum.** De novo missense → **developmental & epileptic
+  encephalopathy** (Guerrini 2022); biallelic variants → **cutis laxa type 2D**;
+  reduced ATP6V1A in Alzheimer cortex (Zhou 2021); rabies virus co-opts ATP6V1A-
+  dependent endosomal acidification for uncoating (Liu 2021). All converge on
+  loss of organellar pH homeostasis / lysosomal-autophagy function — consistent
+  with the established core; disease/host-pathogen items are **non-core** context.
+- **Corroborated localizations/pathways:** lysosome/endosome/Golgi/synaptic
+  vesicle/autophagosome acidification, neurotransmitter loading, mTORC1 scaffold.
+
+Net: no change to calls — ATP6V1A is the V1 catalytic (ATP-hydrolyzing) subunit
+powering organellar acidification.

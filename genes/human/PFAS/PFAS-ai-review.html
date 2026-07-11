@@ -1,0 +1,4151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PFAS - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PFAS</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O15067" target="_blank" class="term-link">
+                        O15067
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PFAS";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O15067" data-a="DESCRIPTION: PFAS encodes phosphoribosylformylglycinamidine syn..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PFAS encodes phosphoribosylformylglycinamidine synthase (FGAM synthase; also called FGAR amidotransferase, FGARAT; EC 6.3.5.3), the enzyme that carries out the fourth step of de novo purine synthesis. It catalyses the ATP-dependent, glutamine-dependent amidotransfer that converts formylglycinamide ribonucleotide (FGAR) to formylglycinamidine ribonucleotide (FGAM), releasing L-glutamate, ADP and phosphate (FGAR + L-glutamine + ATP + H2O -&gt; FGAM + L-glutamate + ADP + Pi). The multidomain protein combines an N-terminal ATP-/Mg2+-dependent synthetase (PurL) region with a C-terminal class-I glutamine amidotransferase (GATase-1) domain that hydrolyses glutamine to supply the transferred amide nitrogen. The enzyme is cytosolic and can associate with the purinosome, the reversible multi-enzyme assembly of de novo purine synthesis. As one of the six enzymes of this housekeeping pathway it supplies the inosine monophosphate (IMP) precursor from which AMP and GMP are subsequently made, and its activity is of interest in the elevated nucleotide demand of proliferating and cancer cells.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O15067" data-a="GO:0005737" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically inferred cytoplasmic localization for this cytosolic de novo purine synthesis enzyme. Consistent with the UniProt subcellular location and with Reactome&#39;s cytosol assignment.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PFAS is a soluble cytosolic enzyme with no membrane-spanning or targeting features; the IBA cytoplasm annotation is correct, though the more specific cytosol term (GO:0005829) is preferable as the primary localization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PFAS/PFAS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-73812
+
+                                </span>
+
+                                <div class="support-text">Fluoresence microscopy studies of cultured human cells have shown that the enzyme is cytosolic</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004642" target="_blank" class="term-link">
+                                    GO:0004642
+                                </a>
+                            </span>
+                            <span class="term-label">phosphoribosylformylglycinamidine synthase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O15067" data-a="GO:0004642" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically inferred phosphoribosylformylglycinamidine synthase (FGAM synthase) activity, the defining molecular function of PFAS and its orthologs across the FGAMS family.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the core molecular function of PFAS, EC 6.3.5.3 (RHEA:17129), independently supported by direct biochemical evidence (IDA) and by the conserved N-terminal PurL synthetase plus C-terminal GATase-1 domain architecture in UniProt.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PFAS/PFAS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">RecName: Full=Phosphoribosylformylglycinamidine synthase;</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PFAS/PFAS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">purines biosynthetic pathway. Catalyzes the ATP-dependent conversion of</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006164" target="_blank" class="term-link">
+                                    GO:0006164
+                                </a>
+                            </span>
+                            <span class="term-label">purine nucleotide biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O15067" data-a="GO:0006164" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically inferred involvement in purine nucleotide biosynthesis, the pathway to which the FGAM synthase reaction belongs.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct parent biological process. PFAS performs step four of de novo purine synthesis, producing the IMP precursor from which purine nucleotides are made. This broad term is accurate; the more specific &#39;de novo IMP biosynthetic process&#39; (GO:0006189) is also annotated and captured as core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10548741" target="_blank" class="term-link">
+                                        PMID:10548741
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">phosphoribosylformylglycineamide amidotransferase (FGARAT) gene, which encodes the fourth step of this pathway</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004642" target="_blank" class="term-link">
+                                    GO:0004642
+                                </a>
+                            </span>
+                            <span class="term-label">phosphoribosylformylglycinamidine synthase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O15067" data-a="GO:0004642" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic assignment of FGAM synthase activity from InterPro/EC/RHEA mappings (IPR010073, EC 6.3.5.3, RHEA:17129).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct and specific. The InterPro-to-GO and EC mappings identify the exact catalytic function, in agreement with the IBA, TAS and IDA annotations of the same term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PFAS/PFAS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">RecName: Full=Phosphoribosylformylglycinamidine synthase;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O15067" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic cytoplasm localization from the UniProt subcellular-location keyword mapping (SL-0086).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the manually asserted cytoplasmic/cytosolic localization; correct though less specific than cytosol.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PFAS/PFAS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006189" target="_blank" class="term-link">
+                                    GO:0006189
+                                </a>
+                            </span>
+                            <span class="term-label">&#39;de novo&#39; IMP biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O15067" data-a="GO:0006189" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic assignment (InterPro IPR010073, UniPathway UPA00074) placing PFAS in the de novo IMP biosynthetic pathway.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the specific and correct biological process for PFAS: the FGAR-&gt;FGAM step is part of the de novo pathway that builds IMP. Concordant with the IDA and NAS annotations of the same term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PFAS/PFAS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">IMP biosynthesis via de novo pathway</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10548741" target="_blank" class="term-link">
+                                        PMID:10548741
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The de-novo synthesis of purines requires 10 enzymatic steps for the production of inosine monophosphate (IMP)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006541" target="_blank" class="term-link">
+                                    GO:0006541
+                                </a>
+                            </span>
+                            <span class="term-label">L-glutamine metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O15067" data-a="GO:0006541" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation transferred from a rat ortholog (UniProtKB:D4AB17) capturing that PFAS consumes L-glutamine as the amide-nitrogen donor for the amidotransfer reaction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Biologically reasonable - the C-terminal glutamine amidotransferase (GATase-1) domain hydrolyses glutamine to supply the transferred nitrogen, so PFAS participates in glutamine catabolism as a side/co-substrate process. However this is a consequence of the catalytic mechanism rather than the enzyme&#39;s core role, which is purine (IMP-precursor) biosynthesis; retain as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PFAS/PFAS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">ATP-binding; Cytoplasm; Glutamine amidotransferase; Ligase; Magnesium;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009410" target="_blank" class="term-link">
+                                    GO:0009410
+                                </a>
+                            </span>
+                            <span class="term-label">response to xenobiotic stimulus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O15067" data-a="GO:0009410" data-r="GO_REF:0000107" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation transferred from a rat ortholog (UniProtKB:D4AB17, ENSRNOP00000007087) via Ensembl Compara.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This term reflects a downstream expression/response phenotype observed for the rodent ortholog and does not describe the molecular or biosynthetic role of PFAS. For a housekeeping de novo purine synthesis enzyme this is an over-annotation transferred electronically from an ortholog; it is not a core function of human PFAS and there is no direct evidence for it in this gene.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009168" target="_blank" class="term-link">
+                                    GO:0009168
+                                </a>
+                            </span>
+                            <span class="term-label">purine ribonucleoside monophosphate biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-73817
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O15067" data-a="GO:0009168" data-r="Reactome:R-HSA-73817" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome pathway-level assertion that PFAS participates in purine ribonucleoside monophosphate (IMP) biosynthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct pathway-level process. Reactome places the FGAR-&gt;FGAM reaction within the pathway that assembles IMP on PRPP; equivalent in scope to the de novo IMP biosynthetic process term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-73817
+
+                                </span>
+
+                                <div class="support-text">The purine ribonucleotide inosine 5&#39;-monophosphate (IMP) is assembled on 5-phospho-alpha-D-ribose 1-diphosphate (PRPP)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004642" target="_blank" class="term-link">
+                                    GO:0004642
+                                </a>
+                            </span>
+                            <span class="term-label">phosphoribosylformylglycinamidine synthase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-73812
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O15067" data-a="GO:0004642" data-r="Reactome:R-HSA-73812" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable assertion of FGAM synthase activity, citing the biochemically characterized human enzyme reaction FGAR + L-glutamine + ATP + H2O -&gt; FGAM + L-glutamate + ADP + Pi.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core molecular function, supported by the purified/characterized human enzyme and concordant with the IDA, IBA and IEA annotations of the same term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-73812
+
+                                </span>
+
+                                <div class="support-text">is catalyzed by phosphoribosylformylglycinamidine synthetase.  The human enzyme has been purified and characterized biochemically</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004642" target="_blank" class="term-link">
+                                    GO:0004642
+                                </a>
+                            </span>
+                            <span class="term-label">phosphoribosylformylglycinamidine synthase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27590927" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27590927
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    CRISPR-Cas9 induced mutations along de novo purine synthesis...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O15067" data-a="GO:0004642" data-r="PMID:27590927" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FGAM synthase activity inferred from a CRISPR-Cas9 PFAS knockout in HeLa cells, in which loss of the enzyme causes accumulation of its substrate.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> MGI experimental (IMP) annotation. The knockout phenotype - accumulation of the enzyme&#39;s substrate - directly implicates PFAS in the FGAR-&gt;FGAM step, supporting the core molecular function. The cached record is abstract-only; the full text (which the curator read) assays this DNPS step. Concordant with the independent IDA annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27590927" target="_blank" class="term-link">
+                                        PMID:27590927
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In all model cell lines with the exception of one, an accumulation of the substrate(s) for the knocked out enzyme was identified</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006177" target="_blank" class="term-link">
+                                    GO:0006177
+                                </a>
+                            </span>
+                            <span class="term-label">GMP biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27590927" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27590927
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    CRISPR-Cas9 induced mutations along de novo purine synthesis...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O15067" data-a="GO:0006177" data-r="PMID:27590927" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> From the CRISPR knockout study; loss of PFAS depletes de novo purine synthesis and thereby the downstream GMP branch.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PFAS acts upstream of GMP synthesis - it makes the IMP precursor, from which GMP is subsequently derived - so the acts_upstream_of_or_within qualifier is appropriate. It is not itself a GMP-biosynthesis enzyme, so this is a valid but non-core downstream-branch annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27590927" target="_blank" class="term-link">
+                                        PMID:27590927
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">CRISPR-Cas9 genome-edited HeLa cells deficient for the individual steps of DNPS</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006189" target="_blank" class="term-link">
+                                    GO:0006189
+                                </a>
+                            </span>
+                            <span class="term-label">&#39;de novo&#39; IMP biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27590927" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27590927
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    CRISPR-Cas9 induced mutations along de novo purine synthesis...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O15067" data-a="GO:0006189" data-r="PMID:27590927" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CRISPR knockout evidence that PFAS is required for de novo IMP biosynthesis, the pathway it directly participates in.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core biological process, experimentally supported. Loss of PFAS blocks flux through de novo purine synthesis toward IMP; concordant with the involved_in IDA/NAS annotations of the same term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27590927" target="_blank" class="term-link">
+                                        PMID:27590927
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">DNPS includes ten reactions catalysed by six enzymes.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044208" target="_blank" class="term-link">
+                                    GO:0044208
+                                </a>
+                            </span>
+                            <span class="term-label">&#39;de novo&#39; AMP biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27590927" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27590927
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    CRISPR-Cas9 induced mutations along de novo purine synthesis...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O15067" data-a="GO:0044208" data-r="PMID:27590927" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> From the CRISPR knockout study; loss of PFAS depletes de novo purine synthesis and thereby the downstream AMP branch.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PFAS acts upstream of AMP synthesis by supplying the shared IMP precursor; the acts_upstream_of_or_within qualifier is correct. It is not itself an AMP-biosynthesis enzyme, so this is a valid but non-core downstream-branch annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27590927" target="_blank" class="term-link">
+                                        PMID:27590927
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">CRISPR-Cas9 genome-edited HeLa cells deficient for the individual steps of DNPS</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097294" target="_blank" class="term-link">
+                                    GO:0097294
+                                </a>
+                            </span>
+                            <span class="term-label">&#39;de novo&#39; XMP biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27590927" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27590927
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    CRISPR-Cas9 induced mutations along de novo purine synthesis...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O15067" data-a="GO:0097294" data-r="PMID:27590927" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> From the CRISPR knockout study; loss of PFAS depletes de novo purine synthesis and thereby the downstream XMP branch.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PFAS acts upstream of XMP synthesis by supplying the shared IMP precursor; the acts_upstream_of_or_within qualifier is correct. It is not itself an XMP-biosynthesis enzyme, so this is a valid but non-core downstream-branch annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27590927" target="_blank" class="term-link">
+                                        PMID:27590927
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">CRISPR-Cas9 genome-edited HeLa cells deficient for the individual steps of DNPS</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097294" target="_blank" class="term-link">
+                                    GO:0097294
+                                </a>
+                            </span>
+                            <span class="term-label">&#39;de novo&#39; XMP biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27590927" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27590927
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    CRISPR-Cas9 induced mutations along de novo purine synthesis...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O15067" data-a="GO:0097294" data-r="PMID:27590927" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct-assay (IDA) annotation to the downstream de novo XMP branch, from the DNPS substrate-accumulation study.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> With the involved_in qualifier this term is arguably too downstream for PFAS, whose direct reaction produces the IMP precursor rather than XMP. The corresponding acts_upstream_of_or_within annotation captures the relationship more accurately. Retained as non-core; deferring to the MGI curator&#39;s full-text reading rather than removing an experimental annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27590927" target="_blank" class="term-link">
+                                        PMID:27590927
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">an accumulation of the substrate(s) for the knocked out enzyme was identified</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004642" target="_blank" class="term-link">
+                                    GO:0004642
+                                </a>
+                            </span>
+                            <span class="term-label">phosphoribosylformylglycinamidine synthase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27590927" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27590927
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    CRISPR-Cas9 induced mutations along de novo purine synthesis...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O15067" data-a="GO:0004642" data-r="PMID:27590927" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence for FGAM synthase activity from the CRISPR/substrate- accumulation study.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core molecular function with direct experimental support; concordant with the IMP, IBA, IEA and Reactome-TAS annotations of the same term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27590927" target="_blank" class="term-link">
+                                        PMID:27590927
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">an accumulation of the substrate(s) for the knocked out enzyme was identified</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006177" target="_blank" class="term-link">
+                                    GO:0006177
+                                </a>
+                            </span>
+                            <span class="term-label">GMP biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27590927" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27590927
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    CRISPR-Cas9 induced mutations along de novo purine synthesis...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O15067" data-a="GO:0006177" data-r="PMID:27590927" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct-assay (IDA) involved_in annotation to the downstream GMP branch.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> As with the AMP/XMP branch terms, PFAS supplies the upstream IMP precursor rather than catalysing GMP synthesis; the acts_upstream_of_or_within relationship is more accurate than involved_in. Retained as non-core; not removed, as this is an experimental annotation whose full text the curator read.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27590927" target="_blank" class="term-link">
+                                        PMID:27590927
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">an accumulation of the substrate(s) for the knocked out enzyme was identified</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006189" target="_blank" class="term-link">
+                                    GO:0006189
+                                </a>
+                            </span>
+                            <span class="term-label">&#39;de novo&#39; IMP biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27590927" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27590927
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    CRISPR-Cas9 induced mutations along de novo purine synthesis...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O15067" data-a="GO:0006189" data-r="PMID:27590927" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct-assay evidence that PFAS is involved in de novo IMP biosynthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core biological process. This is the pathway PFAS directly participates in (step four), and involved_in is the correct qualifier. Concordant with the IEA, NAS and Reactome annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27590927" target="_blank" class="term-link">
+                                        PMID:27590927
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">DNPS includes ten reactions catalysed by six enzymes.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044208" target="_blank" class="term-link">
+                                    GO:0044208
+                                </a>
+                            </span>
+                            <span class="term-label">&#39;de novo&#39; AMP biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27590927" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27590927
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    CRISPR-Cas9 induced mutations along de novo purine synthesis...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O15067" data-a="GO:0044208" data-r="PMID:27590927" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct-assay (IDA) involved_in annotation to the downstream de novo AMP branch.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PFAS makes the shared IMP precursor upstream of AMP synthesis; involved_in is arguably too downstream, and the acts_upstream_of_or_within annotation captures the relationship better. Retained as valid but non-core; not removed given experimental support.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27590927" target="_blank" class="term-link">
+                                        PMID:27590927
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">an accumulation of the substrate(s) for the knocked out enzyme was identified</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070062" target="_blank" class="term-link">
+                                    GO:0070062
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular exosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20458337" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20458337
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    MHC class II-associated proteins in B-cell exosomes and pote...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O15067" data-a="GO:0070062" data-r="PMID:20458337" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput MS detection of PFAS among 539 proteins in the total proteome of purified B-cell-derived exosomes.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is a bulk mass-spectrometry catalog of an exosome preparation, not a targeted or functionally meaningful localization for a cytosolic de novo purine synthesis enzyme. Abundant cytosolic proteins are routinely detected in such exosome proteomes; there is no evidence of a functional role for PFAS in exosomes. Over-annotation - the enzyme acts in the cytosol.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20458337" target="_blank" class="term-link">
+                                        PMID:20458337
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">we first analyzed the total proteome of highly purified B cell-derived exosomes using sensitive and accurate mass spectrometry (MS), and identified 539 proteins</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-73812
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O15067" data-a="GO:0005829" data-r="Reactome:R-HSA-73812" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable assertion that the enzyme is cytosolic, from fluorescence microscopy of cultured human cells.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Most specific and accurate cellular-component annotation for PFAS. Cytosolic localization is consistent with the enzyme&#39;s role in de novo purine synthesis and with its reversible association with the cytosolic purinosome.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-73812
+
+                                </span>
+
+                                <div class="support-text">Fluoresence microscopy studies of cultured human cells have shown that the enzyme is cytosolic</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004642" target="_blank" class="term-link">
+                                    GO:0004642
+                                </a>
+                            </span>
+                            <span class="term-label">phosphoribosylformylglycinamidine synthase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10548741" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10548741
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Human phosphoribosylformylglycineamide amidotransferase (FGA...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O15067" data-a="GO:0004642" data-r="PMID:10548741" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence for FGAM synthase (FGARAT) activity: the human genomic clone corrects the purine auxotrophy and enzyme/protein deficiency of AdeB CHO mutants that lack FGARAT.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core molecular function established by functional complementation. Restoring FGARAT activity in an enzyme-deficient mammalian cell line directly demonstrates the catalytic function of the encoded protein.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10548741" target="_blank" class="term-link">
+                                        PMID:10548741
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The P1 clone corrects the purine auxotrophy and protein deficiency of Chinese hamster ovary (CHO) cell mutants (AdeB) deficient in both the activity and the protein for FGARAT.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006189" target="_blank" class="term-link">
+                                    GO:0006189
+                                </a>
+                            </span>
+                            <span class="term-label">&#39;de novo&#39; IMP biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10548741" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10548741
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Human phosphoribosylformylglycineamide amidotransferase (FGA...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O15067" data-a="GO:0006189" data-r="PMID:10548741" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Non-traceable author statement placing FGARAT/PFAS as the fourth of the ten enzymatic steps producing IMP by de novo purine synthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core biological process, consistent with the specific and correct pathway role of PFAS and concordant with the IEA/IDA annotations of the same term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10548741" target="_blank" class="term-link">
+                                        PMID:10548741
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">phosphoribosylformylglycineamide amidotransferase (FGARAT) gene, which encodes the fourth step of this pathway</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Phosphoribosylformylglycinamidine synthase (FGAM synthase, FGARAT; EC 6.3.5.3): the ATP- and glutamine-dependent amidotransferase catalysing step four of de novo purine synthesis, converting FGAR to FGAM.</h3>
+                <span class="vote-buttons" data-g="O15067" data-a="FUNCTION: Phosphoribosylformylglycinamidine synthase (FGAM s..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004642" target="_blank" class="term-link">
+                            phosphoribosylformylglycinamidine synthase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006189" target="_blank" class="term-link">
+                                &#39;de novo&#39; IMP biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/PFAS/PFAS-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">RecName: Full=Phosphoribosylformylglycinamidine synthase;</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10548741" target="_blank" class="term-link">
+                                PMID:10548741
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">phosphoribosylformylglycineamide amidotransferase (FGARAT) gene, which encodes the fourth step of this pathway</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Participation in purine nucleotide biosynthesis: by producing the FGAM intermediate en route to IMP, PFAS provides the precursor for downstream AMP and GMP synthesis.</h3>
+                <span class="vote-buttons" data-g="O15067" data-a="FUNCTION: Participation in purine nucleotide biosynthesis: b..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004642" target="_blank" class="term-link">
+                            phosphoribosylformylglycinamidine synthase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006164" target="_blank" class="term-link">
+                                purine nucleotide biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            Reactome:R-HSA-73812
+
+                        </span>
+
+                        <div class="finding-text">is catalyzed by phosphoribosylformylglycinamidine synthetase.  The human enzyme has been purified and characterized biochemically</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10548741" target="_blank" class="term-link">
+                            PMID:10548741
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Human phosphoribosylformylglycineamide amidotransferase (FGARAT): regional mapping, complete coding sequence, isolation of a functional genomic clone, and DNA sequence analysis.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20458337" target="_blank" class="term-link">
+                            PMID:20458337
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">MHC class II-associated proteins in B-cell exosomes and potential functional implications for exosome biogenesis.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27590927" target="_blank" class="term-link">
+                            PMID:27590927
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">CRISPR-Cas9 induced mutations along de novo purine synthesis in HeLa cells result in accumulation of individual enzyme substrates and affect purinosome formation.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-73812
+
+                    </span>
+                </div>
+
+                <div class="reference-title">FGAR + L-Glutamine + ATP + H2O =&gt; FGAM + L-Glutamate + ADP + Pi</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-73817
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Purine ribonucleoside monophosphate biosynthesis</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/PFAS/PFAS-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry O15067 (PUR4_HUMAN), phosphoribosylformylglycinamidine synthase</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does PFAS have any moonlighting or regulatory function beyond de novo purine synthesis (e.g. in stress-granule/CD-CODE contexts or via its multiple phosphosites)?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O15067" data-a="Q: Does PFAS have any moonlighting or regulatory func..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How does purinosome association modulate PFAS flux, and is the enzyme rate-limiting under conditions of high purine demand such as tumor proliferation?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O15067" data-a="Q: How does purinosome association modulate PFAS flux..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Quantitative metabolic-flux analysis (LC-MS/MS of FGAR vs FGAM) in PFAS-null versus rescued cells to confirm the in vivo FGAR-&gt;FGAM step and measure control strength.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="O15067" data-a="EXPERIMENT: Quantitative metabolic-flux analysis (LC-MS/MS of ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Phospho-site mutagenesis (Ser215/Ser569/Thr619/Thr623) to test whether phosphorylation regulates PFAS activity or purinosome recruitment.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="O15067" data-a="EXPERIMENT: Phospho-site mutagenesis (Ser215/Ser569/Thr619/Thr..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PFAS-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O15067" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="pfas-o15067-review-notes">PFAS (O15067) — review notes</h1>
+<h2 id="identity-and-function">Identity and function</h2>
+<ul>
+<li><strong>Gene/protein</strong>: PFAS = phosphoribosylformylglycinamidine synthase (FGAM synthase; FGAMS);<br />
+  also called formylglycinamide ribonucleotide amidotransferase (FGAR-AT / FGARAT). UniProt<br />
+<code>PUR4_HUMAN</code>, O15067. HGNC:8863. EC 6.3.5.3.</li>
+<li><strong>Reaction (RHEA:17129)</strong>: N2-formyl-N1-(5-phospho-β-D-ribosyl)glycinamide (FGAR) + L-glutamine</li>
+<li>ATP + H2O → 2-formamido-N1-(5-O-phospho-β-D-ribosyl)acetamidine (FGAM) + L-glutamate + ADP +<br />
+  phosphate + H+.</li>
+<li><strong>Pathway</strong>: fourth step of de novo purine synthesis (DNPS); IMP biosynthesis via de novo pathway.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/10548741" title="phosphoribosylformylglycineamide amidotransferase (FGARAT) gene, which encodes the   fourth step of this pathway">PMID:10548741</a>. Deep research (falcon) unavailable — HTTP 402, out of credits.</li>
+<li><strong>Domain architecture (UniProt)</strong>: N-terminal FGAR-AT / PurL synthetase region (ATP-binding,<br />
+  Mg2+-binding) + C-terminal class-I glutamine amidotransferase (GATase-1) domain (residues<br />
+  1064–1302; catalytic Cys1158 nucleophile). Glutamine amidotransferase keyword.</li>
+<li><strong>Localization</strong>: cytoplasm/cytosol [UniProt SUBCELLULAR LOCATION: Cytoplasm; Reactome R-HSA-73812<br />
+  "the enzyme is cytosolic"]. Also detected in B-cell exosome proteome (HDA, PMID:20458337) as one of<br />
+  539 proteins — non-specific mass-spec catalog, not a functional localization.</li>
+<li><strong>Biology</strong>: houses-keeping DNPS enzyme; a component of the purinosome (multi-enzyme DNPS complex).<br />
+  No well-established Mendelian disease; of interest in cancer metabolism / nucleotide demand.</li>
+</ul>
+<h2 id="publications-all-abstract-only-in-cache">Publications (all abstract-only in cache)</h2>
+<ul>
+<li><strong>PMID:10548741</strong> (Patterson et al., Gene 1999): cloned the human FGARAT cDNA/genomic clone;<br />
+  P1 clone complements purine-auxotroph AdeB CHO mutants deficient in FGARAT activity+protein;<br />
+  maps to 17p13. Source of the IDA MF (<code>enables GO:0004642</code>) and NAS BP (<code>de novo IMP</code>) annotations.</li>
+<li><strong>PMID:27590927</strong> (Baresova et al., Mol Genet Metab 2016): CRISPR-Cas9 knockouts of individual DNPS<br />
+  enzymes in HeLa; substrate accumulation and impaired purinosome assembly. Source of MGI IMP/IDA<br />
+  annotations. Abstract frames DNPS ("ten reactions catalysed by six enzymes") without naming PFAS;<br />
+  full text (not cached) assays the FGAR-AT step. Per curation policy, defer to MGI curator.</li>
+<li><strong>PMID:20458337</strong> (Buschow et al., Immunol Cell Biol 2010): B-cell exosome MS proteome, 539 proteins;<br />
+  source of HDA extracellular-exosome CC.</li>
+</ul>
+<h2 id="annotation-decisions-summary">Annotation decisions (summary)</h2>
+<p>Core: MF GO:0004642 (FGAM synthase activity); BP GO:0006189 (de novo IMP biosynthesis) and<br />
+GO:0006164 (purine nucleotide biosynthetic process); CC GO:0005829 (cytosol).</p>
+<ul>
+<li><code>GO:0004642</code> MF (IBA, IEA, TAS x1, IMP, IDA x2): ACCEPT — well-supported core MF.</li>
+<li><code>GO:0005737</code> cytoplasm (IBA, IEA): ACCEPT.</li>
+<li><code>GO:0005829</code> cytosol (TAS Reactome): ACCEPT — most specific correct CC.</li>
+<li><code>GO:0006189</code> de novo IMP (IBA-absent; IEA, IMP, IDA, NAS): ACCEPT core BP.</li>
+<li><code>GO:0006164</code> purine nucleotide biosynthetic process (IBA): ACCEPT (broader parent, correct).</li>
+<li><code>GO:0006541</code> L-glutamine metabolic process (IEA, Ensembl ortholog): KEEP_AS_NON_CORE — true<br />
+  (glutamine is the amide donor) but a side/co-substrate process, not the core purine-synthesis role.</li>
+<li><code>GO:0009410</code> response to xenobiotic stimulus (IEA, Ensembl rat ortholog): MARK_AS_OVER_ANNOTATED —<br />
+  not the enzyme's core function; over-propagated from a rat ortholog phenotype.</li>
+<li><code>GO:0009168</code> purine ribonucleoside monophosphate biosynthesis (TAS Reactome): ACCEPT (pathway-level).</li>
+<li><code>GO:0006177</code> GMP biosynthetic process (IMP acts_upstream_of_or_within; IDA involved_in):<br />
+  KEEP_AS_NON_CORE — downstream branch (IMP→GMP); PFAS acts upstream via IMP, not a GMP-synthesis enzyme.</li>
+<li><code>GO:0044208</code> de novo AMP biosynthesis (IMP, IDA): KEEP_AS_NON_CORE — downstream branch (IMP→AMP).</li>
+<li><code>GO:0097294</code> de novo XMP biosynthesis (IMP, IDA): KEEP_AS_NON_CORE — downstream branch (IMP→XMP).</li>
+<li><code>GO:0070062</code> extracellular exosome (HDA): MARK_AS_OVER_ANNOTATED — bulk MS catalog, not a<br />
+  functional/biosynthetically meaningful localization for a cytosolic DNPS enzyme.</li>
+</ul>
+<p>Downstream-branch BPs (GMP/AMP/XMP) capture that loss of PFAS depletes all purine nucleotides<br />
+(acts_upstream_of_or_within is the correct qualifier), but the enzyme's own reaction is upstream at<br />
+the IMP-precursor step, so these are non-core. Per policy, experimental (IMP/IDA/HDA) annotations<br />
+whose full text is uncached are not REMOVEd.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O15067
+gene_symbol: PFAS
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  PFAS encodes phosphoribosylformylglycinamidine synthase (FGAM synthase; also called
+  FGAR amidotransferase, FGARAT; EC 6.3.5.3), the enzyme that carries out the fourth step
+  of de novo purine synthesis. It catalyses the ATP-dependent, glutamine-dependent
+  amidotransfer that converts formylglycinamide ribonucleotide (FGAR) to formylglycinamidine
+  ribonucleotide (FGAM), releasing L-glutamate, ADP and phosphate (FGAR + L-glutamine + ATP
+  + H2O -&gt; FGAM + L-glutamate + ADP + Pi). The multidomain protein combines an N-terminal
+  ATP-/Mg2+-dependent synthetase (PurL) region with a C-terminal class-I glutamine
+  amidotransferase (GATase-1) domain that hydrolyses glutamine to supply the transferred
+  amide nitrogen. The enzyme is cytosolic and can associate with the purinosome, the
+  reversible multi-enzyme assembly of de novo purine synthesis. As one of the six enzymes of
+  this housekeeping pathway it supplies the inosine monophosphate (IMP) precursor from which
+  AMP and GMP are subsequently made, and its activity is of interest in the elevated
+  nucleotide demand of proliferating and cancer cells.
+existing_annotations:
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetically inferred cytoplasmic localization for this cytosolic de novo purine
+      synthesis enzyme. Consistent with the UniProt subcellular location and with Reactome&#39;s
+      cytosol assignment.
+    action: ACCEPT
+    reason: &gt;-
+      PFAS is a soluble cytosolic enzyme with no membrane-spanning or targeting features; the
+      IBA cytoplasm annotation is correct, though the more specific cytosol term (GO:0005829)
+      is preferable as the primary localization.
+    supported_by:
+    - reference_id: file:human/PFAS/PFAS-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm&#34;
+    - reference_id: Reactome:R-HSA-73812
+      supporting_text: &gt;-
+        Fluoresence microscopy studies of cultured human cells have shown that the enzyme is
+        cytosolic
+- term:
+    id: GO:0004642
+    label: phosphoribosylformylglycinamidine synthase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetically inferred phosphoribosylformylglycinamidine synthase (FGAM synthase)
+      activity, the defining molecular function of PFAS and its orthologs across the FGAMS
+      family.
+    action: ACCEPT
+    reason: &gt;-
+      This is the core molecular function of PFAS, EC 6.3.5.3 (RHEA:17129), independently
+      supported by direct biochemical evidence (IDA) and by the conserved N-terminal PurL
+      synthetase plus C-terminal GATase-1 domain architecture in UniProt.
+    supported_by:
+    - reference_id: file:human/PFAS/PFAS-uniprot.txt
+      supporting_text: &#34;RecName: Full=Phosphoribosylformylglycinamidine synthase;&#34;
+    - reference_id: file:human/PFAS/PFAS-uniprot.txt
+      supporting_text: purines biosynthetic pathway. Catalyzes the ATP-dependent conversion of
+- term:
+    id: GO:0006164
+    label: purine nucleotide biosynthetic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetically inferred involvement in purine nucleotide biosynthesis, the pathway
+      to which the FGAM synthase reaction belongs.
+    action: ACCEPT
+    reason: &gt;-
+      Correct parent biological process. PFAS performs step four of de novo purine synthesis,
+      producing the IMP precursor from which purine nucleotides are made. This broad term is
+      accurate; the more specific &#39;de novo IMP biosynthetic process&#39; (GO:0006189) is also
+      annotated and captured as core.
+    supported_by:
+    - reference_id: PMID:10548741
+      supporting_text: &gt;-
+        phosphoribosylformylglycineamide amidotransferase (FGARAT) gene, which
+        encodes the fourth step of this pathway
+- term:
+    id: GO:0004642
+    label: phosphoribosylformylglycinamidine synthase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic assignment of FGAM synthase activity from InterPro/EC/RHEA mappings
+      (IPR010073, EC 6.3.5.3, RHEA:17129).
+    action: ACCEPT
+    reason: &gt;-
+      Correct and specific. The InterPro-to-GO and EC mappings identify the exact catalytic
+      function, in agreement with the IBA, TAS and IDA annotations of the same term.
+    supported_by:
+    - reference_id: file:human/PFAS/PFAS-uniprot.txt
+      supporting_text: &#34;RecName: Full=Phosphoribosylformylglycinamidine synthase;&#34;
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic cytoplasm localization from the UniProt subcellular-location keyword mapping
+      (SL-0086).
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with the manually asserted cytoplasmic/cytosolic localization; correct
+      though less specific than cytosol.
+    supported_by:
+    - reference_id: file:human/PFAS/PFAS-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm&#34;
+- term:
+    id: GO:0006189
+    label: &#34;&#39;de novo&#39; IMP biosynthetic process&#34;
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic assignment (InterPro IPR010073, UniPathway UPA00074) placing PFAS in the de
+      novo IMP biosynthetic pathway.
+    action: ACCEPT
+    reason: &gt;-
+      This is the specific and correct biological process for PFAS: the FGAR-&gt;FGAM step is
+      part of the de novo pathway that builds IMP. Concordant with the IDA and NAS annotations
+      of the same term.
+    supported_by:
+    - reference_id: file:human/PFAS/PFAS-uniprot.txt
+      supporting_text: &#34;IMP biosynthesis via de novo pathway&#34;
+    - reference_id: PMID:10548741
+      supporting_text: &gt;-
+        The de-novo
+        synthesis of purines requires 10 enzymatic steps for the production of inosine
+        monophosphate (IMP)
+- term:
+    id: GO:0006541
+    label: L-glutamine metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic annotation transferred from a rat ortholog (UniProtKB:D4AB17) capturing that
+      PFAS consumes L-glutamine as the amide-nitrogen donor for the amidotransfer reaction.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Biologically reasonable - the C-terminal glutamine amidotransferase (GATase-1) domain
+      hydrolyses glutamine to supply the transferred nitrogen, so PFAS participates in
+      glutamine catabolism as a side/co-substrate process. However this is a consequence of
+      the catalytic mechanism rather than the enzyme&#39;s core role, which is purine
+      (IMP-precursor) biosynthesis; retain as non-core.
+    supported_by:
+    - reference_id: file:human/PFAS/PFAS-uniprot.txt
+      supporting_text: &#34;ATP-binding; Cytoplasm; Glutamine amidotransferase; Ligase; Magnesium;&#34;
+- term:
+    id: GO:0009410
+    label: response to xenobiotic stimulus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic annotation transferred from a rat ortholog (UniProtKB:D4AB17,
+      ENSRNOP00000007087) via Ensembl Compara.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      This term reflects a downstream expression/response phenotype observed for the rodent
+      ortholog and does not describe the molecular or biosynthetic role of PFAS. For a
+      housekeeping de novo purine synthesis enzyme this is an over-annotation transferred
+      electronically from an ortholog; it is not a core function of human PFAS and there is no
+      direct evidence for it in this gene.
+- term:
+    id: GO:0009168
+    label: purine ribonucleoside monophosphate biosynthetic process
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-73817
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Reactome pathway-level assertion that PFAS participates in purine ribonucleoside
+      monophosphate (IMP) biosynthesis.
+    action: ACCEPT
+    reason: &gt;-
+      Correct pathway-level process. Reactome places the FGAR-&gt;FGAM reaction within the
+      pathway that assembles IMP on PRPP; equivalent in scope to the de novo IMP biosynthetic
+      process term.
+    supported_by:
+    - reference_id: Reactome:R-HSA-73817
+      supporting_text: &gt;-
+        The purine ribonucleotide inosine 5&#39;-monophosphate (IMP) is assembled on
+        5-phospho-alpha-D-ribose 1-diphosphate (PRPP)
+- term:
+    id: GO:0004642
+    label: phosphoribosylformylglycinamidine synthase activity
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-73812
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Reactome traceable assertion of FGAM synthase activity, citing the biochemically
+      characterized human enzyme reaction FGAR + L-glutamine + ATP + H2O -&gt; FGAM + L-glutamate
+      + ADP + Pi.
+    action: ACCEPT
+    reason: &gt;-
+      Core molecular function, supported by the purified/characterized human enzyme and
+      concordant with the IDA, IBA and IEA annotations of the same term.
+    supported_by:
+    - reference_id: Reactome:R-HSA-73812
+      supporting_text: &gt;-
+        is catalyzed by phosphoribosylformylglycinamidine
+        synthetase.  The human enzyme has been purified and characterized biochemically
+- term:
+    id: GO:0004642
+    label: phosphoribosylformylglycinamidine synthase activity
+  evidence_type: IMP
+  original_reference_id: PMID:27590927
+  qualifier: enables
+  review:
+    summary: &gt;-
+      FGAM synthase activity inferred from a CRISPR-Cas9 PFAS knockout in HeLa cells, in which
+      loss of the enzyme causes accumulation of its substrate.
+    action: ACCEPT
+    reason: &gt;-
+      MGI experimental (IMP) annotation. The knockout phenotype - accumulation of the enzyme&#39;s
+      substrate - directly implicates PFAS in the FGAR-&gt;FGAM step, supporting the core
+      molecular function. The cached record is abstract-only; the full text (which the curator
+      read) assays this DNPS step. Concordant with the independent IDA annotation.
+    supported_by:
+    - reference_id: PMID:27590927
+      supporting_text: &gt;-
+        In all model cell lines with the exception
+        of one, an accumulation of the substrate(s) for the knocked out enzyme was
+        identified
+- term:
+    id: GO:0006177
+    label: GMP biosynthetic process
+  evidence_type: IMP
+  original_reference_id: PMID:27590927
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: &gt;-
+      From the CRISPR knockout study; loss of PFAS depletes de novo purine synthesis and
+      thereby the downstream GMP branch.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      PFAS acts upstream of GMP synthesis - it makes the IMP precursor, from which GMP is
+      subsequently derived - so the acts_upstream_of_or_within qualifier is appropriate. It is
+      not itself a GMP-biosynthesis enzyme, so this is a valid but non-core downstream-branch
+      annotation.
+    supported_by:
+    - reference_id: PMID:27590927
+      supporting_text: &gt;-
+        CRISPR-Cas9 genome-edited HeLa
+        cells deficient for the individual steps
+        of DNPS
+- term:
+    id: GO:0006189
+    label: &#34;&#39;de novo&#39; IMP biosynthetic process&#34;
+  evidence_type: IMP
+  original_reference_id: PMID:27590927
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: &gt;-
+      CRISPR knockout evidence that PFAS is required for de novo IMP biosynthesis, the pathway
+      it directly participates in.
+    action: ACCEPT
+    reason: &gt;-
+      Core biological process, experimentally supported. Loss of PFAS blocks flux through de
+      novo purine synthesis toward IMP; concordant with the involved_in IDA/NAS annotations of
+      the same term.
+    supported_by:
+    - reference_id: PMID:27590927
+      supporting_text: &gt;-
+        DNPS includes ten reactions catalysed by six enzymes.
+- term:
+    id: GO:0044208
+    label: &#34;&#39;de novo&#39; AMP biosynthetic process&#34;
+  evidence_type: IMP
+  original_reference_id: PMID:27590927
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: &gt;-
+      From the CRISPR knockout study; loss of PFAS depletes de novo purine synthesis and
+      thereby the downstream AMP branch.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      PFAS acts upstream of AMP synthesis by supplying the shared IMP precursor; the
+      acts_upstream_of_or_within qualifier is correct. It is not itself an AMP-biosynthesis
+      enzyme, so this is a valid but non-core downstream-branch annotation.
+    supported_by:
+    - reference_id: PMID:27590927
+      supporting_text: &gt;-
+        CRISPR-Cas9 genome-edited HeLa
+        cells deficient for the individual steps
+        of DNPS
+- term:
+    id: GO:0097294
+    label: &#34;&#39;de novo&#39; XMP biosynthetic process&#34;
+  evidence_type: IMP
+  original_reference_id: PMID:27590927
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: &gt;-
+      From the CRISPR knockout study; loss of PFAS depletes de novo purine synthesis and
+      thereby the downstream XMP branch.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      PFAS acts upstream of XMP synthesis by supplying the shared IMP precursor; the
+      acts_upstream_of_or_within qualifier is correct. It is not itself an XMP-biosynthesis
+      enzyme, so this is a valid but non-core downstream-branch annotation.
+    supported_by:
+    - reference_id: PMID:27590927
+      supporting_text: &gt;-
+        CRISPR-Cas9 genome-edited HeLa
+        cells deficient for the individual steps
+        of DNPS
+- term:
+    id: GO:0097294
+    label: &#34;&#39;de novo&#39; XMP biosynthetic process&#34;
+  evidence_type: IDA
+  original_reference_id: PMID:27590927
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Direct-assay (IDA) annotation to the downstream de novo XMP branch, from the DNPS
+      substrate-accumulation study.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      With the involved_in qualifier this term is arguably too downstream for PFAS, whose
+      direct reaction produces the IMP precursor rather than XMP. The corresponding
+      acts_upstream_of_or_within annotation captures the relationship more accurately. Retained
+      as non-core; deferring to the MGI curator&#39;s full-text reading rather than removing an
+      experimental annotation.
+    supported_by:
+    - reference_id: PMID:27590927
+      supporting_text: &gt;-
+        an accumulation of the substrate(s) for the knocked out enzyme was
+        identified
+- term:
+    id: GO:0004642
+    label: phosphoribosylformylglycinamidine synthase activity
+  evidence_type: IDA
+  original_reference_id: PMID:27590927
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct experimental evidence for FGAM synthase activity from the CRISPR/substrate-
+      accumulation study.
+    action: ACCEPT
+    reason: &gt;-
+      Core molecular function with direct experimental support; concordant with the IMP, IBA,
+      IEA and Reactome-TAS annotations of the same term.
+    supported_by:
+    - reference_id: PMID:27590927
+      supporting_text: &gt;-
+        an accumulation of the substrate(s) for the knocked out enzyme was
+        identified
+- term:
+    id: GO:0006177
+    label: GMP biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:27590927
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Direct-assay (IDA) involved_in annotation to the downstream GMP branch.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      As with the AMP/XMP branch terms, PFAS supplies the upstream IMP precursor rather than
+      catalysing GMP synthesis; the acts_upstream_of_or_within relationship is more accurate
+      than involved_in. Retained as non-core; not removed, as this is an experimental
+      annotation whose full text the curator read.
+    supported_by:
+    - reference_id: PMID:27590927
+      supporting_text: &gt;-
+        an accumulation of the substrate(s) for the knocked out enzyme was
+        identified
+- term:
+    id: GO:0006189
+    label: &#34;&#39;de novo&#39; IMP biosynthetic process&#34;
+  evidence_type: IDA
+  original_reference_id: PMID:27590927
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Direct-assay evidence that PFAS is involved in de novo IMP biosynthesis.
+    action: ACCEPT
+    reason: &gt;-
+      Core biological process. This is the pathway PFAS directly participates in (step four),
+      and involved_in is the correct qualifier. Concordant with the IEA, NAS and Reactome
+      annotations.
+    supported_by:
+    - reference_id: PMID:27590927
+      supporting_text: &gt;-
+        DNPS includes ten reactions catalysed by six enzymes.
+- term:
+    id: GO:0044208
+    label: &#34;&#39;de novo&#39; AMP biosynthetic process&#34;
+  evidence_type: IDA
+  original_reference_id: PMID:27590927
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Direct-assay (IDA) involved_in annotation to the downstream de novo AMP branch.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      PFAS makes the shared IMP precursor upstream of AMP synthesis; involved_in is arguably
+      too downstream, and the acts_upstream_of_or_within annotation captures the relationship
+      better. Retained as valid but non-core; not removed given experimental support.
+    supported_by:
+    - reference_id: PMID:27590927
+      supporting_text: &gt;-
+        an accumulation of the substrate(s) for the knocked out enzyme was
+        identified
+- term:
+    id: GO:0070062
+    label: extracellular exosome
+  evidence_type: HDA
+  original_reference_id: PMID:20458337
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput MS detection of PFAS among 539 proteins in the total proteome of
+      purified B-cell-derived exosomes.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      This is a bulk mass-spectrometry catalog of an exosome preparation, not a targeted or
+      functionally meaningful localization for a cytosolic de novo purine synthesis enzyme.
+      Abundant cytosolic proteins are routinely detected in such exosome proteomes; there is
+      no evidence of a functional role for PFAS in exosomes. Over-annotation - the enzyme acts
+      in the cytosol.
+    supported_by:
+    - reference_id: PMID:20458337
+      supporting_text: &gt;-
+        we first analyzed the total
+        proteome of highly purified B cell-derived exosomes using sensitive and accurate
+        mass spectrometry (MS), and identified 539 proteins
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-73812
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome traceable assertion that the enzyme is cytosolic, from fluorescence microscopy
+      of cultured human cells.
+    action: ACCEPT
+    reason: &gt;-
+      Most specific and accurate cellular-component annotation for PFAS. Cytosolic
+      localization is consistent with the enzyme&#39;s role in de novo purine synthesis and with
+      its reversible association with the cytosolic purinosome.
+    supported_by:
+    - reference_id: Reactome:R-HSA-73812
+      supporting_text: &gt;-
+        Fluoresence microscopy studies of cultured human cells have
+        shown that the enzyme is cytosolic
+- term:
+    id: GO:0004642
+    label: phosphoribosylformylglycinamidine synthase activity
+  evidence_type: IDA
+  original_reference_id: PMID:10548741
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct experimental evidence for FGAM synthase (FGARAT) activity: the human genomic
+      clone corrects the purine auxotrophy and enzyme/protein deficiency of AdeB CHO mutants
+      that lack FGARAT.
+    action: ACCEPT
+    reason: &gt;-
+      Core molecular function established by functional complementation. Restoring FGARAT
+      activity in an enzyme-deficient mammalian cell line directly demonstrates the catalytic
+      function of the encoded protein.
+    supported_by:
+    - reference_id: PMID:10548741
+      supporting_text: &gt;-
+        The P1 clone corrects the purine auxotrophy and protein deficiency of Chinese
+        hamster ovary (CHO) cell mutants (AdeB) deficient in both the activity and the
+        protein for FGARAT.
+- term:
+    id: GO:0006189
+    label: &#34;&#39;de novo&#39; IMP biosynthetic process&#34;
+  evidence_type: NAS
+  original_reference_id: PMID:10548741
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Non-traceable author statement placing FGARAT/PFAS as the fourth of the ten enzymatic
+      steps producing IMP by de novo purine synthesis.
+    action: ACCEPT
+    reason: &gt;-
+      Core biological process, consistent with the specific and correct pathway role of PFAS
+      and concordant with the IEA/IDA annotations of the same term.
+    supported_by:
+    - reference_id: PMID:10548741
+      supporting_text: &gt;-
+        phosphoribosylformylglycineamide amidotransferase (FGARAT) gene, which
+        encodes the fourth step of this pathway
+core_functions:
+- description: &gt;-
+    Phosphoribosylformylglycinamidine synthase (FGAM synthase, FGARAT; EC 6.3.5.3): the
+    ATP- and glutamine-dependent amidotransferase catalysing step four of de novo purine
+    synthesis, converting FGAR to FGAM.
+  molecular_function:
+    id: GO:0004642
+    label: phosphoribosylformylglycinamidine synthase activity
+  directly_involved_in:
+  - id: GO:0006189
+    label: &#34;&#39;de novo&#39; IMP biosynthetic process&#34;
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: file:human/PFAS/PFAS-uniprot.txt
+    supporting_text: &#34;RecName: Full=Phosphoribosylformylglycinamidine synthase;&#34;
+  - reference_id: PMID:10548741
+    supporting_text: &gt;-
+      phosphoribosylformylglycineamide amidotransferase (FGARAT) gene, which
+      encodes the fourth step of this pathway
+- description: &gt;-
+    Participation in purine nucleotide biosynthesis: by producing the FGAM intermediate en
+    route to IMP, PFAS provides the precursor for downstream AMP and GMP synthesis.
+  molecular_function:
+    id: GO:0004642
+    label: phosphoribosylformylglycinamidine synthase activity
+  directly_involved_in:
+  - id: GO:0006164
+    label: purine nucleotide biosynthetic process
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: Reactome:R-HSA-73812
+    supporting_text: &gt;-
+      is catalyzed by phosphoribosylformylglycinamidine
+      synthetase.  The human enzyme has been purified and characterized biochemically
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:10548741
+  title: &#39;Human phosphoribosylformylglycineamide amidotransferase (FGARAT): regional
+    mapping, complete coding sequence, isolation of a functional genomic clone, and
+    DNA sequence analysis.&#39;
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Cloning/complementation paper for human FGARAT/PFAS; establishes the enzyme as step
+      four of de novo purine synthesis and demonstrates catalytic function by AdeB CHO
+      complementation. Source of the IDA MF and NAS BP annotations. Abstract-only in cache.
+- id: PMID:20458337
+  title: MHC class II-associated proteins in B-cell exosomes and potential functional
+    implications for exosome biogenesis.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      B-cell exosome proteomics (539 proteins). PFAS is a bulk-catalog hit; supports only the
+      over-annotated extracellular-exosome CC, not a functional role.
+- id: PMID:27590927
+  title: CRISPR-Cas9 induced mutations along de novo purine synthesis in HeLa cells
+    result in accumulation of individual enzyme substrates and affect purinosome formation.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      CRISPR knockouts of individual DNPS enzymes in HeLa; substrate accumulation and impaired
+      purinosome assembly. Source of the MGI IMP/IDA annotations. Abstract frames DNPS at the
+      pathway level without naming PFAS; full text (uncached) assays the FGAR-AT step, so
+      deferring to the MGI curator.
+- id: Reactome:R-HSA-73812
+  title: FGAR + L-Glutamine + ATP + H2O =&gt; FGAM + L-Glutamate + ADP + Pi
+  findings: []
+- id: Reactome:R-HSA-73817
+  title: Purine ribonucleoside monophosphate biosynthesis
+  findings: []
+- id: file:human/PFAS/PFAS-uniprot.txt
+  title: UniProtKB entry O15067 (PUR4_HUMAN), phosphoribosylformylglycinamidine synthase
+  findings: []
+suggested_questions:
+- question: &gt;-
+    Does PFAS have any moonlighting or regulatory function beyond de novo purine synthesis
+    (e.g. in stress-granule/CD-CODE contexts or via its multiple phosphosites)?
+- question: &gt;-
+    How does purinosome association modulate PFAS flux, and is the enzyme rate-limiting under
+    conditions of high purine demand such as tumor proliferation?
+suggested_experiments:
+- description: &gt;-
+    Quantitative metabolic-flux analysis (LC-MS/MS of FGAR vs FGAM) in PFAS-null versus
+    rescued cells to confirm the in vivo FGAR-&gt;FGAM step and measure control strength.
+- description: &gt;-
+    Phospho-site mutagenesis (Ser215/Ser569/Thr619/Thr623) to test whether phosphorylation
+    regulates PFAS activity or purinosome recruitment.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

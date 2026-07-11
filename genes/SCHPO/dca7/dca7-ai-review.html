@@ -1,0 +1,2740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dca7 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>dca7</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O74763" target="_blank" class="term-link">
+                        O74763
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Schizosaccharomyces pombe (strain 972 / ATCC 24843)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "dca7";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O74763" data-a="DESCRIPTION: dca7 (systematic name SPBC17D11.08) is an uncharac..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>dca7 (systematic name SPBC17D11.08) is an uncharacterized WD40 repeat-containing protein of the fission yeast Schizosaccharomyces pombe. Its sequence comprises multiple WD40 repeats predicted to fold into a beta-propeller and it carries the DCAF7-like domain signature (InterPro IPR045159), identifying it as the fission yeast ortholog of the animal DCAF7/WDR68/HAN11 protein and of S. cerevisiae YPL247C; it is a predominantly single-copy protein conserved across fungi and metazoa. The protein has no recognizable catalytic, transmembrane, or signal domain, consistent with a non-enzymatic scaffold/adaptor architecture. In a genome-wide GFP-tagging survey the protein was localized to the cytoplasm and the Golgi apparatus, and it is phosphorylated on serine residues. Its molecular function and the biological process it participates in have not been experimentally determined in S. pombe; deletion of the gene is viable. Animal orthologs act as WD40 scaffolds/adaptors for DYRK-family kinases and have been reported to serve as substrate receptors for the CUL4-DDB1 (CRL4) ubiquitin ligase, but no such role has been demonstrated for the fission yeast protein.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O74763" data-a="GO:0005634" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically inferred (IBA) nuclear localization propagated within PANTHER family PTHR19919 (DCAF7/WDR68). Animal DCAF7 is nucleocytoplasmic and its nuclear pool is functionally important, so a nuclear location is phylogenetically plausible, and PomBase independently carries this cellular component. However, the one direct S. pombe localization dataset (PMID:16823372) reported cytoplasm and Golgi, not nucleus, so this remains an inference. Retained as a plausible, non-core localization annotation; it does not describe a molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> IBA localization consistent with the family and independently curated by PomBase, but it is a location rather than a core function and is not directly demonstrated in S. pombe.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:SCHPO/dca7/dca7-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">DCAF7/WDR68 localizes to both the nucleus and cytoplasm, with its distribution regulated by its kinase binding partners.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O74763" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasmic localization mapped by UniProt from the Subcellular Location vocabulary. It is underpinned by an experimental S. pombe datum: the genome-wide GFP/YFP localization survey (PMID:16823372), recorded in UniProt as &#34;Cytoplasm {ECO:0000269|PubMed:16823372}&#34;. A well-supported localization, but a location rather than a molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Localization is experimentally supported (via UniProt ECO:0000269|PubMed:16823372) but is non-core; it does not describe what the protein does.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    UniProt:O74763
+
+                                </span>
+
+                                <div class="support-text">Cytoplasm {ECO:0000269|PubMed:16823372}</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005794" target="_blank" class="term-link">
+                                    GO:0005794
+                                </a>
+                            </span>
+                            <span class="term-label">Golgi apparatus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O74763" data-a="GO:0005794" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Golgi localization mapped by UniProt from the Subcellular Location vocabulary, derived from the same single high-throughput GFP/YFP survey (PMID:16823372; UniProt &#34;Golgi apparatus {ECO:0000269|PubMed:16823372}&#34;). A WD40 scaffold/adaptor is not an obvious Golgi resident and this single-method observation may reflect a minor or secondary pool; it should be treated with caution and is not corroborated by any interaction or functional evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Retained because it derives from an experimental localization dataset, but flagged as weakly supported (single high-throughput method, no corroboration) and non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    UniProt:O74763
+
+                                </span>
+
+                                <div class="support-text">GO:0005794; C:Golgi apparatus; IEA:UniProtKB-SubCell.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003674" target="_blank" class="term-link">
+                                    GO:0003674
+                                </a>
+                            </span>
+                            <span class="term-label">molecular_function</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O74763" data-a="GO:0003674" data-r="GO_REF:0000015" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root molecular_function term with the ND (&#34;No biological Data&#34;) evidence code, the PomBase convention for a gene whose molecular function has not been experimentally determined. For dca7 this is an accurate statement of the current state of knowledge: no primary study has assigned it a molecular activity in S. pombe. Retained as the honest placeholder marking a genuine molecular-function knowledge gap (see knowledge_gaps).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ND correctly encodes that the molecular function of this dark gene is unknown; it is not a substantive term to replace or remove.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008150" target="_blank" class="term-link">
+                                    GO:0008150
+                                </a>
+                            </span>
+                            <span class="term-label">biological_process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O74763" data-a="GO:0008150" data-r="GO_REF:0000015" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root biological_process term with the ND evidence code, indicating that no biological process has been experimentally assigned to dca7 in S. pombe. Deletion is viable and only broad, non-specific stress-screen phenotypes are recorded, so no defensible specific BP annotation can be made. Retained as the honest placeholder marking a genuine biological-process knowledge gap.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ND correctly encodes that the biological process of this dark gene is unknown; it is not a substantive term to replace or remove.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0080008" target="_blank" class="term-link">
+                                    GO:0080008
+                                </a>
+                            </span>
+                            <span class="term-label">Cul4-RING E3 ubiquitin ligase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O74763" data-a="GO:0080008" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Complex membership inferred by sequence similarity (ISS) from the human ortholog DCAF7 (UniProt P61962), which has been described as a substrate receptor of the CUL4-DDB1 (CRL4) E3 ubiquitin ligase. This is a defensible orthology-based inference given the shared DCAF7-like WD40 architecture, and it is a curator ISS transfer from a legitimate ortholog, so it is not removed. However, two caveats keep it non-core: (i) there is no S. pombe evidence that dca7 assembles into a CUL4 complex (the established fission-yeast DCAFs are Cdt2 in canonical CRL4 and Raf1/Dos1 in the CLRC heterochromatin complex; dca7 is a distinct DCAF7-like protein), and (ii) even for the human ortholog the bona fide CRL4 substrate-receptor role is debated relative to its better-established DYRK-kinase scaffold role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Legitimate ISS transfer from human DCAF7; retained but marked non-core because it is an orthology inference with no local S. pombe evidence and rests on a family role that is itself contested.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:SCHPO/dca7/dca7-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">DCAF7 functions as a substrate recognition subunit (substrate receptor) of the CUL4-DDB1-ROC1 (CRL4) E3 ubiquitin ligase complex</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000015.md" target="_blank" class="term-link">
+                            GO_REF:0000015
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Use of the ND evidence code for Gene Ontology (GO) terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        UniProt:O74763
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Uncharacterized WD repeat-containing protein C17D11.08 (dca7, SPBC17D11.08), Schizosaccharomyces pombe</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16823372" target="_blank" class="term-link">
+                            PMID:16823372
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">ORFeome cloning and global analysis of protein localization in the fission yeast Schizosaccharomyces pombe.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18257517" target="_blank" class="term-link">
+                            PMID:18257517
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Phosphoproteome analysis of fission yeast.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:SCHPO/dca7/dca7-deep-research-falcon.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Deep research report: dca7 (SPBC17D11.08) as a DCAF7-like WD40 protein</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does S. pombe Dca7 bind a DYRK/Yak-family kinase, as its orthologs YPL247C (with Yak1) and C. albicans Orf19.384 (with Yak1) do, thereby establishing a conserved fungal DCAF7-kinase module?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O74763" data-a="Q: Does S. pombe Dca7 bind a DYRK/Yak-family kinase, ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does Dca7 physically associate with the S. pombe Cul4 (Pcu4)/Ddb1 machinery, or is the ISS-transferred CUL4-RING E3 ubiquitin ligase complex membership not realized in fission yeast?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O74763" data-a="Q: Does Dca7 physically associate with the S. pombe C..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is the Golgi localization observed in the genome-wide GFP survey a genuine steady-state pool or a tagging/overexpression artifact, given that a WD40 scaffold has no obvious Golgi role?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O74763" data-a="Q: Is the Golgi localization observed in the genome-w..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Affinity purification of a functional epitope-tagged Dca7 from S. pombe followed by mass spectrometry to define its in vivo interactome, with reciprocal tagging/co-IP validation of the top hits and comparison against candidate DYRK/Yak kinases and Cul4/Ddb1 subunits.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Dca7 functions as a WD40 scaffold/adaptor that binds a specific fission-yeast partner protein (candidate: a DYRK/Yak-family kinase), analogous to the conserved DCAF7-DYRK module.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: affinity purification-mass spectrometry (AP-MS) interactome mapping</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O74763" data-a="EXPERIMENT: Affinity purification of a functional epitope-tagg..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Systematic phenotypic profiling of a dca7 deletion strain (growth, stress panels, quiescence survival, and transcriptome/RNA-seq) alongside a WD40 propeller-surface point mutant to test whether phenotypes depend on the protein-binding surface, and epistasis analysis with candidate kinase and Cul4/Ddb1 partners.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Dca7 contributes to a specific biological process (e.g. gene expression or a stress pathway) despite being non-essential.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: reverse-genetics phenotyping, transcriptomics, and epistasis analysis</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O74763" data-a="EXPERIMENT: Systematic phenotypic profiling of a dca7 deletion..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The molecular function of S. pombe dca7 (SPBC17D11.08) is undetermined: it is not known which protein(s) its WD40 beta-propeller binds in fission yeast, whether it acts as a kinase scaffold, a ubiquitin-ligase substrate receptor, or in some other adaptor capacity, and no direct activity or binding partner has been experimentally established.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Firmly established: the protein exists, is a phosphorylated WD40-repeat protein with a DCAF7-like domain (InterPro IPR045159), is conserved one-to-one across fungi and metazoa, localizes to the cytoplasm and Golgi in a genome-wide GFP survey, and its deletion is viable. Its animal ortholog DCAF7/WDR68 is a catalytically inactive scaffold/adaptor for DYRK-family kinases with a debated CRL4 substrate-receptor role. What is unknown is any S. pombe-specific molecular partner or activity.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> dca7 belongs to a deeply conserved, single-copy protein family with important roles in animal signaling and development (DYRK1A/HIPK2 regulation, transcription, DNA-repair protein turnover). A defined fission-yeast function would clarify the ancestral, pre-metazoan role of the DCAF7/WDR68 scaffold and whether the DYRK-partner or CUL4-receptor role is the conserved core.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Affinity purification-mass spectrometry of tagged Dca7 to identify its fission-yeast interactome (testing for association with a DYRK/Yak-family kinase and/or with Cul4/Ddb1); reciprocal tagging of candidate partners; and phenotypic profiling of a dca7 deletion under conditions where DCAF7-family functions are relevant (stress signaling, DNA damage).</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"No primary literature was identified that directly characterizes SPBC17D11.08/dca7 in *S. pombe*"</em> — file:SCHPO/dca7/dca7-deep-research-falcon.md</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The biological process dca7 participates in within S. pombe is unknown. PomBase records the biological process as ND, deletion is viable, and only broad, non-specific high-throughput stress-resistance/sensitivity and quiescence-survival phenotypes are catalogued, none of which pin the gene to a specific pathway.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">BP_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Established: dca7 deletion is viable and the gene appears in numerous genome-wide phospho/phenomic datasets, and it has high-throughput physical-interaction hits (with the chromatin remodeler fft3 by affinity capture-MS, and with the kinase ppk15 by two-hybrid). Unknown: whether any of these reflect a real, dedicated biological role, and what pathway dca7 belongs to.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Assigning a biological process would move dca7 out of the fission-yeast &#34;conserved unknown&#34; set and could reveal whether the DCAF7/WDR68 scaffold has a conserved role in a specific pathway (e.g. gene expression, as suggested by the PomBase product line) predating its elaboration in animals.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Directed phenotyping of a dca7 deletion (and of a WD40-surface point mutant) in the processes where orthologs act, combined with epistasis against candidate kinase or Cul4/Ddb1 partners; transcriptome analysis to test the &#34;implicated in gene expression&#34; hypothesis.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"The specific SPBC17D11.08 protein is uncharacterized"</em> — file:SCHPO/dca7/dca7-deep-research-falcon.md</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(dca7-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O74763" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Research Report: dca7 (SPBC17D11.08) in *Schizosaccharomyces pombe* — A DCAF7-like WD40 Repeat Protein</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">31 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-06T17:24:02.643934</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="dca7-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="dca7-deep-research-falcon_artifacts/artifact-01.md" class="term-link">Edison artifact artifact-01</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="research-report-dca7-spbc17d1108-in-schizosaccharomyces-pombe-a-dcaf7-like-wd40-repeat-protein">Research Report: dca7 (SPBC17D11.08) in <em>Schizosaccharomyces pombe</em> — A DCAF7-like WD40 Repeat Protein</h1>
+<h2 id="1-gene-and-protein-identity">1. Gene and Protein Identity</h2>
+<p>The gene <em>dca7</em> (systematic name SPBC17D11.08) in the fission yeast <em>Schizosaccharomyces pombe</em> (strain 972 / ATCC 24843) encodes a protein of predicted DCAF7-like function (UniProt accession O74763). The protein is annotated as an "uncharacterized WD repeat-containing protein" and possesses multiple WD40 repeats (InterPro: IPR001680, IPR019775), a WD40/YVTN repeat-like domain superfold (IPR015943, IPR036322), and critically, a DCAF7-like domain (IPR045159). This domain architecture strongly identifies it as the fission yeast ortholog of the well-characterized mammalian DCAF7/WDR68/HAN11 protein. In <em>Saccharomyces cerevisiae</em>, the DCAF7 ortholog is Ypl247c (ananthapadmanabhan2023insightsfromthe pages 6-7, glenewinkel2016theadaptorprotein pages 8-10), and in <em>Candida albicans</em>, it is Orf19.384 (pinsky2024geneticanalysisof pages 1-2, pinsky2024geneticanalysisof pages 6-9).</p>
+<p><strong>Important caveat:</strong> No primary literature was identified that directly characterizes SPBC17D11.08/dca7 in <em>S. pombe</em>. The functional annotation presented here is inferred from the extensively characterized orthologs in other organisms, supported by the conserved domain architecture and the deep evolutionary conservation of the DCAF7 protein family across eukaryotes.</p>
+<h2 id="2-protein-structure">2. Protein Structure</h2>
+<p>The mammalian DCAF7/WDR68 protein is a 342 amino acid protein containing five WD40 repeats that fold into a seven-blade β-propeller structure (yousefelahiyeh2018dcaf7wdr68isrequired pages 1-2). This β-propeller fold is characteristic of WD40 domain proteins and provides a large, versatile surface for mediating multiple protein-protein interactions simultaneously (glenewinkel2016theadaptorprotein pages 10-12). DCAF7 possesses no intrinsic catalytic activity; rather, it functions exclusively as a scaffolding and adaptor protein (glenewinkel2016theadaptorprotein pages 1-2). The WD40 domain contains conserved WDxR motifs, which are positioned on the solvent-exposed bottom surface of the propeller and are critical for binding to DDB1, the adaptor subunit of the CUL4-based E3 ubiquitin ligase complex (lee2007dcafsthemissing pages 2-3, buscaino2012raf1isa pages 4-6). The <em>S. pombe</em> protein SPBC17D11.08 is predicted to adopt a similar β-propeller architecture based on domain annotations.</p>
+<h2 id="3-primary-functions-dual-roles-as-crl4-substrate-receptor-and-dyrk-kinase-scaffold">3. Primary Functions: Dual Roles as CRL4 Substrate Receptor and DYRK Kinase Scaffold</h2>
+<p>The DCAF7 family proteins have two major and well-established molecular functions:</p>
+<h3 id="31-substrate-receptor-for-cul4-ddb1-crl4-e3-ubiquitin-ligase">3.1 Substrate Receptor for CUL4-DDB1 (CRL4) E3 Ubiquitin Ligase</h3>
+<p>DCAF7 functions as a substrate recognition subunit (substrate receptor) of the CUL4-DDB1-ROC1 (CRL4) E3 ubiquitin ligase complex (lee2007dcafsthemissing pages 1-2, higa2007stealingthespotlight pages 1-2). In this role, DCAF7 directly binds DDB1 through its WDxR motifs and recruits specific protein substrates for ubiquitination and subsequent proteasomal degradation. The known substrates targeted by DCAF7 through the CRL4 complex include:</p>
+<ul>
+<li>
+<p><strong>DNA Ligase I (LigI):</strong> DCAF7 directly interacts with human DNA Ligase I and targets it for ubiquitylation at four lysine residues (K79, K192, K226, K376), promoting its proteasomal degradation particularly during growth arrest induced by serum starvation (peng2016humandnaligase pages 5-6).</p>
+</li>
+<li>
+<p><strong>Menin:</strong> DCAF7 facilitates the ubiquitylation and degradation of menin, an essential component of the KMT2A and KMT2B H3K4 methyltransferase complexes, through CRL4B. This is relevant to leukemia biology as menin-dependent KMT2A fusion proteins drive acute myeloid and lymphoblastic leukemias (nakagawa2025cul4basedubiquitinligases pages 14-15).</p>
+</li>
+<li>
+<p><strong>ERCC1-XPF:</strong> DCAF7 is required for maintaining cellular levels of the ERCC1-XPF heterodimer, which is essential for nucleotide excision repair (NER). Depletion of DCAF7 causes time-dependent downregulation of ERCC1-XPF and suppresses NER activity, impairing repair of UV-induced DNA damage, although this role appears partly independent of the canonical CUL4-DDB1 pathway (kawara2019dcaf7isrequired pages 5-7).</p>
+</li>
+<li>
+<p><strong>Influenza A virus PA subunit:</strong> DCAF7 acts as a substrate receptor for CRL4B to promote K48-linked polyubiquitination of the viral polymerase subunit PA at K609, targeting it for degradation and thereby restricting influenza A virus replication (higa2007stealingthespotlight pages 1-2).</p>
+</li>
+</ul>
+<h3 id="32-scaffolding-protein-for-dyrk-family-kinases">3.2 Scaffolding Protein for DYRK-Family Kinases</h3>
+<p>The second major function of DCAF7 is as a scaffold/adaptor for dual-specificity tyrosine phosphorylation-regulated kinases (DYRKs), particularly DYRK1A and DYRK1B (class 1 DYRKs), as well as HIPK2 (glenewinkel2016theadaptorprotein pages 1-2, glenewinkel2016theadaptorprotein pages 2-3, glenewinkel2016theadaptorprotein pages 8-10). DCAF7 binds to a conserved 12-amino acid motif (residues 93–104 in human DYRK1A) in the N-terminal domain of class 1 DYRKs, independently of kinase activity (glenewinkel2016theadaptorprotein pages 8-10, glenewinkel2016theadaptorprotein pages 3-5). This interaction is essential for:</p>
+<ul>
+<li>
+<p><strong>Protein stability:</strong> DCAF7 is required for maintaining normal cellular levels of DYRK1A and DYRK1B. Loss of DCAF7 leads to reduced DYRK1A protein levels through a mechanism that appears independent of proteasome-mediated degradation (yousefelahiyeh2018dcaf7wdr68isrequired pages 1-2, yu2019acomplexbetween pages 4-5).</p>
+</li>
+<li>
+<p><strong>Substrate recruitment and kinase activity:</strong> DCAF7 tethers DYRK1A to its substrates. A critical example is the DYRK1A-DCAF7 complex's role in phosphorylating the C-terminal domain (CTD) of RNA Polymerase II at both Ser2 and Ser5 positions. DCAF7 independently binds Pol II and greatly enhances the DYRK1A-Pol II interaction, enabling the kinase to co-migrate with Pol II along gene loci and promote transcription of myogenic genes including <em>MYOG</em>, <em>MYH2</em>, and <em>CAV3</em> (yu2019acomplexbetween pages 1-1, yu2019acomplexbetween pages 5-5, yu2019acomplexbetween pages 7-8, yu2019acomplexbetween pages 4-5).</p>
+</li>
+<li>
+<p><strong>Signal integration:</strong> DCAF7 also mediates the interaction of the adenovirus E1A oncoprotein with DYRK1A and HIPK2, forming ternary complexes that enable E1A hyperphosphorylation (glenewinkel2016theadaptorprotein pages 8-10, glenewinkel2016theadaptorprotein pages 3-5).</p>
+</li>
+</ul>
+<p>The following table summarizes the dual functional roles of DCAF7/WDR68 across organisms:</p>
+<table>
+<thead>
+<tr>
+<th>Organism/System</th>
+<th>Function/Role</th>
+<th>Mechanism</th>
+<th>Known Substrates/Interactors</th>
+<th>Biological Process</th>
+<th>Key References</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Human</td>
+<td>CRL4 substrate receptor (DCAF7)</td>
+<td>WD40 protein acting as a substrate-recognition factor for CUL4-DDB1 E3 ligase; directly binds DNA ligase I and promotes its ubiquitylation and proteasomal degradation</td>
+<td>DNA ligase I (LigI); CUL4; DDB1</td>
+<td>DNA replication/repair protein turnover, especially during proliferation arrest or serum starvation</td>
+<td>(peng2016humandnaligase pages 5-6, yousefelahiyeh2018dcaf7wdr68isrequired pages 1-2)</td>
+</tr>
+<tr>
+<td>Human</td>
+<td>Regulator of ERCC1-XPF stability linked to DNA repair</td>
+<td>Maintains ERCC1-XPF protein levels and supports nucleotide excision repair; effect appears at least partly independent of canonical CUL4-DDB1 activity</td>
+<td>ERCC1-XPF</td>
+<td>Nucleotide excision repair and UV-damage response</td>
+<td>(kawara2019dcaf7isrequired pages 5-7)</td>
+</tr>
+<tr>
+<td>Human</td>
+<td>Putative/validated CRL4B substrate receptor in chromatin regulation</td>
+<td>Functions in CRL4B complexes that control chromatin regulators; reported to promote ubiquitylation/degradation of menin and implicated in KDM6B regulation</td>
+<td>Menin; KDM6B; CRL4B components</td>
+<td>Histone methylation control, transcriptional regulation, leukemia-relevant chromatin pathways</td>
+<td>(nakagawa2025cul4basedubiquitinligases pages 14-15)</td>
+</tr>
+<tr>
+<td>Human</td>
+<td>CRL4B antiviral substrate receptor</td>
+<td>Recruits influenza A viral PA polymerase subunit to CRL4B for K48-linked polyubiquitylation and degradation</td>
+<td>Influenza A PA; CUL4B; DDB1</td>
+<td>Host antiviral defense against influenza A virus</td>
+<td>(higa2007stealingthespotlight pages 1-2)</td>
+</tr>
+<tr>
+<td>Human</td>
+<td>DYRK1A/DYRK1B kinase scaffold</td>
+<td>Stable WD40 scaffold that binds the N-terminus of class 1 DYRKs, stabilizes kinase abundance, and recruits substrates</td>
+<td>DYRK1A; DYRK1B</td>
+<td>Developmental signaling, protein stability, proliferation-differentiation balance</td>
+<td>(yu2019acomplexbetween pages 4-5, yousefelahiyeh2018dcaf7wdr68isrequired pages 1-2, glenewinkel2016theadaptorprotein pages 8-10)</td>
+</tr>
+<tr>
+<td>Human</td>
+<td>HIPK2/DYRK1A adaptor</td>
+<td>Simultaneously binds kinases and client proteins through distinct interaction surfaces; mediates ternary complex formation</td>
+<td>HIPK2; DYRK1A; adenoviral E1A</td>
+<td>Signal integration, kinase substrate recruitment, viral-host interaction</td>
+<td>(glenewinkel2016theadaptorprotein pages 8-10, glenewinkel2016theadaptorprotein pages 1-2, glenewinkel2016theadaptorprotein pages 10-12, glenewinkel2016theadaptorprotein pages 3-5)</td>
+</tr>
+<tr>
+<td>Human muscle cells</td>
+<td>Transcriptional scaffold for DYRK1A on RNA polymerase II</td>
+<td>DCAF7 binds Pol II and tethers DYRK1A to the CTD, enabling Ser2/Ser5 phosphorylation and robust transcription of myogenic genes</td>
+<td>DYRK1A; RNA polymerase II CTD; MYOG/MYH2/CAV3 loci</td>
+<td>Myogenesis and differentiation-dependent transcription</td>
+<td>(yu2019acomplexbetween pages 1-1, yu2019acomplexbetween pages 11-12, yu2019acomplexbetween pages 5-5, yu2019acomplexbetween pages 7-8, yu2019acomplexbetween pages 4-5, yu2019acomplexbetween pages 1-2)</td>
+</tr>
+<tr>
+<td>Human/HepG2 and Drosophila</td>
+<td>Scaffold in IRS1-PI3K-AKT-FOXO signaling</td>
+<td>Acts as an IRS1 interactor/scaffold supporting AKT activation; depletion increases FOXO1 nuclear localization and cell-cycle arrest gene expression</td>
+<td>IRS1; AKT; FOXO1</td>
+<td>Cell proliferation and growth control</td>
+<td>(frendocumbo2022dcaf7regulatescell pages 4-6, frendocumbo2022dcaf7regulatescell pages 6-8)</td>
+</tr>
+<tr>
+<td>Budding yeast (S. cerevisiae)</td>
+<td>Conserved DYRK-family partner</td>
+<td>Ortholog YPL247C interacts with Yak1, supporting the idea that the DCAF7–DYRK partnership is ancestral</td>
+<td>Yak1; YPL247C</td>
+<td>Stress signaling and conserved kinase-WD40 regulation</td>
+<td>(ananthapadmanabhan2023insightsfromthe pages 6-7, glenewinkel2016theadaptorprotein pages 8-10)</td>
+</tr>
+<tr>
+<td>Candida albicans</td>
+<td>Fungal DYRK/Yak1 scaffold partner</td>
+<td>WDR68/DCAF7 ortholog Orf19.384 forms a conserved complex with Yak1; each affects the other’s localization and likely substrate targeting</td>
+<td>Yak1; Orf19.384; Sfl1</td>
+<td>Filamentation and yeast-to-hypha differentiation</td>
+<td>(pinsky2024geneticanalysisof pages 1-2, pinsky2024geneticanalysisof pages 6-9, pinsky2024geneticanalysisof pages 10-12)</td>
+</tr>
+<tr>
+<td>Schizosaccharomyces pombe context</td>
+<td>Inferred DCAF7-like WD40 scaffold/substrate receptor role</td>
+<td>The specific SPBC17D11.08 protein is uncharacterized, but S. pombe CUL4 systems use WD40 DCAFs with WDxR-like docking logic in both canonical CRL4 and CLRC-type complexes, supporting an inferred adaptor/scaffold role for the DCAF7-like protein</td>
+<td>By inference: CUL4/DDB1-like machinery; more directly, Raf1/Raf2 are example S. pombe DCAFs in CLRC</td>
+<td>Likely protein-protein scaffolding and/or regulated substrate recruitment; precise pathway unknown for SPBC17D11.08</td>
+<td>(lee2007dcafsthemissing pages 1-2, lee2007dcafsthemissing pages 2-3, buscaino2012raf1isa pages 6-8, buscaino2012raf1isa pages 2-4, nakagawa2025cul4basedubiquitinligases pages 6-8)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the two major molecular roles of DCAF7/WDR68 across systems: as a CRL4-family substrate receptor in ubiquitin-dependent proteolysis and as a WD40 scaffold/adaptor for DYRK-family kinase signaling. It is useful for inferring likely functions of the poorly characterized S. pombe DCAF7-like protein from conserved ortholog biology.</em></p>
+<h2 id="4-subcellular-localization">4. Subcellular Localization</h2>
+<p>DCAF7/WDR68 localizes to both the nucleus and cytoplasm, with its distribution regulated by its kinase binding partners. The DYRK1A-DCAF7 complex is predominantly nuclear, with nuclear localization driven by a nuclear localization signal (NLS) in DYRK1A that is distinct from the DCAF7 binding site (yousefelahiyeh2018dcaf7wdr68isrequired pages 1-2, glenewinkel2016theadaptorprotein pages 1-2). DCAF7 nuclear access is functionally important; in zebrafish, nuclear localization of WDR68 is required for proper craniofacial development (ananthapadmanabhan2023insightsfromthe pages 6-7). Co-expression of DCAF7 with the adenoviral E1A protein can cause redistribution from the nucleus to the cytoplasm, suggesting that protein-protein interactions modulate its localization (glenewinkel2016theadaptorprotein pages 8-10). In <em>Candida albicans</em>, the DCAF7 ortholog Orf19.384 requires the Yak1 kinase for proper nuclear accumulation, and reciprocally, Yak1 requires Orf19.384 for cytoplasmic localization (pinsky2024geneticanalysisof pages 6-9). The cytosolic anchoring protein FAM53C can also retain the DYRK1A-DCAF7 complex in the cytoplasm in an inactive state.</p>
+<p>For the <em>S. pombe</em> protein SPBC17D11.08, no direct localization data were identified, but by analogy it is expected to localize to both the nucleus and cytoplasm, likely with nuclear accumulation dependent on interaction with a DYRK-family kinase partner.</p>
+<h2 id="5-signaling-and-biochemical-pathways">5. Signaling and Biochemical Pathways</h2>
+<h3 id="51-cul4-based-ubiquitin-proteasome-pathway">5.1 CUL4-Based Ubiquitin-Proteasome Pathway</h3>
+<p>In the context of the CRL4 E3 ubiquitin ligase, DCAF7 participates in protein quality control and regulated proteolysis. The CUL4-DDB1 ubiquitin ligase system is well-conserved in <em>S. pombe</em>, where CUL4 (Pcu4) participates in both the CLRC complex (using Rik1 as a DDB1-like adaptor and Raf1/Dos1 as a DCAF for heterochromatin formation) and a canonical CRL4 complex (using Ddb1 and the DCAF Cdt2 to target substrates such as Spd1, Cdt1, and Epe1 for degradation) (nakagawa2025cul4basedubiquitinligases pages 6-8, buscaino2012raf1isa pages 6-8, buscaino2012raf1isa pages 2-4). The SPBC17D11.08 protein, by virtue of its DCAF7-like domain and WD40 repeats, is predicted to function within this ubiquitin ligase framework, potentially assembling with Ddb1 or a DDB1-like adaptor to recruit specific substrates for ubiquitination.</p>
+<h3 id="52-dyrk-kinase-signaling">5.2 DYRK Kinase Signaling</h3>
+<p>DCAF7 is a central scaffolding component in DYRK1A-mediated signaling pathways including transcription regulation via Pol II CTD phosphorylation (yu2019acomplexbetween pages 1-1, yu2019acomplexbetween pages 1-2), cell proliferation through IRS1-PI3K-AKT-FOXO1 signaling (frendocumbo2022dcaf7regulatescell pages 4-6, frendocumbo2022dcaf7regulatescell pages 6-8), and developmental differentiation. In fungi, the DCAF7-DYRK kinase partnership (Ypl247c-Yak1 in budding yeast, Orf19.384-Yak1 in <em>C. albicans</em>) is conserved and regulates stress-responsive signaling and cell differentiation pathways (ananthapadmanabhan2023insightsfromthe pages 6-7, pinsky2024geneticanalysisof pages 1-2, pinsky2024geneticanalysisof pages 10-12).</p>
+<h3 id="53-dna-damage-response">5.3 DNA Damage Response</h3>
+<p>Through its CRL4 substrate receptor function, DCAF7 regulates levels of key DNA repair proteins. It maintains ERCC1-XPF levels required for NER (kawara2019dcaf7isrequired pages 5-7) and targets DNA Ligase I for degradation during growth arrest (peng2016humandnaligase pages 5-6), linking DCAF7 to genome maintenance pathways.</p>
+<h2 id="6-evolutionary-conservation">6. Evolutionary Conservation</h2>
+<p>The DCAF7/WDR68 protein family is deeply conserved across eukaryotes, with the DYRK kinase-DCAF7 interaction representing an ancestral feature of the DYRK family that was subsequently lost in class 2 DYRKs (glenewinkel2016theadaptorprotein pages 8-10). The following table summarizes known orthologs:</p>
+<table>
+<thead>
+<tr>
+<th>Organism</th>
+<th>Gene/Protein Name</th>
+<th>Kinase Partner (DYRK family)</th>
+<th>Known Functions</th>
+<th>References</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>Saccharomyces cerevisiae</em></td>
+<td>Ypl247c</td>
+<td>Yak1</td>
+<td>Conserved DCAF7/WDR68 ortholog; directly interacts with Yak1 and is implicated in stress-response signaling, supporting an ancestral DYRK–WD40 partnership in fungi and animals.</td>
+<td>(ananthapadmanabhan2023insightsfromthe pages 6-7, glenewinkel2016theadaptorprotein pages 8-10)</td>
+</tr>
+<tr>
+<td><em>Schizosaccharomyces pombe</em></td>
+<td>SPBC17D11.08 / dca7</td>
+<td>Not directly established; inferred likely partner is a DYRK-family kinase by orthology</td>
+<td>DCAF7-like WD40-repeat protein predicted from domain architecture; no direct functional study found for this specific fission yeast protein, so function is inferred as a conserved adaptor/scaffold or substrate receptor from orthologs and from conserved DCAF logic in <em>S. pombe</em> CUL4 systems.</td>
+<td>(ananthapadmanabhan2023insightsfromthe pages 6-7, glenewinkel2016theadaptorprotein pages 8-10, buscaino2012raf1isa pages 6-8, nakagawa2025cul4basedubiquitinligases pages 6-8)</td>
+</tr>
+<tr>
+<td><em>Candida albicans</em></td>
+<td>Orf19.384</td>
+<td>Yak1</td>
+<td>Forms a conserved kinase–WD40 pair with Yak1; required for hyphal development/filamentation, affects reciprocal subcellular localization with Yak1, and likely helps connect Yak1 to transcriptional regulators such as Sfl1.</td>
+<td>(pinsky2024geneticanalysisof pages 1-2, pinsky2024geneticanalysisof pages 6-9, pinsky2024geneticanalysisof pages 10-12)</td>
+</tr>
+<tr>
+<td><em>Caenorhabditis elegans</em></td>
+<td>SWAN-1 / SWAN-2</td>
+<td>DYRK-family association reported for DCAF7 orthologs broadly; specific kinase partner not defined in the retrieved evidence</td>
+<td>Conserved DCAF7 orthologs involved in osmotic stress regulation and developmental/essential cellular processes, supporting broad conservation of DCAF7-family signaling roles.</td>
+<td>(ananthapadmanabhan2023insightsfromthe pages 6-7)</td>
+</tr>
+<tr>
+<td><em>Drosophila melanogaster</em></td>
+<td>Wap (wings apart)</td>
+<td>Mnb (Minibrain; DYRK-family kinase)</td>
+<td>Conserved DYRK-binding WD40 protein involved in developmental processes; cited as part of the evolutionarily conserved DCAF7–DYRK interaction module.</td>
+<td>(glenewinkel2016theadaptorprotein pages 8-10)</td>
+</tr>
+<tr>
+<td><em>Danio rerio</em> (zebrafish)</td>
+<td>wdr68</td>
+<td>Dyrk1b and functionally linked to Dyrk1a-family signaling</td>
+<td>Required for craniofacial development; regulates endothelin-1-dependent jaw cartilage development, and nuclear localization is functionally important for developmental patterning.</td>
+<td>(glenewinkel2016theadaptorprotein pages 2-3, ananthapadmanabhan2023insightsfromthe pages 6-7, glenewinkel2016theadaptorprotein pages 8-10)</td>
+</tr>
+<tr>
+<td>Human</td>
+<td>DCAF7 / WDR68 / HAN11</td>
+<td>DYRK1A, DYRK1B; also binds HIPK2</td>
+<td>Best-characterized ortholog; dual-function WD40 protein acting as (i) scaffold/adaptor for DYRK1A/DYRK1B and HIPK2, including recruitment of substrates such as RNA polymerase II, and (ii) CRL4 substrate receptor regulating protein stability; implicated in development, transcription, proliferation, DNA repair, and signaling.</td>
+<td>(glenewinkel2016theadaptorprotein pages 8-10, glenewinkel2016theadaptorprotein pages 1-2, yu2019acomplexbetween pages 4-5, yousefelahiyeh2018dcaf7wdr68isrequired pages 1-2, kawara2019dcaf7isrequired pages 5-7, peng2016humandnaligase pages 5-6, yu2019acomplexbetween pages 1-1)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the evolutionary conservation of DCAF7/WDR68-family proteins from fungi to humans, emphasizing their recurrent association with DYRK-family kinases. It is useful for inferring likely functions of the poorly characterized </em>S. pombe<em> SPBC17D11.08/dca7 protein from better-studied orthologs.</em></p>
+<h2 id="7-context-of-cul4-and-dcaf-biology-in-s-pombe">7. Context of CUL4 and DCAF Biology in <em>S. pombe</em></h2>
+<p>While SPBC17D11.08/dca7 itself is uncharacterized, <em>S. pombe</em> has well-studied CUL4-based ubiquitin ligase complexes. The CLRC complex (Cul4-Rik1-Raf1/Raf2-Clr4) uses WD40 DCAF proteins (Raf1/Dos1) with WDxR motifs to dock onto the DDB1-like adaptor Rik1, coupling E3 ubiquitin ligase activity with histone H3K9 methylation for heterochromatin formation (buscaino2012raf1isa pages 6-8, buscaino2012raf1isa pages 2-4, buscaino2012raf1isa pages 4-6, buscaino2012raf1isa pages 1-2). CLRC catalyzes H3K14 ubiquitylation that is required for subsequent H3K9 methylation (nakagawa2025cul4basedubiquitinligases pages 6-8). The canonical <em>S. pombe</em> CRL4 complex (Cul4-Ddb1-Cdt2) targets substrates including Spd1, Cdt1, and Epe1 for degradation (nakagawa2025cul4basedubiquitinligases pages 6-8). SPBC17D11.08/dca7 likely operates within this established CUL4 ubiquitin ligase framework, potentially as an additional DCAF substrate receptor recruiting specific, as-yet-unidentified substrates.</p>
+<h2 id="8-summary-and-conclusions">8. Summary and Conclusions</h2>
+<p>The <em>S. pombe</em> protein encoded by <em>dca7</em> (SPBC17D11.08, UniProt O74763) is an uncharacterized member of the DCAF7 family of WD40 repeat-containing proteins. Based on its conserved DCAF7-like domain architecture and extensive characterization of orthologs in other organisms, the protein is predicted to have two primary molecular functions: (1) as a substrate receptor for the CUL4-DDB1 E3 ubiquitin ligase, recognizing specific proteins for ubiquitin-dependent proteasomal degradation; and (2) as a scaffolding protein for DYRK-family kinases, facilitating kinase-substrate interactions and potentially regulating kinase protein levels and localization. The protein likely localizes to both the nucleus and cytoplasm, with its distribution potentially governed by interaction with a DYRK-family kinase partner. In the broader biological context of <em>S. pombe</em>, DCAF7-like proteins are expected to participate in ubiquitin-proteasome-mediated regulation of protein stability, with potential roles in cell cycle regulation, stress response signaling, and chromatin biology. Direct experimental characterization of SPBC17D11.08 in <em>S. pombe</em> remains an important gap in the current understanding of this protein.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(ananthapadmanabhan2023insightsfromthe pages 6-7): Varsha Ananthapadmanabhan, Kathryn H. Shows, Amanda J. Dickinson, and Larisa Litovchick. Insights from the protein interaction universe of the multifunctional “goldilocks” kinase dyrk1a. Frontiers in Cell and Developmental Biology, Oct 2023. URL: https://doi.org/10.3389/fcell.2023.1277537, doi:10.3389/fcell.2023.1277537. This article has 26 citations.</p>
+</li>
+<li>
+<p>(glenewinkel2016theadaptorprotein pages 8-10): Florian Glenewinkel, Michael J. Cohen, Cason R. King, Sophie Kaspar, Simone Bamberg-Lemper, Joe S. Mymryk, and Walter Becker. The adaptor protein dcaf7 mediates the interaction of the adenovirus e1a oncoprotein with the protein kinases dyrk1a and hipk2. Scientific Reports, Jun 2016. URL: https://doi.org/10.1038/srep28241, doi:10.1038/srep28241. This article has 73 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pinsky2024geneticanalysisof pages 1-2): Mariel Pinsky and Daniel Kornitzer. Genetic analysis of candida albicans filamentation by the iron chelator bps reveals a role for a conserved kinase—wd40 protein pair. Journal of Fungi, 10:83, Jan 2024. URL: https://doi.org/10.3390/jof10010083, doi:10.3390/jof10010083. This article has 5 citations.</p>
+</li>
+<li>
+<p>(pinsky2024geneticanalysisof pages 6-9): Mariel Pinsky and Daniel Kornitzer. Genetic analysis of candida albicans filamentation by the iron chelator bps reveals a role for a conserved kinase—wd40 protein pair. Journal of Fungi, 10:83, Jan 2024. URL: https://doi.org/10.3390/jof10010083, doi:10.3390/jof10010083. This article has 5 citations.</p>
+</li>
+<li>
+<p>(yousefelahiyeh2018dcaf7wdr68isrequired pages 1-2): Mina Yousefelahiyeh, Jingyi Xu, Estibaliz Alvarado, Yang Yu, David Salven, and Robert M. Nissen. Dcaf7/wdr68 is required for normal levels of dyrk1a and dyrk1b. PLoS ONE, 13:e0207779, Nov 2018. URL: https://doi.org/10.1371/journal.pone.0207779, doi:10.1371/journal.pone.0207779. This article has 34 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(glenewinkel2016theadaptorprotein pages 10-12): Florian Glenewinkel, Michael J. Cohen, Cason R. King, Sophie Kaspar, Simone Bamberg-Lemper, Joe S. Mymryk, and Walter Becker. The adaptor protein dcaf7 mediates the interaction of the adenovirus e1a oncoprotein with the protein kinases dyrk1a and hipk2. Scientific Reports, Jun 2016. URL: https://doi.org/10.1038/srep28241, doi:10.1038/srep28241. This article has 73 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(glenewinkel2016theadaptorprotein pages 1-2): Florian Glenewinkel, Michael J. Cohen, Cason R. King, Sophie Kaspar, Simone Bamberg-Lemper, Joe S. Mymryk, and Walter Becker. The adaptor protein dcaf7 mediates the interaction of the adenovirus e1a oncoprotein with the protein kinases dyrk1a and hipk2. Scientific Reports, Jun 2016. URL: https://doi.org/10.1038/srep28241, doi:10.1038/srep28241. This article has 73 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lee2007dcafsthemissing pages 2-3): Jennifer Lee and Pengbo Zhou. Dcafs, the missing link of the cul4-ddb1 ubiquitin ligase. Molecular cell, 26 6:775-80, Jun 2007. URL: https://doi.org/10.1016/j.molcel.2007.06.001, doi:10.1016/j.molcel.2007.06.001. This article has 596 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(buscaino2012raf1isa pages 4-6): Alessia Buscaino, Sharon A. White, Douglas R. Houston, Erwan Lejeune, Femke Simmer, Flavia de Lima Alves, Piyush T. Diyora, Takeshi Urano, Elizabeth H. Bayne, Juri Rappsilber, and Robin C. Allshire. Raf1 is a dcaf for the rik1 ddb1-like protein and has separable roles in sirna generation and chromatin modification. PLoS Genetics, 8:e1002499, Feb 2012. URL: https://doi.org/10.1371/journal.pgen.1002499, doi:10.1371/journal.pgen.1002499. This article has 35 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lee2007dcafsthemissing pages 1-2): Jennifer Lee and Pengbo Zhou. Dcafs, the missing link of the cul4-ddb1 ubiquitin ligase. Molecular cell, 26 6:775-80, Jun 2007. URL: https://doi.org/10.1016/j.molcel.2007.06.001, doi:10.1016/j.molcel.2007.06.001. This article has 596 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(higa2007stealingthespotlight pages 1-2): Leigh Higa and Hui Zhang. Stealing the spotlight: cul4-ddb1 ubiquitin ligase docks wd40-repeat proteins to destroy. Cell Division, 2:5-5, Feb 2007. URL: https://doi.org/10.1186/1747-1028-2-5, doi:10.1186/1747-1028-2-5. This article has 150 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(peng2016humandnaligase pages 5-6): Zhimin Peng, Zhongping Liao, Yoshihiro Matsumoto, Austin Yang, and Alan E. Tomkinson. Human dna ligase i interacts with and is targeted for degradation by the dcaf7 specificity factor of the cul4-ddb1 ubiquitin ligase complex. Journal of Biological Chemistry, 291:21893-21902, Oct 2016. URL: https://doi.org/10.1074/jbc.m116.746198, doi:10.1074/jbc.m116.746198. This article has 35 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(nakagawa2025cul4basedubiquitinligases pages 14-15): Makiko Nakagawa and Tadashi Nakagawa. Cul4-based ubiquitin ligases in chromatin regulation: an evolutionary perspective. Cells, 14:63, Jan 2025. URL: https://doi.org/10.3390/cells14020063, doi:10.3390/cells14020063. This article has 10 citations.</p>
+</li>
+<li>
+<p>(kawara2019dcaf7isrequired pages 5-7): Hiroaki Kawara, Ryo Akahori, Mitsuo Wakasugi, Aziz Sancar, and Tsukasa Matsunaga. Dcaf7 is required for maintaining the cellular levels of ercc1-xpf and nucleotide excision repair. Biochemical and biophysical research communications, 519:204-210, Oct 2019. URL: https://doi.org/10.1016/j.bbrc.2019.08.147, doi:10.1016/j.bbrc.2019.08.147. This article has 12 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(glenewinkel2016theadaptorprotein pages 2-3): Florian Glenewinkel, Michael J. Cohen, Cason R. King, Sophie Kaspar, Simone Bamberg-Lemper, Joe S. Mymryk, and Walter Becker. The adaptor protein dcaf7 mediates the interaction of the adenovirus e1a oncoprotein with the protein kinases dyrk1a and hipk2. Scientific Reports, Jun 2016. URL: https://doi.org/10.1038/srep28241, doi:10.1038/srep28241. This article has 73 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(glenewinkel2016theadaptorprotein pages 3-5): Florian Glenewinkel, Michael J. Cohen, Cason R. King, Sophie Kaspar, Simone Bamberg-Lemper, Joe S. Mymryk, and Walter Becker. The adaptor protein dcaf7 mediates the interaction of the adenovirus e1a oncoprotein with the protein kinases dyrk1a and hipk2. Scientific Reports, Jun 2016. URL: https://doi.org/10.1038/srep28241, doi:10.1038/srep28241. This article has 73 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(yu2019acomplexbetween pages 4-5): Dan Yu, Claudia Cattoglio, Yuhua Xue, and Qiang Zhou. A complex between dyrk1a and dcaf7 phosphorylates the c-terminal domain of rna polymerase ii to promote myogenesis. Nucleic Acids Research, 47:4462-4475, Mar 2019. URL: https://doi.org/10.1093/nar/gkz162, doi:10.1093/nar/gkz162. This article has 44 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(yu2019acomplexbetween pages 1-1): Dan Yu, Claudia Cattoglio, Yuhua Xue, and Qiang Zhou. A complex between dyrk1a and dcaf7 phosphorylates the c-terminal domain of rna polymerase ii to promote myogenesis. Nucleic Acids Research, 47:4462-4475, Mar 2019. URL: https://doi.org/10.1093/nar/gkz162, doi:10.1093/nar/gkz162. This article has 44 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(yu2019acomplexbetween pages 5-5): Dan Yu, Claudia Cattoglio, Yuhua Xue, and Qiang Zhou. A complex between dyrk1a and dcaf7 phosphorylates the c-terminal domain of rna polymerase ii to promote myogenesis. Nucleic Acids Research, 47:4462-4475, Mar 2019. URL: https://doi.org/10.1093/nar/gkz162, doi:10.1093/nar/gkz162. This article has 44 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(yu2019acomplexbetween pages 7-8): Dan Yu, Claudia Cattoglio, Yuhua Xue, and Qiang Zhou. A complex between dyrk1a and dcaf7 phosphorylates the c-terminal domain of rna polymerase ii to promote myogenesis. Nucleic Acids Research, 47:4462-4475, Mar 2019. URL: https://doi.org/10.1093/nar/gkz162, doi:10.1093/nar/gkz162. This article has 44 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(yu2019acomplexbetween pages 11-12): Dan Yu, Claudia Cattoglio, Yuhua Xue, and Qiang Zhou. A complex between dyrk1a and dcaf7 phosphorylates the c-terminal domain of rna polymerase ii to promote myogenesis. Nucleic Acids Research, 47:4462-4475, Mar 2019. URL: https://doi.org/10.1093/nar/gkz162, doi:10.1093/nar/gkz162. This article has 44 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(yu2019acomplexbetween pages 1-2): Dan Yu, Claudia Cattoglio, Yuhua Xue, and Qiang Zhou. A complex between dyrk1a and dcaf7 phosphorylates the c-terminal domain of rna polymerase ii to promote myogenesis. Nucleic Acids Research, 47:4462-4475, Mar 2019. URL: https://doi.org/10.1093/nar/gkz162, doi:10.1093/nar/gkz162. This article has 44 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(frendocumbo2022dcaf7regulatescell pages 4-6): Scott Frendo-Cumbo, Taoyingnan Li, Dustin A. Ammendolia, Etienne Coyaud, Estelle M.N. Laurent, Yuan Liu, Philip J. Bilan, Gordon Polevoy, Brian Raught, Julie A. Brill, Amira Klip, and John H. Brumell. Dcaf7 regulates cell proliferation through irs1-foxo1 signaling. Dec 2022. URL: https://doi.org/10.1016/j.isci.2022.105668, doi:10.1016/j.isci.2022.105668. This article has 13 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(frendocumbo2022dcaf7regulatescell pages 6-8): Scott Frendo-Cumbo, Taoyingnan Li, Dustin A. Ammendolia, Etienne Coyaud, Estelle M.N. Laurent, Yuan Liu, Philip J. Bilan, Gordon Polevoy, Brian Raught, Julie A. Brill, Amira Klip, and John H. Brumell. Dcaf7 regulates cell proliferation through irs1-foxo1 signaling. Dec 2022. URL: https://doi.org/10.1016/j.isci.2022.105668, doi:10.1016/j.isci.2022.105668. This article has 13 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pinsky2024geneticanalysisof pages 10-12): Mariel Pinsky and Daniel Kornitzer. Genetic analysis of candida albicans filamentation by the iron chelator bps reveals a role for a conserved kinase—wd40 protein pair. Journal of Fungi, 10:83, Jan 2024. URL: https://doi.org/10.3390/jof10010083, doi:10.3390/jof10010083. This article has 5 citations.</p>
+</li>
+<li>
+<p>(buscaino2012raf1isa pages 6-8): Alessia Buscaino, Sharon A. White, Douglas R. Houston, Erwan Lejeune, Femke Simmer, Flavia de Lima Alves, Piyush T. Diyora, Takeshi Urano, Elizabeth H. Bayne, Juri Rappsilber, and Robin C. Allshire. Raf1 is a dcaf for the rik1 ddb1-like protein and has separable roles in sirna generation and chromatin modification. PLoS Genetics, 8:e1002499, Feb 2012. URL: https://doi.org/10.1371/journal.pgen.1002499, doi:10.1371/journal.pgen.1002499. This article has 35 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(buscaino2012raf1isa pages 2-4): Alessia Buscaino, Sharon A. White, Douglas R. Houston, Erwan Lejeune, Femke Simmer, Flavia de Lima Alves, Piyush T. Diyora, Takeshi Urano, Elizabeth H. Bayne, Juri Rappsilber, and Robin C. Allshire. Raf1 is a dcaf for the rik1 ddb1-like protein and has separable roles in sirna generation and chromatin modification. PLoS Genetics, 8:e1002499, Feb 2012. URL: https://doi.org/10.1371/journal.pgen.1002499, doi:10.1371/journal.pgen.1002499. This article has 35 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(nakagawa2025cul4basedubiquitinligases pages 6-8): Makiko Nakagawa and Tadashi Nakagawa. Cul4-based ubiquitin ligases in chromatin regulation: an evolutionary perspective. Cells, 14:63, Jan 2025. URL: https://doi.org/10.3390/cells14020063, doi:10.3390/cells14020063. This article has 10 citations.</p>
+</li>
+<li>
+<p>(buscaino2012raf1isa pages 1-2): Alessia Buscaino, Sharon A. White, Douglas R. Houston, Erwan Lejeune, Femke Simmer, Flavia de Lima Alves, Piyush T. Diyora, Takeshi Urano, Elizabeth H. Bayne, Juri Rappsilber, and Robin C. Allshire. Raf1 is a dcaf for the rik1 ddb1-like protein and has separable roles in sirna generation and chromatin modification. PLoS Genetics, 8:e1002499, Feb 2012. URL: https://doi.org/10.1371/journal.pgen.1002499, doi:10.1371/journal.pgen.1002499. This article has 35 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="dca7-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+<li><a href="dca7-deep-research-falcon_artifacts/artifact-01.md">Edison artifact artifact-01</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>glenewinkel2016theadaptorprotein pages 10-12</li>
+<li>glenewinkel2016theadaptorprotein pages 1-2</li>
+<li>peng2016humandnaligase pages 5-6</li>
+<li>higa2007stealingthespotlight pages 1-2</li>
+<li>ananthapadmanabhan2023insightsfromthe pages 6-7</li>
+<li>glenewinkel2016theadaptorprotein pages 8-10</li>
+<li>pinsky2024geneticanalysisof pages 6-9</li>
+<li>pinsky2024geneticanalysisof pages 1-2</li>
+<li>lee2007dcafsthemissing pages 2-3</li>
+<li>lee2007dcafsthemissing pages 1-2</li>
+<li>glenewinkel2016theadaptorprotein pages 2-3</li>
+<li>glenewinkel2016theadaptorprotein pages 3-5</li>
+<li>yu2019acomplexbetween pages 4-5</li>
+<li>yu2019acomplexbetween pages 1-1</li>
+<li>yu2019acomplexbetween pages 5-5</li>
+<li>yu2019acomplexbetween pages 7-8</li>
+<li>yu2019acomplexbetween pages 11-12</li>
+<li>yu2019acomplexbetween pages 1-2</li>
+<li>pinsky2024geneticanalysisof pages 10-12</li>
+<li>https://doi.org/10.3389/fcell.2023.1277537,</li>
+<li>https://doi.org/10.1038/srep28241,</li>
+<li>https://doi.org/10.3390/jof10010083,</li>
+<li>https://doi.org/10.1371/journal.pone.0207779,</li>
+<li>https://doi.org/10.1016/j.molcel.2007.06.001,</li>
+<li>https://doi.org/10.1371/journal.pgen.1002499,</li>
+<li>https://doi.org/10.1186/1747-1028-2-5,</li>
+<li>https://doi.org/10.1074/jbc.m116.746198,</li>
+<li>https://doi.org/10.3390/cells14020063,</li>
+<li>https://doi.org/10.1016/j.bbrc.2019.08.147,</li>
+<li>https://doi.org/10.1093/nar/gkz162,</li>
+<li>https://doi.org/10.1016/j.isci.2022.105668,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(dca7-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O74763" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="dca7-spbc17d1108-o74763-curation-notes">dca7 (SPBC17D11.08 / O74763) — curation notes</h1>
+<p>Journal for the AI GO-annotation review of the <em>S. pombe</em> gene <strong>dca7</strong><br />
+(systematic name SPBC17D11.08; UniProt O74763; PomBase standard name <code>dca7</code>).</p>
+<h2 id="identity-verified">Identity (verified)</h2>
+<ul>
+<li>UniProt: <strong>O74763</strong> (<code>YBE8_SCHPO</code>), 435 aa, "Uncharacterized WD repeat-containing<br />
+  protein C17D11.08" [dca7-uniprot.txt].</li>
+<li>PomBase standard name <strong>dca7</strong>, systematic name <strong>SPBC17D11.08</strong>; product line:<br />
+  "WD repeat protein, DDB1 and CUL4-associated factor Dca7, implicated in gene<br />
+  expression" (PomBase API, <code>dataset/latest/data/gene/SPBC17D11.08</code>).</li>
+<li>PomBase characterisation status: <strong>"conserved unknown"</strong> — i.e. a <em>dark</em> gene.</li>
+<li>Deletion viability: <strong>viable</strong> (PomBase).</li>
+<li>Taxonomic distribution: "eukaryotes only, fungi and metazoa"; PomBase species-distribution<br />
+  terms: conserved in eukaryotes / fungi / metazoa / vertebrates; "predominantly single copy<br />
+  (one to one)" (PomBase).</li>
+</ul>
+<h2 id="domain-architecture-verified-from-uniprot">Domain architecture (verified from UniProt)</h2>
+<ul>
+<li>InterPro: <strong>IPR045159 DCAF7-like</strong>; IPR015943 WD40/YVTN repeat-like domain superfamily;<br />
+  IPR019775 WD40 repeat CS; IPR036322 WD40 repeat domain superfamily; IPR001680 WD40 repeat.</li>
+<li>Pfam PF00400 (WD40, x2); SMART SM00320 (WD40, x4); SUPFAM SSF50978 (WD40 repeat-like);<br />
+  PROSITE WD_REPEATS.</li>
+<li>UniProt FT: 4 WD repeats annotated (105–149, 164–204, 207–247, 313–353); disordered/low-complexity<br />
+  region ~352–371.</li>
+<li>PANTHER <strong>PTHR19919</strong> (WD REPEAT CONTAINING PROTEIN).</li>
+<li>No catalytic domain, no transmembrane region, no signal peptide. Consistent with a<br />
+  β-propeller scaffold/adaptor architecture rather than an enzyme.</li>
+</ul>
+<h2 id="orthology-verified">Orthology (verified)</h2>
+<ul>
+<li>Human ortholog: <strong>HGNC:30915 = DCAF7 / WDR68 / HAN11</strong> (UniProt P61962) — the accession used<br />
+  in the S. pombe ISS annotation <code>GO:0080008</code> (PomBase ortholog_annotations, UniProt DR line).</li>
+<li><em>S. cerevisiae</em>: <strong>YPL247C</strong>; <em>S. japonicus</em>: SJAG_04087 (PomBase ortholog_annotations).</li>
+<li>Reactome mapping: R-SPO-8951664 "Neddylation" (UniProt DR).</li>
+</ul>
+<h2 id="what-is-known-about-the-dcaf7wdr68-family-from-orthologs-not-s-pombe-direct">What is KNOWN about the DCAF7/WDR68 family (from orthologs; NOT S. pombe-direct)</h2>
+<p>Grounded in the falcon deep-research report (dca7-deep-research-falcon.md), which cites<br />
+peer-reviewed DOI sources. The human/animal ortholog DCAF7/WDR68/HAN11 is a WD40 seven-blade<br />
+β-propeller with <strong>no intrinsic catalytic activity</strong>, acting as a scaffold/adaptor. Two recurrent<br />
+family roles are described in the literature:</p>
+<ol>
+<li><strong>Scaffold/adaptor for DYRK-family kinases</strong> (DYRK1A, DYRK1B) and HIPK2. This DYRK–WD40<br />
+   partnership is described as ancestral and conserved down to fungi — <em>S. cerevisiae</em> YPL247C<br />
+   interacts with Yak1, and <em>C. albicans</em> Orf19.384 forms a conserved complex with Yak1<br />
+   [Ananthapadmanabhan 2023, DOI:10.3389/fcell.2023.1277537; Glenewinkel 2016,<br />
+   DOI:10.1038/srep28241; Pinsky 2024, DOI:10.3390/jof10010083]. In humans the DYRK1A–DCAF7<br />
+   complex phosphorylates RNA Pol II CTD to promote myogenic transcription [Yu 2019,<br />
+   DOI:10.1093/nar/gkz162] — a plausible basis for PomBase's "implicated in gene expression"<br />
+   product tag.</li>
+<li><strong>Substrate receptor for the CUL4–DDB1 (CRL4) E3 ubiquitin ligase</strong> — this is the basis of<br />
+   the "DCAF" name; reported substrates include DNA ligase I, menin, ERCC1-XPF, and influenza PA<br />
+   [Peng 2016 DOI:10.1074/jbc.m116.746198; Kawara 2019 DOI:10.1016/j.bbrc.2019.08.147; Higa 2007<br />
+   DOI:10.1186/1747-1028-2-5; Lee &amp; Zhou 2007 DOI:10.1016/j.molcel.2007.06.001]. NOTE: whether<br />
+   DCAF7 truly acts as a bona fide CRL4 substrate receptor versus primarily a kinase scaffold is<br />
+<em>debated</em> in the literature (the DYRK-scaffold role is the more firmly established one).</li>
+</ol>
+<h2 id="what-is-not-known-the-dark-part">What is NOT known (the dark part)</h2>
+<ul>
+<li><strong>No primary literature characterizes S. pombe dca7 / SPBC17D11.08 directly.</strong> The falcon<br />
+  report states explicitly: "No primary literature was identified that directly characterizes<br />
+  SPBC17D11.08/dca7 in <em>S. pombe</em>." All functional inference is by orthology + domain.</li>
+<li>GOA records <strong>MF = GO:0003674 (ND)</strong> and <strong>BP = GO:0008150 (ND)</strong> for this gene: PomBase has<br />
+  formally declared molecular function and biological process <strong>unknown</strong>.</li>
+<li>No S. pombe DYRK partner has been demonstrated for dca7. (S. pombe encodes candidate<br />
+  DYRK/Yak-family kinases, but no dca7–kinase complex is reported.)</li>
+<li>Whether dca7 acts in a CUL4/DDB1 complex in fission yeast is <strong>not experimentally shown</strong>; the<br />
+  known S. pombe DCAFs are Cdt2 (canonical CRL4) and Raf1/Dos1 (CLRC heterochromatin) — dca7 is a<br />
+<em>distinct</em> DCAF7-like protein, so the <code>GO:0080008</code> complex membership is an ISS inference from<br />
+  human P61962, not local evidence.</li>
+</ul>
+<h2 id="existing-annotations-from-dca7-goatsv-review-plan">Existing annotations (from dca7-goa.tsv) — review plan</h2>
+<ol>
+<li><code>GO:0005634 nucleus</code> — <strong>IBA</strong> (GO_REF:0000033, PANTHER PTN000460287). Ortholog DCAF7 is<br />
+   nucleocytoplasmic; nuclear localization is plausible and phylogenetically supported. PomBase<br />
+   also carries this CC. KEEP as non-core (localization, not core function; no direct S. pombe<br />
+   localization datum for the nucleus — the direct large-scale localization study reported<br />
+   cytoplasm + Golgi).</li>
+<li><code>GO:0005737 cytoplasm</code> — <strong>IEA</strong> (GO_REF:0000044, UniProtKB-SubCell SL-0086). Backed by the<br />
+   S. pombe ORFeome-GFP localization study PMID:16823372 (UniProt SUBCELLULAR LOCATION: Cytoplasm<br />
+   {ECO:0000269|PubMed:16823372}). KEEP as non-core.</li>
+<li><code>GO:0005794 Golgi apparatus</code> — <strong>IEA</strong> (GO_REF:0000044, UniProtKB-SubCell SL-0132). Same<br />
+   PMID:16823372 source (UniProt: Golgi apparatus {ECO:0000269|PubMed:16823372}). This is a<br />
+   single high-throughput GFP localization; a WD40 scaffold is not an obvious Golgi resident and<br />
+   this may be a minor/secondary pool. KEEP as non-core but flag as weakly supported /<br />
+   over-interpretable.</li>
+<li><code>GO:0003674 molecular_function</code> — <strong>ND</strong> (GO_REF:0000015). This is the ND root placeholder =<br />
+   "MF unknown". Not something to ACCEPT/REMOVE as a real term; represents the knowledge gap.<br />
+   Mark accordingly (KEEP_AS_NON_CORE is inappropriate for a root; use the ND convention — action<br />
+   reflects that this is the honest "unknown" placeholder).</li>
+<li><code>GO:0008150 biological_process</code> — <strong>ND</strong> (GO_REF:0000015). Same: "BP unknown" placeholder.</li>
+<li><code>GO:0080008 Cul4-RING E3 ubiquitin ligase complex</code> — <strong>ISS</strong> from human DCAF7 P61962<br />
+   (GO_REF:0000024). Defensible orthology-based complex inference, but note the CRL4-receptor role<br />
+   of DCAF7 is itself debated, and there is no S. pombe evidence. KEEP_AS_NON_CORE (inferred,<br />
+   not core; do not upgrade to core without local evidence). Do NOT REMOVE — it is a<br />
+   curator ISS transfer from a legitimate ortholog, and the complex is real in the family.</li>
+</ol>
+<h2 id="localization-datum-detail">Localization datum detail</h2>
+<p>UniProt SUBCELLULAR LOCATION: "Cytoplasm {ECO:0000269|PubMed:16823372}. Golgi apparatus<br />
+{ECO:0000269|PubMed:16823372}." — both from the Matsuyama 2006 ORFeome-GFP global localization<br />
+screen (abstract-only in cache; individual-gene call is in supplementary data, curated by<br />
+UniProt/PomBase). PMID:18257517 (Wilson-Grady 2008 phosphoproteome) supports Ser266/Ser388<br />
+phosphorylation (UniProt MOD_RES).</p>
+<h2 id="interactions-pombase-high-throughput-context-only">Interactions (PomBase, high-throughput; context only)</h2>
+<ul>
+<li>fft3 (SPAC25A8.01c, Fun30-family chromatin remodeler) — Affinity Capture-MS <a href="https://pubmed.ncbi.nlm.nih.gov/28218250">PMID:28218250</a>.</li>
+<li>ppk15 (SPAC823.03, protein kinase) — Two-hybrid <a href="https://pubmed.ncbi.nlm.nih.gov/26771498">PMID:26771498</a>. (Of note: ppk15 is a kinase,<br />
+  loosely consistent with the family kinase-scaffold theme, but this single Y2H hit is not<br />
+  sufficient to assert a DYRK-scaffold function in S. pombe.)<br />
+None of these full texts mention dca7/SPBC17D11.08 in prose (screen data only); they are not used<br />
+as supporting_text.</li>
+</ul>
+<h2 id="curation-decisions-summary">Curation decisions summary</h2>
+<ul>
+<li>Dark gene: MF and BP officially ND. <code>core_functions</code> kept <strong>empty</strong> — there is no direct<br />
+  evidence of any S. pombe molecular function, and the strongest signal (WD40 scaffold/adaptor)<br />
+  is an orthology hypothesis, not established fission-yeast function. The scaffold/DCAF hypothesis<br />
+  is captured in <code>knowledge_gaps</code> and <code>suggested_experiments</code> instead.</li>
+<li><code>description</code>: project-independent, states it is an uncharacterized DCAF7-family WD40 protein,<br />
+  its domain architecture, its verified localization, and its conservation — without asserting a<br />
+  proven function.</li>
+<li><code>knowledge_gaps</code> (REQUIRED): the MF is genuinely unknown (BIOLOGY gap, WHOLLY_DARK / MF_DARK).</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O74763
+gene_symbol: dca7
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:284812
+  label: Schizosaccharomyces pombe (strain 972 / ATCC 24843)
+description: &gt;-
+  dca7 (systematic name SPBC17D11.08) is an uncharacterized WD40 repeat-containing
+  protein of the fission yeast Schizosaccharomyces pombe. Its sequence comprises
+  multiple WD40 repeats predicted to fold into a beta-propeller and it carries the
+  DCAF7-like domain signature (InterPro IPR045159), identifying it as the fission
+  yeast ortholog of the animal DCAF7/WDR68/HAN11 protein and of S. cerevisiae
+  YPL247C; it is a predominantly single-copy protein conserved across fungi and
+  metazoa. The protein has no recognizable catalytic, transmembrane, or signal
+  domain, consistent with a non-enzymatic scaffold/adaptor architecture. In a
+  genome-wide GFP-tagging survey the protein was localized to the cytoplasm and the
+  Golgi apparatus, and it is phosphorylated on serine residues. Its molecular
+  function and the biological process it participates in have not been experimentally
+  determined in S. pombe; deletion of the gene is viable. Animal orthologs act as
+  WD40 scaffolds/adaptors for DYRK-family kinases and have been reported to serve as
+  substrate receptors for the CUL4-DDB1 (CRL4) ubiquitin ligase, but no such role has
+  been demonstrated for the fission yeast protein.
+references:
+- id: GO_REF:0000015
+  title: Use of the ND evidence code for Gene Ontology (GO) terms
+  findings: []
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: UniProt:O74763
+  title: &#34;Uncharacterized WD repeat-containing protein C17D11.08 (dca7, SPBC17D11.08), Schizosaccharomyces pombe&#34;
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Swiss-Prot record (reviewed). Source of the DCAF7-like/WD40 domain architecture,
+      the cytoplasm + Golgi subcellular localization (both ECO:0000269|PubMed:16823372),
+      and Ser266/Ser388 phosphorylation (ECO:0000269|PubMed:18257517). Verified by
+      direct inspection of dca7-uniprot.txt.
+- id: PMID:16823372
+  title: &#34;ORFeome cloning and global analysis of protein localization in the fission yeast Schizosaccharomyces pombe.&#34;
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Genome-wide YFP-tagging localization survey (Matsuyama et al. 2006). The
+      individual localization call for SPBC17D11.08 (cytoplasm, Golgi) is in the
+      supplementary dataset; the cached record is abstract-only and does not name the
+      gene in prose. This is the ECO:0000269 experimental source underlying the
+      cytoplasm and Golgi GO annotations via UniProt Subcellular Location mapping.
+- id: PMID:18257517
+  title: &#34;Phosphoproteome analysis of fission yeast.&#34;
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Large-scale S. pombe phosphoproteome (Wilson-Grady et al. 2008); supports the
+      Ser266/Ser388 phosphorylation sites recorded in UniProt. Provides no functional
+      information on dca7 beyond the fact that it is a phosphoprotein.
+- id: file:SCHPO/dca7/dca7-deep-research-falcon.md
+  title: &#34;Deep research report: dca7 (SPBC17D11.08) as a DCAF7-like WD40 protein&#34;
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Literature synthesis (falcon/Edison) grounded in peer-reviewed DOI sources on the
+      DCAF7/WDR68 family. Used ONLY for orthology-based context (family is a
+      catalytically inactive WD40 scaffold/adaptor for DYRK kinases, with a debated CRL4
+      substrate-receptor role) and for the explicit, verifiable statement that no primary
+      literature directly characterizes the S. pombe protein. Not used to assert any
+      established S. pombe function.
+existing_annotations:
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetically inferred (IBA) nuclear localization propagated within PANTHER
+      family PTHR19919 (DCAF7/WDR68). Animal DCAF7 is nucleocytoplasmic and its
+      nuclear pool is functionally important, so a nuclear location is phylogenetically
+      plausible, and PomBase independently carries this cellular component. However,
+      the one direct S. pombe localization dataset (PMID:16823372) reported cytoplasm
+      and Golgi, not nucleus, so this remains an inference. Retained as a plausible,
+      non-core localization annotation; it does not describe a molecular function.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      IBA localization consistent with the family and independently curated by PomBase,
+      but it is a location rather than a core function and is not directly demonstrated
+      in S. pombe.
+    supported_by:
+    - reference_id: file:SCHPO/dca7/dca7-deep-research-falcon.md
+      supporting_text: &gt;-
+        DCAF7/WDR68 localizes to both the nucleus and cytoplasm, with its distribution
+        regulated by its kinase binding partners.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Cytoplasmic localization mapped by UniProt from the Subcellular Location
+      vocabulary. It is underpinned by an experimental S. pombe datum: the genome-wide
+      GFP/YFP localization survey (PMID:16823372), recorded in UniProt as
+      &#34;Cytoplasm {ECO:0000269|PubMed:16823372}&#34;. A well-supported localization, but a
+      location rather than a molecular function.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Localization is experimentally supported (via UniProt ECO:0000269|PubMed:16823372)
+      but is non-core; it does not describe what the protein does.
+    supported_by:
+    - reference_id: UniProt:O74763
+      supporting_text: &#34;Cytoplasm {ECO:0000269|PubMed:16823372}&#34;
+- term:
+    id: GO:0005794
+    label: Golgi apparatus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Golgi localization mapped by UniProt from the Subcellular Location vocabulary,
+      derived from the same single high-throughput GFP/YFP survey (PMID:16823372;
+      UniProt &#34;Golgi apparatus {ECO:0000269|PubMed:16823372}&#34;). A WD40
+      scaffold/adaptor is not an obvious Golgi resident and this single-method
+      observation may reflect a minor or secondary pool; it should be treated with
+      caution and is not corroborated by any interaction or functional evidence.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Retained because it derives from an experimental localization dataset, but flagged
+      as weakly supported (single high-throughput method, no corroboration) and non-core.
+    supported_by:
+    - reference_id: UniProt:O74763
+      supporting_text: &#34;GO:0005794; C:Golgi apparatus; IEA:UniProtKB-SubCell.&#34;
+- term:
+    id: GO:0003674
+    label: molecular_function
+  evidence_type: ND
+  original_reference_id: GO_REF:0000015
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Root molecular_function term with the ND (&#34;No biological Data&#34;) evidence code,
+      the PomBase convention for a gene whose molecular function has not been
+      experimentally determined. For dca7 this is an accurate statement of the current
+      state of knowledge: no primary study has assigned it a molecular activity in
+      S. pombe. Retained as the honest placeholder marking a genuine molecular-function
+      knowledge gap (see knowledge_gaps).
+    action: ACCEPT
+    reason: &gt;-
+      ND correctly encodes that the molecular function of this dark gene is unknown; it
+      is not a substantive term to replace or remove.
+- term:
+    id: GO:0008150
+    label: biological_process
+  evidence_type: ND
+  original_reference_id: GO_REF:0000015
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Root biological_process term with the ND evidence code, indicating that no
+      biological process has been experimentally assigned to dca7 in S. pombe. Deletion
+      is viable and only broad, non-specific stress-screen phenotypes are recorded, so
+      no defensible specific BP annotation can be made. Retained as the honest
+      placeholder marking a genuine biological-process knowledge gap.
+    action: ACCEPT
+    reason: &gt;-
+      ND correctly encodes that the biological process of this dark gene is unknown; it
+      is not a substantive term to replace or remove.
+- term:
+    id: GO:0080008
+    label: Cul4-RING E3 ubiquitin ligase complex
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      Complex membership inferred by sequence similarity (ISS) from the human ortholog
+      DCAF7 (UniProt P61962), which has been described as a substrate receptor of the
+      CUL4-DDB1 (CRL4) E3 ubiquitin ligase. This is a defensible orthology-based
+      inference given the shared DCAF7-like WD40 architecture, and it is a curator ISS
+      transfer from a legitimate ortholog, so it is not removed. However, two caveats
+      keep it non-core: (i) there is no S. pombe evidence that dca7 assembles into a
+      CUL4 complex (the established fission-yeast DCAFs are Cdt2 in canonical CRL4 and
+      Raf1/Dos1 in the CLRC heterochromatin complex; dca7 is a distinct DCAF7-like
+      protein), and (ii) even for the human ortholog the bona fide CRL4 substrate-receptor
+      role is debated relative to its better-established DYRK-kinase scaffold role.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Legitimate ISS transfer from human DCAF7; retained but marked non-core because it
+      is an orthology inference with no local S. pombe evidence and rests on a
+      family role that is itself contested.
+    supported_by:
+    - reference_id: file:SCHPO/dca7/dca7-deep-research-falcon.md
+      supporting_text: &gt;-
+        DCAF7 functions as a substrate recognition subunit (substrate receptor) of the
+        CUL4-DDB1-ROC1 (CRL4) E3 ubiquitin ligase complex
+core_functions: []
+knowledge_gaps:
+- gap_statement: &gt;-
+    The molecular function of S. pombe dca7 (SPBC17D11.08) is undetermined: it is not
+    known which protein(s) its WD40 beta-propeller binds in fission yeast, whether it acts
+    as a kinase scaffold, a ubiquitin-ligase substrate receptor, or in some other adaptor
+    capacity, and no direct activity or binding partner has been experimentally established.
+  boundary: &gt;-
+    Firmly established: the protein exists, is a phosphorylated WD40-repeat protein with a
+    DCAF7-like domain (InterPro IPR045159), is conserved one-to-one across fungi and metazoa,
+    localizes to the cytoplasm and Golgi in a genome-wide GFP survey, and its deletion is
+    viable. Its animal ortholog DCAF7/WDR68 is a catalytically inactive scaffold/adaptor for
+    DYRK-family kinases with a debated CRL4 substrate-receptor role. What is unknown is any
+    S. pombe-specific molecular partner or activity.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    dca7 belongs to a deeply conserved, single-copy protein family with important roles in
+    animal signaling and development (DYRK1A/HIPK2 regulation, transcription, DNA-repair
+    protein turnover). A defined fission-yeast function would clarify the ancestral,
+    pre-metazoan role of the DCAF7/WDR68 scaffold and whether the DYRK-partner or CUL4-receptor
+    role is the conserved core.
+  resolution: &gt;-
+    Affinity purification-mass spectrometry of tagged Dca7 to identify its fission-yeast
+    interactome (testing for association with a DYRK/Yak-family kinase and/or with Cul4/Ddb1);
+    reciprocal tagging of candidate partners; and phenotypic profiling of a dca7 deletion under
+    conditions where DCAF7-family functions are relevant (stress signaling, DNA damage).
+  provenance:
+  - reference_id: file:SCHPO/dca7/dca7-deep-research-falcon.md
+    supporting_text: &gt;-
+      No primary literature was identified that directly characterizes SPBC17D11.08/dca7 in
+      *S. pombe*
+- gap_statement: &gt;-
+    The biological process dca7 participates in within S. pombe is unknown. PomBase records the
+    biological process as ND, deletion is viable, and only broad, non-specific high-throughput
+    stress-resistance/sensitivity and quiescence-survival phenotypes are catalogued, none of
+    which pin the gene to a specific pathway.
+  boundary: &gt;-
+    Established: dca7 deletion is viable and the gene appears in numerous genome-wide
+    phospho/phenomic datasets, and it has high-throughput physical-interaction hits (with the
+    chromatin remodeler fft3 by affinity capture-MS, and with the kinase ppk15 by two-hybrid).
+    Unknown: whether any of these reflect a real, dedicated biological role, and what pathway
+    dca7 belongs to.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: BP_DARK
+  status: OPEN
+  significance: &gt;-
+    Assigning a biological process would move dca7 out of the fission-yeast &#34;conserved unknown&#34;
+    set and could reveal whether the DCAF7/WDR68 scaffold has a conserved role in a specific
+    pathway (e.g. gene expression, as suggested by the PomBase product line) predating its
+    elaboration in animals.
+  resolution: &gt;-
+    Directed phenotyping of a dca7 deletion (and of a WD40-surface point mutant) in the
+    processes where orthologs act, combined with epistasis against candidate kinase or Cul4/Ddb1
+    partners; transcriptome analysis to test the &#34;implicated in gene expression&#34; hypothesis.
+  provenance:
+  - reference_id: file:SCHPO/dca7/dca7-deep-research-falcon.md
+    supporting_text: &gt;-
+      The specific SPBC17D11.08 protein is uncharacterized
+suggested_questions:
+- question: &gt;-
+    Does S. pombe Dca7 bind a DYRK/Yak-family kinase, as its orthologs YPL247C (with Yak1) and
+    C. albicans Orf19.384 (with Yak1) do, thereby establishing a conserved fungal DCAF7-kinase
+    module?
+- question: &gt;-
+    Does Dca7 physically associate with the S. pombe Cul4 (Pcu4)/Ddb1 machinery, or is the
+    ISS-transferred CUL4-RING E3 ubiquitin ligase complex membership not realized in fission
+    yeast?
+- question: &gt;-
+    Is the Golgi localization observed in the genome-wide GFP survey a genuine steady-state
+    pool or a tagging/overexpression artifact, given that a WD40 scaffold has no obvious Golgi
+    role?
+suggested_experiments:
+- hypothesis: &gt;-
+    Dca7 functions as a WD40 scaffold/adaptor that binds a specific fission-yeast partner
+    protein (candidate: a DYRK/Yak-family kinase), analogous to the conserved DCAF7-DYRK module.
+  description: &gt;-
+    Affinity purification of a functional epitope-tagged Dca7 from S. pombe followed by mass
+    spectrometry to define its in vivo interactome, with reciprocal tagging/co-IP validation of
+    the top hits and comparison against candidate DYRK/Yak kinases and Cul4/Ddb1 subunits.
+  experiment_type: affinity purification-mass spectrometry (AP-MS) interactome mapping
+- hypothesis: &gt;-
+    Dca7 contributes to a specific biological process (e.g. gene expression or a stress
+    pathway) despite being non-essential.
+  description: &gt;-
+    Systematic phenotypic profiling of a dca7 deletion strain (growth, stress panels, quiescence
+    survival, and transcriptome/RNA-seq) alongside a WD40 propeller-surface point mutant to test
+    whether phenotypes depend on the protein-binding surface, and epistasis analysis with
+    candidate kinase and Cul4/Ddb1 partners.
+  experiment_type: reverse-genetics phenotyping, transcriptomics, and epistasis analysis
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

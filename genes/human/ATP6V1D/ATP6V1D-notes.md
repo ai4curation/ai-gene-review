@@ -68,3 +68,29 @@ V-ATPase is broadly required for lysosomal function and autophagy. The annotatio
 - The cytosol annotations (multiple Reactome TAS) are consistent with the fact that the V1 domain is a peripheral complex on the cytoplasmic face of membranes.
 - Extracellular exosome (HDA) annotations from proteomics studies are technically valid observations but represent non-functional localization data for a structural component that may co-purify with exosome membrane fragments.
 - Cilium and centrosome annotations (IDA from PMID:21844891) are supported but represent a secondary function.
+
+## Falcon deep research synthesis (2026-06-21)
+
+Falcon deep research has now completed (`file:human/ATP6V1D/ATP6V1D-deep-research-falcon.md`,
+21 citations). It corroborates the central-rotor core above and adds general
+V-ATPase regulatory detail; no change to annotation calls.
+
+- **Core confirmed.** D is one of the two **central-rotor (central-stalk)**
+  subunits (with F); it transmits torque from A3B3 ATP hydrolysis to the V0
+  proteolipid ring, coupling chemistry to proton translocation. Ubiquitous,
+  essential, not catalytic. No change to the rotor/proton-transport-coupling calls.
+- **Reversible-assembly regulation (Sava 2024; Ratto 2022).** In continuously fed
+  mammalian cells, V1–V0 assembly/disassembly occurs during the lysosome
+  regeneration cycle with rapid cytosolic↔membrane exchange of V1 subunits,
+  distinct from amino-acid-depletion control and **not requiring mTORC1 changes**
+  in the fed state. Relevant regulatory context for the PN regulation branch.
+- **Mode-switching (Kosmidis 2022).** Single mammalian-brain V-ATPase stochastically
+  switches between proton-pumping, inactive, and proton-leaky modes, tuned by ATP
+  and the electrochemical proton gradient — affecting vesicle-acidification and
+  neurotransmitter-loading dynamics. Mechanistic context, not a D-specific MF.
+- **Disease.** No ATP6V1D-specific Mendelian disease reported; the section is
+  generic V-ATPase (neurodegeneration, dRTA, osteopetrosis via a3, cancer).
+  Non-core context.
+
+Net: no change to calls — D is the ubiquitous central-rotor V1 subunit coupling
+ATP hydrolysis to proton translocation.

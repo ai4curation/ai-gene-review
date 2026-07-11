@@ -130,6 +130,10 @@ or have only TrEMBL entries with incorrect/unverified taxonomy. Focus on the 5 g
 - [Enzymatic diversity of the C. thermocellum cellulosome](https://www.nature.com/articles/srep35709)
 - [Cellulosome Wikipedia](https://en.wikipedia.org/wiki/Cellulosome)
 
+## Slides
+
+- [Slides](CELLULOSOME/slides/CELLULOSOME-slides.html) (Marp source: [CELLULOSOME-slides.md](CELLULOSOME/slides/CELLULOSOME-slides.md)) — AI generated
+
 ---
 # STATUS
 

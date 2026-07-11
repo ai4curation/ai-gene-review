@@ -13,20 +13,47 @@ from deep_research_client.templates import TemplateManager  # type: ignore[impor
 from ai_gene_review.etl.gene import expand_organism_name, fetch_uniprot_data, resolve_gene_to_uniprot
 
 
-def parse_uniprot_metadata(uniprot_text: str, uniprot_id: str) -> str:
-    """Parse key metadata from UniProt text format.
+# Official UniProtKB accession syntax (6 or 10 characters). Used to decide
+# whether a positional argument is an accession or a gene symbol, so that
+# all-uppercase gene symbols 6-10 chars long (e.g. ATP6AP1, ATP6V1H, CCDC47)
+# are NOT misclassified as accessions.
+# https://www.uniprot.org/help/accession_numbers
+_UNIPROT_ACCESSION_RE = re.compile(
+    r'^([OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2})$'
+)
 
-    Extracts the most important fields for gene identification and research.
+
+def is_uniprot_accession(value: str) -> bool:
+    """Return True if ``value`` looks like a UniProtKB accession.
+
+    Examples:
+        >>> is_uniprot_accession("Q9H2V7")
+        True
+        >>> is_uniprot_accession("A0A024R161")
+        True
+        >>> is_uniprot_accession("ATP6AP1")
+        False
+        >>> is_uniprot_accession("SPNS1")
+        False
+    """
+    return bool(_UNIPROT_ACCESSION_RE.match(value))
+
+
+def extract_uniprot_fields(uniprot_text: str, uniprot_id: str) -> dict:
+    """Extract key structured fields from a UniProt text entry.
 
     Args:
         uniprot_text: Raw UniProt entry in text format
         uniprot_id: UniProt accession ID
 
     Returns:
-        Formatted string with key metadata
+        Dictionary of parsed metadata fields (e.g. ``protein_name``,
+        ``gene_name``, ``organism``, ``function``, ``protein_family``,
+        ``protein_domains``).
     """
     lines = uniprot_text.split('\n')
-    metadata = {}
+    metadata: dict = {}
+    pfam_domains: list[str] = []
 
     # Parse key fields
     current_section = None
@@ -118,13 +145,53 @@ def parse_uniprot_metadata(uniprot_text: str, uniprot_id: str) -> str:
             continuation = line[9:].strip()
             metadata['subunit'] += ' ' + continuation
 
+        elif line.startswith('CC   -!- SIMILARITY:'):
+            # Protein family membership
+            current_section = 'similarity'
+            sim = line.split('SIMILARITY:')[1].strip()
+            metadata['protein_family'] = sim
+        elif line.startswith('CC       ') and current_section == 'similarity':
+            continuation = line[9:].strip()
+            metadata['protein_family'] += ' ' + continuation
+
+        elif line.startswith('DR   Pfam;'):
+            # Pfam domain/family name (3rd semicolon-separated field)
+            parts = [p.strip() for p in line[5:].split(';')]
+            if len(parts) >= 3 and parts[2]:
+                pfam_domains.append(parts[2])
+
+    if pfam_domains:
+        # De-duplicate preserving order
+        seen: set = set()
+        unique_domains = [d for d in pfam_domains if not (d in seen or seen.add(d))]
+        metadata['protein_domains'] = ', '.join(unique_domains)
+
     # Clean up all fields to remove evidence codes at the end
-    for key in ['function', 'subcellular_location', 'subunit']:
+    for key in ['function', 'subcellular_location', 'subunit', 'protein_family']:
         if key in metadata:
             text = metadata[key]
             if '{ECO:' in text:
                 text = text.split('{ECO:')[0].strip()
-            metadata[key] = text
+            metadata[key] = text.rstrip('.')
+
+    metadata.setdefault('uniprot_id', uniprot_id)
+    return metadata
+
+
+def parse_uniprot_metadata(uniprot_text: str, uniprot_id: str) -> str:
+    """Parse key metadata from UniProt text format.
+
+    Extracts the most important fields for gene identification and research
+    and renders them as a human-readable block for inclusion in a prompt.
+
+    Args:
+        uniprot_text: Raw UniProt entry in text format
+        uniprot_id: UniProt accession ID
+
+    Returns:
+        Formatted string with key metadata
+    """
+    metadata = extract_uniprot_fields(uniprot_text, uniprot_id)
 
     # Format metadata for prompt
     result = []
@@ -229,10 +296,7 @@ def research_gene_unified(
         deep-research-unified PSEAE Q9HXE5 --alias rhlB --provider openai
         deep-research-unified worm pgl-1 --output-dir custom/path
     """
-    # Determine if gene_or_uniprot is a UniProt ID or gene symbol
-    uniprot_pattern = re.compile(r'^[A-Z][0-9][A-Z0-9]{3}[0-9]$|^[A-Z0-9]{6,10}$')
-
-    if uniprot_pattern.match(gene_or_uniprot):
+    if is_uniprot_accession(gene_or_uniprot):
         # Likely a UniProt ID
         uniprot_id = gene_or_uniprot
         gene_symbol = alias if alias else gene_or_uniprot
@@ -319,7 +383,32 @@ def research_gene_unified(
 
     # Prepare template variables
     organism_full = expand_organism_name(organism)
+    fields = extract_uniprot_fields(uniprot_text, uniprot_id)
+
+    protein_description = fields.get("protein_name", "N/A")
+    if fields.get("ec_number"):
+        protein_description += f" (EC {fields['ec_number']})"
+
+    gene_info_parts = []
+    if fields.get("gene_name"):
+        gene_info_parts.append(f"Gene name: {fields['gene_name']}")
+    if fields.get("synonyms"):
+        gene_info_parts.append(f"Synonyms: {fields['synonyms']}")
+    if fields.get("locus_tag"):
+        gene_info_parts.append(f"Locus: {fields['locus_tag']}")
+    gene_info = "; ".join(gene_info_parts) if gene_info_parts else gene_symbol
+
     variables = {
+        # Variables used by the rich default template
+        "gene_symbol": gene_symbol,
+        "gene_id": fields.get("gene_name", gene_symbol),
+        "uniprot_accession": uniprot_id,
+        "protein_description": protein_description,
+        "gene_info": gene_info,
+        "organism_full": organism_full,
+        "protein_family": fields.get("protein_family", "Not specified in UniProt"),
+        "protein_domains": fields.get("protein_domains", "Not specified in UniProt"),
+        # Variables used by the compat template (kept for --template overrides)
         "gene": gene_symbol,
         "organism": organism_full,
         "uniprot_metadata": uniprot_metadata,

@@ -98,3 +98,28 @@ UniProt: Q8NEY4 (VATC2_HUMAN), 427 AA. Gene HGNC:18264, chromosome 2.
   non-core.
 - GO:0005829 (cytosol, TAS Reactome, x12): valid for the free/peripheral V1 pool; keep as
   non-core (representative).
+
+## Falcon deep research synthesis (2026-06-21)
+
+Falcon deep research has now completed (`file:human/ATP6V1C2/ATP6V1C2-deep-research-falcon.md`,
+18 citations). It corroborates the C2 (tissue-restricted C-subunit paralog) biology
+above and sharpens the expression/role picture; no change to annotation calls.
+
+- **Core confirmed.** C2 is a single-copy regulatory/stator V1 subunit (paralog of
+  ubiquitous C1), part of the collar coupling A3B3 ATP hydrolysis to rotor-driven
+  proton translocation and required for V1 assembly — not catalytic itself.
+- **Expression refined to the renal "ionocyte" program.** Single-cell data place
+  ATP6V1C2 predominantly in **type-A (acid-secretory) intercalated cells** of the
+  collecting duct, part of the conserved FOXI1+ ionocyte family that also expresses
+  ATP6V1B1 and KRT7 (Casellas 2023; Jobst-Schwan 2020). This supports a
+  kidney-acid-secretion functional context for C2 (consistent with the
+  kidney/lung-enriched framing in the notes; not testis-specific).
+- **Functional role.** In intercalated cells, apical V-ATPase (containing C2)
+  secretes carbonic-anhydrase-II–derived H+ into the lumen (with basolateral
+  AE1/SLC4A1 exporting HCO3-), contributing to systemic acid-base balance;
+  type-A intercalated-cell number/V-ATPase activity adapts to acid loading via
+  FOXI1/TFCP2L1/NOTCH. Renal-physiology context (the molecular function remains the
+  generic V1 C-subunit assembly/regulatory role).
+
+Net: no change to calls — C2 is the tissue-restricted (renal intercalated cell)
+regulatory C-subunit paralog supporting V-ATPase assembly and acid secretion.

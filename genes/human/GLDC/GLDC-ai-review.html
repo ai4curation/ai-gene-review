@@ -1,0 +1,4190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GLDC - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>GLDC</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P23378" target="_blank" class="term-link">
+                        P23378
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "GLDC";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P23378" data-a="DESCRIPTION: GLDC is the P protein (glycine decarboxylase) of t..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>GLDC is the P protein (glycine decarboxylase) of the mitochondrial glycine cleavage system (GCS), a pyridoxal-5&#39;-phosphate (PLP)-dependent homodimeric enzyme (EC 1.4.4.2) encoded on human chromosome 9. It catalyses the first, committed step of glycine catabolism: it binds the alpha-amino group of glycine through its PLP cofactor (covalently attached as a Schiff base to Lys754), decarboxylates the glycine to release CO2, and transfers the residual aminomethyl moiety to the lipoic-acid (lipoamide) arm of the H protein (GCSH) rather than releasing free methylamine. Together with the T protein (AMT), the L protein (DLD) and the H protein (GCSH), GLDC forms the glycine cleavage system, the major route of glycine degradation, which links glycine to one-carbon/folate metabolism and serine biosynthesis. The mature protein localises to the mitochondrial matrix after cleavage of an N-terminal transit peptide. Loss-of-function variants in GLDC are the most common cause (~80% of cases) of nonketotic hyperglycinemia (glycine encephalopathy), an autosomal recessive disorder characterised by accumulation of glycine in body fluids, neonatal seizures and severe encephalopathy.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004375" target="_blank" class="term-link">
+                                    GO:0004375
+                                </a>
+                            </span>
+                            <span class="term-label">glycine dehydrogenase (decarboxylating) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P23378" data-a="GO:0004375" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function. The phylogenetic (IBA) annotation to glycine dehydrogenase (decarboxylating) activity is the correct, informative MF for the GCS P protein and is corroborated by experimental and TAS evidence in this same gene.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GLDC is the P protein of the glycine cleavage system and catalyses the PLP-dependent decarboxylation of glycine (EC 1.4.4.2). This IBA is concordant with the EXP, IDA and TAS annotations to the same term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GLDC/GLDC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">The P protein (GLDC) binds the alpha-amino group of glycine</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019464" target="_blank" class="term-link">
+                                    GO:0019464
+                                </a>
+                            </span>
+                            <span class="term-label">glycine decarboxylation via glycine cleavage system</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P23378" data-a="GO:0019464" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core biological process. This is the most specific process term for GLDC: glycine decarboxylation carried out as the P-protein step of the glycine cleavage system.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Matches the experimentally established role of GLDC as the P protein of the GCS and is the preferred, most-informative process term for this gene.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GLDC/GLDC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">remaining methylamine moiety is then transferred to the lipoamide</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P23378" data-a="GO:0005739" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct subcellular localisation. GLDC acts in the mitochondrion (matrix). This IBA is consistent with IDA, HTP and TAS localisation evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GLDC carries an N-terminal mitochondrial transit peptide and the GCS operates in the mitochondrial matrix; mitochondrion is the correct compartment, though the matrix (GO:0005759) is more precise.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GLDC/GLDC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004375" target="_blank" class="term-link">
+                                    GO:0004375
+                                </a>
+                            </span>
+                            <span class="term-label">glycine dehydrogenase (decarboxylating) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P23378" data-a="GO:0004375" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic assignment of the core catalytic MF via EC 1.4.4.2 / RHEA:24304 and InterPro. Correct and concordant with experimental evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The EC/RHEA and InterPro mappings correctly capture the glycine dehydrogenase (decarboxylating) activity of the P protein.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GLDC/GLDC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">EC=1.4.4.2</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P23378" data-a="GO:0005739" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic localisation from the UniProt Subcellular Location vocabulary (SL-0173, Mitochondrion). Correct.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the curated UniProt subcellular location and with IDA/HTP/TAS evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GLDC/GLDC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006520" target="_blank" class="term-link">
+                                    GO:0006520
+                                </a>
+                            </span>
+                            <span class="term-label">amino acid metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P23378" data-a="GO:0006520" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Very general parent process. GLDC does participate in amino acid metabolism, but this is far broader than its actual role in glycine cleavage.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct as a broad InterPro-based grouping term; the informative process is the more specific GO:0019464 (glycine decarboxylation via glycine cleavage system). Broad IEA parents may be retained.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GLDC/GLDC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">The glycine cleavage system catalyzes the degradation of</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006544" target="_blank" class="term-link">
+                                    GO:0006544
+                                </a>
+                            </span>
+                            <span class="term-label">glycine metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P23378" data-a="GO:0006544" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Broad but correct grouping term. GLDC is central to glycine metabolism; GO:0019464 is the more specific catabolic term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Accurate InterPro-based parent term consistent with the enzyme acting on glycine.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GLDC/GLDC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">The glycine cleavage system catalyzes the degradation of</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006546" target="_blank" class="term-link">
+                                    GO:0006546
+                                </a>
+                            </span>
+                            <span class="term-label">glycine catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P23378" data-a="GO:0006546" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct process: GLDC catalyses the first step of glycine degradation. This is the direct parent of the more specific GO:0019464.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Glycine catabolic process accurately describes the pathway GLDC initiates; concordant with IDA and TAS annotations to the same term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GLDC/GLDC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">The glycine cleavage system catalyzes the degradation of</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016829" target="_blank" class="term-link">
+                                    GO:0016829
+                                </a>
+                            </span>
+                            <span class="term-label">lyase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="P23378" data-a="GO:0016829" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Wrong-branch electronic mapping. GLDC is classified EC 1.4.4.2, an oxidoreductase acting on the CH-NH2 group of donors (glycine dehydrogenase (decarboxylating)); it is not a lyase. The lyase term derives from the broad PLP-fold InterPro signature IPR001597 (aromatic-amino-acid beta-eliminating lyase / threonine aldolase), which over-generalises to a lyase MF that does not apply to this enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is a demonstrably incorrect electronic (IEA/InterPro) MF inference: the enzyme&#39;s molecular function is glycine dehydrogenase (decarboxylating) activity (GO:0004375, an oxidoreductase, EC 1.4.4.2), captured accurately by other annotations. Lyase activity is the wrong ontology branch for this protein and is safe to remove per the IEA-mis-mapping criterion.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GLDC/GLDC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">EC=1.4.4.2</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005960" target="_blank" class="term-link">
+                                    GO:0005960
+                                </a>
+                            </span>
+                            <span class="term-label">glycine cleavage complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28244183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28244183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Nonketotic hyperglycinemia: Functional assessment of missens...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P23378" data-a="GO:0005960" data-r="PMID:28244183" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct complex membership. GLDC is the P protein subunit of the four-protein glycine cleavage system (P/GLDC, T/AMT, L/DLD, H/GCSH).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Well-established: GLDC is a bona fide subunit of the glycine cleavage complex. Curated by ComplexPortal.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GLDC/GLDC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">P (GLDC), T (GCST), L (DLD) and H (GCSH)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019464" target="_blank" class="term-link">
+                                    GO:0019464
+                                </a>
+                            </span>
+                            <span class="term-label">glycine decarboxylation via glycine cleavage system</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24467211" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24467211
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Glycine decarboxylase is an unusual amino acid decarboxylase...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P23378" data-a="GO:0019464" data-r="PMID:24467211" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core process, independently supported by the mechanistic study of Go et al. (2014), which shows GLDC decarboxylates glycine and hands the aminomethyl group to the H protein within the GCS.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The cited mechanistic paper directly characterises GLDC-catalysed glycine decarboxylation as the P-protein step of the glycine cleavage system.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24467211" target="_blank" class="term-link">
+                                        PMID:24467211
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">aminomethyl moiety is instead transferred to an accessory H-protein</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000052
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P23378" data-a="GO:0005739" data-r="GO_REF:0000052" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Immunofluorescence (HPA) localisation to mitochondrion. Consistent with all other localisation evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct immunofluorescence evidence supports mitochondrial localisation, concordant with the transit peptide and matrix localisation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GLDC/GLDC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004375" target="_blank" class="term-link">
+                                    GO:0004375
+                                </a>
+                            </span>
+                            <span class="term-label">glycine dehydrogenase (decarboxylating) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/1993704" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:1993704
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The glycine cleavage system. Molecular cloning of the chicke...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P23378" data-a="GO:0004375" data-r="PMID:1993704" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental support for the core catalytic function. Kume et al. cloned the human glycine decarboxylase cDNA and characterised the PLP-binding active-site region essential for enzyme activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct experimental characterisation of human glycine decarboxylase, including the PLP-binding lysine and glycine-rich phosphate-binding region that organise the active site.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1993704" target="_blank" class="term-link">
+                                        PMID:1993704
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The pyridoxal phosphate binding site lysine and a glycine-rich region</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HTP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34800366
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quantitative high-confidence human mitochondrial proteome an...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P23378" data-a="GO:0005739" data-r="PMID:34800366" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput mitochondrial proteomics localises GLDC to mitochondria, concordant with all other localisation evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GLDC was identified in a high-confidence quantitative human mitochondrial proteome; this HTP evidence agrees with the transit peptide, IDA immunofluorescence and matrix TAS annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GLDC/GLDC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-5693967
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P23378" data-a="GO:0005759" data-r="Reactome:R-HSA-5693967" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Most precise localisation: the glycine decarboxylation reaction occurs in the mitochondrial matrix. Retained as the informative compartment.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The GCS operates in the mitochondrial matrix; Reactome places the GLDC-catalysed decarboxylation there. This is the preferred, more specific cellular-component term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GLDC/GLDC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0036255" target="_blank" class="term-link">
+                                    GO:0036255
+                                </a>
+                            </span>
+                            <span class="term-label">response to methylamine</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P23378" data-a="GO:0036255" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Peripheral regulatory response inferred by similarity from rat (P15505). Reflects that GCS P-protein activity is inhibited in the presence of methylamine, not a distinct biological role of GLDC.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Derived from an activity-regulation observation (methylamine inhibits the enzyme). It is a plausible ISS-transferred response but does not represent a core function of GLDC; retained as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GLDC/GLDC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Inhibited in presence</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042803" target="_blank" class="term-link">
+                                    GO:0042803
+                                </a>
+                            </span>
+                            <span class="term-label">protein homodimerization activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P23378" data-a="GO:0042803" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Supported: the functional P protein is a homodimer. Retained as a supporting (non-core) molecular function underpinning the catalytic unit.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt records GLDC as a homodimer (by similarity to rat P15505), and the PLP-dependent active site is formed in the dimer. Real but ancillary to the catalytic MF.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GLDC/GLDC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Homodimer (By similarity)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070280" target="_blank" class="term-link">
+                                    GO:0070280
+                                </a>
+                            </span>
+                            <span class="term-label">pyridoxal binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P23378" data-a="GO:0070280" data-r="GO_REF:0000024" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The cofactor is pyridoxal 5&#39;-phosphate (PLP), covalently bound as a Schiff base at Lys754, not free pyridoxal. The more accurate MF is pyridoxal phosphate binding (GO:0030170), which UniProt itself also carries.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GLDC binds pyridoxal 5&#39;-phosphate (the phosphorylated, active cofactor), attached as N6-(pyridoxal phosphate)lysine at Lys754; the specific, accurate term is GO:0030170 pyridoxal phosphate binding rather than the more general pyridoxal binding.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030170" target="_blank" class="term-link">
+                                    pyridoxal phosphate binding
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GLDC/GLDC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Name=pyridoxal 5&#39;-phosphate</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GLDC/GLDC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">N6-(pyridoxal phosphate)lysine</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1903442" target="_blank" class="term-link">
+                                    GO:1903442
+                                </a>
+                            </span>
+                            <span class="term-label">response to lipoic acid</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P23378" data-a="GO:1903442" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Peripheral regulatory response inferred by similarity from rat (P15505), reflecting that P-protein activity is stimulated by lipoic acid (the lipoamide arm of the H protein is the physiological acceptor).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Derived from an activity-regulation observation (lipoic acid stimulates the enzyme). Consistent with the mechanism but not a core function; retained as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GLDC/GLDC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Stimulated by lipoic acid</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004375" target="_blank" class="term-link">
+                                    GO:0004375
+                                </a>
+                            </span>
+                            <span class="term-label">glycine dehydrogenase (decarboxylating) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28244183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28244183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Nonketotic hyperglycinemia: Functional assessment of missens...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P23378" data-a="GO:0004375" data-r="PMID:28244183" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental support for the core catalytic MF: enzymatic assays of GCS P-protein activity for wild-type and NKH missense variants expressed in COS7 cells.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Bravo-Alonso et al. measured residual GCS P-protein (glycine decarboxylase) activity for GLDC constructs, directly assaying this molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28244183" target="_blank" class="term-link">
+                                        PMID:28244183
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">assess the residual activity and mutant protein stability</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28244183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28244183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Nonketotic hyperglycinemia: Functional assessment of missens...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P23378" data-a="GO:0005739" data-r="PMID:28244183" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct evidence of mitochondrial localisation; the same study also reported NKH variants with altered (partially cytosolic) localisation, confirming the wild-type mitochondrial targeting.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Localisation of GLDC to mitochondria was directly assessed; consistent with the transit peptide and all other localisation evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GLDC/GLDC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006546" target="_blank" class="term-link">
+                                    GO:0006546
+                                </a>
+                            </span>
+                            <span class="term-label">glycine catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28244183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28244183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Nonketotic hyperglycinemia: Functional assessment of missens...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P23378" data-a="GO:0006546" data-r="PMID:28244183" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct evidence linking GLDC to glycine catabolism: NKH variants cause loss or reduction of glycine catabolic process, as characterised functionally in this study.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The functional assessment demonstrates that pathogenic GLDC variants impair the glycine catabolic process, confirming GLDC&#39;s role in it. The more specific term is GO:0019464.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28244183" target="_blank" class="term-link">
+                                        PMID:28244183
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">assess the residual activity and mutant protein stability</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009055" target="_blank" class="term-link">
+                                    GO:0009055
+                                </a>
+                            </span>
+                            <span class="term-label">electron transfer activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/2268343" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:2268343
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    One of the two genomic copies of the glycine decarboxylase c...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P23378" data-a="GO:0009055" data-r="PMID:2268343" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Likely over-annotation / mis-assignment. GLDC is a PLP-dependent glycine decarboxylase (EC 1.4.4.2); it does not act as an electron carrier. Within the glycine cleavage system, the redox/electron-transfer role belongs to the L protein (DLD, dihydrolipoamide dehydrogenase, FAD-dependent), not to the P protein. The cited reference (Sakakibara et al. 1990) is about a genomic deletion of the glycine decarboxylase gene in an NKH patient and provides no support for an electron transfer activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The molecular function of GLDC is glycine dehydrogenase (decarboxylating) activity, captured by multiple experimental and electronic annotations; electron transfer activity is not a function of the P protein and is not supported by the cited paper. Flagged as over-annotated rather than removed because it is an author-statement (TAS) annotation whose full text was not reviewed.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GLDC/GLDC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">The P protein (GLDC) binds the alpha-amino group of glycine</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004375" target="_blank" class="term-link">
+                                    GO:0004375
+                                </a>
+                            </span>
+                            <span class="term-label">glycine dehydrogenase (decarboxylating) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/1996985" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:1996985
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structural and expression analyses of normal and mutant mRNA...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P23378" data-a="GO:0004375" data-r="PMID:1996985" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author-stated support for the core catalytic function: expression of normal human P-protein cDNA in COS7 cells reconstituted glycine decarboxylase activity comparable to human liver, whereas the NKH mutant (Phe756del) had none.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Kure et al. demonstrated glycine decarboxylase activity for the wild-type human enzyme and its abolition by an NKH-causing deletion, supporting the catalytic MF.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1996985" target="_blank" class="term-link">
+                                        PMID:1996985
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">showed no activity, indicating that the three-base deletion could cause NKH</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006546" target="_blank" class="term-link">
+                                    GO:0006546
+                                </a>
+                            </span>
+                            <span class="term-label">glycine catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/1996985" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:1996985
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structural and expression analyses of normal and mutant mRNA...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P23378" data-a="GO:0006546" data-r="PMID:1996985" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author-stated support that GLDC drives glycine catabolism: loss of P-protein activity from an NKH deletion causes the glycine-accumulation phenotype, linking the enzyme to the glycine catabolic process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with GLDC&#39;s role in glycine degradation; the loss-of-activity mutant establishes the connection to glycine catabolism. GO:0019464 is the more specific term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1996985" target="_blank" class="term-link">
+                                        PMID:1996985
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">showed no activity, indicating that the three-base deletion could cause NKH</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Pyridoxal-5&#39;-phosphate-dependent decarboxylation of glycine as the P protein of the mitochondrial glycine cleavage system: releases CO2 from glycine and transfers the residual aminomethyl group to the lipoamide arm of the H protein (GCSH).</h3>
+                <span class="vote-buttons" data-g="P23378" data-a="FUNCTION: Pyridoxal-5&#39;-phosphate-dependent decarboxylation o..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004375" target="_blank" class="term-link">
+                            glycine dehydrogenase (decarboxylating) activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019464" target="_blank" class="term-link">
+                                glycine decarboxylation via glycine cleavage system
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                mitochondrial matrix
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/GLDC/GLDC-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">The P protein (GLDC) binds the alpha-amino group of glycine</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24467211" target="_blank" class="term-link">
+                                PMID:24467211
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">aminomethyl moiety is instead transferred to an accessory H-protein</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Binds the pyridoxal 5&#39;-phosphate cofactor (covalently attached as a Schiff base at Lys754) required for glycine decarboxylation.</h3>
+                <span class="vote-buttons" data-g="P23378" data-a="FUNCTION: Binds the pyridoxal 5&#39;-phosphate cofactor (covalen..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030170" target="_blank" class="term-link">
+                            pyridoxal phosphate binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                mitochondrial matrix
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/GLDC/GLDC-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">N6-(pyridoxal phosphate)lysine</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/GLDC/GLDC-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry P23378 (GCSP_HUMAN), Glycine dehydrogenase (decarboxylating), mitochondrial</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/1993704" target="_blank" class="term-link">
+                            PMID:1993704
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The glycine cleavage system. Molecular cloning of the chicken and human glycine decarboxylase cDNAs and some characteristics involved in the deduced protein structures.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/1996985" target="_blank" class="term-link">
+                            PMID:1996985
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Structural and expression analyses of normal and mutant mRNA encoding glycine decarboxylase: three-base deletion in mRNA causes nonketotic hyperglycinemia.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/2268343" target="_blank" class="term-link">
+                            PMID:2268343
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">One of the two genomic copies of the glycine decarboxylase cDNA has been deleted at a 5&#39; region in a patient with nonketotic hyperglycinemia.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24467211" target="_blank" class="term-link">
+                            PMID:24467211
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Glycine decarboxylase is an unusual amino acid decarboxylase involved in tumorigenesis.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28244183" target="_blank" class="term-link">
+                            PMID:28244183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Nonketotic hyperglycinemia: Functional assessment of missense variants in GLDC to understand phenotypes of the disease.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link">
+                            PMID:34800366
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Quantitative high-confidence human mitochondrial proteome and its dynamics in cellular context.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-5693967
+
+                    </span>
+                </div>
+
+                <div class="reference-title">PXLP-K754-GLDC dimer decarboxylates Gly</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(GLDC-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P23378" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="gldc-p23378-review-notes">GLDC (P23378) — review notes</h1>
+<p>Glycine dehydrogenase (decarboxylating), mitochondrial / Glycine cleavage system P protein<br />
+/ Glycine decarboxylase. HGNC:4313. EC 1.4.4.2.</p>
+<p>Deep research: falcon out of credits (HTTP 402); no <code>-deep-research-falcon.md</code>. Review grounded<br />
+in <code>GLDC-uniprot.txt</code>, seeded GOA, and cached <code>publications/PMID_*.md</code>.</p>
+<h2 id="core-biology-verified">Core biology (verified)</h2>
+<ul>
+<li>P-protein of the mitochondrial <strong>glycine cleavage system (GCS)</strong>: P=GLDC, H=GCSH, T=AMT/GCST,<br />
+  L=DLD. Catalyses the first, committed step of glycine catabolism.</li>
+<li>PLP-dependent (pyridoxal-5'-phosphate) enzyme; PLP is covalently bound as<br />
+  N6-(pyridoxal phosphate)lysine at Lys754 (FT MOD_RES 754; ISS from P15505).<br />
+  [file:human/GLDC/GLDC-uniprot.txt "N6-(pyridoxal phosphate)lysine"]</li>
+<li>Reaction: decarboxylates glycine (releases CO2) and transfers the residual aminomethyl<br />
+  moiety to the lipoyl (lipoamide) arm of the H-protein (GCSH).<br />
+  UniProt FUNCTION: [file:human/GLDC/GLDC-uniprot.txt "The P protein (GLDC) binds the alpha-amino group of glycine"]<br />
+  and "CO(2) is released"; "remaining methylamine moiety is then transferred to the lipoamide".</li>
+<li>Mechanism paper PMID:24467211 (Go et al 2014, Biochemistry, abstract only): GLDC is an<br />
+  "unusual PLP-containing alpha-amino acid decarboxylase" that removes CO2 without releasing free<br />
+  methylamine; "aminomethyl moiety is instead transferred to an accessory H-protein"; the GCS<br />
+  "couples the decarboxylation of glycine to the biosynthesis of serine". Also frames GLDC as a<br />
+  metabolic oncogene, but that is tumour context, not the core catalytic function.</li>
+<li>Homodimer; interacts with GCSH (By similarity). [file: "Homodimer (By similarity)"]</li>
+<li>Localisation: mitochondrion / mitochondrial matrix. UniProt SUBCELLULAR LOCATION: Mitochondrion<br />
+  (ECO:0000269|PubMed:28244183). Reactome places reaction in mitochondrial matrix. HPA IDA<br />
+  (GO_REF:0000052) and HTP mito-proteome (PMID:34800366) both localise to mitochondrion.</li>
+<li>Structure: PDB 6I33/6I34/6I35 (human, res 45-1020), PLP-dependent transferase fold.</li>
+</ul>
+<h2 id="disease">Disease</h2>
+<ul>
+<li>Deficiency is the most common cause (~80%) of <strong>nonketotic hyperglycinemia (NKH) / glycine<br />
+  encephalopathy</strong> (MIM:605899): neonatal seizures, encephalopathy, raised CSF:plasma glycine.<br />
+  Many NKH missense variants lose glycine catabolic activity (PMID:28244183; PMID:1996985 Phe756del<br />
+  abolishes activity in COS7).</li>
+</ul>
+<h2 id="annotation-specific-notes">Annotation-specific notes</h2>
+<ul>
+<li>MF GO:0004375 glycine dehydrogenase (decarboxylating) activity — core; supported by EXP<br />
+  (PMID:1993704), IDA (PMID:28244183), TAS (PMID:1996985), IBA, IEA(EC 1.4.4.2 / RHEA:24304). ACCEPT.</li>
+<li>BP GO:0019464 glycine decarboxylation via glycine cleavage system — most specific catabolic<br />
+  process; core. ACCEPT (IBA and NAS).</li>
+<li>BP GO:0006546 glycine catabolic process — parent of the GCS decarboxylation; correct but less<br />
+  specific. ACCEPT (IDA/TAS/IEA); GO:0019464 is the preferred specific core term.</li>
+<li>GO:0009055 electron transfer activity (TAS, PMID:2268343) — this reference is a genomic-copy<br />
+  deletion paper (abstract does not describe electron transfer). GLDC is a PLP decarboxylase, NOT<br />
+  an electron carrier (the L-protein/DLD is the one with FAD/redox activity). Very likely a<br />
+  mis-mapping / over-annotation. It is a TAS (author statement), not experimental; the abstract<br />
+  gives no support. MARK_AS_OVER_ANNOTATED (do not REMOVE a non-IEA cited annotation outright; but<br />
+  flag strongly — arguably wrong branch). Considered: the "aminomethyl-transferring" alt name and<br />
+  the oxidoreductase KW do not imply electron transfer activity in the GO sense.</li>
+<li>GO:0005960 glycine cleavage complex (NAS, ComplexPortal PMID:28244183) part_of — correct, GLDC is<br />
+  a subunit of GCS. ACCEPT.</li>
+<li>GO:0042803 protein homodimerization activity (ISS from P15505) — supported by UniProt SUBUNIT<br />
+  Homodimer. ACCEPT (KEEP; adapter/dimerization real). Kept as non-core supporting.</li>
+<li>GO:0070280 pyridoxal binding (ISS) — PLP cofactor binding; real. Prefer GO:0030170 pyridoxal<br />
+  phosphate binding (the actual cofactor is PLP, covalently bound as Schiff base at Lys754).<br />
+  MODIFY -&gt; GO:0030170. (UniProt DR itself carries GO:0030170 IBA.)</li>
+<li>GO:0036255 response to methylamine (ISS from P15505) — from rat activity-regulation (inhibited by<br />
+  methylamine). Peripheral regulatory response, not core. KEEP_AS_NON_CORE.</li>
+<li>GO:1903442 response to lipoic acid (ISS from P15505) — from rat activity-regulation (stimulated by<br />
+  lipoic acid). Peripheral, not core. KEEP_AS_NON_CORE.</li>
+<li>GO:0006520 amino acid metabolic process (IEA InterPro) — correct but very general parent. ACCEPT<br />
+  (broad IEA); GO:0019464 is the informative term.</li>
+<li>GO:0006544 glycine metabolic process (IEA InterPro) — correct broad parent. ACCEPT.</li>
+<li>GO:0016829 lyase activity (IEA InterPro, IPR001597) — GLDC is classified EC 1.4.4.2 oxidoreductase,<br />
+  not a lyase; IPR001597 (ArAA beta-elim lyase / Thr aldolase) is a broad PLP-fold signature. The<br />
+  lyase MF is a wrong-branch electronic mapping for this enzyme (its MF is glycine dehydrogenase<br />
+  (decarboxylating), an oxidoreductase). REMOVE (clearly wrong IEA inference — permitted).</li>
+<li>Mitochondrion/mitochondrial matrix (multiple IBA/IEA/IDA/HTP/TAS) — all correct. ACCEPT.</li>
+<li>GO:0004375 IEA (GO_REF:0000120, EC/RHEA) — correct electronic MF. ACCEPT.</li>
+</ul>
+<h2 id="core_functions">core_functions</h2>
+<ul>
+<li>MF GO:0004375 glycine dehydrogenase (decarboxylating) activity (with GO:0030170 PLP binding as<br />
+  supporting MF).</li>
+<li>BP directly_involved_in GO:0019464 glycine decarboxylation via glycine cleavage system.</li>
+<li>CC located_in GO:0005759 mitochondrial matrix.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P23378
+gene_symbol: GLDC
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  GLDC is the P protein (glycine decarboxylase) of the mitochondrial glycine
+  cleavage system (GCS), a pyridoxal-5&#39;-phosphate (PLP)-dependent homodimeric
+  enzyme (EC 1.4.4.2) encoded on human chromosome 9. It catalyses the first,
+  committed step of glycine catabolism: it binds the alpha-amino group of glycine
+  through its PLP cofactor (covalently attached as a Schiff base to Lys754),
+  decarboxylates the glycine to release CO2, and transfers the residual
+  aminomethyl moiety to the lipoic-acid (lipoamide) arm of the H protein (GCSH)
+  rather than releasing free methylamine. Together with the T protein (AMT), the
+  L protein (DLD) and the H protein (GCSH), GLDC forms the glycine cleavage
+  system, the major route of glycine degradation, which links glycine to
+  one-carbon/folate metabolism and serine biosynthesis. The mature protein
+  localises to the mitochondrial matrix after cleavage of an N-terminal transit
+  peptide. Loss-of-function variants in GLDC are the most common cause (~80% of
+  cases) of nonketotic hyperglycinemia (glycine encephalopathy), an autosomal
+  recessive disorder characterised by accumulation of glycine in body fluids,
+  neonatal seizures and severe encephalopathy.
+existing_annotations:
+- term:
+    id: GO:0004375
+    label: glycine dehydrogenase (decarboxylating) activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Core molecular function. The phylogenetic (IBA) annotation to glycine
+      dehydrogenase (decarboxylating) activity is the correct, informative MF for
+      the GCS P protein and is corroborated by experimental and TAS evidence in
+      this same gene.
+    action: ACCEPT
+    reason: &gt;-
+      GLDC is the P protein of the glycine cleavage system and catalyses the
+      PLP-dependent decarboxylation of glycine (EC 1.4.4.2). This IBA is
+      concordant with the EXP, IDA and TAS annotations to the same term.
+    supported_by:
+    - reference_id: file:human/GLDC/GLDC-uniprot.txt
+      supporting_text: &#34;The P protein (GLDC) binds the alpha-amino group of glycine&#34;
+- term:
+    id: GO:0019464
+    label: glycine decarboxylation via glycine cleavage system
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Core biological process. This is the most specific process term for GLDC:
+      glycine decarboxylation carried out as the P-protein step of the glycine
+      cleavage system.
+    action: ACCEPT
+    reason: &gt;-
+      Matches the experimentally established role of GLDC as the P protein of the
+      GCS and is the preferred, most-informative process term for this gene.
+    supported_by:
+    - reference_id: file:human/GLDC/GLDC-uniprot.txt
+      supporting_text: &#34;remaining methylamine moiety is then transferred to the lipoamide&#34;
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Correct subcellular localisation. GLDC acts in the mitochondrion (matrix).
+      This IBA is consistent with IDA, HTP and TAS localisation evidence.
+    action: ACCEPT
+    reason: &gt;-
+      GLDC carries an N-terminal mitochondrial transit peptide and the GCS
+      operates in the mitochondrial matrix; mitochondrion is the correct compartment,
+      though the matrix (GO:0005759) is more precise.
+    supported_by:
+    - reference_id: file:human/GLDC/GLDC-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Mitochondrion&#34;
+- term:
+    id: GO:0004375
+    label: glycine dehydrogenase (decarboxylating) activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic assignment of the core catalytic MF via EC 1.4.4.2 / RHEA:24304
+      and InterPro. Correct and concordant with experimental evidence.
+    action: ACCEPT
+    reason: &gt;-
+      The EC/RHEA and InterPro mappings correctly capture the glycine
+      dehydrogenase (decarboxylating) activity of the P protein.
+    supported_by:
+    - reference_id: file:human/GLDC/GLDC-uniprot.txt
+      supporting_text: &#34;EC=1.4.4.2&#34;
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic localisation from the UniProt Subcellular Location vocabulary
+      (SL-0173, Mitochondrion). Correct.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with the curated UniProt subcellular location and with IDA/HTP/TAS
+      evidence.
+    supported_by:
+    - reference_id: file:human/GLDC/GLDC-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Mitochondrion&#34;
+- term:
+    id: GO:0006520
+    label: amino acid metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Very general parent process. GLDC does participate in amino acid metabolism,
+      but this is far broader than its actual role in glycine cleavage.
+    action: ACCEPT
+    reason: &gt;-
+      Correct as a broad InterPro-based grouping term; the informative process is
+      the more specific GO:0019464 (glycine decarboxylation via glycine cleavage
+      system). Broad IEA parents may be retained.
+    supported_by:
+    - reference_id: file:human/GLDC/GLDC-uniprot.txt
+      supporting_text: &#34;The glycine cleavage system catalyzes the degradation of&#34;
+- term:
+    id: GO:0006544
+    label: glycine metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Broad but correct grouping term. GLDC is central to glycine metabolism;
+      GO:0019464 is the more specific catabolic term.
+    action: ACCEPT
+    reason: &gt;-
+      Accurate InterPro-based parent term consistent with the enzyme acting on
+      glycine.
+    supported_by:
+    - reference_id: file:human/GLDC/GLDC-uniprot.txt
+      supporting_text: &#34;The glycine cleavage system catalyzes the degradation of&#34;
+- term:
+    id: GO:0006546
+    label: glycine catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Correct process: GLDC catalyses the first step of glycine degradation. This
+      is the direct parent of the more specific GO:0019464.
+    action: ACCEPT
+    reason: &gt;-
+      Glycine catabolic process accurately describes the pathway GLDC initiates;
+      concordant with IDA and TAS annotations to the same term.
+    supported_by:
+    - reference_id: file:human/GLDC/GLDC-uniprot.txt
+      supporting_text: &#34;The glycine cleavage system catalyzes the degradation of&#34;
+- term:
+    id: GO:0016829
+    label: lyase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Wrong-branch electronic mapping. GLDC is classified EC 1.4.4.2, an
+      oxidoreductase acting on the CH-NH2 group of donors (glycine dehydrogenase
+      (decarboxylating)); it is not a lyase. The lyase term derives from the broad
+      PLP-fold InterPro signature IPR001597 (aromatic-amino-acid beta-eliminating
+      lyase / threonine aldolase), which over-generalises to a lyase MF that does
+      not apply to this enzyme.
+    action: REMOVE
+    reason: &gt;-
+      This is a demonstrably incorrect electronic (IEA/InterPro) MF inference: the
+      enzyme&#39;s molecular function is glycine dehydrogenase (decarboxylating)
+      activity (GO:0004375, an oxidoreductase, EC 1.4.4.2), captured accurately by
+      other annotations. Lyase activity is the wrong ontology branch for this
+      protein and is safe to remove per the IEA-mis-mapping criterion.
+    supported_by:
+    - reference_id: file:human/GLDC/GLDC-uniprot.txt
+      supporting_text: &#34;EC=1.4.4.2&#34;
+- term:
+    id: GO:0005960
+    label: glycine cleavage complex
+  evidence_type: NAS
+  original_reference_id: PMID:28244183
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      Correct complex membership. GLDC is the P protein subunit of the
+      four-protein glycine cleavage system (P/GLDC, T/AMT, L/DLD, H/GCSH).
+    action: ACCEPT
+    reason: &gt;-
+      Well-established: GLDC is a bona fide subunit of the glycine cleavage
+      complex. Curated by ComplexPortal.
+    supported_by:
+    - reference_id: file:human/GLDC/GLDC-uniprot.txt
+      supporting_text: &#34;P (GLDC), T (GCST), L (DLD) and H (GCSH)&#34;
+- term:
+    id: GO:0019464
+    label: glycine decarboxylation via glycine cleavage system
+  evidence_type: NAS
+  original_reference_id: PMID:24467211
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Core process, independently supported by the mechanistic study of Go et al.
+      (2014), which shows GLDC decarboxylates glycine and hands the aminomethyl
+      group to the H protein within the GCS.
+    action: ACCEPT
+    reason: &gt;-
+      The cited mechanistic paper directly characterises GLDC-catalysed glycine
+      decarboxylation as the P-protein step of the glycine cleavage system.
+    supported_by:
+    - reference_id: PMID:24467211
+      supporting_text: &#34;aminomethyl moiety is instead transferred to an accessory H-protein&#34;
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Immunofluorescence (HPA) localisation to mitochondrion. Consistent with all
+      other localisation evidence.
+    action: ACCEPT
+    reason: &gt;-
+      Direct immunofluorescence evidence supports mitochondrial localisation,
+      concordant with the transit peptide and matrix localisation.
+    supported_by:
+    - reference_id: file:human/GLDC/GLDC-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Mitochondrion&#34;
+- term:
+    id: GO:0004375
+    label: glycine dehydrogenase (decarboxylating) activity
+  evidence_type: EXP
+  original_reference_id: PMID:1993704
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental support for the core catalytic function. Kume et al. cloned the
+      human glycine decarboxylase cDNA and characterised the PLP-binding
+      active-site region essential for enzyme activity.
+    action: ACCEPT
+    reason: &gt;-
+      Direct experimental characterisation of human glycine decarboxylase,
+      including the PLP-binding lysine and glycine-rich phosphate-binding region
+      that organise the active site.
+    supported_by:
+    - reference_id: PMID:1993704
+      supporting_text: &#34;The pyridoxal phosphate binding site lysine and a glycine-rich region&#34;
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HTP
+  original_reference_id: PMID:34800366
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput mitochondrial proteomics localises GLDC to mitochondria,
+      concordant with all other localisation evidence.
+    action: ACCEPT
+    reason: &gt;-
+      GLDC was identified in a high-confidence quantitative human mitochondrial
+      proteome; this HTP evidence agrees with the transit peptide, IDA
+      immunofluorescence and matrix TAS annotations.
+    supported_by:
+    - reference_id: file:human/GLDC/GLDC-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Mitochondrion&#34;
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-5693967
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Most precise localisation: the glycine decarboxylation reaction occurs in
+      the mitochondrial matrix. Retained as the informative compartment.
+    action: ACCEPT
+    reason: &gt;-
+      The GCS operates in the mitochondrial matrix; Reactome places the
+      GLDC-catalysed decarboxylation there. This is the preferred, more specific
+      cellular-component term.
+    supported_by:
+    - reference_id: file:human/GLDC/GLDC-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Mitochondrion&#34;
+- term:
+    id: GO:0036255
+    label: response to methylamine
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Peripheral regulatory response inferred by similarity from rat (P15505).
+      Reflects that GCS P-protein activity is inhibited in the presence of
+      methylamine, not a distinct biological role of GLDC.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Derived from an activity-regulation observation (methylamine inhibits the
+      enzyme). It is a plausible ISS-transferred response but does not represent a
+      core function of GLDC; retained as non-core.
+    supported_by:
+    - reference_id: file:human/GLDC/GLDC-uniprot.txt
+      supporting_text: &#34;Inhibited in presence&#34;
+- term:
+    id: GO:0042803
+    label: protein homodimerization activity
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Supported: the functional P protein is a homodimer. Retained as a supporting
+      (non-core) molecular function underpinning the catalytic unit.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      UniProt records GLDC as a homodimer (by similarity to rat P15505), and the
+      PLP-dependent active site is formed in the dimer. Real but ancillary to the
+      catalytic MF.
+    supported_by:
+    - reference_id: file:human/GLDC/GLDC-uniprot.txt
+      supporting_text: &#34;Homodimer (By similarity)&#34;
+- term:
+    id: GO:0070280
+    label: pyridoxal binding
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: enables
+  review:
+    summary: &gt;-
+      The cofactor is pyridoxal 5&#39;-phosphate (PLP), covalently bound as a Schiff
+      base at Lys754, not free pyridoxal. The more accurate MF is pyridoxal
+      phosphate binding (GO:0030170), which UniProt itself also carries.
+    action: MODIFY
+    reason: &gt;-
+      GLDC binds pyridoxal 5&#39;-phosphate (the phosphorylated, active cofactor),
+      attached as N6-(pyridoxal phosphate)lysine at Lys754; the specific,
+      accurate term is GO:0030170 pyridoxal phosphate binding rather than the more
+      general pyridoxal binding.
+    proposed_replacement_terms:
+    - id: GO:0030170
+      label: pyridoxal phosphate binding
+    supported_by:
+    - reference_id: file:human/GLDC/GLDC-uniprot.txt
+      supporting_text: &#34;Name=pyridoxal 5&#39;-phosphate&#34;
+    - reference_id: file:human/GLDC/GLDC-uniprot.txt
+      supporting_text: &#34;N6-(pyridoxal phosphate)lysine&#34;
+- term:
+    id: GO:1903442
+    label: response to lipoic acid
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Peripheral regulatory response inferred by similarity from rat (P15505),
+      reflecting that P-protein activity is stimulated by lipoic acid (the
+      lipoamide arm of the H protein is the physiological acceptor).
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Derived from an activity-regulation observation (lipoic acid stimulates the
+      enzyme). Consistent with the mechanism but not a core function; retained as
+      non-core.
+    supported_by:
+    - reference_id: file:human/GLDC/GLDC-uniprot.txt
+      supporting_text: &#34;Stimulated by lipoic acid&#34;
+- term:
+    id: GO:0004375
+    label: glycine dehydrogenase (decarboxylating) activity
+  evidence_type: IDA
+  original_reference_id: PMID:28244183
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct experimental support for the core catalytic MF: enzymatic assays of
+      GCS P-protein activity for wild-type and NKH missense variants expressed in
+      COS7 cells.
+    action: ACCEPT
+    reason: &gt;-
+      Bravo-Alonso et al. measured residual GCS P-protein (glycine decarboxylase)
+      activity for GLDC constructs, directly assaying this molecular function.
+    supported_by:
+    - reference_id: PMID:28244183
+      supporting_text: &#34;assess the residual activity and mutant protein stability&#34;
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IDA
+  original_reference_id: PMID:28244183
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct evidence of mitochondrial localisation; the same study also reported
+      NKH variants with altered (partially cytosolic) localisation, confirming the
+      wild-type mitochondrial targeting.
+    action: ACCEPT
+    reason: &gt;-
+      Localisation of GLDC to mitochondria was directly assessed; consistent with
+      the transit peptide and all other localisation evidence.
+    supported_by:
+    - reference_id: file:human/GLDC/GLDC-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Mitochondrion&#34;
+- term:
+    id: GO:0006546
+    label: glycine catabolic process
+  evidence_type: IDA
+  original_reference_id: PMID:28244183
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Direct evidence linking GLDC to glycine catabolism: NKH variants cause loss
+      or reduction of glycine catabolic process, as characterised functionally in
+      this study.
+    action: ACCEPT
+    reason: &gt;-
+      The functional assessment demonstrates that pathogenic GLDC variants impair
+      the glycine catabolic process, confirming GLDC&#39;s role in it. The more
+      specific term is GO:0019464.
+    supported_by:
+    - reference_id: PMID:28244183
+      supporting_text: &#34;assess the residual activity and mutant protein stability&#34;
+- term:
+    id: GO:0009055
+    label: electron transfer activity
+  evidence_type: TAS
+  original_reference_id: PMID:2268343
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Likely over-annotation / mis-assignment. GLDC is a PLP-dependent glycine
+      decarboxylase (EC 1.4.4.2); it does not act as an electron carrier. Within
+      the glycine cleavage system, the redox/electron-transfer role belongs to the
+      L protein (DLD, dihydrolipoamide dehydrogenase, FAD-dependent), not to the P
+      protein. The cited reference (Sakakibara et al. 1990) is about a genomic
+      deletion of the glycine decarboxylase gene in an NKH patient and provides no
+      support for an electron transfer activity.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The molecular function of GLDC is glycine dehydrogenase (decarboxylating)
+      activity, captured by multiple experimental and electronic annotations;
+      electron transfer activity is not a function of the P protein and is not
+      supported by the cited paper. Flagged as over-annotated rather than removed
+      because it is an author-statement (TAS) annotation whose full text was not
+      reviewed.
+    supported_by:
+    - reference_id: file:human/GLDC/GLDC-uniprot.txt
+      supporting_text: &#34;The P protein (GLDC) binds the alpha-amino group of glycine&#34;
+- term:
+    id: GO:0004375
+    label: glycine dehydrogenase (decarboxylating) activity
+  evidence_type: TAS
+  original_reference_id: PMID:1996985
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Author-stated support for the core catalytic function: expression of normal
+      human P-protein cDNA in COS7 cells reconstituted glycine decarboxylase
+      activity comparable to human liver, whereas the NKH mutant (Phe756del) had
+      none.
+    action: ACCEPT
+    reason: &gt;-
+      Kure et al. demonstrated glycine decarboxylase activity for the wild-type
+      human enzyme and its abolition by an NKH-causing deletion, supporting the
+      catalytic MF.
+    supported_by:
+    - reference_id: PMID:1996985
+      supporting_text: &#34;showed no activity, indicating that the three-base deletion could cause NKH&#34;
+- term:
+    id: GO:0006546
+    label: glycine catabolic process
+  evidence_type: TAS
+  original_reference_id: PMID:1996985
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Author-stated support that GLDC drives glycine catabolism: loss of P-protein
+      activity from an NKH deletion causes the glycine-accumulation phenotype,
+      linking the enzyme to the glycine catabolic process.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with GLDC&#39;s role in glycine degradation; the loss-of-activity
+      mutant establishes the connection to glycine catabolism. GO:0019464 is the
+      more specific term.
+    supported_by:
+    - reference_id: PMID:1996985
+      supporting_text: &#34;showed no activity, indicating that the three-base deletion could cause NKH&#34;
+core_functions:
+- description: &gt;-
+    Pyridoxal-5&#39;-phosphate-dependent decarboxylation of glycine as the P protein
+    of the mitochondrial glycine cleavage system: releases CO2 from glycine and
+    transfers the residual aminomethyl group to the lipoamide arm of the H protein
+    (GCSH).
+  molecular_function:
+    id: GO:0004375
+    label: glycine dehydrogenase (decarboxylating) activity
+  directly_involved_in:
+  - id: GO:0019464
+    label: glycine decarboxylation via glycine cleavage system
+  locations:
+  - id: GO:0005759
+    label: mitochondrial matrix
+  supported_by:
+  - reference_id: file:human/GLDC/GLDC-uniprot.txt
+    supporting_text: &#34;The P protein (GLDC) binds the alpha-amino group of glycine&#34;
+  - reference_id: PMID:24467211
+    supporting_text: &#34;aminomethyl moiety is instead transferred to an accessory H-protein&#34;
+- description: &gt;-
+    Binds the pyridoxal 5&#39;-phosphate cofactor (covalently attached as a Schiff
+    base at Lys754) required for glycine decarboxylation.
+  molecular_function:
+    id: GO:0030170
+    label: pyridoxal phosphate binding
+  locations:
+  - id: GO:0005759
+    label: mitochondrial matrix
+  supported_by:
+  - reference_id: file:human/GLDC/GLDC-uniprot.txt
+    supporting_text: &#34;N6-(pyridoxal phosphate)lysine&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:human/GLDC/GLDC-uniprot.txt
+  title: UniProtKB entry P23378 (GCSP_HUMAN), Glycine dehydrogenase (decarboxylating),
+    mitochondrial
+  findings: []
+- id: PMID:1993704
+  title: The glycine cleavage system. Molecular cloning of the chicken and human glycine
+    decarboxylase cDNAs and some characteristics involved in the deduced protein structures.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Abstract-only cache; PubMed-verified. Cloned human glycine decarboxylase cDNA
+      and characterised the PLP-binding active-site region. Supports the catalytic
+      MF and PLP cofactor role.
+- id: PMID:1996985
+  title: &#39;Structural and expression analyses of normal and mutant mRNA encoding glycine
+    decarboxylase: three-base deletion in mRNA causes nonketotic hyperglycinemia.&#39;
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Abstract-only cache; PubMed-verified. WT human P-protein cDNA reconstituted
+      glycine decarboxylase activity in COS7; NKH Phe756del abolished it. Supports
+      catalytic MF and glycine catabolic process.
+- id: PMID:2268343
+  title: One of the two genomic copies of the glycine decarboxylase cDNA has been
+    deleted at a 5&#39; region in a patient with nonketotic hyperglycinemia.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: MISCITED
+    review_notes: &gt;-
+      Abstract-only cache; PubMed-verified. The paper describes a genomic deletion
+      of the glycine decarboxylase gene in an NKH patient and does NOT support the
+      electron transfer activity (GO:0009055) it is cited for; that MF annotation is
+      an over-annotation/mis-assignment for the P protein.
+- id: PMID:24467211
+  title: Glycine decarboxylase is an unusual amino acid decarboxylase involved in
+    tumorigenesis.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Abstract-only cache; PubMed-verified. Mechanistic study showing GLDC is an
+      unusual PLP-dependent alpha-amino acid decarboxylase that removes CO2 without
+      releasing free methylamine and transfers the aminomethyl group to the H
+      protein. Directly supports the GCS decarboxylation function.
+- id: PMID:28244183
+  title: &#39;Nonketotic hyperglycinemia: Functional assessment of missense variants in
+    GLDC to understand phenotypes of the disease.&#39;
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Abstract-only cache; PubMed-verified. Enzymatic assays of GCS P-protein
+      activity and structural modelling for 19 GLDC missense variants; supports the
+      catalytic MF, glycine catabolic process, mitochondrial localisation and
+      complex membership.
+- id: PMID:34800366
+  title: Quantitative high-confidence human mitochondrial proteome and its dynamics
+    in cellular context.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Abstract-only cache (GLDC data in supplementary tables not present in the
+      cache). High-throughput mitochondrial proteomics; supports mitochondrial
+      localisation of GLDC.
+- id: Reactome:R-HSA-5693967
+  title: PXLP-K754-GLDC dimer decarboxylates Gly
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,0 +1,2591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>rrg8 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>rrg8</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O14106" target="_blank" class="term-link">
+                        O14106
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Schizosaccharomyces pombe (strain 972 / ATCC 24843)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+
+                    <span class="badge">SPAC31G5.06</span>
+
+                    <span class="badge">rgg8</span>
+
+                </div>
+            </div>
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "rrg8";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O14106" data-a="DESCRIPTION: rrg8 (SPAC31G5.06) is a small (234-residue) fungal..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>rrg8 (SPAC31G5.06) is a small (234-residue) fungal mitochondrial protein of unknown molecular function. Its budding-yeast ortholog RRG8/YPR116W (alias MTA1) is one of several accessory factors required for efficient 5&#39;-end processing of mitochondrial tRNAs: it associates with the mitochondrial inner membrane, sediments as a high-molecular-weight complex, and co-purifies with Rpm2p, the protein subunit of mitochondrial RNase P (the endonuclease that cleaves the 5&#39; leader of pre-tRNAs). Loss of the ortholog reduces mitochondrial tRNA levels and causes respiratory deficiency and defects in mitochondrial genome maintenance and mitochondrial protein synthesis. In fission yeast, where loss of mitochondrial DNA is lethal, deletion of rrg8 is inviable. The protein carries no recognizable domain, catalytic motif, or family signature, and no direct biochemical activity has been demonstrated for either the fission-yeast protein or its orthologs; its role in mitochondrial tRNA processing and gene expression is inferred from ortholog genetics rather than measured for the S. pombe protein itself.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O14106" data-a="GO:0005634" data-r="GO_REF:0000044" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (UniProt Subcellular Location keyword-mapping) nuclear annotation, ultimately derived from a high-throughput C-terminal YFP-tagging screen.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The nucleus call traces to the genome-scale YFP-tagging ORFeome screen (PMID:16823372) via UniProt Subcellular Location and GO_REF:0000044. It conflicts with the orthology-based mitochondrial localization of this protein (the S. cerevisiae ortholog RRG8/MTA1 is on the matrix side of the inner mitochondrial membrane) and is not curated as a cellular component by PomBase, which annotates only mitochondrion. Large-scale C-terminally tagged screens frequently produce spurious cytosolic/nuclear signal for low-abundance organellar proteins, and a C-terminal tag can mask a cleavable mitochondrial targeting signal. Flag as an over-annotation for a mitochondrial protein rather than a core location.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16823372" target="_blank" class="term-link">
+                                        PMID:16823372
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">we determined the localization of 4,431 proteins</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O14106" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (UniProt Subcellular Location keyword-mapping) cytoplasmic annotation from the same high-throughput YFP-tagging screen.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> As with the nucleus annotation, cytoplasm derives from the genome-scale YFP screen (PMID:16823372) mapped through UniProt Subcellular Location (GO_REF:0000044). It is a broad, non-specific term that is inconsistent with the mitochondrial localization inferred from the well-characterized ortholog and with PomBase&#39;s expert decision to annotate only mitochondrion. Mark as over-annotated; the informative location is mitochondrion.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16823372" target="_blank" class="term-link">
+                                        PMID:16823372
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">we determined the localization of 4,431 proteins</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003674" target="_blank" class="term-link">
+                                    GO:0003674
+                                </a>
+                            </span>
+                            <span class="term-label">molecular_function</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O14106" data-a="GO:0003674" data-r="GO_REF:0000015" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root molecular_function term with the No-Data (ND) evidence code, correctly recording that no molecular function has been determined for rrg8.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The molecular function of rrg8 is genuinely unknown. The protein has no recognizable domain, catalytic motif, or family signature (no InterPro/Pfam/PANTHER assignment), and even the better-studied budding-yeast ortholog is described as &#34;of unknown function&#34;. The ND annotation to the root term is the honest and correct representation of this gap; retain it.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISO</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O14106" data-a="GO:0005739" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mitochondrial localization transferred by orthology (ISO) from the S. cerevisiae ortholog RRG8/MTA1 (SGD:S000006320), which localizes to the matrix side of the mitochondrial inner membrane and is GFP-tagged in mitochondria.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The ISO transfer is well supported: the ortholog is experimentally mitochondrial (inner-membrane-associated; GFP in mitochondria, PMID:19751518) and functions there in mitochondrial tRNA processing (PMID:30759361). Mitochondrion is the single cellular component curated by PomBase for rrg8 and represents its core location. Retain as core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19751518" target="_blank" class="term-link">
+                                        PMID:19751518
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">identified ten previously uncharacterized genes essential for respiratory growth</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30759361" target="_blank" class="term-link">
+                                        PMID:30759361
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Mta1p, Mta2p, Pet130p, and Gep5p are associated with the</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097745" target="_blank" class="term-link">
+                                    GO:0097745
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial tRNA 5&#39;-end processing</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISO</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O14106" data-a="GO:0097745" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Involvement in mitochondrial tRNA 5&#39;-end processing transferred by orthology (ISO) from the S. cerevisiae ortholog RRG8/MTA1, which is required for efficient 5&#39; processing of mitochondrial tRNAs and associates with mitochondrial RNase P (Rpm2p).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The process assignment is well supported by ortholog genetics and biochemistry: mta1 null mutants have severely reduced mitochondrial tRNA levels, ts mutants accumulate pre-tRNA transcripts, and Mta1p co-immunopurifies with Rpm2p, the protein subunit of mitochondrial RNase P (PMID:30759361). This is the best-supported biological process for rrg8 and is consistent with its essentiality in fission yeast, where loss of mtDNA/mitochondrial gene expression is lethal. Note this is a process (BP) annotation, not a claim that rrg8 is the catalytic nuclease. Retain as core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30759361" target="_blank" class="term-link">
+                                        PMID:30759361
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">we identify four novel genes MTA1, MTA2, GEP5 and PET130 of</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30759361" target="_blank" class="term-link">
+                                        PMID:30759361
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">co-immunopurification of Rpm2 with Mta1p</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Accessory factor for mitochondrial tRNA 5&#39;-end processing / mitochondrial gene expression. Acting within the mitochondrion (ortholog is on the matrix side of the inner membrane), rrg8 is required for efficient 5&#39; maturation of mitochondrial tRNAs, a step catalyzed by mitochondrial RNase P. Its precise molecular activity is unknown; the ortholog associates with, and co-purifies with, the RNase P protein subunit Rpm2p, consistent with a scaffolding/assembly or accessory role rather than an intrinsic catalytic function. No molecular_function term is asserted because none can be defended from sequence (no domain, motif, or family) or from experiment.</h3>
+                <span class="vote-buttons" data-g="O14106" data-a="FUNCTION: Accessory factor for mitochondrial tRNA 5&#39;-end pro..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097745" target="_blank" class="term-link">
+                                mitochondrial tRNA 5&#39;-end processing
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                mitochondrion
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30759361" target="_blank" class="term-link">
+                                PMID:30759361
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">we identify four novel genes MTA1, MTA2, GEP5 and PET130 of</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19751518" target="_blank" class="term-link">
+                                PMID:19751518
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">identified ten previously uncharacterized genes essential for respiratory growth</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000015.md" target="_blank" class="term-link">
+                            GO_REF:0000015
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Use of the ND evidence code for Gene Ontology (GO) terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/30759361" target="_blank" class="term-link">
+                            PMID:30759361
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">5&#39; processing of Saccharomyces cerevisiae mitochondrial tRNAs requires expression of multiple genes.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The budding-yeast ortholog RRG8/MTA1 is one of four genes (MTA1, MTA2, GEP5, PET130) required for efficient 5&#39; processing of mitochondrial tRNAs; the proteins associate with the mitochondrial inner membrane, form high-molecular-weight complexes, and Mta1p co-immunopurifies with the RNase P protein subunit Rpm2p.</div>
+
+                        <div class="finding-text">"we identify four novel genes MTA1, MTA2, GEP5 and PET130 of"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19751518" target="_blank" class="term-link">
+                            PMID:19751518
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Genome-wide deletion mutant analysis reveals genes required for respiratory growth, mitochondrial genome maintenance and mitochondrial protein synthesis in Saccharomyces cerevisiae.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Systematic deletion analysis named RRG8 (YPR116w) as one of ten previously uncharacterized genes essential for respiratory growth; the GFP-tagged protein localizes to mitochondria and its loss compromises mitochondrial protein synthesis and genome maintenance.</div>
+
+                        <div class="finding-text">"identified ten previously uncharacterized genes essential for respiratory growth"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20473289" target="_blank" class="term-link">
+                            PMID:20473289
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Analysis of a genome-wide set of gene deletions in the fission yeast Schizosaccharomyces pombe.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Genome-wide fission-yeast deletion analysis; provides the essentiality classification underlying the inviable phenotype of rrg8 deletion and notes that loss of mtDNA is lethal in fission yeast (unlike budding yeast petites), explaining why a mitochondrial gene-expression factor is essential in S. pombe.</div>
+
+                        <div class="finding-text">"Loss of mtDNA is lethal in fission yeast but not in budding yeast"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23697806" target="_blank" class="term-link">
+                            PMID:23697806
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A genome-wide resource of cell cycle and cell shape genes of fission yeast.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Microscopy-based screen providing the evidence for the inviable, tapered-cell deletion phenotype of rrg8 recorded in PomBase.</div>
+
+                        <div class="finding-text">"A genome-wide resource of cell cycle and cell shape genes of fission yeast"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16823372" target="_blank" class="term-link">
+                            PMID:16823372
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">ORFeome cloning and global analysis of protein localization in the fission yeast Schizosaccharomyces pombe.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">High-throughput C-terminal YFP-tagging localization screen; the source (via UniProt Subcellular Location) of the electronic cytoplasm and nucleus annotations for rrg8. Such large-scale C-terminally tagged screens can mislocalize low-abundance organellar proteins.</div>
+
+                        <div class="finding-text">"we determined the localization of 4,431 proteins"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/39367033" target="_blank" class="term-link">
+                            PMID:39367033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Quantitative proteomics and phosphoproteomics profiling of meiotic divisions in the fission yeast Schizosaccharomyces pombe.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Meiotic proteomics detecting rrg8 at the protein level, with increased abundance during meiotic division; establishes that the gene is expressed as a protein.</div>
+
+                        <div class="finding-text">"Quantitative proteomics and phosphoproteomics profiling of meiotic divisions"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is Rrg8 a stoichiometric subunit of fission-yeast mitochondrial RNase P, or a transient assembly/maturation factor for the enzyme?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O14106" data-a="Q: Is Rrg8 a stoichiometric subunit of fission-yeast ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does the essential phenotype of rrg8 deletion in S. pombe reflect specifically defective mitochondrial tRNA processing (and consequent loss of mitochondrial translation and mtDNA), or an additional/independent function?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O14106" data-a="Q: Does the essential phenotype of rrg8 deletion in S..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Endogenously epitope-tag rrg8, purify from isolated mitochondria under native conditions, and test by mass spectrometry / co-immunoprecipitation for association with the RNase P protein subunit (Rpm2 ortholog) and other Mta1/Mta2/Gep5/Pet130-equivalent factors. In parallel, use a conditional rrg8 allele and northern blotting / primer extension to test for accumulation of unprocessed mitochondrial pre-tRNA 5&#39; leaders.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Rrg8 associates with mitochondrial RNase P and is required for 5&#39; processing of mitochondrial pre-tRNAs in S. pombe.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: affinity purification-mass spectrometry and RNA processing assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O14106" data-a="EXPERIMENT: Endogenously epitope-tag rrg8, purify from isolate..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Determine or predict the structure of Rrg8 (cryo-EM within the mitochondrial RNase P complex, or high-confidence structure prediction plus DALI/Foldseek search) to identify structural homologs, a possible RNA-binding surface, or a degenerate catalytic site, and use conservation mapping across fungal orthologs to nominate functionally important residues for mutagenesis.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Rrg8 possesses an assignable fold and candidate functional surface despite lacking recognized sequence signatures.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: structural biology / structure-based homology detection</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O14106" data-a="EXPERIMENT: Determine or predict the structure of Rrg8 (cryo-E..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The molecular function of rrg8 is unknown. No biochemical activity, catalytic residue, domain, or family signature has been identified for the fission-yeast protein or for any of its orthologs; whether it is an enzyme, an RNA-binding protein, or a purely structural scaffold is undetermined.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> The protein is 234 residues, carries a single low-complexity region and no recognizable InterPro/Pfam/PANTHER domain, and UniProt lists no FUNCTION and only &#34;Predicted&#34; protein existence. Even the better-studied S. cerevisiae ortholog RRG8/MTA1 is repeatedly described as a protein &#34;of unknown function&#34;, so the gap is real and field-acknowledged, not merely uncurated.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> rrg8 is essential in fission yeast and its ortholog is required for respiratory growth, yet the molecular basis of these phenotypes is completely unexplained. It is a conserved, single-copy, essential &#34;dark&#34; gene of exactly the type the unknome program targets.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Biochemical characterization of purified rrg8 / Rrg8-family protein: test for nuclease, RNA-binding, or protein-scaffolding activity in mitochondrial RNase P reconstitution; structural determination (X-ray/cryo-EM or high-confidence structure prediction) to assign a fold and candidate active site.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"identified ten previously uncharacterized genes essential for respiratory growth"</em> — PMID:19751518</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> Whether rrg8 is a stable subunit of mitochondrial RNase P, a transient assembly/maturation factor for the enzyme, or acts on tRNA processing indirectly is unresolved. The mechanism by which it promotes 5&#39; pre-tRNA cleavage is not defined.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span><span class="badge">ONTOLOGY</span>
+                <span class="badge">RESIDUAL_SUBGAP</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> In the ortholog, Mta1p (together with Mta2p, Gep5p, Pet130p) is inner-membrane-associated, sediments as a high-molecular-weight complex, and co-immunopurifies with the RNase P protein subunit Rpm2p (PMID:30759361); null mutants have reduced mitochondrial tRNA levels and ts mutants accumulate pre-tRNA transcripts. This establishes a functional link to RNase P but not the mechanistic role (subunit vs assembly factor vs indirect).</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Distinguishing a bona fide RNase P subunit from an accessory assembly factor would clarify the architecture of fungal mitochondrial RNase P and determine whether an appropriate GO complex/subunit term (currently lacking) is needed to express rrg8&#39;s contribution.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Native purification / cryo-EM of fungal mitochondrial RNase P to test for stoichiometric inclusion of Rrg8; in-organello pre-tRNA processing assays in rrg8 conditional mutants; define whether the RNase P activity or its assembly is lost.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"co-immunopurification of Rpm2 with Mta1p"</em> — PMID:30759361</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The direct role of the S. pombe protein itself has not been measured. All functional annotations (mitochondrion, mitochondrial tRNA 5&#39;-end processing) are transferred by orthology from S. cerevisiae; there is no fission-yeast biochemistry, localization by native methods, or in-organello assay for rrg8.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span><span class="badge">CURATION</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> rrg8 deletion is inviable in fission yeast (PomBase; microscopy evidence PMID:23697806), and the protein is expressed (detected at RNA and protein level, increased in meiosis, PMID:39367033). The essential phenotype is consistent with a mitochondrial gene-expression role because loss of mtDNA is lethal in fission yeast (PMID:20473289), but the specific molecular defect in rrg8-null cells has not been characterized.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Direct fission-yeast evidence would upgrade the ISO annotations to experimental support and test whether the mitochondrial tRNA-processing role is conserved in S. pombe or whether the essential phenotype reflects a different or additional function.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Localize an endogenously tagged Rrg8 by fluorescence and subcellular fractionation; analyze mitochondrial tRNA processing and mtDNA maintenance in a conditional (e.g. tetO/thiamine- repressible) rrg8 allele.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Loss of mtDNA is lethal in fission yeast but not in budding yeast"</em> — PMID:20473289</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(rrg8-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O14106" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="rrg8-spac31g506-uniprot-o14106-curation-notes">rrg8 (SPAC31G5.06, UniProt O14106) — curation notes</h1>
+<p>Journal of research for the AI GO-annotation review of the fission yeast gene <strong>rrg8</strong>.</p>
+<h2 id="identity">Identity</h2>
+<ul>
+<li><strong>Systematic name:</strong> SPAC31G5.06 (chromosome I, S. pombe strain 972 / ATCC 24843)</li>
+<li><strong>PomBase standard name:</strong> <code>rrg8</code> ("Required for Respiratory Growth 8"). Note: the UniProt entry<br />
+  (O14106, entry <code>RGG8_SCHPO</code>) currently lists the gene name as <code>rgg8</code>; this is a lagging/variant<br />
+  spelling. PomBase (authoritative for S. pombe nomenclature) gives <code>rrg8</code>, product<br />
+  "mitochondrial tRNA 5'-end processing protein Rrg8"<br />
+  (PomBase API <code>dataset/latest/data/gene/SPAC31G5.06</code>, <code>name: "rrg8"</code>). This review uses <code>rrg8</code>.</li>
+<li><strong>UniProt accession:</strong> O14106 (Swiss-Prot, but <code>PE 4: Predicted</code> — protein existence only predicted).</li>
+<li><strong>Length:</strong> 234 aa; MW ~27.5 kDa. One low-complexity region (aa 209–225, per PomBase).</li>
+<li><strong>PomBase characterisation status:</strong> "biological role inferred"; taxonomic distribution "fungi only";<br />
+  "predominantly single copy (one to one)".</li>
+<li><strong>S. cerevisiae ortholog:</strong> YPR116W = <strong>RRG8</strong> (SGD:S000006320, UniProt Q06109), alias <strong>MTA1</strong><br />
+  (PomBase <code>ortholog_annotations</code> → YPR116W, taxon 4932; SGD alias record).</li>
+</ul>
+<h2 id="domain-bioinformatic-analysis-done-inline">Domain / bioinformatic analysis (done inline)</h2>
+<ul>
+<li><strong>No recognized domains or family signatures.</strong> The UniProt record (cached<br />
+<code>rrg8-uniprot.txt</code> and live <code>rest.uniprot.org/uniprotkb/O14106.txt</code>, checked 2026-07-06) has<br />
+<strong>no</strong> InterPro / Pfam / PANTHER / PROSITE / SUPFAM / Gene3D / SMART / CDD cross-references, and<br />
+<code>just fetch-gene</code> reported "No PANTHER family found". InterPro protein API returns no matched entries.</li>
+<li><strong>No FUNCTION comment</strong> in UniProt; feature table lists only a single CHAIN (1..234) — no annotated<br />
+  TRANSIT peptide, signal peptide, transmembrane, or catalytic domain. (Absence of an annotated<br />
+  mitochondrial transit peptide does not exclude one; the record does not carry TargetP/MitoFates<br />
+  predictions and PomBase/orthology place the protein in mitochondria — see below.)</li>
+<li><strong>Conclusion from sequence:</strong> rrg8 is a genuinely "dark" protein — no fold/domain/EC assignable<br />
+  from sequence, no derivable molecular function. This is consistent across S. pombe and its<br />
+  budding-yeast ortholog.</li>
+</ul>
+<h2 id="what-is-known">What is KNOWN</h2>
+<h3 id="mitochondrial-localization-and-role-in-mitochondrial-trna-5-processing-via-ortholog-iso">Mitochondrial localization and role in mitochondrial tRNA 5' processing (via ortholog, ISO)</h3>
+<p>The two functional GO annotations on rrg8 (GO:0005739 mitochondrion; GO:0097745 mitochondrial tRNA<br />
+5'-end processing) are <strong>ISO</strong> (<code>GO_REF:0000024</code>) transferred from the S. cerevisiae ortholog<br />
+RRG8/MTA1 (with/from <code>SGD:S000006320</code>), per PomBase annotation_details (ids 124631, 124632).</p>
+<p>The budding-yeast ortholog is functionally characterised:<br />
+- SGD summary for YPR116W/RRG8/MTA1: "Protein of unknown function; required for efficient 5'<br />
+  processing of mitochondrial tRNAs, for respiratory growth and mitochondrial genome maintenance;<br />
+  ... localizes to the matrix side of the inner mitochondrial membrane" (SGD locus S000006320).<br />
+- [PMID:30759361 "5' processing of Saccharomyces cerevisiae mitochondrial tRNAs requires expression of multiple genes", "we identify four novel genes MTA1, MTA2, GEP5 and PET130 of the Saccharomycetaceae family that are necessary for an efficient processing of mitochondrial tRNAs"] — MTA1 = the RRG8 ortholog. Null mutants have severely reduced mt-tRNA levels; ts mutants accumulate pre-tRNA transcripts. <a href="https://pubmed.ncbi.nlm.nih.gov/30759361" title="Mta1p, Mta2p, Pet130p, and Gep5p are associated with the mitochondrial inner membrane and are all extracted and sediment in sucrose gradients as high molecular weight complexes, where they may be present in a common complex with Rpm2p">PMID:30759361</a> and <a href="https://pubmed.ncbi.nlm.nih.gov/30759361" title="co-immunopurification of Rpm2 with Mta1p">PMID:30759361</a>. Rpm2p is the protein subunit of yeast mitochondrial RNase P — the enzyme that carries out 5' pre-tRNA cleavage. So the ortholog is an <strong>accessory factor associated with mitochondrial RNase P</strong>, not the established catalytic component.<br />
+- <a href="https://pubmed.ncbi.nlm.nih.gov/19751518" title="identified ten previously uncharacterized genes essential for respiratory growth (RRG1 through RRG10)">PMID:19751518</a> — this is the paper that named RRG8. Its Table 5 lists "RRG8 / YPR116w / Unknown function, GFP-tagged protein in mitochondria", with mitochondrial localization "+", and after cytoduction "Translation activity ... Absent" and "Nucleoids ... Altered", i.e. loss of RRG8 damages mitochondrial genome maintenance and mitochondrial protein synthesis.</p>
+<h3 id="essentiality-phenotype-in-s-pombe">Essentiality / phenotype in S. pombe</h3>
+<ul>
+<li>PomBase <code>deletion_viability: inviable</code>; single-locus phenotypes FYPO:0002061 "inviable vegetative<br />
+  cell population" and FYPO:0002111 "inviable tapered vegetative cell" (microscopy evidence,<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/23697806">PMID:23697806</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/20473289">PMID:20473289</a>).</li>
+<li>Why essential in S. pombe but only respiratory-deficient (viable) in S. cerevisiae: fission yeast<br />
+  cannot survive loss of mtDNA. <a href="https://pubmed.ncbi.nlm.nih.gov/20473289" title="Loss of mtDNA is lethal in fission yeast but not in budding yeast where “petite” mutants lacking mtDNA are viable and mitochondrial translation is not essential">PMID:20473289</a>. A mitochondrial-gene-expression factor is therefore expected to be essential in S. pombe even though its budding-yeast ortholog is a viable respiratory (pet) mutant — this cross-species pattern strengthens (rather than weakens) the mitochondrial functional assignment.</li>
+</ul>
+<h3 id="expression">Expression</h3>
+<ul>
+<li>Detected at RNA and protein level; protein level increases during meiotic division<br />
+  (<a href="https://pubmed.ncbi.nlm.nih.gov/39367033">PMID:39367033</a>, meiotic proteomics; PomBase gene-expression annotations, ext during GO:0007127<br />
+  meiosis I / GO:0072690). <a href="https://pubmed.ncbi.nlm.nih.gov/23101633">PMID:23101633</a> quantitative transcriptome/proteome, expression during<br />
+  quiescence (GO:0072690).</li>
+</ul>
+<h2 id="what-is-not-known-knowledge-gaps-the-primary-deliverable">What is NOT known (knowledge gaps — the primary deliverable)</h2>
+<ol>
+<li><strong>Molecular function is unknown.</strong> No domain, no catalytic motif, no EC. Even in the<br />
+   better-studied budding-yeast ortholog the protein is "of unknown function". Its association with<br />
+   RNase P (co-IP with Rpm2p) suggests an accessory/scaffolding or assembly role in the mitochondrial<br />
+   RNase P holoenzyme, but no biochemical activity has been demonstrated. rrg8 is NOT shown to be the<br />
+   nuclease; GO:0097745 is a <em>process</em> (BP) annotation, not a molecular-function claim.</li>
+<li><strong>Direct role of the S. pombe protein is inferred, not measured.</strong> The mitochondrion and mt-tRNA<br />
+   5' processing annotations are ISO from S. cerevisiae; there is no direct S. pombe biochemistry or<br />
+   in-organello assay for rrg8 itself.</li>
+<li><strong>Precise submitochondrial location and topology in S. pombe</strong> are not established (ortholog is on<br />
+   the matrix side of the inner membrane).</li>
+<li><strong>Whether rrg8 is a stable subunit of, or a transient assembly factor for, mitochondrial RNase P</strong><br />
+   is unresolved.</li>
+</ol>
+<h2 id="annotation-review-decisions-summary">Annotation review decisions (summary)</h2>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Evidence</th>
+<th>Decision</th>
+<th>Rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GO:0005739 mitochondrion (is_active_in, ISO from SGD)</td>
+<td>ISO</td>
+<td>ACCEPT (core CC)</td>
+<td>Ortholog mitochondrial (inner membrane); PomBase curated this as the sole CC.</td>
+</tr>
+<tr>
+<td>GO:0097745 mitochondrial tRNA 5'-end processing (involved_in, ISO)</td>
+<td>ISO</td>
+<td>ACCEPT (core BP)</td>
+<td>Well-supported by ortholog genetics/biochemistry (PMID:30759361, 19751518).</td>
+</tr>
+<tr>
+<td>GO:0003674 molecular_function (ND)</td>
+<td>ND</td>
+<td>ACCEPT</td>
+<td>Honest "no data" for MF — matches the true knowledge gap; keep.</td>
+</tr>
+<tr>
+<td>GO:0005737 cytoplasm (located_in, IEA GO_REF:0000044 / SubCell)</td>
+<td>IEA</td>
+<td>MARK_AS_OVER_ANNOTATED</td>
+<td>From a C-terminally YFP-tagged high-throughput screen (PMID:16823372); a mitochondrial matrix-side inner-membrane protein. PomBase does not annotate cytoplasm. Broad/likely-artefactual for this protein.</td>
+</tr>
+<tr>
+<td>GO:0005634 nucleus (located_in, IEA GO_REF:0000044 / SubCell)</td>
+<td>IEA</td>
+<td>MARK_AS_OVER_ANNOTATED</td>
+<td>Same high-throughput dual cyto/nuclear call; inconsistent with orthology-based mitochondrial localization and not curated by PomBase.</td>
+</tr>
+</tbody>
+</table>
+<p>Note on the cytoplasm/nucleus calls: UniProt SubCellular Location cites the Matsuyama YFP ORFeome<br />
+screen (PMID:16823372). C-terminal fluorescent tags can disrupt or mask C-terminal / cleavable<br />
+mitochondrial targeting information, and high-throughput screens frequently produce cytosolic/nuclear<br />
+"leftover" signal for low-abundance organellar proteins. Per CLAUDE.md, IEA electronic inferences may<br />
+be argued against on biological grounds; these are not experimental annotations. I therefore flag them<br />
+as over-annotations rather than REMOVE.</p>
+<h2 id="deep-research-provenance-note">Deep research provenance note</h2>
+<p>The <code>deep_research_wrapper.py</code> (falcon → perplexity-lite fallback) was run twice in the foreground<br />
+(2026-07-06) and <strong>hung with no output</strong> (timed out at 200 s / 590 s, exit 124), producing no file.<br />
+Per project policy I did NOT fabricate a <code>-deep-research-*.md</code>. All assertions above are grounded in<br />
+the cached UniProt record, GOA TSV, PomBase and SGD REST APIs (authoritative ortholog annotation), and<br />
+cached primary publications (PMID:30759361, 19751518, 20473289, 23697806, 16823372, 39367033,<br />
+23101633), with verbatim quotes recorded inline.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O14106
+gene_symbol: rrg8
+aliases:
+  - SPAC31G5.06
+  - rgg8
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:284812
+  label: Schizosaccharomyces pombe (strain 972 / ATCC 24843)
+description: &gt;-
+  rrg8 (SPAC31G5.06) is a small (234-residue) fungal mitochondrial protein of unknown
+  molecular function. Its budding-yeast ortholog RRG8/YPR116W (alias MTA1) is one of
+  several accessory factors required for efficient 5&#39;-end processing of mitochondrial
+  tRNAs: it associates with the mitochondrial inner membrane, sediments as a
+  high-molecular-weight complex, and co-purifies with Rpm2p, the protein subunit of
+  mitochondrial RNase P (the endonuclease that cleaves the 5&#39; leader of pre-tRNAs).
+  Loss of the ortholog reduces mitochondrial tRNA levels and causes respiratory
+  deficiency and defects in mitochondrial genome maintenance and mitochondrial protein
+  synthesis. In fission yeast, where loss of mitochondrial DNA is lethal, deletion of
+  rrg8 is inviable. The protein carries no recognizable domain, catalytic motif, or
+  family signature, and no direct biochemical activity has been demonstrated for either
+  the fission-yeast protein or its orthologs; its role in mitochondrial tRNA processing
+  and gene expression is inferred from ortholog genetics rather than measured for the
+  S. pombe protein itself.
+references:
+  - id: GO_REF:0000015
+    title: Use of the ND evidence code for Gene Ontology (GO) terms
+    findings: []
+  - id: GO_REF:0000024
+    title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+      by curator judgment of sequence similarity
+    findings: []
+  - id: GO_REF:0000044
+    title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+      vocabulary mapping, accompanied by conservative changes to GO terms applied by
+      UniProt
+    findings: []
+  - id: PMID:30759361
+    title: &#34;5&#39; processing of Saccharomyces cerevisiae mitochondrial tRNAs requires expression\
+      \ of multiple genes.&#34;
+    findings:
+      - statement: &gt;-
+          The budding-yeast ortholog RRG8/MTA1 is one of four genes (MTA1, MTA2, GEP5,
+          PET130) required for efficient 5&#39; processing of mitochondrial tRNAs; the proteins
+          associate with the mitochondrial inner membrane, form high-molecular-weight
+          complexes, and Mta1p co-immunopurifies with the RNase P protein subunit Rpm2p.
+        supporting_text: &gt;-
+          we identify four novel genes MTA1, MTA2, GEP5 and PET130 of
+    reference_review:
+      relevance: HIGH
+      correctness: VERIFIED
+      review_notes: &gt;-
+        PubMed-verified primary paper (abstract-only in cache). This is the functional
+        source for the mt-tRNA 5&#39;-end processing role transferred by ISO to rrg8. Establishes
+        MTA1 (= YPR116W = the RRG8 ortholog) as an inner-membrane, RNase-P-associated accessory
+        factor, not a demonstrated catalytic nuclease.
+  - id: PMID:19751518
+    title: Genome-wide deletion mutant analysis reveals genes required for respiratory growth,
+      mitochondrial genome maintenance and mitochondrial protein synthesis in Saccharomyces
+      cerevisiae.
+    findings:
+      - statement: &gt;-
+          Systematic deletion analysis named RRG8 (YPR116w) as one of ten previously
+          uncharacterized genes essential for respiratory growth; the GFP-tagged protein
+          localizes to mitochondria and its loss compromises mitochondrial protein synthesis
+          and genome maintenance.
+        supporting_text: &gt;-
+          identified ten previously uncharacterized genes essential for respiratory growth
+    reference_review:
+      relevance: HIGH
+      correctness: VERIFIED
+      review_notes: &gt;-
+        PubMed/PMC-verified. Source of the RRG8 gene name (&#34;Required for Respiratory Growth 8&#34;)
+        and of mitochondrial localization/respiratory-deficiency of the ortholog. Table 5 lists
+        RRG8/YPR116w as &#34;Unknown function, GFP-tagged protein in mitochondria&#34;.
+  - id: PMID:20473289
+    title: Analysis of a genome-wide set of gene deletions in the fission yeast Schizosaccharomyces
+      pombe.
+    findings:
+      - statement: &gt;-
+          Genome-wide fission-yeast deletion analysis; provides the essentiality classification
+          underlying the inviable phenotype of rrg8 deletion and notes that loss of mtDNA is
+          lethal in fission yeast (unlike budding yeast petites), explaining why a mitochondrial
+          gene-expression factor is essential in S. pombe.
+        supporting_text: &gt;-
+          Loss of mtDNA is lethal in fission yeast but not in budding yeast
+    reference_review:
+      relevance: MEDIUM
+      correctness: VERIFIED
+      review_notes: &gt;-
+        PMC-verified genome-wide deletion resource. Per-gene call for SPAC31G5.06 is in
+        supplementary data; PomBase records the inviable deletion phenotype. Cited here for
+        essentiality context and the fission-yeast-specific lethality of mtDNA loss.
+  - id: PMID:23697806
+    title: A genome-wide resource of cell cycle and cell shape genes of fission yeast.
+    findings:
+      - statement: &gt;-
+          Microscopy-based screen providing the evidence for the inviable, tapered-cell
+          deletion phenotype of rrg8 recorded in PomBase.
+        supporting_text: &gt;-
+          A genome-wide resource of cell cycle and cell shape genes of fission yeast
+    reference_review:
+      relevance: MEDIUM
+      correctness: VERIFIED
+      review_notes: &gt;-
+        PMC-verified. Bioneer/Sysgro microscopy resource; PomBase attributes the FYPO inviable
+        phenotype (microscopy evidence) of rrg8 deletion to this study.
+  - id: PMID:16823372
+    title: ORFeome cloning and global analysis of protein localization in the fission yeast
+      Schizosaccharomyces pombe.
+    findings:
+      - statement: &gt;-
+          High-throughput C-terminal YFP-tagging localization screen; the source (via UniProt
+          Subcellular Location) of the electronic cytoplasm and nucleus annotations for rrg8.
+          Such large-scale C-terminally tagged screens can mislocalize low-abundance organellar
+          proteins.
+        supporting_text: &gt;-
+          we determined the localization of 4,431 proteins
+    reference_review:
+      relevance: LOW
+      correctness: LOW_QUALITY
+      review_notes: &gt;-
+        PubMed-verified (abstract-only). Genome-scale YFP-tagging screen; the cyto/nuclear call
+        for rrg8 conflicts with orthology-based mitochondrial localization and is not curated as
+        a component by PomBase. Treated as the basis of over-annotated electronic CC terms.
+  - id: PMID:39367033
+    title: Quantitative proteomics and phosphoproteomics profiling of meiotic divisions in the
+      fission yeast Schizosaccharomyces pombe.
+    findings:
+      - statement: &gt;-
+          Meiotic proteomics detecting rrg8 at the protein level, with increased abundance during
+          meiotic division; establishes that the gene is expressed as a protein.
+        supporting_text: &gt;-
+          Quantitative proteomics and phosphoproteomics profiling of meiotic divisions
+    reference_review:
+      relevance: LOW
+      correctness: VERIFIED
+      review_notes: &gt;-
+        PMC-verified. Expression/abundance evidence only (protein detected, increased in meiosis);
+        does not inform molecular function.
+existing_annotations:
+  - term:
+      id: GO:0005634
+      label: nucleus
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000044
+    qualifier: located_in
+    review:
+      summary: &gt;-
+        Electronic (UniProt Subcellular Location keyword-mapping) nuclear annotation, ultimately
+        derived from a high-throughput C-terminal YFP-tagging screen.
+      action: MARK_AS_OVER_ANNOTATED
+      reason: &gt;-
+        The nucleus call traces to the genome-scale YFP-tagging ORFeome screen (PMID:16823372)
+        via UniProt Subcellular Location and GO_REF:0000044. It conflicts with the
+        orthology-based mitochondrial localization of this protein (the S. cerevisiae ortholog
+        RRG8/MTA1 is on the matrix side of the inner mitochondrial membrane) and is not curated
+        as a cellular component by PomBase, which annotates only mitochondrion. Large-scale
+        C-terminally tagged screens frequently produce spurious cytosolic/nuclear signal for
+        low-abundance organellar proteins, and a C-terminal tag can mask a cleavable
+        mitochondrial targeting signal. Flag as an over-annotation for a mitochondrial protein
+        rather than a core location.
+      supported_by:
+        - reference_id: PMID:16823372
+          supporting_text: &gt;-
+            we determined the localization of 4,431 proteins
+  - term:
+      id: GO:0005737
+      label: cytoplasm
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000044
+    qualifier: located_in
+    review:
+      summary: &gt;-
+        Electronic (UniProt Subcellular Location keyword-mapping) cytoplasmic annotation from the
+        same high-throughput YFP-tagging screen.
+      action: MARK_AS_OVER_ANNOTATED
+      reason: &gt;-
+        As with the nucleus annotation, cytoplasm derives from the genome-scale YFP screen
+        (PMID:16823372) mapped through UniProt Subcellular Location (GO_REF:0000044). It is a
+        broad, non-specific term that is inconsistent with the mitochondrial localization inferred
+        from the well-characterized ortholog and with PomBase&#39;s expert decision to annotate only
+        mitochondrion. Mark as over-annotated; the informative location is mitochondrion.
+      supported_by:
+        - reference_id: PMID:16823372
+          supporting_text: &gt;-
+            we determined the localization of 4,431 proteins
+  - term:
+      id: GO:0003674
+      label: molecular_function
+    evidence_type: ND
+    original_reference_id: GO_REF:0000015
+    qualifier: enables
+    review:
+      summary: &gt;-
+        Root molecular_function term with the No-Data (ND) evidence code, correctly recording that
+        no molecular function has been determined for rrg8.
+      action: ACCEPT
+      reason: &gt;-
+        The molecular function of rrg8 is genuinely unknown. The protein has no recognizable domain,
+        catalytic motif, or family signature (no InterPro/Pfam/PANTHER assignment), and even the
+        better-studied budding-yeast ortholog is described as &#34;of unknown function&#34;. The ND
+        annotation to the root term is the honest and correct representation of this gap; retain it.
+  - term:
+      id: GO:0005739
+      label: mitochondrion
+    evidence_type: ISO
+    original_reference_id: GO_REF:0000024
+    qualifier: is_active_in
+    review:
+      summary: &gt;-
+        Mitochondrial localization transferred by orthology (ISO) from the S. cerevisiae ortholog
+        RRG8/MTA1 (SGD:S000006320), which localizes to the matrix side of the mitochondrial inner
+        membrane and is GFP-tagged in mitochondria.
+      action: ACCEPT
+      reason: &gt;-
+        The ISO transfer is well supported: the ortholog is experimentally mitochondrial
+        (inner-membrane-associated; GFP in mitochondria, PMID:19751518) and functions there in
+        mitochondrial tRNA processing (PMID:30759361). Mitochondrion is the single cellular
+        component curated by PomBase for rrg8 and represents its core location. Retain as core.
+      supported_by:
+        - reference_id: PMID:19751518
+          supporting_text: &gt;-
+            identified ten previously uncharacterized genes essential for respiratory growth
+        - reference_id: PMID:30759361
+          supporting_text: &gt;-
+            Mta1p, Mta2p, Pet130p, and Gep5p are associated with the
+  - term:
+      id: GO:0097745
+      label: mitochondrial tRNA 5&#39;-end processing
+    evidence_type: ISO
+    original_reference_id: GO_REF:0000024
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        Involvement in mitochondrial tRNA 5&#39;-end processing transferred by orthology (ISO) from
+        the S. cerevisiae ortholog RRG8/MTA1, which is required for efficient 5&#39; processing of
+        mitochondrial tRNAs and associates with mitochondrial RNase P (Rpm2p).
+      action: ACCEPT
+      reason: &gt;-
+        The process assignment is well supported by ortholog genetics and biochemistry: mta1 null
+        mutants have severely reduced mitochondrial tRNA levels, ts mutants accumulate pre-tRNA
+        transcripts, and Mta1p co-immunopurifies with Rpm2p, the protein subunit of mitochondrial
+        RNase P (PMID:30759361). This is the best-supported biological process for rrg8 and is
+        consistent with its essentiality in fission yeast, where loss of mtDNA/mitochondrial gene
+        expression is lethal. Note this is a process (BP) annotation, not a claim that rrg8 is the
+        catalytic nuclease. Retain as core.
+      supported_by:
+        - reference_id: PMID:30759361
+          supporting_text: &gt;-
+            we identify four novel genes MTA1, MTA2, GEP5 and PET130 of
+        - reference_id: PMID:30759361
+          supporting_text: &gt;-
+            co-immunopurification of Rpm2 with Mta1p
+core_functions:
+  - description: &gt;-
+      Accessory factor for mitochondrial tRNA 5&#39;-end processing / mitochondrial gene expression.
+      Acting within the mitochondrion (ortholog is on the matrix side of the inner membrane), rrg8
+      is required for efficient 5&#39; maturation of mitochondrial tRNAs, a step catalyzed by
+      mitochondrial RNase P. Its precise molecular activity is unknown; the ortholog associates
+      with, and co-purifies with, the RNase P protein subunit Rpm2p, consistent with a
+      scaffolding/assembly or accessory role rather than an intrinsic catalytic function. No
+      molecular_function term is asserted because none can be defended from sequence (no domain,
+      motif, or family) or from experiment.
+    directly_involved_in:
+      - id: GO:0097745
+        label: mitochondrial tRNA 5&#39;-end processing
+    locations:
+      - id: GO:0005739
+        label: mitochondrion
+    supported_by:
+      - reference_id: PMID:30759361
+        supporting_text: &gt;-
+          we identify four novel genes MTA1, MTA2, GEP5 and PET130 of
+      - reference_id: PMID:19751518
+        supporting_text: &gt;-
+          identified ten previously uncharacterized genes essential for respiratory growth
+knowledge_gaps:
+  - gap_statement: &gt;-
+      The molecular function of rrg8 is unknown. No biochemical activity, catalytic residue,
+      domain, or family signature has been identified for the fission-yeast protein or for any
+      of its orthologs; whether it is an enzyme, an RNA-binding protein, or a purely structural
+      scaffold is undetermined.
+    boundary: &gt;-
+      The protein is 234 residues, carries a single low-complexity region and no recognizable
+      InterPro/Pfam/PANTHER domain, and UniProt lists no FUNCTION and only &#34;Predicted&#34; protein
+      existence. Even the better-studied S. cerevisiae ortholog RRG8/MTA1 is repeatedly described
+      as a protein &#34;of unknown function&#34;, so the gap is real and field-acknowledged, not merely
+      uncurated.
+    gap_kind:
+      - BIOLOGY
+    dark_aspect: MF_DARK
+    status: OPEN
+    significance: &gt;-
+      rrg8 is essential in fission yeast and its ortholog is required for respiratory growth,
+      yet the molecular basis of these phenotypes is completely unexplained. It is a conserved,
+      single-copy, essential &#34;dark&#34; gene of exactly the type the unknome program targets.
+    resolution: &gt;-
+      Biochemical characterization of purified rrg8 / Rrg8-family protein: test for nuclease,
+      RNA-binding, or protein-scaffolding activity in mitochondrial RNase P reconstitution;
+      structural determination (X-ray/cryo-EM or high-confidence structure prediction) to assign
+      a fold and candidate active site.
+    provenance:
+      - reference_id: PMID:19751518
+        supporting_text: &gt;-
+          identified ten previously uncharacterized genes essential for respiratory growth
+  - gap_statement: &gt;-
+      Whether rrg8 is a stable subunit of mitochondrial RNase P, a transient assembly/maturation
+      factor for the enzyme, or acts on tRNA processing indirectly is unresolved. The mechanism by
+      which it promotes 5&#39; pre-tRNA cleavage is not defined.
+    boundary: &gt;-
+      In the ortholog, Mta1p (together with Mta2p, Gep5p, Pet130p) is inner-membrane-associated,
+      sediments as a high-molecular-weight complex, and co-immunopurifies with the RNase P protein
+      subunit Rpm2p (PMID:30759361); null mutants have reduced mitochondrial tRNA levels and ts
+      mutants accumulate pre-tRNA transcripts. This establishes a functional link to RNase P but
+      not the mechanistic role (subunit vs assembly factor vs indirect).
+    gap_kind:
+      - BIOLOGY
+      - ONTOLOGY
+    dark_aspect: RESIDUAL_SUBGAP
+    status: OPEN
+    significance: &gt;-
+      Distinguishing a bona fide RNase P subunit from an accessory assembly factor would clarify
+      the architecture of fungal mitochondrial RNase P and determine whether an appropriate GO
+      complex/subunit term (currently lacking) is needed to express rrg8&#39;s contribution.
+    resolution: &gt;-
+      Native purification / cryo-EM of fungal mitochondrial RNase P to test for stoichiometric
+      inclusion of Rrg8; in-organello pre-tRNA processing assays in rrg8 conditional mutants;
+      define whether the RNase P activity or its assembly is lost.
+    provenance:
+      - reference_id: PMID:30759361
+        supporting_text: &gt;-
+          co-immunopurification of Rpm2 with Mta1p
+  - gap_statement: &gt;-
+      The direct role of the S. pombe protein itself has not been measured. All functional
+      annotations (mitochondrion, mitochondrial tRNA 5&#39;-end processing) are transferred by
+      orthology from S. cerevisiae; there is no fission-yeast biochemistry, localization by native
+      methods, or in-organello assay for rrg8.
+    boundary: &gt;-
+      rrg8 deletion is inviable in fission yeast (PomBase; microscopy evidence PMID:23697806),
+      and the protein is expressed (detected at RNA and protein level, increased in meiosis,
+      PMID:39367033). The essential phenotype is consistent with a mitochondrial gene-expression
+      role because loss of mtDNA is lethal in fission yeast (PMID:20473289), but the specific
+      molecular defect in rrg8-null cells has not been characterized.
+    gap_kind:
+      - BIOLOGY
+      - CURATION
+    dark_aspect: MF_DARK
+    status: OPEN
+    significance: &gt;-
+      Direct fission-yeast evidence would upgrade the ISO annotations to experimental support and
+      test whether the mitochondrial tRNA-processing role is conserved in S. pombe or whether the
+      essential phenotype reflects a different or additional function.
+    resolution: &gt;-
+      Localize an endogenously tagged Rrg8 by fluorescence and subcellular fractionation; analyze
+      mitochondrial tRNA processing and mtDNA maintenance in a conditional (e.g. tetO/thiamine-
+      repressible) rrg8 allele.
+    provenance:
+      - reference_id: PMID:20473289
+        supporting_text: &gt;-
+          Loss of mtDNA is lethal in fission yeast but not in budding yeast
+suggested_questions:
+  - question: &gt;-
+      Is Rrg8 a stoichiometric subunit of fission-yeast mitochondrial RNase P, or a transient
+      assembly/maturation factor for the enzyme?
+    experts: []
+  - question: &gt;-
+      Does the essential phenotype of rrg8 deletion in S. pombe reflect specifically defective
+      mitochondrial tRNA processing (and consequent loss of mitochondrial translation and mtDNA),
+      or an additional/independent function?
+    experts: []
+suggested_experiments:
+  - hypothesis: &gt;-
+      Rrg8 associates with mitochondrial RNase P and is required for 5&#39; processing of
+      mitochondrial pre-tRNAs in S. pombe.
+    description: &gt;-
+      Endogenously epitope-tag rrg8, purify from isolated mitochondria under native conditions, and
+      test by mass spectrometry / co-immunoprecipitation for association with the RNase P protein
+      subunit (Rpm2 ortholog) and other Mta1/Mta2/Gep5/Pet130-equivalent factors. In parallel, use a
+      conditional rrg8 allele and northern blotting / primer extension to test for accumulation of
+      unprocessed mitochondrial pre-tRNA 5&#39; leaders.
+    experiment_type: affinity purification-mass spectrometry and RNA processing assay
+  - hypothesis: &gt;-
+      Rrg8 possesses an assignable fold and candidate functional surface despite lacking recognized
+      sequence signatures.
+    description: &gt;-
+      Determine or predict the structure of Rrg8 (cryo-EM within the mitochondrial RNase P complex,
+      or high-confidence structure prediction plus DALI/Foldseek search) to identify structural
+      homologs, a possible RNA-binding surface, or a degenerate catalytic site, and use conservation
+      mapping across fungal orthologs to nominate functionally important residues for mutagenesis.
+    experiment_type: structural biology / structure-based homology detection
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

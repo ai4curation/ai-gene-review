@@ -1,0 +1,2816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIA1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>SIA1</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q12212" target="_blank" class="term-link">
+                        Q12212
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Saccharomyces cerevisiae</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "SIA1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q12212" data-a="DESCRIPTION: SIA1 (YOR137C) is a poorly characterized 622-resid..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>SIA1 (YOR137C) is a poorly characterized 622-residue protein of the budding yeast Saccharomyces cerevisiae. It carries an N-terminal signal peptide and a single calcineurin-like metallophosphoesterase (metallophosphatase/purple acid phosphatase-like) domain, placing it in a family that also contains the yeast paralog Dcr2 and several plant &#34;probable inactive purple acid phosphatases&#34;. Genetic evidence shows that SIA1 is required for the glucose-triggered, post-translational activation of the plasma membrane proton pump Pma1: cells lacking SIA1 have normal Pma1 protein levels at the plasma membrane but fail to show the full glucose-induced increase in Pma1 maximal velocity, identifying SIA1 as a positive regulator of H+-ATPase activation rather than a component of the pump itself. SIA1 was independently isolated as a multicopy suppressor of a temperature-sensitive allele of the essential translation factor eIF5A (the source of its name, &#34;Suppressor of eIF5A&#34;), a screen that linked eIF5A to the WSC/PKC1 cell-wall-integrity signalling pathway. SIA1 transcription is induced by ethanol stress. Its molecular activity is unresolved: although the metallophosphatase fold and phylogenetic assignment suggest a possible phosphatase, no catalytic activity or substrate has been demonstrated, and its closest relatives are predicted to be catalytically inactive.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004721" target="_blank" class="term-link">
+                                    GO:0004721
+                                </a>
+                            </span>
+                            <span class="term-label">phosphoprotein phosphatase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q12212" data-a="GO:0004721" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Family-level phylogenetic (IBA) inference of phosphatase activity from the calcineurin-like metallophosphatase fold. SIA1 has the domain, but no phosphatase activity or substrate has ever been demonstrated for it, and its nearest orthologs include &#34;probable inactive purple acid phosphatases&#34;. Retained as a plausible family-level hypothesis but not treated as an established (core) function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> SIA1 is assigned to PANTHER PTHR32440:SF0 (phosphatase DCR2-related), a metallophosphoesterase / purple acid phosphatase-like family, so an IBA phosphatase annotation is a defensible domain-based hypothesis and should not be removed. However, the only experimental data on SIA1 concern its requirement for glucose activation of Pma1, with no assay of phosphatase activity; SGD lists molecular function as Unknown; and several reviewed SF0 members are annotated as inactive purple acid phosphatases. The catalytic activity of SIA1 is therefore an open knowledge gap, so this term is kept as non-core rather than accepted as a core function.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">NO FAILURE NON CORE</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">SOURCE EVIDENCE WEAK</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTHR32440</span>
+
+                                    &middot; phosphatase DCR2-related (SF0)
+
+
+                                    <span class="badge">SOURCE WEAK OR INFERRED</span>
+
+
+                                    <div class="propagation-comment">Family includes yeast Dcr2 and plant PAP14/16/28/29 annotated as probable INACTIVE purple acid phosphatases; SIA1 catalytic activity unverified.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:yeast/SIA1/SIA1-uniprot.txt
+
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016787" target="_blank" class="term-link">
+                                    GO:0016787
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q12212" data-a="GO:0016787" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic hydrolase parent term inferred electronically (InterPro2GO) from the metallophosphatase domain IPR004843. Consistent with the fold but uninformative and subsumed by the more specific (also inferential) phosphatase term; not wrong.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This IEA annotation is a direct domain-to-GO mapping (IPR004843 -&gt; hydrolase activity) and is consistent with the metallophosphatase fold. It is far more general than the family-level phosphatase inference and carries the same (unverified) assumption that the domain is catalytically active. It is retained as non-core background rather than removed, since the fold is genuinely present, but it does not describe a demonstrated SIA1 function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:yeast/SIA1/SIA1-uniprot.txt
+
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1902600" target="_blank" class="term-link">
+                                    GO:1902600
+                                </a>
+                            </span>
+                            <span class="term-label">proton transmembrane transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9450541" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9450541
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Yeast gene YOR137c is involved in the activation of the yeas...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q12212" data-a="GO:1902600" data-r="PMID:9450541" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Based on the SIA1 deletion phenotype (loss of glucose-triggered Pma1 Vmax increase), SGD annotated SIA1 to proton transmembrane transport (IMP). The experimental evidence is sound, but SIA1 does not itself transport protons; it is required for activation of the Pma1 proton pump. A regulatory process term better captures the biology.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The experimental support (PMID:9450541, IMP) is solid and must be retained - the paper shows SIA1 is required for the glucose-induced Vmax increase of Pma1. However, the term &#34;proton transmembrane transport&#34; attributes the ion-translocation process to SIA1, whereas SIA1 is a regulator required for activation of the transporter, not a transporter or channel. The essence is sound but a better term exists, so MODIFY to a regulatory term (&#34;regulation of proton transport&#34;, GO:0010155) that preserves the experimental support while stating the biology accurately.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010155" target="_blank" class="term-link">
+                                    regulation of proton transport
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9450541" target="_blank" class="term-link">
+                                        PMID:9450541
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Deletion of YOR137c does not affect the level of Pma1 at the plasma membrane, but disturbs the glucose-triggered Vmax increase of the enzyme.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:yeast/SIA1/SIA1-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">Within this pathway, SIA1 is genetically implicated alongside PTK2 as a positive factor in Pma1 activation.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003674" target="_blank" class="term-link">
+                                    GO:0003674
+                                </a>
+                            </span>
+                            <span class="term-label">molecular_function</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q12212" data-a="GO:0003674" data-r="GO_REF:0000015" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SGD ND placeholder recording that no molecular-function data are available for SIA1. This is accurate: SIA1&#39;s molecular activity is genuinely unresolved (see knowledge_gaps).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The root molecular_function ND annotation correctly records the absence of curated molecular-function evidence. Given that SIA1 has no experimentally demonstrated activity and its family assignment is ambiguous (possible pseudophosphatase), the ND placeholder is an honest reflection of the state of knowledge and should be retained until an activity is established.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005575" target="_blank" class="term-link">
+                                    GO:0005575
+                                </a>
+                            </span>
+                            <span class="term-label">cellular_component</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q12212" data-a="GO:0005575" data-r="GO_REF:0000015" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SGD ND placeholder recording that no cellular-component data are available for SIA1. SIA1 has a predicted signal peptide (secretory-pathway entry) but no experimentally verified subcellular localization is curated.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The root cellular_component ND annotation correctly records the absence of curated localization evidence. Although a signal peptide predicts membrane/secretory-pathway entry and SIA1 functionally regulates the plasma-membrane Pma1, no experimental localization is available, so retaining the honest ND placeholder is appropriate.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Positive regulator required for the glucose-triggered, post-translational activation of the plasma membrane H+-ATPase Pma1. Loss of SIA1 leaves Pma1 protein levels at the plasma membrane unchanged but prevents the full glucose-induced increase in the pump&#39;s maximal velocity, identifying SIA1 as required for one of the (at least two) mechanisms that activate Pma1 in response to glucose. The molecular mechanism (direct versus indirect; catalytic versus scaffolding) is not established.</h3>
+                <span class="vote-buttons" data-g="Q12212" data-a="FUNCTION: Positive regulator required for the glucose-trigge..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010155" target="_blank" class="term-link">
+                                regulation of proton transport
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9450541" target="_blank" class="term-link">
+                                PMID:9450541
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Deletion of YOR137c does not affect the level of Pma1 at the plasma membrane, but disturbs the glucose-triggered Vmax increase of the enzyme.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9450541" target="_blank" class="term-link">
+                            PMID:9450541
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Yeast gene YOR137c is involved in the activation of the yeast plasma membrane H+-ATPase by glucose.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Deletion of YOR137c (SIA1) does not change the amount of Pma1 at the plasma membrane but abolishes the glucose-triggered increase in Pma1 maximal velocity, showing that SIA1 is required for post-translational (post-transcriptional) glucose activation of the H+-ATPase.</div>
+
+                        <div class="finding-text">"Deletion of YOR137c does not affect the level of Pma1 at the plasma membrane, but disturbs the glucose-triggered Vmax increase of the enzyme."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11861547" target="_blank" class="term-link">
+                            PMID:11861547
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Genetic interactions of yeast eukaryotic translation initiation factor 5A (eIF5A) reveal connections to poly(A)-binding protein and protein kinase C signaling.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">A multicopy suppressor screen of a temperature-sensitive eIF5A (tif51A) allele recovered several genes and connected eIF5A to the WSC/PKC1 cell-wall-integrity signalling pathway; SIA1 (Suppressor of eIF5A 1) was named from this screen.</div>
+
+                        <div class="finding-text">"A multicopy suppressor screen revealed six genes, the overexpression of which allows growth of a tif51A-1 strain at high temperature; these genes include PAB1, PKC1, and PKC1 regulators WSC1, WSC2, and WSC3."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11389906" target="_blank" class="term-link">
+                            PMID:11389906
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Global gene expression during short-term ethanol stress in Saccharomyces cerevisiae.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">SIA1 (YOR137C) transcription is up-regulated during short-term ethanol stress (UniProt INDUCTION line, ECO:0000269|PubMed:11389906).</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000015.md" target="_blank" class="term-link">
+                            GO_REF:0000015
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on ND (No biological Data available) records.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:yeast/SIA1/SIA1-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProt entry Q12212 (SIA1_YEAST) - domain and feature annotations.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt annotates SIA1 with an N-terminal signal peptide (residues 1-27) and a single calcineurin-like metallophosphoesterase domain (Pfam PF00149 Metallophos; InterPro IPR004843/IPR029052; Gene3D 3.60.21.10; SUPFAM SSF56300), and assigns it to PANTHER family PTHR32440 subfamily SF0 (phosphatase DCR2-related).</div>
+
+                        <div class="finding-text">"DR   Pfam; PF00149; Metallophos; 1."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:yeast/SIA1/SIA1-deep-research-falcon.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Falcon (Edison) deep-research report for SIA1 (YOR137C).</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Independent deep-research synthesis places SIA1 in the metallophosphoesterase superfamily and, alongside PTK2, as a genetically implicated positive factor in glucose-induced Pma1 H+-ATPase activation, with the exact biochemical step unresolved; it also links SIA1 to the RIM101 weak-acid stress network (down in rim101-delta).</div>
+
+                        <div class="finding-text">"Within this pathway, SIA1 is genetically implicated alongside PTK2 as a positive factor in Pma1 activation."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does SIA1 act directly on Pma1 (physical interaction / activator or scaffold) or indirectly through a signalling or lipid-mediated route to promote glucose activation of the H+-ATPase?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q12212" data-a="Q: Does SIA1 act directly on Pma1 (physical interacti..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is the SIA1 metallophosphatase domain catalytically active, and if so what is its physiological substrate - or is SIA1 a pseudophosphatase like its closest relatives?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q12212" data-a="Q: Is the SIA1 metallophosphatase domain catalyticall..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is SIA1&#39;s role in glucose activation of Pma1 mechanistically connected to its genetic identity as an eIF5A suppressor and to WSC/PKC1 cell-wall-integrity signalling, or are these independent activities?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q12212" data-a="Q: Is SIA1&#39;s role in glucose activation of Pma1 mecha..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Co-immunoprecipitation / proximity labelling of tagged SIA1 and Pma1 before and after glucose addition to test for direct interaction; phosphoproteomic comparison of Pma1 (especially the C-terminal autoinhibitory Ser/Thr residues) in wild-type versus sia1-delta cells upon glucose refeeding.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: SIA1 promotes glucose activation of Pma1 by directly modulating Pma1&#39;s activity or phosphorylation state.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: interaction and phosphorylation analysis</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q12212" data-a="EXPERIMENT: Co-immunoprecipitation / proximity labelling of ta..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Recombinant expression of the SIA1 metallophosphatase domain and in vitro phosphatase assays (para-nitrophenyl phosphate and phosphopeptide substrates) with metal-dependence controls; parallel assay of catalytic-residue point mutants to test whether any activity requires the predicted metal-binding scaffold.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The SIA1 metallophosphatase domain is (or is not) catalytically active.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: enzymology</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q12212" data-a="EXPERIMENT: Recombinant expression of the SIA1 metallophosphat..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Determine the subcellular localization of endogenously tagged SIA1 by fluorescence microscopy and membrane fractionation, and test signal-peptide dependence, to place SIA1 relative to Pma1 in the secretory pathway / plasma membrane.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: SIA1 localizes to a compartment consistent with acting on Pma1 (plasma membrane or secretory pathway).</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: cell biology / localization</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q12212" data-a="EXPERIMENT: Determine the subcellular localization of endogeno..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> SIA1&#39;s molecular activity is undetermined. Although it has a calcineurin-like metallophosphatase fold and carries a family-level IBA &#34;phosphoprotein phosphatase activity&#34; annotation, no catalytic activity or substrate has ever been demonstrated for SIA1, and its closest relatives include probable inactive purple acid phosphatases, so it is unknown whether SIA1 is an active phosphatase or a pseudoenzyme.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Established: SIA1 contains a single metallophosphatase domain (Pfam PF00149; InterPro IPR004843) and belongs to PANTHER PTHR32440:SF0. Not established: any measured enzymatic activity, substrate, or metal dependence; SGD lists molecular function as Unknown.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Whether SIA1 is an active phosphatase determines the class of mechanism by which it could regulate Pma1 (direct enzymatic modification versus non-catalytic scaffolding), and would resolve whether the family-level IBA/IEA activity annotations reflect real biology.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> In vitro phosphatase assays on recombinant SIA1 (and catalytic-residue mutants) with phosphoprotein/phosphopeptide and generic substrates; structural comparison of the SIA1 active site with active metallophosphatases.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>""</em> — file:yeast/SIA1/SIA1-uniprot.txt</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The mechanism linking SIA1 to glucose activation of Pma1 is unknown - whether SIA1 acts directly on the pump or through an intermediate signalling/lipid step, and which of the &#34;at least two independent mechanisms&#34; of Pma1 glucose activation SIA1 belongs to.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Established: sia1-delta cells retain normal plasma-membrane Pma1 levels but fail the glucose-triggered Vmax increase (PMID:9450541). Not established: the molecular step or partner through which SIA1 exerts this effect.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Identifies how a central metabolic signal (glucose) is transduced to the master plasma-membrane proton pump; SIA1 is a genetic entry point into this poorly understood activation pathway.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Epistasis and interaction studies placing SIA1 relative to known Pma1 glucose-activation inputs (Ptk1/2 kinases, Glc7 phosphatase, sphingolipid/ergosterol requirements) and direct interaction tests.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"We propose that at least two independent mechanisms are involved in glucose activation of the H+-ATPase."</em> — PMID:9450541</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> SIA1&#39;s direct physical partners and its subcellular localization are unknown. No validated Pma1 physical interaction is curated, and there is no experimentally determined localization despite a predicted N-terminal signal peptide.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span><span class="badge">CURATION</span>
+                <span class="badge">CC_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Established: SIA1 has a predicted signal peptide (UniProt residues 1-27) and low-throughput interaction records exist, but SGD lists cellular component as Unknown and no direct Pma1 interaction is curated. Not established: where SIA1 resides and what it binds.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Knowing whether SIA1 reaches the plasma membrane / secretory pathway and what it binds is prerequisite to any mechanistic model of how it acts on Pma1.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Endogenous-tag localization microscopy and membrane fractionation; affinity-purification mass spectrometry / proximity labelling to define the SIA1 interactome.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>""</em> — file:yeast/SIA1/SIA1-uniprot.txt</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(SIA1-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q12212" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">19 citations</span>
+
+
+
+                    <span class="report-meta-text">2026-07-05T14:47:31.100670</span>
+
+
+
+                </div>
+
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="comprehensive-research-report-sia1-yor137c-in-saccharomyces-cerevisiae">Comprehensive Research Report: SIA1 (YOR137C) in <em>Saccharomyces cerevisiae</em></h2>
+<h3 id="1-gene-and-protein-identity">1. Gene and Protein Identity</h3>
+<p>SIA1 (systematic name YOR137C; also designated YOR3329C) encodes a 466-amino acid protein (UniProt: Q12212) in <em>Saccharomyces cerevisiae</em> (strain S288c). The protein is annotated as a precursor and contains a calcineurin-like phosphohistidinol phosphatase (PHP) domain (IPR004843), a metallo-dependent phosphatase-like domain (IPR029052), and a metallophosphatase (Metallophos, PF00149) domain. SIA1 was first functionally characterized by de la Fuente, Maldonado, and Portillo (1997), who identified the gene as being involved in the glucose-induced activation of the yeast plasma membrane H⁺-ATPase (Pma1).</p>
+<h3 id="2-protein-domain-architecture-and-structural-context">2. Protein Domain Architecture and Structural Context</h3>
+<p>Sia1p belongs to the calcineurin-like metallophosphoesterase (MPE) superfamily, a large and diverse group of phosphoesterases that share a remarkably conserved structural fold despite wide functional divergence (matange2015metallophosphoesterasesstructuralfidelity pages 1-2). The MPE domain features a characteristic βαβαβ architecture with a central β-sandwich decorated by α-helices. At the apex of this β-sandwich lies the active site, which contains a binuclear metal center with two metal ions (designated α and β) octahedrally coordinated by seven conserved residues from the MPE motif, plus a metal-bridging water molecule (matange2015metallophosphoesterasesstructuralfidelity pages 5-7). The catalytic mechanism involves a metal-coordinated water molecule serving as the attacking nucleophile, initiating hydrolysis of phosphoester substrates through a penta-coordinated transition state (matange2015metallophosphoesterasesstructuralfidelity pages 7-9).</p>
+<p>In <em>S. cerevisiae</em>, four proteins contain the calcineurin-like phosphoesterase domain: Cdc1p, Gps1p, Dcr2p, and Sia1p (tu2008functionalstudieson pages 33-38). Among these, Cdc1p, Gps1p, and Dcr2p all contain the conserved GNHD/E sequence motif thought to be important for phosphate ester hydrolysis at the active-site dinuclear metal center (tu2008functionalstudieson pages 33-38). The <em>S. cerevisiae</em> genome encodes approximately 20 MPE domain-containing proteins overall (matange2015metallophosphoesterasesstructuralfidelity pages 12-13). MPEs can hydrolyze a diverse range of substrates including phosphomonoesters, phosphodiesters, and phosphotriesters, and individual family members have been co-opted for functions ranging from protein dephosphorylation to nucleotide hydrolysis to non-catalytic protein-interaction scaffolding roles (matange2015metallophosphoesterasesstructuralfidelity pages 1-2, matange2015metallophosphoesterasesstructuralfidelity pages 12-13).</p>
+<h3 id="3-primary-function-role-in-glucose-induced-activation-of-the-plasma-membrane-h-atpase">3. Primary Function: Role in Glucose-Induced Activation of the Plasma Membrane H⁺-ATPase</h3>
+<p>The primary characterized function of Sia1p is its involvement in the glucose-induced activation of the plasma membrane H⁺-ATPase Pma1. This was established in the foundational study by de la Fuente, Maldonado, and Portillo (1997, FEBS Letters 420:17–19), which demonstrated that the <em>YOR137C</em> gene product participates in the proton transport process associated with Pma1 activation upon glucose addition (tu2008functionalstudieson pages 33-38, mira2009therim101pathway pages 11-12).</p>
+<p>Pma1 is the major plasma membrane proton pump in yeast, establishing the electrochemical H⁺ gradient that drives active transport of ions and metabolites across the plasma membrane. Pma1 is self-inhibited by its C-terminal autoinhibitory domain unless this domain is phosphorylated at specific residues (guarini2024phosphoregulationofthe pages 17-18, guarini2024phosphoregulationofthe pages 4-6). The current understanding of Pma1 activation involves:</p>
+<ul>
+<li><strong>Ptk1 and Ptk2 kinases</strong> phosphorylate key residues (Ser899, Ser911, and Thr912) in the regulatory (R) domain of Pma1 in response to glucose availability. These phosphorylation events disrupt self-inhibitory interactions between the R and P domains of Pma1, thereby activating the pump (guarini2024phosphoregulationofthe pages 4-6, guarini2024phosphoregulationofthe pages 6-7).</li>
+<li><strong>Glc7 PP1 phosphatase</strong> counteracts this phosphorylation under glucose starvation, dephosphorylating S911-T912 and restoring Pma1 self-inhibition (guarini2024phosphoregulationofthe pages 17-18, guarini2024phosphoregulationofthe pages 7-9).</li>
+<li>This phosphoregulation is under <strong>TORC1 control</strong>, suggesting feedback regulation between Pma1 activity and growth signaling (guarini2024phosphoregulationofthe pages 11-12, guarini2024phosphoregulationofthe pages 25-26).</li>
+</ul>
+<p>While the precise molecular mechanism by which Sia1p contributes to this pathway has not been fully elucidated at the biochemical level, its identification as a calcineurin-like phosphoesterase involved in the proton transport/Pma1 activation process suggests it may participate in phosphoregulatory events related to Pma1 activation. The exact enzymatic substrate(s) of Sia1p remain to be determined.</p>
+<h3 id="4-biological-processes-and-pathway-involvement">4. Biological Processes and Pathway Involvement</h3>
+<h4 id="41-ph-homeostasis-and-ionic-balance">4.1 pH Homeostasis and Ionic Balance</h4>
+<p>SIA1 is classified under ionic homeostasis functions in the yeast genome. During short-term ethanol stress, <em>SIA1</em> (YOR137C) transcript levels are upregulated approximately 3-fold, and the gene was categorized together with other genes involved in ionic homeostasis, including copper transporters (CCC2, CTR2), P-type ATPases (SPF1), and the K⁺/H⁺ exchanger KHA1 (alexandre2001globalgeneexpression pages 3-4). This stress-responsive upregulation is consistent with a role in maintaining intracellular pH during conditions that challenge proton homeostasis.</p>
+<h4 id="42-rim101-pathway-and-weak-acid-tolerance">4.2 RIM101 Pathway and Weak Acid Tolerance</h4>
+<p>SIA1 is part of the RIM101 regulon. In <em>Δrim101</em> mutant cells, <em>SIA1</em> transcription is decreased approximately 1.9-fold, which may impair the cell's ability to respond to propionic acid stress (mira2009therim101pathway pages 11-12). The RIM101 pathway is required for <em>S. cerevisiae</em> adaptive response and resistance to propionic acid and other weak acids. The decreased <em>SIA1</em> expression in <em>rim101</em> mutants contributes to deficient control of propionic acid-induced internal acidification, because Sia1p mediates glucose-induced activation of PM-ATPase (Pma1) activity, which is crucial for counteracting weak acid-induced intracellular acidification (mira2009therim101pathway pages 11-12). This positions SIA1 at the intersection of the RIM101 pH-sensing pathway and glucose-dependent proton pump regulation.</p>
+<h4 id="43-glucose-signaling-network">4.3 Glucose Signaling Network</h4>
+<p>The involvement of SIA1 in Pma1 activation places it within the broader glucose signaling network in yeast. Pma1 activation is a key event following glucose addition to yeast cells, and this activation is coordinated with multiple glucose-sensing pathways. The G protein-coupled receptor Gpr1 and the transporter-like glucose sensors Rgt2 and Snf3 both contribute to regulation of intracellular pH through Pma1 (isom2018coordinatedregulationof pages 1-2). The Pma1-mediated changes in cytoplasmic pH serve as a second messenger for glucose sensing, linking nutrient availability to metabolic reprogramming (isom2018coordinatedregulationof pages 1-2). Additionally, proper Pma1 phosphorylation is required for optimal TORC1 activation upon H⁺ influx coupled to amino acid uptake, demonstrating the integration of Pma1 regulation with growth signaling (guarini2024phosphoregulationofthe pages 11-12).</p>
+<h3 id="5-subcellular-localization">5. Subcellular Localization</h3>
+<p>According to the global GFP-tagging study of the yeast proteome (Huh et al., 2003), Sia1p localizes to the cytoplasm. Given its role in the activation of the plasma membrane H⁺-ATPase Pma1, Sia1p likely exerts its function at or near the plasma membrane, potentially interacting with components of the Pma1 regulatory machinery, though direct localization to the plasma membrane has not been explicitly demonstrated.</p>
+<h3 id="6-sequence-relationships">6. Sequence Relationships</h3>
+<p>SIA1 shows sequence similarity to YLR270W (also known as DCS1), as noted in genome annotation studies (alexandre2001globalgeneexpression pages 3-4). Both proteins likely share the metallophosphatase domain architecture, although their functional specializations may differ. The <em>S. cerevisiae</em> genome contains approximately 20 metallophosphoesterase domain-containing proteins, reflecting the evolutionary expansion and functional diversification of this domain family in eukaryotes (matange2015metallophosphoesterasesstructuralfidelity pages 12-13).</p>
+<h3 id="7-summary-and-knowledge-gaps">7. Summary and Knowledge Gaps</h3>
+<p>SIA1/YOR137C encodes a calcineurin-like metallophosphoesterase that plays a role in the glucose-induced activation of the plasma membrane H⁺-ATPase Pma1 in <em>S. cerevisiae</em>. Through this function, Sia1p contributes to intracellular pH homeostasis and ionic balance. The protein is transcriptionally regulated by the RIM101 pathway and is induced under ethanol stress conditions, consistent with a protective role during conditions that challenge cellular pH.</p>
+<p>Despite these functional assignments, several important questions remain:</p>
+<ol>
+<li><strong>Enzymatic activity</strong>: The specific phosphoesterase substrate(s) of Sia1p have not been biochemically characterized. Whether Sia1p acts as a protein phosphatase, nucleotidase, or has another phosphoesterase activity remains unknown.</li>
+<li><strong>Mechanism of Pma1 regulation</strong>: The precise molecular mechanism by which Sia1p contributes to Pma1 activation—whether through direct dephosphorylation of regulatory proteins, scaffolding interactions, or other mechanisms—has not been determined.</li>
+<li><strong>Relationship to other calcineurin-like phosphoesterases</strong>: How Sia1p functionally differs from its paralogs Cdc1p, Gps1p, and Dcr2p, and whether these proteins have overlapping or distinct roles in cellular physiology, remains to be fully explored.</li>
+</ol>
+<p>The limited primary literature specifically focused on SIA1 reflects its status as a relatively understudied gene, with the foundational 1997 study by de la Fuente et al. providing the main functional characterization, and subsequent studies primarily mentioning SIA1 in the context of genome-wide screens and transcriptomics analyses.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(matange2015metallophosphoesterasesstructuralfidelity pages 1-2): Nishad Matange, Marjetka Podobnik, and Sandhya S. Visweswariah. Metallophosphoesterases: structural fidelity with functional promiscuity. The Biochemical journal, 467 2:201-16, Apr 2015. URL: https://doi.org/10.1042/bj20150028, doi:10.1042/bj20150028. This article has 87 citations.</p>
+</li>
+<li>
+<p>(matange2015metallophosphoesterasesstructuralfidelity pages 5-7): Nishad Matange, Marjetka Podobnik, and Sandhya S. Visweswariah. Metallophosphoesterases: structural fidelity with functional promiscuity. The Biochemical journal, 467 2:201-16, Apr 2015. URL: https://doi.org/10.1042/bj20150028, doi:10.1042/bj20150028. This article has 87 citations.</p>
+</li>
+<li>
+<p>(matange2015metallophosphoesterasesstructuralfidelity pages 7-9): Nishad Matange, Marjetka Podobnik, and Sandhya S. Visweswariah. Metallophosphoesterases: structural fidelity with functional promiscuity. The Biochemical journal, 467 2:201-16, Apr 2015. URL: https://doi.org/10.1042/bj20150028, doi:10.1042/bj20150028. This article has 87 citations.</p>
+</li>
+<li>
+<p>(tu2008functionalstudieson pages 33-38): Linna Tu. Functional studies on vps74p, a novel protein sorting regulator in sacchromyces cerevisiae. ArXiv, 2008. URL: https://doi.org/10.14711/thesis-b1023209, doi:10.14711/thesis-b1023209. This article has 0 citations.</p>
+</li>
+<li>
+<p>(matange2015metallophosphoesterasesstructuralfidelity pages 12-13): Nishad Matange, Marjetka Podobnik, and Sandhya S. Visweswariah. Metallophosphoesterases: structural fidelity with functional promiscuity. The Biochemical journal, 467 2:201-16, Apr 2015. URL: https://doi.org/10.1042/bj20150028, doi:10.1042/bj20150028. This article has 87 citations.</p>
+</li>
+<li>
+<p>(mira2009therim101pathway pages 11-12): Nuno P. Mira, Artur B. LourenÃ§o, Alexandra R. Fernandes, Jorg D. Becker, and Isabel SÃ¡-Correia. The rim101 pathway has a role in saccharomyces cerevisiae adaptive response and resistance to propionic acid and other weak acids. FEMS yeast research, 9 2:202-16, Mar 2009. URL: https://doi.org/10.1111/j.1567-1364.2008.00473.x, doi:10.1111/j.1567-1364.2008.00473.x. This article has 125 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(guarini2024phosphoregulationofthe pages 17-18): Nadia Guarini, Elie Saliba, and Bruno André. Phosphoregulation of the yeast pma1 h+-atpase autoinhibitory domain involves the ptk1/2 kinases and the glc7 pp1 phosphatase and is under torc1 control. PLOS Genetics, 20:e1011121, Jan 2024. URL: https://doi.org/10.1371/journal.pgen.1011121, doi:10.1371/journal.pgen.1011121. This article has 10 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(guarini2024phosphoregulationofthe pages 4-6): Nadia Guarini, Elie Saliba, and Bruno André. Phosphoregulation of the yeast pma1 h+-atpase autoinhibitory domain involves the ptk1/2 kinases and the glc7 pp1 phosphatase and is under torc1 control. PLOS Genetics, 20:e1011121, Jan 2024. URL: https://doi.org/10.1371/journal.pgen.1011121, doi:10.1371/journal.pgen.1011121. This article has 10 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(guarini2024phosphoregulationofthe pages 6-7): Nadia Guarini, Elie Saliba, and Bruno André. Phosphoregulation of the yeast pma1 h+-atpase autoinhibitory domain involves the ptk1/2 kinases and the glc7 pp1 phosphatase and is under torc1 control. PLOS Genetics, 20:e1011121, Jan 2024. URL: https://doi.org/10.1371/journal.pgen.1011121, doi:10.1371/journal.pgen.1011121. This article has 10 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(guarini2024phosphoregulationofthe pages 7-9): Nadia Guarini, Elie Saliba, and Bruno André. Phosphoregulation of the yeast pma1 h+-atpase autoinhibitory domain involves the ptk1/2 kinases and the glc7 pp1 phosphatase and is under torc1 control. PLOS Genetics, 20:e1011121, Jan 2024. URL: https://doi.org/10.1371/journal.pgen.1011121, doi:10.1371/journal.pgen.1011121. This article has 10 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(guarini2024phosphoregulationofthe pages 11-12): Nadia Guarini, Elie Saliba, and Bruno André. Phosphoregulation of the yeast pma1 h+-atpase autoinhibitory domain involves the ptk1/2 kinases and the glc7 pp1 phosphatase and is under torc1 control. PLOS Genetics, 20:e1011121, Jan 2024. URL: https://doi.org/10.1371/journal.pgen.1011121, doi:10.1371/journal.pgen.1011121. This article has 10 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(guarini2024phosphoregulationofthe pages 25-26): Nadia Guarini, Elie Saliba, and Bruno André. Phosphoregulation of the yeast pma1 h+-atpase autoinhibitory domain involves the ptk1/2 kinases and the glc7 pp1 phosphatase and is under torc1 control. PLOS Genetics, 20:e1011121, Jan 2024. URL: https://doi.org/10.1371/journal.pgen.1011121, doi:10.1371/journal.pgen.1011121. This article has 10 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(alexandre2001globalgeneexpression pages 3-4): H. Alexandre, V. Ansanay-Galeote, S. Dequin, and B. Blondin. Global gene expression during short‐term ethanol stress in saccharomyces cerevisiae. FEBS Letters, Jun 2001. URL: https://doi.org/10.1016/s0014-5793(01)02503-0, doi:10.1016/s0014-5793(01)02503-0. This article has 534 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(isom2018coordinatedregulationof pages 1-2): Daniel G. Isom, Stephani C. Page, Leonard B. Collins, Nicholas J. Kapolka, Geoffrey J. Taghon, and Henrik G. Dohlman. Coordinated regulation of intracellular ph by two glucose-sensing pathways in yeast. Journal of Biological Chemistry, 293:2318-2329, Feb 2018. URL: https://doi.org/10.1074/jbc.ra117.000422, doi:10.1074/jbc.ra117.000422. This article has 42 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>matange2015metallophosphoesterasesstructuralfidelity pages 1-2</li>
+<li>matange2015metallophosphoesterasesstructuralfidelity pages 5-7</li>
+<li>matange2015metallophosphoesterasesstructuralfidelity pages 7-9</li>
+<li>tu2008functionalstudieson pages 33-38</li>
+<li>matange2015metallophosphoesterasesstructuralfidelity pages 12-13</li>
+<li>alexandre2001globalgeneexpression pages 3-4</li>
+<li>isom2018coordinatedregulationof pages 1-2</li>
+<li>guarini2024phosphoregulationofthe pages 11-12</li>
+<li>guarini2024phosphoregulationofthe pages 17-18</li>
+<li>guarini2024phosphoregulationofthe pages 4-6</li>
+<li>guarini2024phosphoregulationofthe pages 6-7</li>
+<li>guarini2024phosphoregulationofthe pages 7-9</li>
+<li>guarini2024phosphoregulationofthe pages 25-26</li>
+<li>https://doi.org/10.1042/bj20150028,</li>
+<li>https://doi.org/10.14711/thesis-b1023209,</li>
+<li>https://doi.org/10.1111/j.1567-1364.2008.00473.x,</li>
+<li>https://doi.org/10.1371/journal.pgen.1011121,</li>
+<li>https://doi.org/10.1016/s0014-5793(01</li>
+<li>https://doi.org/10.1074/jbc.ra117.000422,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(SIA1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q12212" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="sia1-yor137c-q12212-curation-notes">SIA1 (YOR137C, Q12212) — curation notes</h1>
+<p>Journal / working notes for the AI GO-annotation review of <em>Saccharomyces cerevisiae</em> SIA1.</p>
+<h2 id="identity">Identity</h2>
+<ul>
+<li>UniProt: <strong>Q12212</strong> (SIA1_YEAST); systematic name <strong>YOR137C</strong>; ORF YOR3329C; chromosome XV.</li>
+<li>SGD: S000005663.</li>
+<li>Length 622 aa; PE=2 (evidence at transcript level).</li>
+<li>Gene name origin: <strong>SIA1 = "Suppressor of eIF5A 1"</strong> — verified against the SGD backend record<br />
+  (<code>name_description: "Suppressor of eIF5A"</code>, cited to Valentini SR et al. 2002, PMID:11861547).<br />
+  NOTE: the task brief glossed the acronym as "Sphingoid long-chain base Influences ATPase"; this<br />
+  is NOT the SGD-authoritative expansion, and I found no source for the sphingoid gloss. I use the<br />
+  SGD name.</li>
+<li>SGD one-line description: "Protein of unassigned function; involved in activation of the Pma1p<br />
+  plasma membrane H+-ATPase by glucose; contains peptide signal for membrane localization."</li>
+<li>SGD curated GO summary: Molecular Function = Unknown; Biological Process = proton transmembrane<br />
+  transport; Cellular Component = Unknown. → genuinely a dark/understudied gene.</li>
+</ul>
+<h2 id="known-evidence-supported">KNOWN (evidence-supported)</h2>
+<ol>
+<li>
+<p><strong>Required for glucose-triggered post-translational activation of the Pma1 plasma-membrane<br />
+   H+-ATPase.</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/9450541" title="Deletion of YOR137c does not affect the level of Pma1 at the plasma    membrane, but disturbs the glucose-triggered Vmax increase of the enzyme.">PMID:9450541</a> The same abstract:<br />
+   "the YOR137c gene product is implicated in this activation" and "We propose that at least two<br />
+   independent mechanisms are involved in glucose activation of the H+-ATPase." This is the sole<br />
+   experimental functional characterisation (deletion phenotype, IMP-grade). It shows SIA1 is<br />
+   REQUIRED for the Vmax increase but does NOT show a direct molecular mechanism or a direct<br />
+   physical interaction with Pma1.</p>
+</li>
+<li>
+<p><strong>Isolated genetically as a multicopy suppressor of a temperature-sensitive eIF5A (TIF51A)<br />
+   allele</strong> — the basis of the gene name (Valentini et al. 2002, PMID:11861547). The abstract<br />
+   names PAB1, PKC1, WSC1, WSC2, WSC3 among six suppressors and connects eIF5A to the WSC/PKC1<br />
+   cell-wall-integrity signalling pathway; SIA1 is the sixth (unnamed in the abstract; full text<br />
+   not in cache). This links SIA1 genetically to PKC1/cell-integrity signalling, but the mechanism<br />
+   is unknown.</p>
+</li>
+<li>
+<p><strong>Induced (up-regulated) by ethanol / short-term ethanol stress</strong> (UniProt INDUCTION line,<br />
+   ECO:0000269|PubMed:11389906; Alexandre et al. 2001). This is expression regulation, not a<br />
+   molecular function.</p>
+</li>
+<li>
+<p><strong>Contains an N-terminal signal peptide (residues 1–27, ECO:0000255)</strong> and a metallophosphatase<br />
+   domain (see below); consistent with membrane/secretory-pathway localisation, matching the<br />
+   "peptide signal for membrane localization" phrasing in SGD. No experimentally verified<br />
+   subcellular localisation term is curated (CC = Unknown at SGD).</p>
+</li>
+</ol>
+<h2 id="domain-bioinformatic-reasoning-inline-from-sia1-uniprottxt">Domain / bioinformatic reasoning (inline, from SIA1-uniprot.txt)</h2>
+<ul>
+<li>Pfam <strong>PF00149 Metallophos</strong> (one copy); InterPro <strong>IPR004843 (Calcineurin-like_PHP)</strong> +<br />
+<strong>IPR029052 (Metallo-depent_PP-like)</strong>; Gene3D <strong>3.60.21.10</strong>; SUPFAM <strong>SSF56300 Metallo-dependent<br />
+  phosphatases</strong>. → SIA1 has a calcineurin-like metallophosphoesterase (MPE) fold.</li>
+<li>PANTHER family <strong>PTHR32440</strong>, subfamily <strong>SF0 "PHOSPHATASE DCR2-RELATED"</strong>. Reviewed SF0 members<br />
+  (from PTHR32440-entries.csv): S. cerevisiae <strong>DCR2</strong> (Q05924, "Phosphatase DCR2"), the K. lactis<br />
+  SIA1 ortholog (Q6CPQ2), S. pombe SPCC1020.05, and several <strong>Arabidopsis "probable INACTIVE purple<br />
+  acid phosphatase"</strong> proteins (PAP14/16/28/29). The InterPro family text notes the family is in the<br />
+  "purple acid phosphatase family, although some are predicted to be inactive."</li>
+<li>Metallophosphatase catalytic signature (the conserved metal-coordinating blocks<br />
+  D-x-H…GD-x-x-D…GNH[D/E]…GH-x-H). Manual inspection of the SIA1 sequence finds candidate motifs:<br />
+<code>QITDFHF</code> (~315, DxH), <code>VVITGDLLDS</code> (~350, GD..D), and <code>SCGHEHNNDCC</code> (~575, GH-x-H). So at least<br />
+  part of the metal-binding scaffold appears retained. HOWEVER: (a) no phosphatase substrate or<br />
+  catalytic activity has ever been demonstrated for SIA1 experimentally; (b) its nearest orthologs<br />
+  cluster with "inactive purple acid phosphatases"; (c) SGD lists Molecular Function = Unknown.<br />
+  → The molecular activity of SIA1 is UNRESOLVED. The IBA "phosphoprotein phosphatase activity" is<br />
+  a plausible family-level inference but is NOT experimentally supported for SIA1, and may reflect a<br />
+  degenerate / pseudophosphatase domain. I treat catalytic phosphatase activity as a knowledge gap,<br />
+  not an established function. (This is a family-level bioinformatic judgement, not a definitive<br />
+  claim of inactivity.)</li>
+</ul>
+<h2 id="existing-goa-annotations-5-review-plan">Existing GOA annotations (5) — review plan</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Term</th>
+<th>Ev</th>
+<th>Ref</th>
+<th>Plan</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>GO:0004721 phosphoprotein phosphatase activity</td>
+<td>IBA</td>
+<td>GO_REF:0000033</td>
+<td>KEEP_AS_NON_CORE — family-level MPE inference; not experimentally shown; flag as gap</td>
+</tr>
+<tr>
+<td>2</td>
+<td>GO:0016787 hydrolase activity</td>
+<td>IEA</td>
+<td>GO_REF:0000002 (InterPro IPR004843)</td>
+<td>KEEP_AS_NON_CORE — generic parent of the MPE-fold inference; uninformative but not wrong</td>
+</tr>
+<tr>
+<td>3</td>
+<td>GO:1902600 proton transmembrane transport</td>
+<td>IMP</td>
+<td>PMID:9450541</td>
+<td>MODIFY → regulation of proton transport (GO:0010155); SIA1 regulates, does not transport</td>
+</tr>
+<tr>
+<td>4</td>
+<td>GO:0003674 molecular_function (root, ND)</td>
+<td>ND</td>
+<td>GO_REF:0000015</td>
+<td>ACCEPT (ND placeholder; MF genuinely unknown)</td>
+</tr>
+<tr>
+<td>5</td>
+<td>GO:0005575 cellular_component (root, ND)</td>
+<td>ND</td>
+<td>GO_REF:0000015</td>
+<td>ACCEPT (ND placeholder; CC genuinely unknown)</td>
+</tr>
+</tbody>
+</table>
+<p>Rationale for #3 MODIFY (not REMOVE): PMID:9450541 is experimental (IMP) and I must not overrule<br />
+the SGD curator. But the <em>term</em> chosen (proton transmembrane transport, a transporter/BP for the<br />
+ion movement itself) attributes the transport activity to SIA1, whereas the paper shows SIA1 is<br />
+REQUIRED for the glucose-triggered Vmax increase of Pma1 — i.e. a <em>regulatory</em> role. MODIFY to<br />
+"regulation of proton transport" (GO:0010155) keeps the experimental support while stating the<br />
+biology more accurately. Keep the original as the essence-is-sound case.</p>
+<h2 id="core_functions-planned">core_functions (planned)</h2>
+<p>SIA1 is best summarised as a positive regulator required for glucose-induced activation of the<br />
+Pma1 H+-ATPase; molecular mechanism unknown. I will use the BP "regulation of proton transport"<br />
+(GO:0010155) grounded in PMID:9450541, and NOT assert a catalytic MF given the gap.</p>
+<h2 id="knowledge_gaps-the-primary-deliverable-dark-gene">knowledge_gaps (the primary deliverable — dark gene)</h2>
+<ol>
+<li><strong>Molecular mechanism of Pma1 activation.</strong> Does SIA1 act directly on Pma1 (as an activator /<br />
+   scaffold) or indirectly (e.g. via signalling, lipid environment)? PMID:9450541 shows a<br />
+   requirement, not a mechanism, and explicitly proposes "at least two independent mechanisms."</li>
+<li><strong>Is SIA1 a catalytically active phosphatase or a pseudophosphatase?</strong> The MPE/calcineurin-like<br />
+   fold and the IBA annotation suggest possible phosphatase activity, but no substrate/activity has<br />
+   been demonstrated and the closest orthologs are "inactive purple acid phosphatases." If active,<br />
+   its physiological substrate (Pma1? a Pma1 kinase/phosphatase relay?) is unknown.</li>
+<li><strong>Direct physical partners.</strong> BioGRID lists interactions but no validated Pma1 physical<br />
+   interaction is curated in UniProt (IntAct=1). Direct binding partners are unknown.</li>
+<li><strong>Subcellular localisation.</strong> Signal peptide predicts secretory-pathway/membrane entry, but no<br />
+   experimental localisation term is curated (SGD CC = Unknown). Where SIA1 acts relative to Pma1<br />
+   (plasma membrane vs. secretory compartments) is unresolved.</li>
+<li><strong>Relationship to eIF5A / PKC1 cell-integrity signalling.</strong> SIA1 was isolated as an eIF5A<br />
+   suppressor (PMID:11861547) linking it to WSC/PKC1 signalling; whether this is mechanistically<br />
+   related to its Pma1 role, or an independent activity, is unknown.</li>
+<li><strong>Broader phenotype.</strong> SGD large-scale phenotypes (altered chemical/UV resistance, abnormal<br />
+   vacuolar morphology, competitive-fitness changes) are unexplained at the molecular level.</li>
+</ol>
+<h2 id="files-provenance">Files / provenance</h2>
+<ul>
+<li>UniProt: genes/yeast/SIA1/SIA1-uniprot.txt</li>
+<li>GOA: genes/yeast/SIA1/SIA1-goa.tsv</li>
+<li>PANTHER: interpro/panther/PTHR32440/ (metadata + entries)</li>
+<li>Cached pubs: publications/PMID_9450541.md (abstract only), publications/PMID_11861547.md<br />
+  (abstract only). PMID:11389906 (ethanol induction) referenced by UniProt but not central to MF.</li>
+<li>Deep research: NOT AVAILABLE. Two <code>just deep-research-falcon yeast SIA1 --fallback
+  perplexity-lite</code> runs both failed — the Falcon/Edison endpoint repeatedly disconnected<br />
+  (RemoteProtocolError / connection reset) and timed out at 600s, and the perplexity-lite<br />
+  fallback returned HTTP 401 "insufficient_quota". No <code>-deep-research-*.md</code> file was produced.<br />
+  Per project rules I did NOT hand-author a file named <code>-deep-research-{provider}.md</code>. The<br />
+  review is instead grounded in: UniProt Q12212 (domains/features), the GOA TSV, PANTHER<br />
+  PTHR32440 family data, the SGD locus record (name + curated summary + phenotypes, fetched<br />
+  from the SGD backend API), and the two cached primary papers PMID:9450541 and PMID:11861547.<br />
+</content><br />
+</invoke></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q12212
+gene_symbol: SIA1
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:559292
+  label: Saccharomyces cerevisiae
+description: &gt;-
+  SIA1 (YOR137C) is a poorly characterized 622-residue protein of the budding yeast
+  Saccharomyces cerevisiae. It carries an N-terminal signal peptide and a single
+  calcineurin-like metallophosphoesterase (metallophosphatase/purple acid phosphatase-like)
+  domain, placing it in a family that also contains the yeast paralog Dcr2 and several
+  plant &#34;probable inactive purple acid phosphatases&#34;. Genetic evidence shows that SIA1 is
+  required for the glucose-triggered, post-translational activation of the plasma membrane
+  proton pump Pma1: cells lacking SIA1 have normal Pma1 protein levels at the plasma
+  membrane but fail to show the full glucose-induced increase in Pma1 maximal velocity,
+  identifying SIA1 as a positive regulator of H+-ATPase activation rather than a component
+  of the pump itself. SIA1 was independently isolated as a multicopy suppressor of a
+  temperature-sensitive allele of the essential translation factor eIF5A (the source of its
+  name, &#34;Suppressor of eIF5A&#34;), a screen that linked eIF5A to the WSC/PKC1 cell-wall-integrity
+  signalling pathway. SIA1 transcription is induced by ethanol stress. Its molecular
+  activity is unresolved: although the metallophosphatase fold and phylogenetic assignment
+  suggest a possible phosphatase, no catalytic activity or substrate has been demonstrated,
+  and its closest relatives are predicted to be catalytically inactive.
+references:
+  - id: PMID:9450541
+    title: &#34;Yeast gene YOR137c is involved in the activation of the yeast plasma membrane H+-ATPase by glucose.&#34;
+    findings:
+      - statement: &gt;-
+          Deletion of YOR137c (SIA1) does not change the amount of Pma1 at the plasma membrane
+          but abolishes the glucose-triggered increase in Pma1 maximal velocity, showing that
+          SIA1 is required for post-translational (post-transcriptional) glucose activation of
+          the H+-ATPase.
+        supporting_text: &gt;-
+          Deletion of YOR137c does not affect the level of Pma1 at the plasma membrane, but
+          disturbs the glucose-triggered Vmax increase of the enzyme.
+        reference_section_type: ABSTRACT
+    reference_review:
+      relevance: HIGH
+      correctness: VERIFIED
+      review_notes: &gt;-
+        PubMed-verified primary paper (FEBS Lett 1997); abstract cached (full text unavailable).
+        This is the sole experimental functional characterization of SIA1 and is the basis of the
+        curated SGD/UniProt FUNCTION line and the IMP GO:1902600 annotation. Establishes a
+        requirement (deletion phenotype), not a molecular mechanism.
+  - id: PMID:11861547
+    title: &#34;Genetic interactions of yeast eukaryotic translation initiation factor 5A (eIF5A) reveal connections to poly(A)-binding protein and protein kinase C signaling.&#34;
+    findings:
+      - statement: &gt;-
+          A multicopy suppressor screen of a temperature-sensitive eIF5A (tif51A) allele
+          recovered several genes and connected eIF5A to the WSC/PKC1 cell-wall-integrity
+          signalling pathway; SIA1 (Suppressor of eIF5A 1) was named from this screen.
+        supporting_text: &gt;-
+          A multicopy suppressor screen revealed six genes, the overexpression of which allows
+          growth of a tif51A-1 strain at high temperature; these genes include PAB1, PKC1, and
+          PKC1 regulators WSC1, WSC2, and WSC3.
+        reference_section_type: ABSTRACT
+    reference_review:
+      relevance: HIGH
+      correctness: VERIFIED
+      review_notes: &gt;-
+        PubMed-verified (Genetics 2002); abstract cached (full text unavailable). This is the
+        origin of the gene name SIA1 = &#34;Suppressor of eIF5A&#34; (confirmed against the SGD locus
+        record, which cites this paper for the name). The abstract names five of the six
+        suppressors and links eIF5A to WSC/PKC1 signalling; SIA1 is the sixth suppressor,
+        described in the full text (not in the cached abstract) - a case where the abstract
+        foregrounds other genes. Cited here for the eIF5A-suppressor / PKC1-signalling context,
+        not for a specific SIA1 molecular function.
+  - id: PMID:11389906
+    title: &#34;Global gene expression during short-term ethanol stress in Saccharomyces cerevisiae.&#34;
+    findings:
+      - statement: &gt;-
+          SIA1 (YOR137C) transcription is up-regulated during short-term ethanol stress
+          (UniProt INDUCTION line, ECO:0000269|PubMed:11389906).
+        full_text_unavailable: true
+        reference_section_type: OTHER
+    reference_review:
+      relevance: LOW
+      correctness: VERIFIED
+      review_notes: &gt;-
+        Cited by UniProt for the INDUCTION (ethanol up-regulation) statement. Relevant to
+        expression regulation/stress response, not to SIA1 molecular function. Abstract not
+        in cache; provenance anchored to the UniProt curated INDUCTION line rather than to a
+        verbatim publication quote (full_text_unavailable).
+  - id: GO_REF:0000002
+    title: &#34;Gene Ontology annotation through association of InterPro records with GO terms.&#34;
+    findings: []
+    reference_review:
+      relevance: LOW
+      correctness: VERIFIED
+      review_notes: &gt;-
+        InterPro2GO electronic pipeline; source of the IEA GO:0016787 (hydrolase activity)
+        annotation from IPR004843. Domain-based, not gene-specific evidence.
+  - id: GO_REF:0000015
+    title: &#34;Gene Ontology annotation based on ND (No biological Data available) records.&#34;
+    findings: []
+    reference_review:
+      relevance: LOW
+      correctness: VERIFIED
+      review_notes: &gt;-
+        SGD ND placeholders for the molecular_function and cellular_component root terms,
+        recording that no data are available for these aspects. Consistent with SIA1 being a
+        dark gene.
+  - id: GO_REF:0000033
+    title: &#34;Annotation inferences using phylogenetic trees.&#34;
+    findings: []
+    reference_review:
+      relevance: MEDIUM
+      correctness: VERIFIED
+      review_notes: &gt;-
+        PAINT/GO_Central phylogenetic (IBA) pipeline; source of the IBA GO:0004721
+        (phosphoprotein phosphatase activity) annotation, propagated across PANTHER family
+        PTHR32440. Family-level inference; not experimentally verified for SIA1, and several
+        close family members are predicted inactive purple acid phosphatases.
+  - id: file:yeast/SIA1/SIA1-uniprot.txt
+    title: &#34;UniProt entry Q12212 (SIA1_YEAST) - domain and feature annotations.&#34;
+    findings:
+      - statement: &gt;-
+          UniProt annotates SIA1 with an N-terminal signal peptide (residues 1-27) and a single
+          calcineurin-like metallophosphoesterase domain (Pfam PF00149 Metallophos; InterPro
+          IPR004843/IPR029052; Gene3D 3.60.21.10; SUPFAM SSF56300), and assigns it to PANTHER
+          family PTHR32440 subfamily SF0 (phosphatase DCR2-related).
+        supporting_text: &#34;DR   Pfam; PF00149; Metallophos; 1.&#34;
+        reference_section_type: OTHER
+    reference_review:
+      relevance: HIGH
+      correctness: VERIFIED
+      review_notes: &gt;-
+        Machine-fetched UniProt record used for inline domain analysis. Establishes the
+        signal peptide and the metallophosphatase fold that underlie the hydrolase/phosphatase
+        family-level annotations.
+  - id: file:yeast/SIA1/SIA1-deep-research-falcon.md
+    title: &#34;Falcon (Edison) deep-research report for SIA1 (YOR137C).&#34;
+    findings:
+      - statement: &gt;-
+          Independent deep-research synthesis places SIA1 in the metallophosphoesterase
+          superfamily and, alongside PTK2, as a genetically implicated positive factor in
+          glucose-induced Pma1 H+-ATPase activation, with the exact biochemical step
+          unresolved; it also links SIA1 to the RIM101 weak-acid stress network (down in
+          rim101-delta).
+        supporting_text: &gt;-
+          Within this pathway, SIA1 is genetically implicated alongside PTK2 as a positive
+          factor in Pma1 activation.
+        reference_section_type: OTHER
+    reference_review:
+      relevance: MEDIUM
+      correctness: VERIFIED
+      review_notes: &gt;-
+        Genuine Falcon/Edison deep-research report (32 citations, ~26 min run). Cross-checked
+        against the cached primary papers: it corroborates (does not extend beyond) the
+        evidence used here - metallophosphoesterase domain, genetic-only implication in Pma1
+        activation, and unresolved mechanism. Some of its downstream citations (e.g. Mira 2009
+        RIM101, Guarini 2024 phosphoregulation) were not independently fetched; used for
+        context only, not as primary support for any GO action.
+existing_annotations:
+  - term:
+      id: GO:0004721
+      label: phosphoprotein phosphatase activity
+    evidence_type: IBA
+    original_reference_id: GO_REF:0000033
+    qualifier: enables
+    review:
+      summary: &gt;-
+        Family-level phylogenetic (IBA) inference of phosphatase activity from the
+        calcineurin-like metallophosphatase fold. SIA1 has the domain, but no phosphatase
+        activity or substrate has ever been demonstrated for it, and its nearest orthologs
+        include &#34;probable inactive purple acid phosphatases&#34;. Retained as a plausible
+        family-level hypothesis but not treated as an established (core) function.
+      action: KEEP_AS_NON_CORE
+      reason: &gt;-
+        SIA1 is assigned to PANTHER PTHR32440:SF0 (phosphatase DCR2-related), a
+        metallophosphoesterase / purple acid phosphatase-like family, so an IBA phosphatase
+        annotation is a defensible domain-based hypothesis and should not be removed. However,
+        the only experimental data on SIA1 concern its requirement for glucose activation of
+        Pma1, with no assay of phosphatase activity; SGD lists molecular function as Unknown;
+        and several reviewed SF0 members are annotated as inactive purple acid phosphatases.
+        The catalytic activity of SIA1 is therefore an open knowledge gap, so this term is kept
+        as non-core rather than accepted as a core function.
+      supported_by:
+        - reference_id: file:yeast/SIA1/SIA1-uniprot.txt
+          supporting_text_fulltext: &#34;DR   Pfam; PF00149; Metallophos; 1.&#34;
+      propagation_review:
+        root_cause: NO_FAILURE_NON_CORE
+        failure_modes:
+          - SOURCE_EVIDENCE_WEAK
+        source_entities:
+          - source_id: PANTHER:PTHR32440
+            source_label: &#34;phosphatase DCR2-related (SF0)&#34;
+            source_status: SOURCE_WEAK_OR_INFERRED
+            comment: &gt;-
+              Family includes yeast Dcr2 and plant PAP14/16/28/29 annotated as probable
+              INACTIVE purple acid phosphatases; SIA1 catalytic activity unverified.
+  - term:
+      id: GO:0016787
+      label: hydrolase activity
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: enables
+    review:
+      summary: &gt;-
+        Generic hydrolase parent term inferred electronically (InterPro2GO) from the
+        metallophosphatase domain IPR004843. Consistent with the fold but uninformative and
+        subsumed by the more specific (also inferential) phosphatase term; not wrong.
+      action: KEEP_AS_NON_CORE
+      reason: &gt;-
+        This IEA annotation is a direct domain-to-GO mapping (IPR004843 -&gt; hydrolase activity)
+        and is consistent with the metallophosphatase fold. It is far more general than the
+        family-level phosphatase inference and carries the same (unverified) assumption that the
+        domain is catalytically active. It is retained as non-core background rather than removed,
+        since the fold is genuinely present, but it does not describe a demonstrated SIA1 function.
+      supported_by:
+        - reference_id: file:yeast/SIA1/SIA1-uniprot.txt
+          supporting_text_fulltext: &#34;DR   InterPro; IPR004843; Calcineurin-like_PHP.&#34;
+  - term:
+      id: GO:1902600
+      label: proton transmembrane transport
+    evidence_type: IMP
+    original_reference_id: PMID:9450541
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        Based on the SIA1 deletion phenotype (loss of glucose-triggered Pma1 Vmax increase),
+        SGD annotated SIA1 to proton transmembrane transport (IMP). The experimental evidence
+        is sound, but SIA1 does not itself transport protons; it is required for activation of
+        the Pma1 proton pump. A regulatory process term better captures the biology.
+      action: MODIFY
+      reason: &gt;-
+        The experimental support (PMID:9450541, IMP) is solid and must be retained - the paper
+        shows SIA1 is required for the glucose-induced Vmax increase of Pma1. However, the term
+        &#34;proton transmembrane transport&#34; attributes the ion-translocation process to SIA1,
+        whereas SIA1 is a regulator required for activation of the transporter, not a transporter
+        or channel. The essence is sound but a better term exists, so MODIFY to a regulatory
+        term (&#34;regulation of proton transport&#34;, GO:0010155) that preserves the experimental
+        support while stating the biology accurately.
+      proposed_replacement_terms:
+        - id: GO:0010155
+          label: regulation of proton transport
+      additional_reference_ids:
+        - file:yeast/SIA1/SIA1-deep-research-falcon.md
+      supported_by:
+        - reference_id: PMID:9450541
+          supporting_text: &gt;-
+            Deletion of YOR137c does not affect the level of Pma1 at the plasma membrane, but
+            disturbs the glucose-triggered Vmax increase of the enzyme.
+          reference_section_type: ABSTRACT
+        - reference_id: file:yeast/SIA1/SIA1-deep-research-falcon.md
+          supporting_text: &gt;-
+            Within this pathway, SIA1 is genetically implicated alongside PTK2 as a positive
+            factor in Pma1 activation.
+          reference_section_type: OTHER
+  - term:
+      id: GO:0003674
+      label: molecular_function
+    evidence_type: ND
+    original_reference_id: GO_REF:0000015
+    qualifier: enables
+    review:
+      summary: &gt;-
+        SGD ND placeholder recording that no molecular-function data are available for SIA1.
+        This is accurate: SIA1&#39;s molecular activity is genuinely unresolved (see knowledge_gaps).
+      action: ACCEPT
+      reason: &gt;-
+        The root molecular_function ND annotation correctly records the absence of curated
+        molecular-function evidence. Given that SIA1 has no experimentally demonstrated activity
+        and its family assignment is ambiguous (possible pseudophosphatase), the ND placeholder
+        is an honest reflection of the state of knowledge and should be retained until an activity
+        is established.
+  - term:
+      id: GO:0005575
+      label: cellular_component
+    evidence_type: ND
+    original_reference_id: GO_REF:0000015
+    qualifier: is_active_in
+    review:
+      summary: &gt;-
+        SGD ND placeholder recording that no cellular-component data are available for SIA1.
+        SIA1 has a predicted signal peptide (secretory-pathway entry) but no experimentally
+        verified subcellular localization is curated.
+      action: ACCEPT
+      reason: &gt;-
+        The root cellular_component ND annotation correctly records the absence of curated
+        localization evidence. Although a signal peptide predicts membrane/secretory-pathway
+        entry and SIA1 functionally regulates the plasma-membrane Pma1, no experimental
+        localization is available, so retaining the honest ND placeholder is appropriate.
+core_functions:
+  - description: &gt;-
+      Positive regulator required for the glucose-triggered, post-translational activation of
+      the plasma membrane H+-ATPase Pma1. Loss of SIA1 leaves Pma1 protein levels at the plasma
+      membrane unchanged but prevents the full glucose-induced increase in the pump&#39;s maximal
+      velocity, identifying SIA1 as required for one of the (at least two) mechanisms that
+      activate Pma1 in response to glucose. The molecular mechanism (direct versus indirect;
+      catalytic versus scaffolding) is not established.
+    supported_by:
+      - reference_id: PMID:9450541
+        supporting_text: &gt;-
+          Deletion of YOR137c does not affect the level of Pma1 at the plasma membrane, but
+          disturbs the glucose-triggered Vmax increase of the enzyme.
+        reference_section_type: ABSTRACT
+    directly_involved_in:
+      - id: GO:0010155
+        label: regulation of proton transport
+    knowledge_gaps:
+      - gap_statement: &gt;-
+          The molecular mechanism by which SIA1 promotes glucose activation of Pma1 is unknown:
+          it is not established whether SIA1 acts directly on Pma1 (e.g. as an activator or
+          scaffold) or indirectly (e.g. via a signalling relay, a kinase/phosphatase step, or
+          the membrane lipid environment).
+        boundary: &gt;-
+          Established: SIA1 is required for the glucose-triggered Vmax increase of Pma1 without
+          affecting Pma1 abundance at the plasma membrane (PMID:9450541). Not established: the
+          molecular step SIA1 acts on, or whether it contacts Pma1 at all.
+        gap_kind:
+          - BIOLOGY
+        dark_aspect: MF_DARK
+        status: OPEN
+        significance: &gt;-
+          Pma1 is the major generator of the plasma-membrane proton-motive force in yeast and a
+          master regulator of intracellular pH and nutrient uptake; identifying how glucose
+          signalling is transduced to Pma1 activation is a long-standing question, and SIA1 marks
+          one of the at-least-two independent mechanisms proposed for this activation.
+        resolution: &gt;-
+          Test for direct SIA1-Pma1 physical interaction and for SIA1-dependent changes in Pma1
+          C-terminal regulatory-domain phosphorylation; epistasis with known Pma1 regulators
+          (Ptk1/2 kinases, Glc7 phosphatase) upon glucose addition.
+        provenance:
+          - reference_id: PMID:9450541
+            supporting_text: &gt;-
+              We propose that at least two independent mechanisms are involved in glucose
+              activation of the H+-ATPase.
+            reference_section_type: ABSTRACT
+proposed_new_terms: []
+suggested_questions:
+  - question: &gt;-
+      Does SIA1 act directly on Pma1 (physical interaction / activator or scaffold) or
+      indirectly through a signalling or lipid-mediated route to promote glucose activation of
+      the H+-ATPase?
+    experts: []
+  - question: &gt;-
+      Is the SIA1 metallophosphatase domain catalytically active, and if so what is its
+      physiological substrate - or is SIA1 a pseudophosphatase like its closest relatives?
+    experts: []
+  - question: &gt;-
+      Is SIA1&#39;s role in glucose activation of Pma1 mechanistically connected to its genetic
+      identity as an eIF5A suppressor and to WSC/PKC1 cell-wall-integrity signalling, or are
+      these independent activities?
+    experts: []
+suggested_experiments:
+  - hypothesis: &gt;-
+      SIA1 promotes glucose activation of Pma1 by directly modulating Pma1&#39;s activity or
+      phosphorylation state.
+    description: &gt;-
+      Co-immunoprecipitation / proximity labelling of tagged SIA1 and Pma1 before and after
+      glucose addition to test for direct interaction; phosphoproteomic comparison of Pma1
+      (especially the C-terminal autoinhibitory Ser/Thr residues) in wild-type versus sia1-delta
+      cells upon glucose refeeding.
+    experiment_type: interaction and phosphorylation analysis
+  - hypothesis: &gt;-
+      The SIA1 metallophosphatase domain is (or is not) catalytically active.
+    description: &gt;-
+      Recombinant expression of the SIA1 metallophosphatase domain and in vitro phosphatase
+      assays (para-nitrophenyl phosphate and phosphopeptide substrates) with metal-dependence
+      controls; parallel assay of catalytic-residue point mutants to test whether any activity
+      requires the predicted metal-binding scaffold.
+    experiment_type: enzymology
+  - hypothesis: &gt;-
+      SIA1 localizes to a compartment consistent with acting on Pma1 (plasma membrane or
+      secretory pathway).
+    description: &gt;-
+      Determine the subcellular localization of endogenously tagged SIA1 by fluorescence
+      microscopy and membrane fractionation, and test signal-peptide dependence, to place SIA1
+      relative to Pma1 in the secretory pathway / plasma membrane.
+    experiment_type: cell biology / localization
+knowledge_gaps:
+  - gap_statement: &gt;-
+      SIA1&#39;s molecular activity is undetermined. Although it has a calcineurin-like
+      metallophosphatase fold and carries a family-level IBA &#34;phosphoprotein phosphatase
+      activity&#34; annotation, no catalytic activity or substrate has ever been demonstrated for
+      SIA1, and its closest relatives include probable inactive purple acid phosphatases, so it
+      is unknown whether SIA1 is an active phosphatase or a pseudoenzyme.
+    boundary: &gt;-
+      Established: SIA1 contains a single metallophosphatase domain (Pfam PF00149; InterPro
+      IPR004843) and belongs to PANTHER PTHR32440:SF0. Not established: any measured enzymatic
+      activity, substrate, or metal dependence; SGD lists molecular function as Unknown.
+    gap_kind:
+      - BIOLOGY
+    dark_aspect: MF_DARK
+    status: OPEN
+    significance: &gt;-
+      Whether SIA1 is an active phosphatase determines the class of mechanism by which it could
+      regulate Pma1 (direct enzymatic modification versus non-catalytic scaffolding), and would
+      resolve whether the family-level IBA/IEA activity annotations reflect real biology.
+    resolution: &gt;-
+      In vitro phosphatase assays on recombinant SIA1 (and catalytic-residue mutants) with
+      phosphoprotein/phosphopeptide and generic substrates; structural comparison of the
+      SIA1 active site with active metallophosphatases.
+    provenance:
+      - reference_id: file:yeast/SIA1/SIA1-uniprot.txt
+        supporting_text_fulltext: &#34;DR   Pfam; PF00149; Metallophos; 1.&#34;
+  - gap_statement: &gt;-
+      The mechanism linking SIA1 to glucose activation of Pma1 is unknown - whether SIA1 acts
+      directly on the pump or through an intermediate signalling/lipid step, and which of the
+      &#34;at least two independent mechanisms&#34; of Pma1 glucose activation SIA1 belongs to.
+    boundary: &gt;-
+      Established: sia1-delta cells retain normal plasma-membrane Pma1 levels but fail the
+      glucose-triggered Vmax increase (PMID:9450541). Not established: the molecular step or
+      partner through which SIA1 exerts this effect.
+    gap_kind:
+      - BIOLOGY
+    dark_aspect: MF_DARK
+    status: OPEN
+    significance: &gt;-
+      Identifies how a central metabolic signal (glucose) is transduced to the master
+      plasma-membrane proton pump; SIA1 is a genetic entry point into this poorly understood
+      activation pathway.
+    resolution: &gt;-
+      Epistasis and interaction studies placing SIA1 relative to known Pma1 glucose-activation
+      inputs (Ptk1/2 kinases, Glc7 phosphatase, sphingolipid/ergosterol requirements) and
+      direct interaction tests.
+    provenance:
+      - reference_id: PMID:9450541
+        supporting_text: &gt;-
+          We propose that at least two independent mechanisms are involved in glucose
+          activation of the H+-ATPase.
+        reference_section_type: ABSTRACT
+  - gap_statement: &gt;-
+      SIA1&#39;s direct physical partners and its subcellular localization are unknown. No validated
+      Pma1 physical interaction is curated, and there is no experimentally determined
+      localization despite a predicted N-terminal signal peptide.
+    boundary: &gt;-
+      Established: SIA1 has a predicted signal peptide (UniProt residues 1-27) and low-throughput
+      interaction records exist, but SGD lists cellular component as Unknown and no direct Pma1
+      interaction is curated. Not established: where SIA1 resides and what it binds.
+    gap_kind:
+      - BIOLOGY
+      - CURATION
+    dark_aspect: CC_DARK
+    status: OPEN
+    significance: &gt;-
+      Knowing whether SIA1 reaches the plasma membrane / secretory pathway and what it binds is
+      prerequisite to any mechanistic model of how it acts on Pma1.
+    resolution: &gt;-
+      Endogenous-tag localization microscopy and membrane fractionation; affinity-purification
+      mass spectrometry / proximity labelling to define the SIA1 interactome.
+    provenance:
+      - reference_id: file:yeast/SIA1/SIA1-uniprot.txt
+        supporting_text_fulltext: &#34;FT   SIGNAL          1..27&#34;
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

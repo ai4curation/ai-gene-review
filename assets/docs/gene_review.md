@@ -14,24 +14,55 @@ Schema for gene curation Top level entity is a GeneReview, which is about a sing
 
  * [AlternativeProduct](AlternativeProduct.md) - An alternative splicing product (isoform) of the gene. Corresponds to UniProt isoform entries. Use this to document isoform-specific functions where different isoforms have distinct or even antagonistic biological activities. DEPRECATED: Use FunctionalIsoform instead for curated functional classes.
  * [AnnotationExtension](AnnotationExtension.md)
+ * [ComplexUnit](ComplexUnit.md) - A role-bearing unit within a protein complex descriptor.
  * [ConditionOverlapAssessment](ConditionOverlapAssessment.md) - Assessment of overlap between rule conditions
  * [CoreFunction](CoreFunction.md) - A core function is a GO-CAM-like annotation of the core evolved functions of a gene. This is a synthesis of the reviewed core annotations, brought together into a unified GO-CAM-like representation.
+ * [Descriptor](Descriptor.md) - A human-friendly descriptor with optional ontology/database grounding. The preferred_term may be more nuanced than the term label, and the term may be absent when no good identifier exists yet.
+     * [AnatomicalEntityDescriptor](AnatomicalEntityDescriptor.md) - A descriptor for an anatomical entity, tissue, organismal region, or structure.
+     * [BiologicalProcessDescriptor](BiologicalProcessDescriptor.md) - A descriptor for a biological process, pathway, reaction, or process-like module grounding.
+     * [CellTypeDescriptor](CellTypeDescriptor.md) - A descriptor for a cell type or cell state.
+     * [CellularComponentDescriptor](CellularComponentDescriptor.md) - A descriptor for a cellular component, organelle, compartment, or complex location.
+         * [ProteinComplexDescriptor](ProteinComplexDescriptor.md) - A descriptor for a protein-containing complex or subcomplex.
+     * [ChemicalEntityDescriptor](ChemicalEntityDescriptor.md) - A descriptor for a chemical entity, metabolite, cofactor, ion, or small molecule.
+     * [DevelopmentalStageDescriptor](DevelopmentalStageDescriptor.md) - A descriptor for a developmental stage, life-cycle stage, or temporal window.
+     * [DomainDescriptor](DomainDescriptor.md) - A descriptor for a protein domain, motif, site, or architectural feature.
+     * [FamilyDescriptor](FamilyDescriptor.md) - A descriptor for a protein family, orthogroup, or other evolutionary grouping.
+     * [GeneDescriptor](GeneDescriptor.md) - A descriptor for a gene or locus.
+     * [GeneProductDescriptor](GeneProductDescriptor.md) - A descriptor for a gene product, protein, isoform, or gene-product form.
+     * [MolecularFunctionDescriptor](MolecularFunctionDescriptor.md) - A descriptor for a molecular function. Extra slots capture common functional nuance without requiring formal post-composition.
+     * [RelationDescriptor](RelationDescriptor.md) - A descriptor for a relation or connection predicate.
+     * [TaxonDescriptor](TaxonDescriptor.md) - A descriptor for a taxon or taxonomic scope.
  * [EmbeddedRule](EmbeddedRule.md) - An embedded representation of an ARBA or UniRule for storage in YAML. Captures the essential structure: conditions (antecedent) and GO annotations (consequent).
+ * [EvidenceItem](EvidenceItem.md) - A lightweight citable source for module-level assertions. The source may be a PMID, DOI, database record, local file, pathway record, issue, or any other citable artifact. This is deliberately less strict than the publication quote validation used in gene reviews.
  * [ExistingAnnotation](ExistingAnnotation.md) - An existing annotation from the GO database, plus a review of the annotation.
  * [Experiment](Experiment.md) - A suggested experiment to answer a question about the gene
  * [Finding](Finding.md) - A finding is a statement about a gene, which is supported by a reference. Similar to "comments" in uniprot
+ * [FindingReview](FindingReview.md) - Manual reviewer assessment of a specific finding within a reference - in particular whether it remains current, is disputed, or has been overturned/superseded by later evidence. This is finer-grained than reference_review (which assesses the whole reference); a paper may contain some findings that stand and others that are overturned. All fields optional and reviewer-supplied.
  * [FunctionalIsoform](FunctionalIsoform.md) - A curated functional isoform class. Unlike AlternativeProduct (which maps 1:1 to UniProt isoforms), this captures FUNCTIONALLY RELEVANT distinctions that may: - Group multiple UniProt isoforms into a functional class (e.g., WT1 +KTS isoforms) - Represent cleavage products from polyproteins (e.g., POMC peptides) - Describe modification states or conformational variants Only create entries when there ARE functionally distinct forms worth documenting.
  * [FunctionalIsoformMapping](FunctionalIsoformMapping.md) - A mapping from a functional isoform class to underlying UniProt identifiers. Allows grouping multiple UniProt isoforms or chains into a single functional class.
  * [GOSpecificityAssessment](GOSpecificityAssessment.md) - Assessment of GO term specificity
  * [GeneReview](GeneReview.md) - Complete review for a gene
  * [InterPro2GORedundancy](InterPro2GORedundancy.md) - Analysis of whether rule GO annotations are redundant with existing InterPro2GO mappings from the GO Consortium.
+ * [KnowledgeGap](KnowledgeGap.md) - A curated, literature-grounded statement of what is NOT known about a gene product, core function, module, or step — its molecular activity, mechanism, partner(s), localization, or biological role. A knowledge gap is a reviewer judgment reached by reading the primary literature, NOT a pattern in the annotations: a heavily annotated gene can hide a gaping mechanistic hole, and a sparsely annotated one can be perfectly understood and merely under-curated. Each gap is a small, defensible scholarly object with the same evidentiary discipline used for positive claims. See projects/FUNCTION_KNOWLEDGE_GAPS.md for the methodology and worked exemplars.
  * [LiteratureSupportAssessment](LiteratureSupportAssessment.md) - Assessment of literature support for the rule
+ * [ModuleAnnoton](ModuleAnnoton.md) - A leaf role assertion in a module. The participant may be a concrete gene or an abstract selector, and the function/process/location fields are descriptor holders rather than direct GO annotation exports.
+ * [ModuleConnection](ModuleConnection.md) - A connection between module nodes, annotons, or other named elements. Source and target are IDs scoped to the module document.
+ * [ModuleContext](ModuleContext.md) - Context that applies to a module node, variant, annoton, or connection.
+ * [ModuleNode](ModuleNode.md) - A node in a module. Nodes can be recursively decomposed using parts and variant_sets, and may also carry leaf annotons and connections.
+ * [ModulePart](ModulePart.md) - A conjunctive part or step of a module node.
+ * [ModuleReview](ModuleReview.md) - Review or curation record for a recursively decomposable biological module. This can describe a pathway, organelle lifecycle, protein complex, molecular function, developmental process, or abstract/evolutionary functional plan.
+ * [ModuleVariantSet](ModuleVariantSet.md) - A set of alternative implementations for a module node or part. Variants may themselves contain parts, annotons, connections, and nested variant sets.
  * [PairwiseOverlap](PairwiseOverlap.md) - Overlap statistics between two domain conditions (InterPro, FunFam, etc.) in the same condition set. Provides set difference metrics to measure uniqueness and redundancy.
  * [ParsimonyAssessment](ParsimonyAssessment.md) - Assessment of rule parsimony (simplicity vs complexity)
+ * [ParticipantSelector](ParticipantSelector.md) - A selector for a concrete or abstract participant in a module annoton. This can ground to a gene, gene product, complex, family, domain, ortholog, homolog, or any entity satisfying a functional/domain constraint.
+ * [PredictedAnnotation](PredictedAnnotation.md) - A single computational prediction and its review. Each prediction comes from a specific method and predicts a term (EC number, GO term, etc.) for the gene.
+ * [PredictionAssessment](PredictionAssessment.md) - Assessment of a single computational prediction. Uses categories from de Crécy-Lagard et al. 2025 (PMID:40703034) plus extensions for GO predictions.
+ * [PredictionReview](PredictionReview.md) - Review of computational/ML predictions for a gene that are NOT in the curated GOA/UniProt annotations. This captures predictions from methods like DeepECTF, PANTHER/IBA, InterPro2GO, CLEAN, GloEC, MAPred, etc. and evaluates them against literature and bioinformatic evidence. Inspired by the systematic evaluation in de Crécy-Lagard et al. 2025 (PMID:40703034).
  * [ProposedOntologyTerm](ProposedOntologyTerm.md) - A proposed new ontology term that should exist but doesn't currently
  * [Question](Question.md) - A question to be answered about the gene
  * [RedundantAnnotation](RedundantAnnotation.md) - A GO annotation that is redundant with an existing InterPro2GO mapping
  * [Reference](Reference.md) - A reference is a published text  that describes a finding or a method. References might be formal publications (where the ID is a PMID), or for methods, a GO_REF. Additionally, a reference to a local ad-hoc analysis or review can be made by using the `file:` prefix.
+ * [ReferenceReview](ReferenceReview.md) - Manual reviewer assessment of a reference - how relevant it is to the gene's function, and whether it is correctly cited and scientifically sound. Distinct from the machine-fetched id/title fields; all fields are optional and reviewer-supplied.
  * [RelatedEntry](RelatedEntry.md) - A relationship from this entry to another entry in the rule. Categorized as PREDICTS (this → other), PREDICTED_BY (other → this), or EQUIV (bidirectional).
  * [Review](Review.md) - A review of an existing annotation.
  * [RuleCondition](RuleCondition.md) - A single condition in a rule antecedent
@@ -53,22 +84,43 @@ Schema for gene curation Top level entity is a GeneReview, which is about a sing
  * [additional_reference_ids](additional_reference_ids.md) - IDs of the references
  * [aliases](aliases.md)
  * [alternative_products](alternative_products.md) - Alternative splicing products (isoforms) of the gene. Seeded from UniProt ALTERNATIVE PRODUCTS section. Only populated if there are multiple isoforms. Use this to document isoform-specific functions and biology. DEPRECATED: Use functional_isoforms instead for curated functional classes.
+ * [➞ends_with](biologicalProcessDescriptor__ends_with.md)
+ * [➞inputs](biologicalProcessDescriptor__inputs.md)
+ * [➞occurs_in](biologicalProcessDescriptor__occurs_in.md)
+ * [➞outputs](biologicalProcessDescriptor__outputs.md)
+ * [➞starts_with](biologicalProcessDescriptor__starts_with.md)
+ * [➞evidence](complexUnit__evidence.md)
+ * [➞function](complexUnit__function.md)
+ * [➞id](complexUnit__id.md)
+ * [➞label](complexUnit__label.md)
+ * [➞notes](complexUnit__notes.md)
+ * [➞participant](complexUnit__participant.md)
+ * [➞role](complexUnit__role.md)
+ * [➞stoichiometry](complexUnit__stoichiometry.md) - Optional stoichiometry or copy-number statement when known.
  * [➞assessment](conditionOverlapAssessment__assessment.md) - Overlap assessment value
  * [➞notes](conditionOverlapAssessment__notes.md) - Notes on condition overlap - e.g., "IPR000001 and IPR000002 both represent the same structural domain" or "FunFam subsumes the InterPro entry"
  * [➞supported_by](conditionOverlapAssessment__supported_by.md) - Supporting text from literature for this assessment
  * [➞anatomical_locations](coreFunction__anatomical_locations.md)
+ * [➞contributes_to_molecular_function](coreFunction__contributes_to_molecular_function.md) - A molecular function that this gene product contributes to as part of a complex, but does not independently enable. Used for accessory/structural subunits of multi-protein complexes (e.g., an accessory subunit of Complex I contributes_to NADH dehydrogenase activity but does not have that activity on its own). The molecular_function slot should then contain the subunit-specific activity (e.g., structural molecule activity).
  * [➞description](coreFunction__description.md) - Description of the core function
  * [➞directly_involved_in](coreFunction__directly_involved_in.md)
- * [➞in_complex](coreFunction__in_complex.md)
- * [➞locations](coreFunction__locations.md)
- * [➞molecular_function](coreFunction__molecular_function.md)
+ * [➞in_complex](coreFunction__in_complex.md) - The protein-containing complex (GO:0032991 descendant) that this gene product is an active unit of. Use this — not locations — for complex membership (e.g. ribosome, spliceosome, EMC, signal peptidase complex).
+ * [➞locations](coreFunction__locations.md) - Cellular anatomical entities (e.g. membranes, nucleus, cytosol, organelle parts) where the gene product functions. Do NOT use this for protein-containing complexes (GO:0032991 and its descendants) — record complex membership in in_complex instead.
+ * [➞molecular_function](coreFunction__molecular_function.md) - The molecular function this gene product enables (i.e., has the activity independently). For complex subunits that contribute to but don't independently have a complex-level activity, use contributes_to_molecular_function instead and put a subunit-specific MF here (e.g., structural constituent of ribosome, electron transfer activity).
  * [➞substrates](coreFunction__substrates.md)
  * [➞supported_by](coreFunction__supported_by.md)
  * [core_functions](core_functions.md)
+ * [correctness](correctness.md) - Reviewer's overall assessment of a reference's trustworthiness - both citation correctness (the identifier resolves to the intended paper that supports its use) and scientific soundness of that paper's claim.
  * [description](description.md) - Description of the entity
      * [AlternativeProduct➞description](AlternativeProduct_description.md) - Agent-populated description of the isoform's function. Document any isoform-specific functions, expression patterns, or biological activities that differ from other isoforms.
      * [CoreFunction➞description](CoreFunction_description.md)
      * [GeneReview➞description](GeneReview_description.md)
+     * [PredictionReview➞description](PredictionReview_description.md) - Summary of the prediction review findings
+ * [➞description](descriptor__description.md)
+ * [➞evidence](descriptor__evidence.md)
+ * [➞notes](descriptor__notes.md)
+ * [➞preferred_term](descriptor__preferred_term.md)
+ * [➞term](descriptor__term.md)
  * [➞condition_sets](embeddedRule__condition_sets.md) - List of condition sets (OR-ed together). Each condition set is a conjunction (AND) of conditions. The rule fires if ANY condition set matches.
  * [➞created_date](embeddedRule__created_date.md) - Date the rule was created
  * [➞entries](embeddedRule__entries.md) - Entry-centric view of all entities in the rule (domain conditions and GO terms). Each entry tracks its relationships (PREDICTS, PREDICTED_BY, EQUIV) to other entries.
@@ -78,12 +130,21 @@ Schema for gene curation Top level entity is a GeneReview, which is about a sing
  * [➞reviewed_protein_count](embeddedRule__reviewed_protein_count.md) - Number of reviewed (Swiss-Prot) proteins annotated by this rule
  * [➞rule_id](embeddedRule__rule_id.md) - Original rule ID (e.g., ARBA00026249, UR000000070)
  * [➞unreviewed_protein_count](embeddedRule__unreviewed_protein_count.md) - Number of unreviewed (TrEMBL) proteins annotated by this rule
+ * [➞notes](evidenceItem__notes.md)
+ * [➞source_id](evidenceItem__source_id.md) - Identifier for the evidence source, e.g. PMID:123456, DOI:..., Reactome:R-HSA-..., MetaCyc:..., file:...
+ * [➞statement](evidenceItem__statement.md) - The assertion this evidence supports in this module.
+ * [➞supporting_text](evidenceItem__supporting_text.md) - Optional quote or excerpt from the evidence source.
+ * [➞title](evidenceItem__title.md)
+ * [➞url](evidenceItem__url.md)
  * [evidence_type](evidence_type.md) - Evidence code (e.g., IDA, IBA, ISS, TAS)
  * [existing_annotations](existing_annotations.md)
  * [➞description](experiment__description.md) - Detailed description of the experiment to be performed
  * [➞experiment_type](experiment__experiment_type.md) - Type of experiment or assay to answer the question
  * [➞hypothesis](experiment__hypothesis.md) - Hypothesis to be investigated
  * [extensions](extensions.md)
+ * [➞representative_members](familyDescriptor__representative_members.md) - Representative concrete members used to orient the family. These are examples, not an exhaustive member list and not a claim that the module is limited to these proteins.
+ * [finding_review](finding_review.md) - Manual reviewer assessment of this specific finding - in particular whether the finding remains current, is disputed, or has been overturned/superseded by later evidence. Reviewer-supplied; distinct from the statement/supporting_text that describe the finding itself.
+ * [finding_status](finding_status.md) - Reviewer's assessment of the empirical standing of a specific finding in light of other evidence (e.g. whether it has been disputed or overturned).
  * [findings](findings.md)
  * [full_text_unavailable](full_text_unavailable.md) - Whether the full text is unavailable
  * [➞ids](functionalIsoformMapping__ids.md) - UniProt identifiers belonging to this functional class. For UNIPROT_ISOFORM: P19544-1, P19544-2, etc. For UNIPROT_CHAIN: PRO_0000024969, PRO_0000024970, etc.
@@ -102,18 +163,91 @@ Schema for gene curation Top level entity is a GeneReview, which is about a sing
  * [gene_symbol](gene_symbol.md) - Symbol of the gene
  * [id](id.md)
      * [AlternativeProduct➞id](AlternativeProduct_id.md) - UniProt isoform ID (e.g., Q07817-1, Q07817-2)
+     * [PredictionReview➞id](PredictionReview_id.md) - UniProt accession for the gene product
+     * [Reference➞id](Reference_id.md)
      * [RuleReview➞id](RuleReview_id.md) - The rule ID (e.g., ARBA00026249, UR000000070)
-     * [Term➞id](Term_id.md) - An OBO CURIE for a term in GO, CL, CHEBI, etc.
+     * [Term➞id](Term_id.md) - A CURIE for a term or database object in GO, CL, CHEBI, UniProtKB, PANTHER, etc.
  * [➞novel_annotations](interPro2GORedundancy__novel_annotations.md) - GO IDs not found in InterPro2GO for any rule condition
  * [➞redundant_annotations](interPro2GORedundancy__redundant_annotations.md) - GO annotations that already exist in InterPro2GO
  * [➞summary](interPro2GORedundancy__summary.md) - Human-readable summary of redundancy analysis
  * [is_invalid](is_invalid.md) - Whether the reference is invalid (e.g., retracted or replaced)
  * [isoform](isoform.md) - UniProt isoform identifier (e.g., "P19544-1" for WT1 isoform 1). Only populated when the annotation is specific to a particular isoform rather than the canonical protein sequence. Note that just because an experiment used a particular isoform doesn't mean the annotation is isoform-specific - it may apply to all isoforms. Use this field only when there is clear evidence the annotation is isoform-specific.
+ * [➞boundary](knowledgeGap__boundary.md) - What IS firmly established, so the gap is sharply delimited. The edge of current knowledge against which the gap is defined.
+ * [➞dark_aspect](knowledgeGap__dark_aspect.md) - Which GO aspect (or pattern) is dark for this gap. Most "dark" genes are not uniformly dark.
+ * [➞gap_kind](knowledgeGap__gap_kind.md) - The kind(s) of ignorance — biology, curation, and/or ontology — which determines who can resolve it. Multiple values denote a blend (e.g. a biology gap with an ontology shadow).
+ * [➞gap_statement](knowledgeGap__gap_statement.md) - The specific unknown, stated precisely. Not "role unclear" but e.g. "the direct substrate / the catalytic activity / the essential partner is undetermined".
+ * [➞proposed_terms](knowledgeGap__proposed_terms.md) - For ONTOLOGY gaps, the new ontology term(s) that would let the knowledge be expressed (e.g. "structural constituent of complex X"). May elaborate the gene's top-level proposed_new_terms.
+ * [➞provenance](knowledgeGap__provenance.md) - Evidence that the unknown is REAL and not merely uncurated — ideally the field's own admissions of ignorance ("remains to be determined", "the precise role is unknown"). The supporting_text is a verbatim substring of the cited reference and is checked by the reference validator exactly like supported_by. When the only available source is a DOI-only paper or a local analysis, anchor provenance to that reference_id (e.g. a file: path).
+ * [➞resolution](knowledgeGap__resolution.md) - What would resolve the gap — the experiment, ontology term, or curation action. For ONTOLOGY gaps, pair with proposed_terms (or the gene's top-level proposed_new_terms).
+ * [➞significance](knowledgeGap__significance.md) - Why closing this gap matters.
+ * [➞status](knowledgeGap__status.md) - Lifecycle status of the gap, tracking progress toward resolution.
+ * [knowledge_gaps](knowledge_gaps.md) - Curated, literature-grounded statements of what is NOT known — applicable at the level of the whole gene, a single existing annotation, a core function, a whole module, or a single module step/node. The inverse of core_functions: everywhere else the schema records what IS known; here it records, with the same evidentiary discipline, what is not. See the Function Knowledge Gaps project (projects/FUNCTION_KNOWLEDGE_GAPS.md).
  * [label](label.md) - Human readable name of the entity
      * [Term➞label](Term_label.md) - the term name
  * [➞assessment](literatureSupportAssessment__assessment.md) - Level of literature support
  * [➞notes](literatureSupportAssessment__notes.md) - Notes on literature support - key papers, gaps in evidence
  * [➞supported_by](literatureSupportAssessment__supported_by.md) - Supporting text from literature for this assessment
+ * [➞evidence](moduleAnnoton__evidence.md)
+ * [➞function](moduleAnnoton__function.md)
+ * [➞id](moduleAnnoton__id.md)
+ * [➞label](moduleAnnoton__label.md)
+ * [➞locations](moduleAnnoton__locations.md)
+ * [➞notes](moduleAnnoton__notes.md)
+ * [➞participant](moduleAnnoton__participant.md)
+ * [➞processes](moduleAnnoton__processes.md)
+ * [➞role_description](moduleAnnoton__role_description.md)
+ * [➞connection_type](moduleConnection__connection_type.md)
+ * [➞context](moduleConnection__context.md)
+ * [➞description](moduleConnection__description.md)
+ * [➞evidence](moduleConnection__evidence.md)
+ * [➞notes](moduleConnection__notes.md)
+ * [➞predicate](moduleConnection__predicate.md)
+ * [➞source](moduleConnection__source.md)
+ * [➞target](moduleConnection__target.md)
+ * [➞anatomical_locations](moduleContext__anatomical_locations.md)
+ * [➞cell_types](moduleContext__cell_types.md)
+ * [➞cellular_components](moduleContext__cellular_components.md)
+ * [➞conditions](moduleContext__conditions.md)
+ * [➞developmental_stages](moduleContext__developmental_stages.md)
+ * [➞evidence](moduleContext__evidence.md)
+ * [➞notes](moduleContext__notes.md)
+ * [➞taxa](moduleContext__taxa.md)
+ * [➞annotons](moduleNode__annotons.md)
+ * [➞concepts](moduleNode__concepts.md) - Optional ontology/database grounding for this module node.
+ * [➞connections](moduleNode__connections.md)
+ * [➞context](moduleNode__context.md)
+ * [➞description](moduleNode__description.md)
+ * [➞evidence](moduleNode__evidence.md)
+ * [➞id](moduleNode__id.md)
+ * [➞label](moduleNode__label.md)
+ * [➞module_type](moduleNode__module_type.md)
+ * [➞notes](moduleNode__notes.md)
+ * [➞parts](moduleNode__parts.md)
+ * [➞variant_sets](moduleNode__variant_sets.md)
+ * [➞evidence](modulePart__evidence.md)
+ * [➞node](modulePart__node.md)
+ * [➞notes](modulePart__notes.md)
+ * [➞optional](modulePart__optional.md) - Whether this part is optional in the parent module.
+ * [➞order](modulePart__order.md) - Optional display or temporal order. Equal or absent values imply partial ordering only.
+ * [➞role](modulePart__role.md) - Curator-supplied role of this part within the parent module.
+ * [➞evidence](moduleReview__evidence.md)
+ * [➞module](moduleReview__module.md)
+ * [➞notes](moduleReview__notes.md)
+ * [➞status](moduleReview__status.md)
+ * [➞axis](moduleVariantSet__axis.md) - The dimension along which these variants differ, e.g. taxon, cell type, compartment, route, enzyme family.
+ * [➞evidence](moduleVariantSet__evidence.md)
+ * [➞id](moduleVariantSet__id.md)
+ * [➞label](moduleVariantSet__label.md)
+ * [➞notes](moduleVariantSet__notes.md)
+ * [➞selection](moduleVariantSet__selection.md) - How many variants may be selected in a concrete realization.
+ * [➞variants](moduleVariantSet__variants.md)
+ * [➞cargo](molecularFunctionDescriptor__cargo.md)
+ * [➞cofactors](molecularFunctionDescriptor__cofactors.md)
+ * [➞destination_location](molecularFunctionDescriptor__destination_location.md)
+ * [➞products](molecularFunctionDescriptor__products.md)
+ * [➞source_location](molecularFunctionDescriptor__source_location.md)
+ * [➞substrates](molecularFunctionDescriptor__substrates.md)
+ * [➞targets](molecularFunctionDescriptor__targets.md)
  * [name](name.md) - Name of the entity (e.g., isoform name like Bcl-xL)
      * [AlternativeProduct➞name](AlternativeProduct_name.md) - Common name of the isoform (e.g., Bcl-xL, Bcl-xS)
  * [negated](negated.md) - Whether the term is negated
@@ -138,8 +272,36 @@ Schema for gene curation Top level entity is a GeneReview, which is about a sing
  * [➞assessment](parsimonyAssessment__assessment.md) - Parsimony assessment value
  * [➞notes](parsimonyAssessment__notes.md) - Notes on parsimony - e.g., which conditions are redundant
  * [➞supported_by](parsimonyAssessment__supported_by.md) - Supporting text from literature for this assessment
+ * [➞description](participantSelector__description.md)
+ * [➞domain](participantSelector__domain.md)
+ * [➞evidence](participantSelector__evidence.md)
+ * [➞family](participantSelector__family.md)
+ * [➞gene](participantSelector__gene.md)
+ * [➞gene_product](participantSelector__gene_product.md)
+ * [➞homolog_of](participantSelector__homolog_of.md)
+ * [➞notes](participantSelector__notes.md)
+ * [➞ortholog_of](participantSelector__ortholog_of.md)
+ * [➞protein_complex](participantSelector__protein_complex.md)
+ * [➞required_domain](participantSelector__required_domain.md)
+ * [➞required_function](participantSelector__required_function.md)
+ * [➞selector_type](participantSelector__selector_type.md)
+ * [➞taxon](participantSelector__taxon.md)
  * [predicate](predicate.md) - Predicate of the extension
      * [AnnotationExtension➞predicate](AnnotationExtension_predicate.md)
+ * [➞predicted_term](predictedAnnotation__predicted_term.md) - The predicted term (GO term, EC number, etc.)
+ * [➞predicted_term_type](predictedAnnotation__predicted_term_type.md) - Type of predicted term (EC, GO_MF, GO_BP, GO_CC)
+ * [➞review](predictedAnnotation__review.md) - Assessment of this prediction
+ * [➞source_method](predictedAnnotation__source_method.md) - Name of the prediction method (e.g., DeepECTF, PANTHER_IBA, InterPro2GO, CLEAN, GloEC, MAPred, ProteinInfer)
+ * [➞source_reference_id](predictedAnnotation__source_reference_id.md) - Reference for the prediction method or study (e.g., PMID:37820725 for the Kim et al. 2023 DeepECTF study)
+ * [➞source_version](predictedAnnotation__source_version.md) - Version or date of the prediction method
+ * [➞assessment](predictionAssessment__assessment.md) - Assessment category for this prediction
+ * [➞confidence_score](predictionAssessment__confidence_score.md) - Confidence score following de Crécy-Lagard et al. 2025: 2 = concordant with evidence, 1 = uncertain, 0 = discordant with evidence
+ * [➞error_type](predictionAssessment__error_type.md) - Type of error that led to the incorrect prediction, following Table 1 of de Crécy-Lagard et al. 2025
+ * [➞summary](predictionAssessment__summary.md) - Summary of the assessment rationale
+ * [➞supported_by](predictionAssessment__supported_by.md) - Supporting evidence for the assessment
+ * [➞locus_tag](predictionReview__locus_tag.md) - Locus tag for the gene (e.g., b1267 for E. coli)
+ * [➞predictions](predictionReview__predictions.md) - List of predictions to review
+ * [➞source_documents](predictionReview__source_documents.md) - Paths to supporting source documents (e.g., reasoning traces, raw model outputs) for provenance
  * [product_type](product_type.md) - Type of gene product (protein, ncRNA, etc.)
  * [➞justification](proposedOntologyTerm__justification.md) - Justification for why this term is needed
  * [➞proposed_definition](proposedOntologyTerm__proposed_definition.md) - Proposed definition for the new term
@@ -149,6 +311,9 @@ Schema for gene curation Top level entity is a GeneReview, which is about a sing
  * [➞supported_by](proposedOntologyTerm__supported_by.md)
  * [proposed_new_terms](proposed_new_terms.md) - Proposed new ontology terms that should exist but don't
  * [proposed_replacement_terms](proposed_replacement_terms.md) - If the action is MODIFY, then this is a list of proposed replacement terms
+ * [➞active_units](proteinComplexDescriptor__active_units.md) - Active units or role-bearing components of the complex. This is used to avoid leaving functionally important complex structure as prose.
+ * [publication_type](publication_type.md) - The kind of publication or source this reference is (e.g. primary research article, review, meta-analysis, database record, AI deep-research report). For PMIDs this is normally inferred from the PubMed publication-type ('PT') metadata rather than set by hand; for non-PMID references (GO_REF, Reactome, file:) it is inferred from the identifier. Lets analyses ask, e.g., whether review articles or abstracts alone are sufficient to support a given annotation action.
+ * [qualifier](qualifier.md) - The GO annotation qualifier specifying the relationship between the gene product and the term. For MF annotations, distinguishes 'enables' (gene product has the activity independently) from 'contributes_to' (gene product contributes to a complex's activity but does not have the activity alone). For BP, distinguishes 'involved_in', 'acts_upstream_of', etc. For CC, distinguishes 'located_in', 'part_of', 'is_active_in', 'colocalizes_with'.
  * [➞experts](question__experts.md) - Experts to answer the question. These should be drawn from the authors of relevant publications already referenced. If no suitable experts are available, it's OK to leave this as an empty list!
  * [➞question](question__question.md) - Question to be answered
  * [reason](reason.md) - Reason for the action
@@ -157,6 +322,7 @@ Schema for gene curation Top level entity is a GeneReview, which is about a sing
  * [➞interpro_label](redundantAnnotation__interpro_label.md) - InterPro domain label
  * [➞interpro_source](redundantAnnotation__interpro_source.md) - InterPro ID that already maps to this GO term in ipr2go
  * [reference_id](reference_id.md)
+ * [reference_review](reference_review.md) - Manual reviewer assessment of this reference (relevance, and citation correctness / scientific soundness). Reviewer-supplied, distinct from the machine-fetched id/title.
  * [reference_section_type](reference_section_type.md) - Type of section in the reference (e.g., 'ABSTRACT', 'METHODS', 'RESULTS', 'DISCUSSION')
  * [references](references.md)
  * [➞containment](relatedEntry__containment.md) - Containment score (0-1) for the directional relationship. For PREDICTS: this_in_target (how much of this is contained in target). For PREDICTED_BY: target_in_this (how much of target is contained in this). For EQUIV: max of both directions.
@@ -165,8 +331,10 @@ Schema for gene curation Top level entity is a GeneReview, which is about a sing
  * [➞jaccard_similarity](relatedEntry__jaccard_similarity.md) - Jaccard similarity coefficient (0-1)
  * [➞relationship](relatedEntry__relationship.md) - Type of relationship
  * [➞target_id](relatedEntry__target_id.md) - ID of the related entry
+ * [relevance](relevance.md) - Reviewer judgment of how relevant the reference is to the gene's function and this review.
  * [retired](retired.md) - Whether the annotation is retired or replaced
  * [review](review.md) - Review of the gene
+ * [review_notes](review_notes.md) - Free-text note explaining the relevance/correctness judgment (e.g. what was verified, or why a citation is wrong, disputed, or low quality).
  * [➞conditions](ruleConditionSet__conditions.md) - Conditions in this set (all must match)
  * [➞notes](ruleConditionSet__notes.md) - Reviewer notes on this specific condition set
  * [➞number](ruleConditionSet__number.md) - 1-based condition set number (CS1, CS2, CS3, etc.)
@@ -213,6 +381,7 @@ Schema for gene curation Top level entity is a GeneReview, which is about a sing
  * [suggested_experiments](suggested_experiments.md)
  * [suggested_questions](suggested_questions.md) - Suggested questions to ask experts about the gene. Only include if not obvious from the literature.
  * [summary](summary.md) - Summary of the review
+ * [superseded_by](superseded_by.md) - Reference(s) that dispute, correct, or overturn this finding. Used together with finding_status DISPUTED or OVERTURNED.
  * [supported_by](supported_by.md)
  * [supporting_entities](supporting_entities.md) - IDs of the supporting entities
  * [supporting_text](supporting_text.md) - Supporting text from the publication. This should be exact substrings. Different substrings can be broken up by '...'s. These substrings will be checked against the actual text of the paper. If editorialization is necessary, put this in square brackets (this is not checked). For example, you can say '...[CFAP300 shows] transport within cilia is IFT dependent...'
@@ -223,7 +392,6 @@ Schema for gene curation Top level entity is a GeneReview, which is about a sing
  * [➞notes](taxonomicScopeAssessment__notes.md) - Notes on taxonomic scope - suggested changes to taxon constraints
  * [➞supported_by](taxonomicScopeAssessment__supported_by.md) - Supporting text from literature for this assessment
  * [term](term.md) - Term to be annotated
-     * [ExistingAnnotation➞term](ExistingAnnotation_term.md)
  * [➞predicate](termMapping__predicate.md) - Mapping predicate (e.g., 'skos:exactMatch', 'skos:closeMatch', 'skos:broadMatch', 'skos:narrowMatch')
  * [➞target_term](termMapping__target_term.md) - The target term in another ontology
  * [title](title.md) - Title of the entity
@@ -231,32 +399,47 @@ Schema for gene curation Top level entity is a GeneReview, which is about a sing
 ### Enums
 
  * [ActionEnum](ActionEnum.md)
+ * [AnnotationQualifierEnum](AnnotationQualifierEnum.md) - GO annotation qualifiers specifying the relationship between a gene product and a GO term. These correspond to the QUALIFIER column in GAF/GPAD files and the QuickGO API.
  * [ConditionTypeEnum](ConditionTypeEnum.md) - Types of conditions in rule antecedents
  * [EntryRelationshipEnum](EntryRelationshipEnum.md) - Type of relationship between entries in a rule
  * [EntryTypeEnum](EntryTypeEnum.md) - Type of entry in a rule review (domain/family condition or GO term target)
  * [EvidenceType](EvidenceType.md) - Gene Ontology evidence codes mapped to Evidence and Conclusion Ontology (ECO) terms
+ * [FindingReviewStatusEnum](FindingReviewStatusEnum.md) - Reviewer's assessment of the empirical standing of a specific finding (a statement extracted from a reference) in light of other evidence. Unlike ReferenceCorrectnessEnum, which judges a whole reference, this applies per finding: a paper may have some findings that stand and others that have been overturned. Use superseded_by to point to the reference(s) responsible.
  * [FunctionalIsoformMappingTypeEnum](FunctionalIsoformMappingTypeEnum.md) - Type of identifier that a functional isoform maps to
  * [FunctionalIsoformTypeEnum](FunctionalIsoformTypeEnum.md) - Type of functional isoform or product. Distinguishes between different mechanisms that produce functionally distinct forms of a gene product.
  * [GOBiologicalProcessEnum](GOBiologicalProcessEnum.md) - A biological process term in the GO ontology
  * [GOCellularLocationEnum](GOCellularLocationEnum.md) - A cellular location term in the GO ontology (excludes protein-containing complexes)
  * [GOMolecularActivityEnum](GOMolecularActivityEnum.md) - A molecular activity term in the GO ontology
  * [GOProteinContainingComplexEnum](GOProteinContainingComplexEnum.md) - A protein-containing complex term in the GO ontology
- * [GOTermEnum](GOTermEnum.md) - A term in the GO ontology
+ * [GOTermEnum](GOTermEnum.md) - A term in the GO ontology (including roots, to allow ND annotations)
  * [GeneReviewStatusEnum](GeneReviewStatusEnum.md) - Status of the gene review process
  * [InterProTypeEnum](InterProTypeEnum.md) - InterPro entry types categorizing protein signatures
+ * [KnowledgeGapAspectEnum](KnowledgeGapAspectEnum.md) - Which GO aspect (or pattern) is dark for a knowledge gap. Most "dark" genes are not uniformly dark.
+ * [KnowledgeGapKindEnum](KnowledgeGapKindEnum.md) - The kind of ignorance a knowledge gap represents, which determines who can resolve it. A single gap may carry several values when it is a blend.
+ * [KnowledgeGapStatusEnum](KnowledgeGapStatusEnum.md) - Lifecycle status of a knowledge gap, tracking progress toward resolution.
  * [LiteratureSupportEnum](LiteratureSupportEnum.md) - Level of literature support for the rule
  * [ManuscriptSection](ManuscriptSection.md) - Sections of a scientific manuscript or publication
+ * [ModuleConnectionTypeEnum](ModuleConnectionTypeEnum.md) - Common connection types between module elements.
+ * [ModuleTypeEnum](ModuleTypeEnum.md) - Broad type of biological module node.
  * [OverlapEnum](OverlapEnum.md) - Assessment of condition overlap/redundancy
  * [OverlapInterpretationEnum](OverlapInterpretationEnum.md) - Automated interpretation of domain overlap patterns
  * [ParsimonyEnum](ParsimonyEnum.md) - Assessment of rule parsimony (simplicity vs complexity)
+ * [ParticipantSelectorTypeEnum](ParticipantSelectorTypeEnum.md) - How a module annoton participant is selected.
+ * [PredictedTermTypeEnum](PredictedTermTypeEnum.md) - Type of predicted annotation term
+ * [PredictionAssessmentEnum](PredictionAssessmentEnum.md) - Assessment categories for computational predictions, based on de Crécy-Lagard et al. 2025 (PMID:40703034) Fig. 4.
+ * [PredictionErrorTypeEnum](PredictionErrorTypeEnum.md) - Types of errors that lead to incorrect functional predictions, based on Table 1 of de Crécy-Lagard et al. 2025 (PMID:40703034).
  * [ProductTypeEnum](ProductTypeEnum.md) - Type of gene product
  * [ProteinDatabaseEnum](ProteinDatabaseEnum.md) - Protein database types for rule analysis
+ * [PublicationTypeEnum](PublicationTypeEnum.md) - The kind of publication or source a reference is. For PMIDs this is inferred from the PubMed publication-type ('PT') metadata; for non-literature references it is inferred from the identifier scheme. Used to test hypotheses about which evidence sources (primary papers, reviews, abstracts, deep research) suffice for GO annotation review.
  * [ROTermEnum](ROTermEnum.md) - A term in the relation ontology
+ * [ReferenceCorrectnessEnum](ReferenceCorrectnessEnum.md) - Reviewer's overall manual assessment of a reference's trustworthiness, spanning both citation correctness (does the identifier point to the intended paper that supports its use) and scientific soundness (is that paper's claim reliable). Single-valued: record the most salient issue and elaborate in review_notes. Complements is_invalid (retracted/replaced) and full_text_unavailable.
+ * [ReferenceRelevanceEnum](ReferenceRelevanceEnum.md) - Reviewer's assessment of how relevant a reference is to the gene's function and review.
  * [RuleActionEnum](RuleActionEnum.md) - Recommended action for the rule
  * [RuleReviewStatusEnum](RuleReviewStatusEnum.md) - Status of the rule review
  * [RuleTypeEnum](RuleTypeEnum.md) - Type of UniProt annotation rule
  * [SpecificityEnum](SpecificityEnum.md) - Assessment of GO term specificity
  * [TaxonomicScopeEnum](TaxonomicScopeEnum.md) - Assessment of taxonomic restriction appropriateness
+ * [VariantSelectionEnum](VariantSelectionEnum.md) - How variants in a variant set may be selected in a realization.
 
 ### Subsets
 

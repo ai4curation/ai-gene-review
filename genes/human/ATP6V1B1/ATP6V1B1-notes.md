@@ -122,3 +122,31 @@ specialized cells, the extracellular space.
 - Reactome cytosol (TAS) annotations: generic "cytosol" placement for V1 subunits in
   many Reactome pathways; the V1 domain is cytoplasmic, so cytosol is acceptable but
   low-information and largely redundant.
+
+## Falcon deep research synthesis (2026-06-21)
+
+Falcon deep research has now completed (`file:human/ATP6V1B1/ATP6V1B1-deep-research-falcon.md`,
+17 citations). It corroborates the B1 (kidney-isoform, non-catalytic V1 subunit)
+biology above and adds one mechanistically specific finding.
+
+- **Core confirmed.** B1 is a non-catalytic V1 subunit forming the AB heterodimers
+  of the V1 hexamer; the proton gradient it helps generate (via catalytic A
+  subunit) acidifies organelles and, in renal type-A intercalated cells, secretes
+  H+ into urine. No change to the non-catalytic-subunit / acidification calls.
+- **New: chemiosmotic coupling to cystinosin (Jamalpoor 2020).** In CRISPR
+  ATP6V1B1-deficient human proximal tubule cells, loss of B1 disrupts coupling
+  between the V-ATPase proton gradient and **cystinosin (CTNS, H+/cystine
+  symporter)**, causing ~3-fold lysosomal **cystine accumulation** (normalized by
+  cysteamine) and ~3-fold increased nuclear **TFEB** (autophagy/lysosomal
+  biogenesis). This extends B1's relevance to proximal-tubule lysosomal physiology
+  and mechanistically links V-ATPase activity to lysosomal amino-acid efflux —
+  good support for the lysosomal-acidification role and the autophagy/mTORC1-TFEB
+  connection (downstream, non-core).
+- **Disease.** Biallelic variants → autosomal-recessive **distal renal tubular
+  acidosis** with the **strongest sensorineural-hearing-loss association** among
+  dRTA genes (9/9 patients; 67% with large vestibular aqueduct syndrome; Ay 2023),
+  reflecting V-ATPase maintenance of endolymph composition. Consistent with the
+  established kidney/inner-ear core.
+
+Net: no change to calls — B1 is the kidney/inner-ear-restricted non-catalytic V1
+subunit supporting organellar and renal-luminal acidification.

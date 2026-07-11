@@ -115,6 +115,12 @@
             color: var(--amber);
         }
 
+        .pill.scope {
+            background: #eef2f7;
+            border-color: #cbd5e1;
+            color: #334155;
+        }
+
         .pill.type {
             background: var(--accent-soft);
             border-color: #b8dfd8;
@@ -430,6 +436,81 @@
             border-radius: 8px;
             padding: 12px 16px;
             margin-bottom: 18px;
+        }
+
+        .qc-panel {
+            margin-bottom: 18px;
+        }
+
+        .qc-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 12px;
+        }
+
+        .qc-card {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: #fbfcfd;
+            padding: 12px 14px;
+        }
+
+        .qc-card-wide {
+            grid-column: 1 / -1;
+        }
+
+        .qc-card h3 {
+            font-size: 0.98rem;
+            margin-bottom: 8px;
+        }
+
+        .qc-headline {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .qc-list {
+            margin: 6px 0 0;
+            padding-left: 18px;
+        }
+
+        .qc-list li {
+            margin: 3px 0;
+        }
+
+        .qc-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+        }
+
+        .qc-table th,
+        .qc-table td {
+            text-align: left;
+            padding: 5px 8px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: top;
+        }
+
+        .qc-table th {
+            color: var(--muted);
+            font-size: 0.78rem;
+            text-transform: uppercase;
+        }
+
+        .qc-table td.center,
+        .qc-table th.center {
+            text-align: center;
+        }
+
+        .ok {
+            color: var(--green);
+            font-weight: 700;
+        }
+
+        .warn {
+            color: var(--red);
+            font-weight: 700;
         }
 
         @media (max-width: 960px) {
@@ -801,6 +882,7 @@
         <div class="meta-row">
             {%- if data.get('id') %}<span class="pill">{{ data.get('id') }}</span>{% endif -%}
             {%- if data.get('status') %}<span class="pill status">{{ data.get('status') }}</span>{% endif -%}
+            {%- if data.get('scope') %}<span class="pill scope">{{ data.get('scope') }}</span>{% endif -%}
             {%- if module.get('module_type') %}<span class="pill type">{{ module.get('module_type') | enum_label }}</span>{% endif -%}
             <span class="pill">{{ source_file }}</span>
         </div>
@@ -828,6 +910,160 @@
         <div class="stat"><span class="stat-value">{{ stats.annotons }}</span><span class="stat-label">Annotons</span></div>
         <div class="stat"><span class="stat-value">{{ stats.connections }}</span><span class="stat-label">Connections</span></div>
     </section>
+
+    {%- if qc %}
+    <section class="qc-panel panel" aria-label="Derived QC">
+        <div class="panel-header">
+            <h2>Derived QC</h2>
+        </div>
+        <div class="panel-body qc-grid">
+            <div class="qc-card">
+                <h3>Recommended-field compliance</h3>
+                {%- if qc.data_qc.get('error') %}
+                    <p class="muted small">Unavailable: {{ qc.data_qc.get('error') }}</p>
+                {%- else %}
+                    <div><span class="qc-headline">{{ qc.data_qc.global_compliance }}%</span>
+                        <span class="muted small">recommended fields populated</span></div>
+                    {%- if qc.data_qc.missing %}
+                        <ul class="qc-list small">
+                            {%- for item in qc.data_qc.missing %}
+                                <li><code>{{ item.path }}</code> &middot; {{ item.slot }}
+                                    <span class="muted">({{ item.populated }}/{{ item.total }})</span></li>
+                            {%- endfor %}
+                        </ul>
+                    {%- else %}
+                        <p class="muted small">All recommended fields populated.</p>
+                    {%- endif %}
+                {%- endif %}
+            </div>
+
+            <div class="qc-card">
+                <h3>Module deep research</h3>
+                {%- if qc.module_deep_research.has_deep_research %}
+                    <p><span class="ok">&#10003; present</span></p>
+                    <ul class="qc-list small">
+                        {%- for report in qc.module_deep_research.reports %}
+                            <li>{{ report.file }}{% if report.provider %} <span class="muted">({{ report.provider }})</span>{% endif %}</li>
+                        {%- endfor %}
+                    </ul>
+                {%- else %}
+                    <p><span class="warn">&#10007; none found</span></p>
+                    <p class="muted small">No <code>{{ data.get('id', 'module') }}</code> deep-research report alongside the module YAML.</p>
+                {%- endif %}
+            </div>
+
+            <div class="qc-card">
+                <h3>Leaf nodes lacking representative members</h3>
+                {%- if data.get('scope') == 'ABSTRACT' %}
+                    <p><span class="ok">&#10003;</span> <span class="small">representative grounding skipped for abstract module.</span></p>
+                {%- elif qc.leaf_nodes_missing_representatives %}
+                    <p class="small">{{ qc.leaf_nodes_missing_representatives | length }} leaf node(s) with no concrete protein grounding:</p>
+                    <ul class="qc-list small">
+                        {%- for node in qc.leaf_nodes_missing_representatives %}
+                            <li><a href="#node-{{ anchor_id(node.id) }}">{{ node.label }}</a>
+                                {%- if node.selector_types %} <span class="muted">{{ node.selector_types | join(', ') }}</span>{% endif -%}
+                            </li>
+                        {%- endfor %}
+                    </ul>
+                {%- else %}
+                    <p><span class="ok">&#10003;</span> <span class="small">every leaf node grounds to a representative protein.</span></p>
+                {%- endif %}
+            </div>
+
+            <div class="qc-card">
+                <h3>Template conformance</h3>
+                {%- if qc.conformance_violations %}
+                    <p class="small">{{ qc.conformance_violations | length }} conformance issue(s):</p>
+                    <ul class="qc-list small">
+                        {%- for v in qc.conformance_violations %}
+                            <li>
+                                <a href="#node-{{ anchor_id(v.node_id) }}">{{ v.node_id }}</a>
+                                <span class="muted">&rarr; {{ v.template }}</span>
+                                {%- if v.severity == 'error' %} <span class="warn">[error]</span>
+                                {%- elif v.severity == 'warning' %} <span class="warn">[warning]</span>
+                                {%- else %} <span class="muted">[info]</span>{% endif %}
+                                <br><span class="small">{{ v.message }}</span>
+                            </li>
+                        {%- endfor %}
+                    </ul>
+                {%- else %}
+                    <p><span class="ok">&#10003;</span> <span class="small">every declared <code>conforms_to</code> bundle matches its template motif.</span></p>
+                {%- endif %}
+            </div>
+
+            {%- if qc.reaction_chaining %}
+            <div class="qc-card">
+                <h3>Reaction chaining <span class="muted small">(advisory)</span></h3>
+                {%- set chain_warns = qc.reaction_chaining | selectattr('severity', 'equalto', 'warning') | list %}
+                {%- if chain_warns %}
+                    <p class="small">{{ chain_warns | length }} unacknowledged break(s) (product of one reaction is not a substrate of the next):</p>
+                {%- else %}
+                    <p><span class="ok">&#10003;</span> <span class="small">every <code>PRECEDES</code> step chains, or its break is acknowledged via <code>chaining_status</code>.</span></p>
+                {%- endif %}
+                <ul class="qc-list small">
+                    {%- for f in qc.reaction_chaining %}
+                        <li>
+                            <span class="muted">{{ f.source }} &rarr; {{ f.target }}</span>
+                            {%- if f.severity == 'warning' %} <span class="warn">[{{ f.status }}]</span>
+                            {%- else %} <span class="muted">[{{ f.status }}]</span>{% endif %}
+                            {%- if f.shared %} <br><span class="small">shared: {{ f.shared | join(', ') }}</span>{% endif %}
+                            {%- if f.note %} <br><span class="small muted">{{ f.note }}</span>{% endif %}
+                        </li>
+                    {%- endfor %}
+                </ul>
+            </div>
+            {%- endif %}
+
+            <div class="qc-card qc-card-wide">
+                <h3>Gene-review completeness
+                    <span class="muted small">({{ qc.gene_reviews.with_review }}/{{ qc.gene_reviews.total_genes }} grounded genes reviewed)</span>
+                </h3>
+                {%- if qc.gene_reviews.genes %}
+                    <p class="small muted">
+                        {{ qc.gene_reviews.complete_reviews }} complete review(s) &middot;
+                        {{ qc.gene_reviews.with_deep_research }} with deep research &middot;
+                        {{ qc.gene_reviews.without_review }} missing review &middot;
+                        {{ qc.gene_reviews.without_deep_research }} reviewed but lacking deep research
+                    </p>
+                    <table class="qc-table small">
+                        <thead>
+                            <tr>
+                                <th>Gene</th>
+                                <th class="center">Review</th>
+                                <th class="center">Complete</th>
+                                <th class="center">Deep research</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {%- for gene in qc.gene_reviews.genes %}
+                                <tr>
+                                    <td>{{ gene.symbol or gene.label or gene.accession }}
+                                        <span class="muted term-id">{{ gene.accession }}</span></td>
+                                    <td class="center">
+                                        {%- if gene.has_review %}<span class="ok">&#10003;</span>{% else %}<span class="warn">&#10007;</span>{% endif -%}
+                                    </td>
+                                    <td class="center">
+                                        {%- if gene.has_review %}
+                                            {%- if gene.complete %}<span class="ok">&#10003;</span>
+                                            {%- else %}<span class="warn">{{ gene.reviewed_annotations }}/{{ gene.total_annotations }}</span>{% endif -%}
+                                        {%- else %}&mdash;{% endif -%}
+                                    </td>
+                                    <td class="center">
+                                        {%- if gene.has_review %}
+                                            {%- if gene.has_deep_research %}<span class="ok">&#10003;</span>{% else %}<span class="warn">&#10007;</span>{% endif -%}
+                                        {%- else %}&mdash;{% endif -%}
+                                    </td>
+                                </tr>
+                            {%- endfor %}
+                        </tbody>
+                    </table>
+                {%- else %}
+                    <p class="muted small">No concrete UniProt-grounded genes in this module.</p>
+                {%- endif %}
+            </div>
+        </div>
+    </section>
+    {%- endif %}
 
     <section class="browser">
         <aside class="panel tree-panel">

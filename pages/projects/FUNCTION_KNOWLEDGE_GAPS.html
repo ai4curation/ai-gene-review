@@ -250,6 +250,25 @@
         /* Project meta: maturity + tag badges */
         .project-meta { margin-bottom: 0.5rem; }
         .project-meta .badge { margin: 0 0.25rem 0.25rem 0; }
+        .gene-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.375rem;
+            margin-bottom: 1rem;
+        }
+        .gene-list a,
+        .gene-list span {
+            background-color: #dbeafe;
+            border-radius: 0.25rem;
+            color: #1e40af;
+            display: inline-block;
+            font-weight: 500;
+            padding: 0.125rem 0.375rem;
+        }
+        .gene-list a:hover {
+            background-color: #bfdbfe;
+            text-decoration: none;
+        }
         .m-SCOPING     { background: #fef3c7; color: #92400e; }
         .m-IN_PROGRESS { background: #dbeafe; color: #1e40af; }
         .m-MATURE      { background: #dcfce7; color: #166534; }
@@ -330,30 +349,30 @@
 
     <header class="header">
         <h1>Function Knowledge Gaps</h1>
-        
+
         <p class="project-meta">
             <span class="badge m-MATURE">MATURE</span>
             <span class="badge tag t-PIPELINE">PIPELINE</span><span class="badge tag t-FLAGSHIP">FLAGSHIP</span>
         </p>
-        
-        
-        
+
+
+
     </header>
 
-    
 
-    
+
+
     <div class="warnings">
         <h3>Warnings (2)</h3>
         <ul>
-            
+
             <li>Species-qualified symbol &#39;human/curatorial&#39; not found (no genes/human/curatorial).</li>
-            
+
             <li>Species-qualified symbol &#39;human/FGFRL1-adjacent&#39; not found (no genes/human/FGFRL1-adjacent).</li>
-            
+
         </ul>
     </div>
-    
+
 
     <div class="content">
         <h1 id="function-knowledge-gaps">Function Knowledge Gaps</h1>
@@ -484,6 +503,47 @@ flagging them is high-value because the hole is often the rate-limiting unknown 
 <p>This is strictly more than the existing <code>suggested_questions</code> field (which asks the right things<br />
 but cites nothing): the added value is the <strong>adjudicated boundary plus provenance for the<br />
 unknown</strong>.</p>
+<h2 id="structured-curation-the-knowledgegap-schema-class">Structured curation: the <code>KnowledgeGap</code> schema class</h2>
+<p>The anatomy above is now a first-class schema object, <code>KnowledgeGap</code>, so a gap can be curated<br />
+<em>in the gene/module YAML itself</em> rather than only as prose on this page. This mirrors the way<br />
+the <a href="https://github.com/monarch-initiative/dismech">Monarch <code>dismech</code></a> knowledge base promotes<br />
+unknowns to a first-class <code>Discussion</code> object (with <code>kind</code> / <code>status</code> / <code>proposed_experiment</code>),<br />
+and goes further by demanding <strong>provenance for the unknown</strong> and a biology/curation/ontology<br />
+typing.</p>
+<p>A <code>KnowledgeGap</code> (see <code>src/ai_gene_review/schema/gene_review.yaml</code>) carries:</p>
+<ul>
+<li><code>gap_statement</code> (required) and <code>boundary</code> — the precise unknown and the edge of knowledge;</li>
+<li><code>gap_kind</code> (<code>BIOLOGY</code> / <code>CURATION</code> / <code>ONTOLOGY</code>, multivalued for blends), <code>dark_aspect</code><br />
+  (<code>MF_DARK</code> / <code>BP_DARK</code> / <code>CC_DARK</code> / <code>WHOLLY_DARK</code> / <code>RESIDUAL_SUBGAP</code>), and a dismech-style<br />
+  lifecycle <code>status</code> (<code>OPEN</code> / <code>NARROWING</code> / <code>CLOSING</code> / <code>RESOLVED</code>);</li>
+<li><code>significance</code> and <code>resolution</code>;</li>
+<li><code>provenance</code> — a list of <code>SupportingTextInReference</code>, so each "the field's own admission of<br />
+  ignorance" quote is a <strong>verbatim substring checked by the reference validator</strong>, exactly like<br />
+<code>supported_by</code>. (When the only source is a DOI-only paper or a local analysis, anchor to a<br />
+<code>file:</code> reference, as elsewhere in this repo.) <strong>Caveat:</strong> only PMID/PMC-style references are<br />
+  verbatim-checked; <code>file:</code> (and the other <code>skip_prefixes</code> in<br />
+<code>conf/reference_validator_config.yaml</code>) are <em>not</em> quote-checked, so a <code>file:</code>-anchored quote<br />
+  such as <a href="../../genes/human/RAB9A/RAB9A-ai-review.html">RAB9A</a>'s must be verified by hand. Prefer a checkable PMID quote where one exists.</li>
+<li><code>proposed_terms</code> — inline <code>ProposedOntologyTerm</code>s for <code>ONTOLOGY</code> gaps.</li>
+</ul>
+<p>It can be attached at five levels — the whole gene (<code>GeneReview.knowledge_gaps</code>), a single<br />
+annotation (<code>ExistingAnnotation.review.knowledge_gaps</code>, ideal for <strong>residual sub-gaps</strong>), a<br />
+core function (<code>CoreFunction.knowledge_gaps</code>), a whole module (<code>ModuleReview.knowledge_gaps</code>),<br />
+or a single module step (<code>ModuleNode.knowledge_gaps</code>).</p>
+<p><strong>Worked YAML exemplars in the KB:</strong> <code>genes/human/CFAP300/</code> (gene-level biology+ontology gap,<br />
+two PMID provenance quotes) and <code>genes/human/RAB9A/</code> (annotation-level residual sub-gap on the<br />
+GTPase-activity review, the missing GEF/GAP).</p>
+<p><strong>Rendered from data:</strong> running <code>just aggregate-knowledge-gaps</code> (or<br />
+<code>python scripts/aggregate_knowledge_gaps.py</code>) walks every gene/module YAML and regenerates the<br />
+<a href="FUNCTION_KNOWLEDGE_GAPS/structured-gaps.html">Structured Knowledge-Gap Register</a> plus<br />
+<code>reports/knowledge_gaps.tsv</code>. The prose worked-entries below remain the curated narrative; the<br />
+register is their queryable, schema-backed counterpart and will grow as gaps are recorded in the<br />
+YAML.</p>
+<p><strong>Curation highlights from the dark-gene campaigns:</strong> the batched reviews of understudied genes<br />
+(50 <em>C. elegans</em>, 50 <em>S. cerevisiae</em>, 20 <em>S. pombe</em>) that populate this register also surfaced<br />
+recurring, generalizable curation findings — identity corrections, pseudoenzyme calls, and<br />
+family over-propagations caught before they became annotations. These are written up in<br />
+<a href="FUNCTION_KNOWLEDGE_GAPS/dark-gene-curation-highlights.html">Dark-Gene Batch Reviews: Curation Highlights</a>.</p>
 <h2 id="worked-example-the-cfap300-molecular-function-gap">Worked example: the <a href="../../genes/human/CFAP300/CFAP300-ai-review.html">CFAP300</a> molecular-function gap</h2>
 <p><a href="../../genes/human/CFAP300/CFAP300-ai-review.html">CFAP300</a> (formerly C11orf70) is a dynein axonemal assembly factor; loss-of-function causes<br />
 primary ciliary dyskinesia (PCD). It is in the KB (<code>genes/human/CFAP300/</code>) and is an ideal<br />
@@ -1169,10 +1229,11 @@ this project; 3 and 4 fall out for free once 1 produces structured per-file outp
 </tr>
 </tbody>
 </table>
-<p><strong>Schema direction (deferred):</strong> the cleanest long-term home would elevate <code>suggested_questions</code><br />
-into a provenance-bearing <code>knowledge_gaps</code> structure (gap statement + boundary + <code>supported_by</code><br />
-quotes + type) so gaps become first-class and queryable. We are <em>not</em> committing to a schema<br />
-change here; this project first proves the unit and the method on curated examples.</p>
+<p><strong>Schema direction (implemented):</strong> this has now been elevated into a provenance-bearing<br />
+<code>knowledge_gaps</code> structure (gap statement + boundary + verbatim <code>provenance</code> quotes + kind/aspect/<br />
+status typing) so gaps are first-class and queryable — see the <em>Structured curation</em> section above<br />
+for the <code>KnowledgeGap</code> class. The project first proved the unit and method on the curated examples<br />
+below; the schema element now makes them machine-tractable.</p>
 <h2 id="prioritization-curatorial-not-computed">Prioritization (curatorial, not computed)</h2>
 <p>When choosing what to read next, weight toward gaps that are both high-value and tractable:</p>
 <ul>
@@ -1381,7 +1442,7 @@ gap to the deep-research <strong>file path</strong> and verbatim quote.</p>
 <li>[ ] Implement <code>validate-deep-research</code>: PMID resolution + title-match + per-file reliability score (extends <code>validate_pmid_references.py</code>)</li>
 <li>[ ] Read-list deepening, batch 4: <a href="../../genes/human/PUS3/PUS3-ai-review.html">PUS3</a>, <a href="../../genes/human/CFAP418/CFAP418-ai-review.html">CFAP418</a>, <a href="../../genes/human/SOCS4/SOCS4-ai-review.html">SOCS4</a>/SOCS5, <a href="../../genes/human/RFT1/RFT1-ai-review.html">RFT1</a>, <a href="../../genes/worm/pef-1/pef-1-ai-review.html">pef-1</a>, <a href="../../genes/worm/fshr-1/fshr-1-ai-review.html">fshr-1</a>, <a href="../../genes/SCHPO/alo1/alo1-ai-review.html">alo1</a></li>
 <li>[ ] Decide unit granularity (per-gap vs per-gene narrative)</li>
-<li>[ ] Decide home: standalone register vs <code>knowledge_gaps</code> schema element (deferred)</li>
+<li>[x] Decide home: standalone register vs <code>knowledge_gaps</code> schema element — <strong>done</strong>: added a first-class <code>KnowledgeGap</code> schema class (gene/annotation/core-function/module/module-node), with the structured register rendered from it</li>
 <li>[ ] Conservation / disease prioritization pass over candidates</li>
 </ul>
 <h2 id="notes">Notes</h2>

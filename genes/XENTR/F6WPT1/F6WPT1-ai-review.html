@@ -1,0 +1,2338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>arl5a - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>arl5a</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/F6WPT1" target="_blank" class="term-link">
+                        F6WPT1
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Xenopus tropicalis</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "arl5a";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="F6WPT1" data-a="DESCRIPTION: ARL5A (ADP-ribosylation factor-like protein 5A) is..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>ARL5A (ADP-ribosylation factor-like protein 5A) is a small GTPase of the ARF (ADP-ribosylation factor) family in the Ras superfamily. It functions as a molecular switch cycling between inactive GDP-bound and active GTP-bound states, with GTP hydrolysis as its primary enzymatic activity. ARL5A is predominantly localized to the trans-Golgi network (TGN), where it is recruited by the upstream GTPase ARFRP1 in complex with the transmembrane protein SYS1. In its GTP-bound state, ARL5A recruits effector proteins including the GARP tethering complex (VPS51/52/53/54), ARMH3, and phosphatidylinositol 4-kinase beta (PI4KB). Through GARP recruitment, ARL5A promotes SNARE-dependent fusion of endosome-derived retrograde transport carriers with the TGN membrane, enabling recycling of TGN-resident proteins such as TGN46, mannose-6-phosphate receptors, furin, and sortilin. Through the ARMH3-PI4KB axis, ARL5A promotes synthesis of phosphatidylinositol 4-phosphate (PI4P) at the TGN, a critical signaling lipid for membrane trafficking and organelle identity. ARL5A also localizes to endolysosomal compartments, where it interacts with the Ragulator complex (LAMTOR1-5) in an amino acid-sensitive manner, linking nutrient sensing to retrograde trafficking independently of the Rag GTPase-mTORC1 pathway. ARL5 is conserved across eukaryotes and was present in the last eukaryotic common ancestor (LECA). No Xenopus tropicalis-specific functional studies have been reported; functional annotation rests on strong orthology with mammalian ARL5A/ARL5B, which have been characterized in detail through proximity labeling, knockout studies, and live-cell imaging.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="F6WPT1" data-a="GO:0005737" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic annotation of cytoplasm localization based on broad Arf-family orthology. ARL5A is a soluble protein that associates with membranes via an N-terminal amphipathic helix; it is expected to be present in the cytoplasm when in its GDP-bound (inactive) state, prior to membrane recruitment. However, cytoplasm is an extremely broad term and does not capture the functionally relevant localization of ARL5A at the TGN and endolysosomes.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The annotation is not incorrect -- ARL5A is a peripheral membrane protein that cycles through the cytoplasm -- but it is too broad to be informative about the actual site of action. The functionally meaningful localization is at the trans-Golgi network and endolysosomes. Kept as non-core rather than removed because cytoplasmic localization of the GDP-bound pool is biologically real.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016192" target="_blank" class="term-link">
+                                    GO:0016192
+                                </a>
+                            </span>
+                            <span class="term-label">vesicle-mediated transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="F6WPT1" data-a="GO:0016192" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic annotation of vesicle-mediated transport. ARL5A regulates endosome-to-TGN retrograde trafficking by recruiting the GARP tethering complex, which promotes SNARE-dependent fusion of endosome-derived carriers with the TGN. This is clearly a form of vesicle-mediated transport, though the term is broad.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ARL5A has a well-established role in vesicle-mediated transport, specifically endosome-to-TGN retrograde trafficking mediated by GARP-dependent vesicle tethering and SNARE-dependent fusion. The IBA inference from Arf-family orthologs is well supported by experimental evidence in mammalian systems. While more specific BP terms could be used, this annotation accurately captures a core function of ARL5A.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006886" target="_blank" class="term-link">
+                                    GO:0006886
+                                </a>
+                            </span>
+                            <span class="term-label">intracellular protein transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="F6WPT1" data-a="GO:0006886" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic annotation of intracellular protein transport. ARL5A mediates retrograde transport of cargo proteins (TGN46, mannose-6-phosphate receptors, furin, sortilin) from endosomes back to the TGN. This is a form of intracellular protein transport, though the term is broad.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ARL5A is directly involved in intracellular protein transport -- specifically, the retrograde transport of TGN-resident membrane proteins from endosomes back to the TGN. Loss of ARL5 causes mislocalization and endosomal accumulation of these cargo proteins. The IBA annotation is consistent with the known function from mammalian orthologs.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005525" target="_blank" class="term-link">
+                                    GO:0005525
+                                </a>
+                            </span>
+                            <span class="term-label">GTP binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="F6WPT1" data-a="GO:0005525" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic annotation of GTP binding. ARL5A is a small GTPase that cycles between GDP-bound and GTP-bound states. GTP binding is an inherent property of all ARF-family GTPases and is essential for ARL5A function, as the GTP-bound form recruits effectors GARP, ARMH3, and PI4KB. The UniProt entry includes a GTP-binding site at residues 23-30, 69, and 125-128.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GTP binding is a fundamental and well-established molecular function of ARL5A as a member of the ARF-family small GTPases. The protein contains conserved GTP-binding motifs (P-loop, switch regions) confirmed by domain analysis. Mutant studies (constitutively active Q70L and dominant-negative T30N) confirm the GTP-binding cycle is essential for function.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005802" target="_blank" class="term-link">
+                                    GO:0005802
+                                </a>
+                            </span>
+                            <span class="term-label">trans-Golgi network</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="F6WPT1" data-a="GO:0005802" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic annotation of trans-Golgi network localization. The TGN is the primary site of ARL5A function. In mammalian cells, ARL5A colocalizes strongly with the TGN marker TGN46 rather than with cis- or medial-Golgi markers. TGN localization is dependent on the upstream ARFRP1-SYS1 complex, and it is at the TGN that ARL5A recruits its major effectors GARP, ARMH3, and PI4KB.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Trans-Golgi network localization is the primary and best-characterized subcellular location for ARL5A function. Immunofluorescence and live-cell imaging in mammalian systems demonstrate strong TGN enrichment, and genetic studies show TGN localization depends on the upstream ARFRP1-SYS1 complex. This is a core localization annotation.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1903292" target="_blank" class="term-link">
+                                    GO:1903292
+                                </a>
+                            </span>
+                            <span class="term-label">protein localization to Golgi membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="F6WPT1" data-a="GO:1903292" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic annotation of involvement in protein localization to Golgi membrane. ARL5A promotes retrograde transport of cargo proteins from endosomes to the TGN via GARP recruitment, which effectively maintains the steady-state localization of TGN-resident membrane proteins at the Golgi. Loss of ARL5 causes displacement of proteins such as TGN46 from the Golgi, consistent with a role in protein localization to Golgi membrane.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ARL5A-dependent retrograde trafficking is essential for maintaining the localization of TGN-resident proteins at the Golgi. When ARL5 is depleted, cargo proteins accumulate in endosomes rather than at the TGN. The IBA annotation accurately reflects this role. This is a downstream consequence of GARP-mediated retrograde transport.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003924" target="_blank" class="term-link">
+                                    GO:0003924
+                                </a>
+                            </span>
+                            <span class="term-label">GTPase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="F6WPT1" data-a="GO:0003924" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro-based annotation of GTPase activity derived from the ARF/SAR family domain (IPR006689). ARL5A is a small GTPase that hydrolyzes GTP to GDP plus inorganic phosphate. The GTPase cycle (GTP-bound active to GDP-bound inactive) is the core molecular switch mechanism that controls ARL5A effector recruitment and membrane trafficking function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GTPase activity is a core molecular function of ARL5A. As an ARF-family GTPase, the protein hydrolyzes GTP as part of its regulatory cycle. The InterPro domain assignment (IPR006689, Small_GTPase_ARF/SAR) is correct, and the P-loop NTPase fold with conserved catalytic residues supports GTPase activity. This is distinct from but complementary to the GTP binding annotation -- together they describe the complete GTPase cycle.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005525" target="_blank" class="term-link">
+                                    GO:0005525
+                                </a>
+                            </span>
+                            <span class="term-label">GTP binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="F6WPT1" data-a="GO:0005525" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro-based annotation of GTP binding derived from multiple domain hits (IPR005225 Small_GTP-bd, IPR006689 Small_GTPase_ARF/SAR, IPR024156 Small_GTPase_ARF). This annotation is redundant with the IBA annotation for the same term (GO:0005525) but derives from a different evidence source. The GTP-binding site residues are annotated in the UniProt entry at positions 23-30, 69, and 125-128.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GTP binding is a fundamental function of ARL5A confirmed by multiple independent domain annotations. While redundant with the IBA annotation for the same GO term, the InterPro evidence provides independent computational support. The domain architecture (Arf domain, P-loop NTPase fold) is fully consistent with GTP binding activity.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1903292" target="_blank" class="term-link">
+                                    GO:1903292
+                                </a>
+                            </span>
+                            <span class="term-label">protein localization to Golgi membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="F6WPT1" data-a="GO:1903292" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARBA machine learning prediction of involvement in protein localization to Golgi membrane. This is redundant with the IBA annotation for the same term (GO:1903292) but derives from an independent computational method. ARL5A promotes retrograde transport from endosomes to the TGN, maintaining steady-state localization of TGN-resident proteins at the Golgi membrane.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The ARBA prediction is consistent with established ARL5A function in retrograde trafficking to the TGN. While redundant with the IBA annotation, the ARBA prediction provides independent computational support. The biological role in maintaining Golgi membrane protein localization through GARP-dependent retrograde trafficking is well-established in mammalian systems.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>ARL5A is a small GTPase of the ARF family that functions as a molecular switch at the trans-Golgi network, regulating endosome-to-TGN retrograde membrane trafficking and phosphoinositide metabolism. In its GTP-bound state, ARL5A recruits the GARP tethering complex to promote SNARE-dependent fusion of endosome-derived transport carriers with the TGN membrane, enabling recycling of TGN-resident proteins (TGN46, mannose-6-phosphate receptors, furin, sortilin). ARL5A also recruits ARMH3, which activates PI4KB to synthesize PI4P at the TGN. TGN localization of ARL5A depends on the upstream ARFRP1-SYS1 complex. Additionally, ARL5A interacts with the Ragulator complex at endolysosomes in an amino acid-sensitive manner, linking nutrient sensing to retrograde trafficking independently of the Rag-mTORC1 pathway. No Xenopus-specific studies exist; annotation is based on conserved orthology with mammalian ARL5A/ARL5B.</h3>
+                <span class="vote-buttons" data-g="F6WPT1" data-a="FUNCTION: ARL5A is a small GTPase of the ARF family that fun..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003924" target="_blank" class="term-link">
+                            GTPase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006886" target="_blank" class="term-link">
+                                intracellular protein transport
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016192" target="_blank" class="term-link">
+                                vesicle-mediated transport
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005802" target="_blank" class="term-link">
+                                trans-Golgi network
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(F6WPT1-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="F6WPT1" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Comprehensive Research Report: ARL5A (ADP-ribosylation factor-like protein 5A) in Xenopus tropicalis</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">18 citations</span>
+
+
+                    <span class="report-badge">1 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-06-18T19:47:50.946747</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="F6WPT1-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="comprehensive-research-report-arl5a-adp-ribosylation-factor-like-protein-5a-in-xenopus-tropicalis">Comprehensive Research Report: ARL5A (ADP-ribosylation factor-like protein 5A) in Xenopus tropicalis</h1>
+<h2 id="executive-summary">Executive Summary</h2>
+<p>ARL5A (UniProt: F6WPT1) is a small GTPase of the ARF (ADP-ribosylation factor) family that functions as a molecular switch at the trans-Golgi network (TGN) and endolysosomal compartments (ishida2024armh3isan pages 1-2, shi2018aminoacidsstimulate pages 1-2). While no Xenopus tropicalis-specific functional studies were identified in the literature, ARL5A is highly conserved across eukaryotes, enabling robust functional inference from mammalian orthologs (vargova2021aeukaryotewideperspective pages 2-3). This report synthesizes recent mechanistic findings (2018-2024) to provide a comprehensive functional annotation of ARL5A.</p>
+<h2 id="protein-identity-and-family-classification">Protein Identity and Family Classification</h2>
+<p>ARL5A belongs to the ARF family of small GTPases, which is a branch of the Ras superfamily comprising approximately 30 members in mammals, including classical ARFs (ARF1-6), SAR proteins, ARF-like proteins (ARLs), ARFRP1, and TRIM23 (li2023thearffamily pages 1-3, quirion2025unfoldingarfand pages 1-2). The ARF family proteins are distinguished from other Ras superfamily members by their unique N-terminal amphipathic helix, which undergoes lipid modification (myristoylation or acetylation) and is critical for membrane association (quirion2025unfoldingarfand pages 1-2, li2023thearffamily pages 1-3).</p>
+<p>ARL5A is one of only five ARLs predicted to possess an N-terminal amphipathic helix (along with ARL2, ARL3, ARL5B, and ARL8A), setting it apart from most other ARL proteins (quirion2025unfoldingarfand pages 1-2). ARL5A and its closely related paralog ARL5B share high sequence similarity and overlapping functions at the TGN, and are typically studied together in mammalian systems (ishida2024armh3isan pages 1-2, ishida2019arfrp1functionsupstream pages 1-2). Evolutionary analyses indicate that Arl5 was present in the last eukaryotic common ancestor (LECA), highlighting its ancient and conserved role in membrane trafficking across eukaryotic evolution (vargova2021aeukaryotewideperspective pages 2-3).</p>
+<h2 id="primary-molecular-function">Primary Molecular Function</h2>
+<h3 id="gtpase-activity-and-mechanistic-cycle">GTPase Activity and Mechanistic Cycle</h3>
+<p>ARL5A functions as a molecular switch that cycles between an inactive GDP-bound state and an active GTP-bound state (li2023thearffamily pages 1-3, quirion2025unfoldingarfand pages 1-2). The primary enzymatic activity is GTP hydrolysis, converting GTP to GDP plus inorganic phosphate. However, unlike metabolic enzymes with small-molecule substrates, the biological output of ARL5A is mediated through conformational changes that enable recruitment of specific effector proteins when in the GTP-bound form (ishida2024armh3isan pages 1-2, li2022definingtheproximal pages 2-5). </p>
+<p>The GTP-bound form of ARL5A exposes binding surfaces for effector proteins, while the GDP-bound form does not support these interactions. This has been demonstrated experimentally using constitutively active (Q70L) and dominant-negative (T30N) mutants: active ARL5A-Q70L recruits effectors such as GARP, ARMH3, and PI4KB, while inactive ARL5A-T30N shows minimal or absent binding (ishida2024armh3isan pages 1-2, ishida2024armh3isan pages 3-4, ishida2024armh3isan pages 5-6).</p>
+<h3 id="regulatory-mechanisms">Regulatory Mechanisms</h3>
+<p>ARL5A is regulated through two distinct but interconnected mechanisms:</p>
+<p><strong>1. ARFRP1-SYS1-dependent TGN recruitment:</strong> ARL5 recruitment to the TGN depends on the upstream GTPase ARFRP1 (another ARF-family member) in complex with the transmembrane protein SYS1 (ishida2024armh3isan pages 1-2, ishida2019arfrp1functionsupstream pages 1-2). ARFRP1 functions as a master regulator that coordinates recruitment of multiple tethering factors to the TGN by acting upstream of both ARL1 (which recruits golgin tethers) and ARL5 (which recruits the GARP complex) (ishida2019arfrp1functionsupstream pages 1-2). Knockout of ARFRP1 or SYS1 abolishes ARL5 localization to the TGN and disrupts downstream effector recruitment, including GARP and ARMH3 (ishida2024armh3isan pages 1-2, ishida2024armh3isan pages 3-4, ishida2019arfrp1functionsupstream pages 1-2).</p>
+<p><strong>2. Ragulator-dependent amino acid sensing:</strong> ARL5 participates in a nutrient-responsive pathway linking amino acid availability to membrane trafficking (shi2018aminoacidsstimulate pages 1-2, shi2018aminoacidsstimulate pages 9-10). The Ragulator complex (comprising LAMTOR1-5 subunits) interacts with ARL5 in an amino acid-regulated manner. Under amino acid starvation conditions, ARL5 binds strongly to Ragulator on endolysosomal membranes. Amino acid sufficiency, particularly glutamine availability, weakens the ARL5-Ragulator interaction and promotes GTP loading of ARL5, thereby stimulating retrograde trafficking from endosomes to the Golgi (shi2018aminoacidsstimulate pages 1-2, shi2018aminoacidsstimulate pages 9-10). This regulation occurs through the amino acid sensors SLC38A9 and v-ATPase, but is independent of Rag GTPases and mTORC1, distinguishing it from the canonical amino acid sensing pathway (shi2018aminoacidsstimulate pages 1-2). Ragulator has been proposed to function as a guanine nucleotide exchange factor (GEF) for ARL5, facilitating GDP-to-GTP exchange in response to nutrient availability (shi2018aminoacidsstimulate pages 1-2).</p>
+<h2 id="subcellular-localization">Subcellular Localization</h2>
+<p>ARL5A exhibits dual subcellular localization that reflects its multiple functional roles:</p>
+<p><strong>Primary localization: Trans-Golgi Network (TGN).</strong> ARL5A is predominantly localized to the TGN, where it colocalizes strongly with the TGN marker TGN46 rather than with cis- or medial-Golgi markers (GM130, Giantin) (li2022definingtheproximal pages 8-10). This TGN localization is dependent on the ARFRP1-SYS1 complex and is the site where ARL5A recruits its major effectors—GARP and ARMH3—to regulate retrograde trafficking and phosphoinositide metabolism (ishida2024armh3isan pages 1-2, li2022definingtheproximal pages 8-10, ishida2019arfrp1functionsupstream pages 1-2).</p>
+<p><strong>Secondary localization: Endolysosomes.</strong> Live-cell imaging and immunofluorescence studies have revealed that ARL5, particularly in its GTP-bound form, also localizes to peripheral puncta positive for early endosome (Rab5), late endosome/lysosome (Lamp1), and Ragulator (Lamtor1) markers (shi2018aminoacidsstimulate pages 9-10). This endolysosomal pool of ARL5 is where the protein interacts with Ragulator to sense amino acid levels and coordinate nutrient-responsive membrane trafficking (shi2018aminoacidsstimulate pages 1-2, shi2018aminoacidsstimulate pages 9-10). The dual localization pattern suggests that ARL5A shuttles between or functions at both the TGN and endolysosomal compartments, coordinating retrograde trafficking in response to both spatial cues and nutrient signals.</p>
+<h2 id="effector-proteins-and-molecular-interactions">Effector Proteins and Molecular Interactions</h2>
+<p>ARL5A recruits and activates multiple effector proteins in its GTP-bound form:</p>
+<p><strong>1. GARP complex (VPS51, VPS52, VPS53, VPS54):</strong> GARP is a heterotetrameric multisubunit tethering complex that was the first well-characterized effector of ARL5 (ishida2019arfrp1functionsupstream pages 1-2, ishida2024armh3isan pages 1-2). ARL5 recruits GARP to the TGN, where GARP functions as a tethering factor to promote SNARE-dependent fusion of endosome-derived retrograde transport carriers with the TGN membrane (ishida2019arfrp1functionsupstream pages 1-2, ishida2024armh3isan pages 1-2). Knockout of ARL5 causes partial displacement of GARP from the Golgi and impairs retrograde trafficking of multiple cargo proteins (ishida2024armh3isan pages 1-2, ishida2019arfrp1functionsupstream pages 1-2).</p>
+<p><strong>2. ARMH3 (Armadillo-like helical domain-containing protein 3, also known as C10orf76):</strong> ARMH3 was identified as a novel ARL5 effector through proximity biotinylation (MitoID) screening (ishida2024armh3isan pages 1-2, ishida2024armh3isan pages 3-4, ishida2024armh3isan pages 5-6). ARMH3 binds specifically to active (GTP-bound) ARL5A and ARL5B but not to inactive forms, as demonstrated by yeast two-hybrid assays, co-immunoprecipitation, and mitochondrial relocalization experiments (ishida2024armh3isan pages 3-4, ishida2024armh3isan pages 5-6). ARMH3 recruitment to the Golgi is strictly dependent on the SYS1-ARFRP1-ARL5 axis (ishida2024armh3isan pages 3-4). Functionally, ARMH3 serves as an activator of phosphatidylinositol 4-kinase beta (PI4KB), linking ARL5 to phosphoinositide metabolism at the TGN (ishida2024armh3isan pages 1-2, ishida2024armh3isan pages 5-6).</p>
+<p><strong>3. Phosphatidylinositol 4-kinase beta (PI4KB):</strong> PI4KB is both a direct and indirect effector of ARL5A/ARL5B. Proximity labeling studies identified PI4KB as one of the strongest interactors of ARL5A and ARL5B (li2022definingtheproximal pages 8-10, li2022definingtheproximal pages 2-5). Co-immunoprecipitation experiments confirmed that PI4KB preferentially binds to the GTP-bound form of ARL5, with the interaction mediated through the N-terminal non-catalytic domain of PI4KB (li2022definingtheproximal pages 8-10). ARL5 recruits PI4KB to the trans-Golgi, where it catalyzes synthesis of phosphatidylinositol 4-phosphate (PI4P), the major pool of PI4P at the TGN (ishida2024armh3isan pages 1-2, li2022definingtheproximal pages 8-10, ishida2024armh3isan pages 5-6). Recent work has clarified that this function occurs primarily through the ARL5-ARMH3-PI4KB axis, with ARMH3 serving as the key activator of PI4KB downstream of ARL5 (ishida2024armh3isan pages 5-6).</p>
+<p><strong>4. Ragulator complex:</strong> As described above, the pentameric Ragulator complex (LAMTOR1-5) interacts with ARL5 in an amino acid-dependent manner on endolysosomal membranes, linking nutrient sensing to ARL5 activation and trafficking regulation (shi2018aminoacidsstimulate pages 1-2, shi2018aminoacidsstimulate pages 9-10).</p>
+<h2 id="biological-pathways-and-cellular-functions">Biological Pathways and Cellular Functions</h2>
+<h3 id="1-endosome-to-tgn-retrograde-trafficking">1. Endosome-to-TGN Retrograde Trafficking</h3>
+<p>The primary and best-characterized function of ARL5 is regulation of retrograde membrane trafficking from endosomes to the TGN (ishida2024armh3isan pages 1-2, shi2018aminoacidsstimulate pages 1-2, ishida2019arfrp1functionsupstream pages 1-2). Through recruitment of the GARP tethering complex, ARL5 promotes SNARE-mediated fusion of endosome-derived tubular/vesicular carriers with the TGN membrane (ishida2019arfrp1functionsupstream pages 1-2, ishida2024armh3isan pages 1-2). This pathway is essential for recycling TGN-resident membrane proteins, including TGN46, cation-independent mannose-6-phosphate receptor (CI-MPR), cation-dependent MPR (CD-MPR), furin, and sortilin, which cycle between the TGN, plasma membrane, and endosomes (ishida2024armh3isan pages 1-2, shi2018aminoacidsstimulate pages 1-2).</p>
+<p>Depletion of ARL5 (or its paralogs ARL5A/5B together) significantly impairs retrograde trafficking, leading to mislocalization and accumulation of cargo proteins in endosomal compartments (shi2018aminoacidsstimulate pages 1-2, shi2018aminoacidsstimulate pages 9-10). This defect has downstream consequences for Golgi organization, glycosylation, and protein secretion. The GARP complex requires ARL5 for its proper localization and function; loss of ARL5 causes partial GARP displacement from the Golgi and accumulation of retrograde transport vesicles (ishida2024armh3isan pages 1-2, ishida2019arfrp1functionsupstream pages 1-2).</p>
+<h3 id="2-phosphatidylinositol-4-phosphate-pi4p-synthesis-at-the-tgn">2. Phosphatidylinositol 4-Phosphate (PI4P) Synthesis at the TGN</h3>
+<p>ARL5A and ARL5B regulate the synthesis of PI4P at the TGN through the SYS1-ARFRP1-ARL5-ARMH3-PI4KB signaling axis (ishida2024armh3isan pages 1-2, ishida2024armh3isan pages 5-6). PI4P is a critical signaling lipid at the TGN that recruits additional effector proteins and regulates membrane trafficking and organelle identity (ishida2024armh3isan pages 5-6). </p>
+<p>The mechanism proceeds as follows: Active GTP-bound ARL5 recruits ARMH3 to the TGN; ARMH3 then binds to and activates PI4KB, the kinase responsible for generating the major pool of PI4P at the TGN (ishida2024armh3isan pages 5-6). This was demonstrated through proximity labeling, co-immunoprecipitation, imaging studies showing colocalization of ARL5 with PI4KB and with PI4P biosensors, and functional assays showing that ARL5 or ARMH3 knockout disrupts PI4KB localization and reduces TGN PI4P levels (ishida2024armh3isan pages 1-2, li2022definingtheproximal pages 8-10, ishida2024armh3isan pages 5-6).</p>
+<p>The PI4P generated by this pathway has multiple downstream functions, including recruitment of the oncoprotein GOLPH3, regulation of glycan modifications at the TGN, and promotion of efficient protein secretion (ishida2024armh3isan pages 1-2, ishida2024armh3isan pages 5-6). Double knockout of ARL5A and ARL5B significantly decreases PI4KB colocalization with the TGN marker TGN46, confirming the requirement for ARL5 in this pathway (li2022definingtheproximal pages 8-10).</p>
+<h3 id="3-nutrient-responsive-membrane-trafficking">3. Nutrient-Responsive Membrane Trafficking</h3>
+<p>ARL5 functions as a molecular link between amino acid availability and membrane trafficking, integrating nutrient sensing with endomembrane organization (shi2018aminoacidsstimulate pages 1-2, shi2018aminoacidsstimulate pages 9-10). When cells are starved of amino acids, TGN-resident proteins such as furin become dispersed from the Golgi and accumulate in endosomal compartments. Amino acid sufficiency, particularly glutamine, rapidly stimulates retrograde trafficking, returning these proteins to the TGN (shi2018aminoacidsstimulate pages 1-2).</p>
+<p>This nutrient-stimulated trafficking requires SLC38A9, v-ATPase, Ragulator, ARL5, and GARP, but notably does not require Rag GTPases or mTORC1, distinguishing it from the canonical amino acid-mTORC1 signaling axis (shi2018aminoacidsstimulate pages 1-2). Under starvation conditions, ARL5 interacts strongly with Ragulator on endolysosomes; amino acid refeeding weakens this interaction, potentially allowing Ragulator to function as a GEF to activate ARL5, which then promotes retrograde trafficking via GARP recruitment (shi2018aminoacidsstimulate pages 1-2, shi2018aminoacidsstimulate pages 9-10). This creates a regulatory circuit whereby cellular nutrient status directly modulates the efficiency of membrane recycling and Golgi homeostasis.</p>
+<h3 id="4-protein-secretion-and-golgi-glycosylation">4. Protein Secretion and Golgi Glycosylation</h3>
+<p>Through its dual roles in retrograde trafficking and PI4P synthesis, ARL5 indirectly regulates protein secretion and Golgi glycosylation (ishida2024armh3isan pages 1-2, li2022definingtheproximal pages 8-10, ishida2024armh3isan pages 5-6). Efficient post-Golgi anterograde transport of secreted proteins depends on GARP-mediated retrograde trafficking, as the retrograde pathway recycles factors necessary for forward secretory traffic (ishida2024armh3isan pages 1-2). Additionally, the ARL5-ARMH3-PI4KB axis promotes PI4P production, which contributes to proper localization and function of Golgi glycosylation enzymes (ishida2024armh3isan pages 5-6). Loss of GARP or disruption of the ARL5 pathway leads to defects in N- and O-glycosylation, reduced stability of glycoproteins and Golgi enzymes, and impaired secretion (ishida2024armh3isan pages 1-2).</p>
+<h2 id="experimental-evidence">Experimental Evidence</h2>
+<p>The functional characterization of ARL5A is supported by multiple complementary experimental approaches from recent studies:</p>
+<p><strong>Proximity labeling studies:</strong> MiniTurboID and BioID proximity labeling coupled with quantitative mass spectrometry identified GARP, ARMH3, and PI4KB as high-confidence ARL5A/ARL5B interactors in mammalian cells (li2022definingtheproximal pages 1-2, ishida2024armh3isan pages 1-2, quirion2024mappingtheglobal pages 1-3, li2022definingtheproximal pages 2-5). These unbiased proteomic approaches provided comprehensive interaction networks and identified novel effectors.</p>
+<p><strong>Protein-protein interaction validation:</strong> Direct interactions were confirmed through co-immunoprecipitation showing that GARP, ARMH3, and PI4KB bind preferentially to GTP-bound (active) forms of ARL5A/ARL5B (li2022definingtheproximal pages 8-10, ishida2024armh3isan pages 3-4, ishida2024armh3isan pages 5-6). Yeast two-hybrid assays independently validated activation-state-dependent binding of ARMH3 to ARL5 (ishida2024armh3isan pages 3-4, ishida2024armh3isan pages 5-6).</p>
+<p><strong>Localization studies:</strong> Live-cell imaging and immunofluorescence microscopy demonstrated ARL5 localization to the TGN (with strongest overlap with TGN46) and to peripheral endolysosomal puncta positive for Rab5, Lamp1, and Lamtor1 (li2022definingtheproximal pages 8-10, shi2018aminoacidsstimulate pages 9-10). Mitochondrial relocalization assays (MitoID) confirmed that ARMH3 redistributes to mitochondria when co-expressed with mitochondrially-targeted active ARL5, but not with inactive ARL5 (ishida2024armh3isan pages 3-4).</p>
+<p><strong>Functional trafficking assays:</strong> Multiple cargo proteins (furin, TGN46, CD8a-furin chimeras, CI-MPR) were used to monitor retrograde trafficking in cells with ARL5 knockdown or knockout. These studies showed that ARL5 depletion significantly impairs amino acid-stimulated endosome-to-Golgi trafficking and causes cargo accumulation in endosomes (shi2018aminoacidsstimulate pages 1-2, shi2018aminoacidsstimulate pages 9-10). Rescue experiments with wild-type or constitutively active ARL5 restored trafficking, confirming specificity (shi2018aminoacidsstimulate pages 9-10).</p>
+<p><strong>Genetic and molecular perturbations:</strong> Knockout studies of ARL5, ARFRP1, SYS1, ARMH3, and GARP components defined the hierarchical relationships and dependencies within the pathway. For example, ARFRP1 or SYS1 knockout abolished ARL5-dependent GARP and ARMH3 recruitment, establishing ARFRP1 as an upstream regulator (ishida2024armh3isan pages 1-2, ishida2024armh3isan pages 3-4, ishida2019arfrp1functionsupstream pages 1-2).</p>
+<p><strong>Phosphoinositide measurements:</strong> Live-cell imaging with fluorescent PI4P biosensors (mEGFP-P4M-SidMx2) showed strong colocalization of ARL5 with PI4P at the Golgi, and ARL5 or ARMH3 knockout reduced TGN PI4P levels, directly demonstrating the role of this pathway in phosphoinositide metabolism (li2022definingtheproximal pages 8-10, ishida2024armh3isan pages 5-6).</p>
+<h2 id="evolutionary-conservation">Evolutionary Conservation</h2>
+<p>ARL5 is highly conserved across eukaryotic evolution. Phylogenetic analyses trace Arl5 to the last eukaryotic common ancestor (LECA), indicating its presence in the ancestral eukaryotic cell before the diversification of major lineages (vargova2021aeukaryotewideperspective pages 2-3). Orthologs of ARL5 are found from yeast to mammals, and the core functions in retrograde trafficking appear to be ancient and conserved (vargova2021aeukaryotewideperspective pages 2-3, li2023thearffamily pages 1-3). This deep evolutionary conservation strongly supports the inference that Xenopus tropicalis ARL5A performs analogous functions to its mammalian orthologs, even in the absence of organism-specific experimental studies.</p>
+<h2 id="summary-table">Summary Table</h2>
+<p>A comprehensive summary of ARL5A characteristics and functions is provided below:</p>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Summary for ARL5A</th>
+<th>Evidence / notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Verified identity</td>
+<td>ARL5A is an ARF-like small GTPase of the ARF family; the family is a branch of the Ras superfamily and includes classical ARFs, SARs, ARLs, ARFRP1, and TRIM23. ARL5A is closely related to ARL5B and is typically discussed together with ARL5B in mechanistic studies.</td>
+<td>Family-level reviews describe ARL5A as an ARF-family small GTPase and note that ARL5A/ARL5B are among the ARLs retaining an N-terminal amphipathic helix typical of membrane-associated ARF-family proteins (li2023thearffamily pages 1-3, quirion2025unfoldingarfand pages 1-2). Evolutionary analyses place Arl5 among ancient eukaryotic ARF-family paralogs, indicating deep conservation (vargova2021aeukaryotewideperspective pages 2-3).</td>
+</tr>
+<tr>
+<td>Protein family / domains</td>
+<td>Small GTPase superfamily, ARF family; expected catalytic core is a P-loop NTPase/small GTP-binding domain with ARF-family features, including conformational switching between GDP- and GTP-bound states and membrane association via an N-terminal amphipathic helix.</td>
+<td>General ARF-family structural mechanism and membrane-coupled switching are summarized in recent reviews; these features are directly relevant to ARL5A and consistent with its UniProt domain assignment (li2023thearffamily pages 1-3, quirion2025unfoldingarfand pages 1-2, quirion2024mappingtheglobal pages 1-3).</td>
+</tr>
+<tr>
+<td>Primary molecular function</td>
+<td>Molecular switch GTPase. ARL5A binds and hydrolyzes GTP; in the GTP-bound state it recruits effectors to specific membranes rather than catalyzing chemistry on a small-molecule substrate. Its “substrate” as an enzyme is GTP, producing GDP + Pi, while its biological outputs are mediated through effector recruitment.</td>
+<td>ARF-family proteins cycle between inactive GDP-bound and active GTP-bound states, with GTP binding exposing effector-binding surfaces; ARL5 studies specifically compare active Q70L and inactive T30N states to define effector binding and function (ishida2024armh3isan pages 1-2, li2023thearffamily pages 1-3, li2022definingtheproximal pages 2-5).</td>
+</tr>
+<tr>
+<td>Immediate upstream regulation</td>
+<td>ARL5 recruitment to the trans-Golgi network (TGN) depends on ARFRP1 and the transmembrane protein SYS1; ARFRP1 acts upstream of ARL5 in a Golgi GTPase cascade that coordinates TGN tether recruitment.</td>
+<td>ARFRP1/SYS1-dependent recruitment of ARL5 to the TGN is demonstrated genetically and cell biologically; loss of ARFRP1 or SYS1 abolishes ARL5-dependent ARMH3 Golgi localization and disrupts GARP recruitment (ishida2024armh3isan pages 1-2, ishida2024armh3isan pages 3-4, ishida2019arfrp1functionsupstream pages 1-2).</td>
+</tr>
+<tr>
+<td>Nutrient-responsive regulation</td>
+<td>ARL5 also participates in amino-acid-regulated trafficking. Ragulator interacts with ARL5 in an amino-acid-sensitive manner, and Ragulator has been proposed to act as a GEF-like activator for Arl5 during amino-acid sufficiency; glutamine is especially important in disrupting Arl5–Ragulator binding and stimulating retrograde trafficking.</td>
+<td>Amino acid sufficiency weakens Arl5–Ragulator association and promotes endosome-to-Golgi trafficking; SLC38A9, v-ATPase, and Ragulator are required, whereas Rag GTPases and mTORC1 are dispensable for this trafficking branch (shi2018aminoacidsstimulate pages 1-2, shi2018aminoacidsstimulate pages 9-10).</td>
+</tr>
+<tr>
+<td>Major subcellular localization</td>
+<td>Predominantly trans-Golgi network; additional localization to endosomal/lysosomal compartments has been observed, particularly in the context of Ragulator interaction and nutrient-regulated trafficking.</td>
+<td>ARL5A shows stronger overlap with TGN46 than with cis/medial Golgi markers, indicating TGN enrichment; Arl5 proteins also localize to peripheral puncta positive for Rab5, Lamp1, and Lamtor1 in live-cell imaging/IF studies (li2022definingtheproximal pages 8-10, shi2018aminoacidsstimulate pages 9-10).</td>
+</tr>
+<tr>
+<td>Major effector proteins</td>
+<td>Best-established effectors are the GARP tethering complex and ARMH3; PI4KB is recruited/functionally engaged downstream of ARL5 and ARMH3, and can also be detected as a strong ARL5A/ARL5B interactor in proximity-labeling and co-IP assays.</td>
+<td>GARP was previously established as an ARL5 effector for retrograde trafficking; ARMH3 binds active ARL5A/ARL5B and is recruited to the TGN in a SYS1-ARFRP1-ARL5-dependent manner; PI4KB is a strong ARL5A/ARL5B interactor and functional target at the TGN (ishida2024armh3isan pages 1-2, li2022definingtheproximal pages 8-10, ishida2024armh3isan pages 3-4, ishida2024armh3isan pages 5-6).</td>
+</tr>
+<tr>
+<td>Effector binding specificity</td>
+<td>Effector binding is activation-state dependent: active/GTP-like ARL5A or ARL5B preferentially recruits ARMH3 and PI4KB, whereas inactive/GDP-like mutants show reduced or absent interaction.</td>
+<td>Mitochondrial relocalization, Y2H, co-IP, and colocalization assays show preference of ARMH3 and PI4KB for active ARL5 forms (li2022definingtheproximal pages 8-10, ishida2024armh3isan pages 3-4, ishida2024armh3isan pages 5-6).</td>
+</tr>
+<tr>
+<td>Core biological pathway 1</td>
+<td>Endosome-to-TGN retrograde trafficking. ARL5 recruits GARP to the TGN to promote SNARE-dependent fusion of endosome-derived carriers with the TGN.</td>
+<td>ARL5 is required for GARP localization to the TGN and for efficient delivery of retrograde cargos such as TGN46, CI-MPR, and Shiga toxin-related cargos in mammalian systems (ishida2024armh3isan pages 1-2, shi2018aminoacidsstimulate pages 1-2, ishida2019arfrp1functionsupstream pages 1-2).</td>
+</tr>
+<tr>
+<td>Core biological pathway 2</td>
+<td>TGN phosphoinositide control: ARL5A/ARL5B promote PI4KB-dependent synthesis of PI4P at the TGN, primarily through recruitment of ARMH3, which activates PI4KB.</td>
+<td>Recent work identifies the SYS1-ARFRP1-ARL5-ARMH3 axis as a regulator of PI4KB and the major TGN PI4P pool; earlier proximity-labeling and colocalization studies independently found ARL5A/ARL5B recruit PI4KB to the trans-Golgi (ishida2024armh3isan pages 1-2, li2022definingtheproximal pages 8-10, ishida2024armh3isan pages 5-6).</td>
+</tr>
+<tr>
+<td>Core biological pathway 3</td>
+<td>Nutrient-linked membrane trafficking. ARL5 connects amino-acid sensing machinery to retrograde traffic independently of canonical Rag/mTORC1 output.</td>
+<td>AA-stimulated retrograde trafficking requires SLC38A9, v-ATPase, Ragulator, Arl5, and GARP, linking lysosomal nutrient sensing to Golgi trafficking control (shi2018aminoacidsstimulate pages 1-2, shi2018aminoacidsstimulate pages 9-10).</td>
+</tr>
+<tr>
+<td>Downstream cellular consequences</td>
+<td>Maintenance of TGN organization and Golgi recycling, efficient protein secretion, recruitment of GOLPH3 via PI4P, and proper glycan modification at the TGN.</td>
+<td>ARL5-dependent PI4KB/PI4P signaling contributes to GOLPH3 recruitment and glycan modifications; ARL5A/ARL5B-mediated PI4KB recruitment was also linked to PI4P synthesis and protein secretion in earlier systems-level work (ishida2024armh3isan pages 1-2, li2022definingtheproximal pages 8-10, ishida2024armh3isan pages 5-6).</td>
+</tr>
+<tr>
+<td>Evidence strength / limitations for Xenopus tropicalis</td>
+<td>No organism-specific functional study for Xenopus tropicalis ARL5A was identified in the retrieved literature. Functional annotation for Xenopus ARL5A therefore rests mainly on strong orthology plus conserved domain architecture and detailed mammalian experiments.</td>
+<td>The absence of Xenopus-specific primary literature should be stated explicitly; however, conservation of the ARF-family core mechanism and deep evolutionary retention of Arl5 support careful orthology-based inference (vargova2021aeukaryotewideperspective pages 2-3, li2023thearffamily pages 1-3, quirion2025unfoldingarfand pages 1-2).</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table compiles the main experimentally supported characteristics of ARL5A relevant for functional annotation, including its family assignment, GTPase activity, regulators, localization, effectors, and pathways. It is especially useful because Xenopus-specific literature is sparse, so annotation depends on conserved orthologous evidence from recent mechanistic studies.</em></p>
+<h2 id="conclusions-and-limitations">Conclusions and Limitations</h2>
+<p>ARL5A is a small GTPase of the ARF family that functions as a key regulator of membrane trafficking at the trans-Golgi network and endolysosomal system. Its primary molecular function is to act as a molecular switch, cycling between GDP-bound (inactive) and GTP-bound (active) states, with the active form recruiting specific effector proteins—most notably the GARP tethering complex, ARMH3, and PI4KB. ARL5A operates within three integrated biological pathways: (1) endosome-to-TGN retrograde trafficking, essential for recycling TGN-resident proteins and maintaining Golgi organization; (2) PI4P synthesis at the TGN via the ARMH3-PI4KB axis, regulating phosphoinositide signaling and protein secretion; and (3) nutrient-responsive trafficking, linking amino acid availability sensed by Ragulator to membrane trafficking dynamics.</p>
+<p>The regulation of ARL5A occurs through the upstream ARFRP1-SYS1 complex, which recruits ARL5 to the TGN, and through Ragulator-mediated amino acid sensing, which modulates ARL5 activity in response to nutrient status. The protein localizes primarily to the TGN but also to endolysosomes, reflecting its dual roles in spatial membrane organization and nutrient sensing.</p>
+<p><strong>Important limitation:</strong> No experimental studies specific to Xenopus tropicalis ARL5A were identified in the current literature. All functional annotations presented here are inferred from mammalian orthologs (primarily human and mouse ARL5A/ARL5B). However, the deep evolutionary conservation of ARL5 across eukaryotes, including its presence in LECA, provides strong support for functional conservation in Xenopus tropicalis. The Xenopus ARL5A protein contains the expected ARF-family domains (P-loop NTPase, Small GTPase ARF domain) as annotated in UniProt, consistent with this orthology-based inference.</p>
+<h2 id="key-references">Key References</h2>
+<p>Recent high-quality mechanistic studies informing this report include:</p>
+<ul>
+<li>Li et al. (2022) <em>EMBO Journal</em> - Systematic ARF family interactome by miniTurboID-MS (li2022definingtheproximal pages 1-2, li2022definingtheproximal pages 2-5)</li>
+<li>Ishida &amp; Bonifacino (2019) <em>Journal of Cell Biology</em> - ARFRP1-ARL1-ARL5 GTPase cascade at TGN (ishida2019arfrp1functionsupstream pages 1-2)</li>
+<li>Ishida et al. (2024) <em>Nature Communications</em> - ARMH3 as ARL5 effector for PI4KB regulation (ishida2024armh3isan pages 1-2, ishida2024armh3isan pages 3-4, ishida2024armh3isan pages 5-6)</li>
+<li>Shi et al. (2018) <em>Nature Communications</em> - Amino acid-stimulated trafficking via Ragulator and Arl5 (shi2018aminoacidsstimulate pages 1-2, shi2018aminoacidsstimulate pages 9-10)</li>
+<li>Quirion et al. (2024) <em>Journal of Cell Science</em> - Global ARF/ARL interactome mapping (quirion2024mappingtheglobal pages 1-3, quirion2024mappingtheglobal pages 3-5)</li>
+<li>Li &amp; Guan (2023) <em>BioEssays</em> - ARF family function review (li2023thearffamily pages 1-3)</li>
+<li>Quirion et al. (2025) <em>Frontiers in Molecular Biosciences</em> - Atypical ARF/ARL properties review (quirion2025unfoldingarfand pages 1-2)</li>
+<li>Vargová et al. (2021) <em>Genome Biology and Evolution</em> - ARF family evolutionary analysis (vargova2021aeukaryotewideperspective pages 2-3)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(ishida2024armh3isan pages 1-2): Morié Ishida, Adriana E. Golding, Tal Keren-Kaplan, Yan Li, Tamas Balla, and Juan S. Bonifacino. Armh3 is an arl5 effector that promotes pi4kb-catalyzed pi4p synthesis at the trans-golgi network. Nature Communications, Nov 2024. URL: https://doi.org/10.1038/s41467-024-54410-y, doi:10.1038/s41467-024-54410-y. This article has 8 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(shi2018aminoacidsstimulate pages 1-2): Meng Shi, Bing Chen, Divyanshu Mahajan, Boon Kim Boh, Yan Zhou, Bamaprasad Dutta, Hieng Chiong Tie, Siu Kwan Sze, Geng Wu, and Lei Lu. Amino acids stimulate the endosome-to-golgi trafficking through ragulator and small gtpase arl5. Nature Communications, Nov 2018. URL: https://doi.org/10.1038/s41467-018-07444-y, doi:10.1038/s41467-018-07444-y. This article has 30 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(vargova2021aeukaryotewideperspective pages 2-3): Romana Vargová, Jeremy G. Wideman, Romain Derelle, Vladimír Klimeš, Richard A. Kahn, Joel B. Dacks, and Marek Eliáš. A eukaryote-wide perspective on the diversity and evolution of the arf gtpase protein family. Genome Biology and Evolution, Nov 2021. URL: https://doi.org/10.1093/gbe/evab157, doi:10.1093/gbe/evab157. This article has 47 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(li2023thearffamily pages 1-3): Fu‐Long Li and Kun‐Liang Guan. The arf family gtpases: regulation of vesicle biogenesis and beyond. BioEssays, Mar 2023. URL: https://doi.org/10.1002/bies.202200214, doi:10.1002/bies.202200214. This article has 18 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(quirion2025unfoldingarfand pages 1-2): Laura Quirion, Regina Strakhova, Matthew J. Smith, and Jean-François Côté. Unfolding arf and arl gtpases: from biophysics to systems-level insights. Frontiers in Molecular Biosciences, Dec 2025. URL: https://doi.org/10.3389/fmolb.2025.1712544, doi:10.3389/fmolb.2025.1712544. This article has 0 citations.</p>
+</li>
+<li>
+<p>(ishida2019arfrp1functionsupstream pages 1-2): Morié Ishida and Juan S. Bonifacino. Arfrp1 functions upstream of arl1 and arl5 to coordinate recruitment of distinct tethering factors to the trans-golgi network. The Journal of Cell Biology, 218:3681-3696, Oct 2019. URL: https://doi.org/10.1083/jcb.201905097, doi:10.1083/jcb.201905097. This article has 53 citations.</p>
+</li>
+<li>
+<p>(li2022definingtheproximal pages 2-5): Fu‐Long Li, Zhengming Wu, Yong‐Qi Gao, Forrest Z Bowling, J Matthew Franklin, Chongze Hu, Raymond T Suhandynata, Michael A Frohman, Michael V Airola, Huilin Zhou, and Kun‐Liang Guan. Defining the proximal interaction networks of arf gtpases reveals a mechanism for the regulation of pld1 and pi4kb. The EMBO Journal, Jul 2022. URL: https://doi.org/10.15252/embj.2022110698, doi:10.15252/embj.2022110698. This article has 26 citations.</p>
+</li>
+<li>
+<p>(ishida2024armh3isan pages 3-4): Morié Ishida, Adriana E. Golding, Tal Keren-Kaplan, Yan Li, Tamas Balla, and Juan S. Bonifacino. Armh3 is an arl5 effector that promotes pi4kb-catalyzed pi4p synthesis at the trans-golgi network. Nature Communications, Nov 2024. URL: https://doi.org/10.1038/s41467-024-54410-y, doi:10.1038/s41467-024-54410-y. This article has 8 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ishida2024armh3isan pages 5-6): Morié Ishida, Adriana E. Golding, Tal Keren-Kaplan, Yan Li, Tamas Balla, and Juan S. Bonifacino. Armh3 is an arl5 effector that promotes pi4kb-catalyzed pi4p synthesis at the trans-golgi network. Nature Communications, Nov 2024. URL: https://doi.org/10.1038/s41467-024-54410-y, doi:10.1038/s41467-024-54410-y. This article has 8 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(shi2018aminoacidsstimulate pages 9-10): Meng Shi, Bing Chen, Divyanshu Mahajan, Boon Kim Boh, Yan Zhou, Bamaprasad Dutta, Hieng Chiong Tie, Siu Kwan Sze, Geng Wu, and Lei Lu. Amino acids stimulate the endosome-to-golgi trafficking through ragulator and small gtpase arl5. Nature Communications, Nov 2018. URL: https://doi.org/10.1038/s41467-018-07444-y, doi:10.1038/s41467-018-07444-y. This article has 30 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(li2022definingtheproximal pages 8-10): Fu‐Long Li, Zhengming Wu, Yong‐Qi Gao, Forrest Z Bowling, J Matthew Franklin, Chongze Hu, Raymond T Suhandynata, Michael A Frohman, Michael V Airola, Huilin Zhou, and Kun‐Liang Guan. Defining the proximal interaction networks of arf gtpases reveals a mechanism for the regulation of pld1 and pi4kb. The EMBO Journal, Jul 2022. URL: https://doi.org/10.15252/embj.2022110698, doi:10.15252/embj.2022110698. This article has 26 citations.</p>
+</li>
+<li>
+<p>(li2022definingtheproximal pages 1-2): Fu‐Long Li, Zhengming Wu, Yong‐Qi Gao, Forrest Z Bowling, J Matthew Franklin, Chongze Hu, Raymond T Suhandynata, Michael A Frohman, Michael V Airola, Huilin Zhou, and Kun‐Liang Guan. Defining the proximal interaction networks of arf gtpases reveals a mechanism for the regulation of pld1 and pi4kb. The EMBO Journal, Jul 2022. URL: https://doi.org/10.15252/embj.2022110698, doi:10.15252/embj.2022110698. This article has 26 citations.</p>
+</li>
+<li>
+<p>(quirion2024mappingtheglobal pages 1-3): Laura Quirion, Amélie Robert, Jonathan Boulais, Shiying Huang, Gabriela Bernal Astrain, Regina Strakhova, Chang Hwa Jo, Yacine Kherdjemil, Denis Faubert, Marie-Pier Thibault, Marie Kmita, Jeremy M. Baskin, Anne-Claude Gingras, Matthew J. Smith, and Jean-François Côté. Mapping the global interactome of the arf family reveals spatial organization in cellular signaling pathways. Journal of Cell Science, Apr 2024. URL: https://doi.org/10.1242/jcs.262140, doi:10.1242/jcs.262140. This article has 16 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(quirion2024mappingtheglobal pages 3-5): Laura Quirion, Amélie Robert, Jonathan Boulais, Shiying Huang, Gabriela Bernal Astrain, Regina Strakhova, Chang Hwa Jo, Yacine Kherdjemil, Denis Faubert, Marie-Pier Thibault, Marie Kmita, Jeremy M. Baskin, Anne-Claude Gingras, Matthew J. Smith, and Jean-François Côté. Mapping the global interactome of the arf family reveals spatial organization in cellular signaling pathways. Journal of Cell Science, Apr 2024. URL: https://doi.org/10.1242/jcs.262140, doi:10.1242/jcs.262140. This article has 16 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="F6WPT1-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>vargova2021aeukaryotewideperspective pages 2-3</li>
+<li>quirion2025unfoldingarfand pages 1-2</li>
+<li>shi2018aminoacidsstimulate pages 1-2</li>
+<li>li2022definingtheproximal pages 8-10</li>
+<li>shi2018aminoacidsstimulate pages 9-10</li>
+<li>li2023thearffamily pages 1-3</li>
+<li>li2022definingtheproximal pages 2-5</li>
+<li>li2022definingtheproximal pages 1-2</li>
+<li>quirion2024mappingtheglobal pages 1-3</li>
+<li>quirion2024mappingtheglobal pages 3-5</li>
+<li>https://doi.org/10.1038/s41467-024-54410-y,</li>
+<li>https://doi.org/10.1038/s41467-018-07444-y,</li>
+<li>https://doi.org/10.1093/gbe/evab157,</li>
+<li>https://doi.org/10.1002/bies.202200214,</li>
+<li>https://doi.org/10.3389/fmolb.2025.1712544,</li>
+<li>https://doi.org/10.1083/jcb.201905097,</li>
+<li>https://doi.org/10.15252/embj.2022110698,</li>
+<li>https://doi.org/10.1242/jcs.262140,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: F6WPT1
+gene_symbol: arl5a
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:8364
+  label: Xenopus tropicalis
+description: &gt;-
+  ARL5A (ADP-ribosylation factor-like protein 5A) is a small GTPase of the ARF
+  (ADP-ribosylation factor) family in the Ras superfamily. It functions as a
+  molecular switch cycling between inactive GDP-bound and active GTP-bound states,
+  with GTP hydrolysis as its primary enzymatic activity. ARL5A is predominantly
+  localized to the trans-Golgi network (TGN), where it is recruited by the upstream
+  GTPase ARFRP1 in complex with the transmembrane protein SYS1. In its GTP-bound
+  state, ARL5A recruits effector proteins including the GARP tethering complex
+  (VPS51/52/53/54), ARMH3, and phosphatidylinositol 4-kinase beta (PI4KB). Through
+  GARP recruitment, ARL5A promotes SNARE-dependent fusion of endosome-derived
+  retrograde transport carriers with the TGN membrane, enabling recycling of
+  TGN-resident proteins such as TGN46, mannose-6-phosphate receptors, furin, and
+  sortilin. Through the ARMH3-PI4KB axis, ARL5A promotes synthesis of
+  phosphatidylinositol 4-phosphate (PI4P) at the TGN, a critical signaling lipid
+  for membrane trafficking and organelle identity. ARL5A also localizes to
+  endolysosomal compartments, where it interacts with the Ragulator complex
+  (LAMTOR1-5) in an amino acid-sensitive manner, linking nutrient sensing to
+  retrograde trafficking independently of the Rag GTPase-mTORC1 pathway. ARL5 is
+  conserved across eukaryotes and was present in the last eukaryotic common ancestor
+  (LECA). No Xenopus tropicalis-specific functional studies have been reported;
+  functional annotation rests on strong orthology with mammalian ARL5A/ARL5B, which
+  have been characterized in detail through proximity labeling, knockout studies,
+  and live-cell imaging.
+existing_annotations:
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic annotation of cytoplasm localization based on broad Arf-family
+      orthology. ARL5A is a soluble protein that associates with membranes via an
+      N-terminal amphipathic helix; it is expected to be present in the cytoplasm
+      when in its GDP-bound (inactive) state, prior to membrane recruitment.
+      However, cytoplasm is an extremely broad term and does not capture the
+      functionally relevant localization of ARL5A at the TGN and endolysosomes.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The annotation is not incorrect -- ARL5A is a peripheral membrane protein
+      that cycles through the cytoplasm -- but it is too broad to be informative
+      about the actual site of action. The functionally meaningful localization
+      is at the trans-Golgi network and endolysosomes. Kept as non-core rather
+      than removed because cytoplasmic localization of the GDP-bound pool is
+      biologically real.
+- term:
+    id: GO:0016192
+    label: vesicle-mediated transport
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic annotation of vesicle-mediated transport. ARL5A regulates
+      endosome-to-TGN retrograde trafficking by recruiting the GARP tethering
+      complex, which promotes SNARE-dependent fusion of endosome-derived carriers
+      with the TGN. This is clearly a form of vesicle-mediated transport, though
+      the term is broad.
+    action: ACCEPT
+    reason: &gt;-
+      ARL5A has a well-established role in vesicle-mediated transport, specifically
+      endosome-to-TGN retrograde trafficking mediated by GARP-dependent vesicle
+      tethering and SNARE-dependent fusion. The IBA inference from Arf-family
+      orthologs is well supported by experimental evidence in mammalian systems.
+      While more specific BP terms could be used, this annotation accurately
+      captures a core function of ARL5A.
+- term:
+    id: GO:0006886
+    label: intracellular protein transport
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic annotation of intracellular protein transport. ARL5A mediates
+      retrograde transport of cargo proteins (TGN46, mannose-6-phosphate receptors,
+      furin, sortilin) from endosomes back to the TGN. This is a form of
+      intracellular protein transport, though the term is broad.
+    action: ACCEPT
+    reason: &gt;-
+      ARL5A is directly involved in intracellular protein transport -- specifically,
+      the retrograde transport of TGN-resident membrane proteins from endosomes
+      back to the TGN. Loss of ARL5 causes mislocalization and endosomal
+      accumulation of these cargo proteins. The IBA annotation is consistent with
+      the known function from mammalian orthologs.
+- term:
+    id: GO:0005525
+    label: GTP binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetic annotation of GTP binding. ARL5A is a small GTPase that cycles
+      between GDP-bound and GTP-bound states. GTP binding is an inherent property
+      of all ARF-family GTPases and is essential for ARL5A function, as the
+      GTP-bound form recruits effectors GARP, ARMH3, and PI4KB. The UniProt entry
+      includes a GTP-binding site at residues 23-30, 69, and 125-128.
+    action: ACCEPT
+    reason: &gt;-
+      GTP binding is a fundamental and well-established molecular function of
+      ARL5A as a member of the ARF-family small GTPases. The protein contains
+      conserved GTP-binding motifs (P-loop, switch regions) confirmed by domain
+      analysis. Mutant studies (constitutively active Q70L and dominant-negative
+      T30N) confirm the GTP-binding cycle is essential for function.
+- term:
+    id: GO:0005802
+    label: trans-Golgi network
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic annotation of trans-Golgi network localization. The TGN is
+      the primary site of ARL5A function. In mammalian cells, ARL5A colocalizes
+      strongly with the TGN marker TGN46 rather than with cis- or medial-Golgi
+      markers. TGN localization is dependent on the upstream ARFRP1-SYS1 complex,
+      and it is at the TGN that ARL5A recruits its major effectors GARP, ARMH3,
+      and PI4KB.
+    action: ACCEPT
+    reason: &gt;-
+      Trans-Golgi network localization is the primary and best-characterized
+      subcellular location for ARL5A function. Immunofluorescence and live-cell
+      imaging in mammalian systems demonstrate strong TGN enrichment, and
+      genetic studies show TGN localization depends on the upstream ARFRP1-SYS1
+      complex. This is a core localization annotation.
+- term:
+    id: GO:1903292
+    label: protein localization to Golgi membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic annotation of involvement in protein localization to Golgi
+      membrane. ARL5A promotes retrograde transport of cargo proteins from
+      endosomes to the TGN via GARP recruitment, which effectively maintains the
+      steady-state localization of TGN-resident membrane proteins at the Golgi.
+      Loss of ARL5 causes displacement of proteins such as TGN46 from the Golgi,
+      consistent with a role in protein localization to Golgi membrane.
+    action: ACCEPT
+    reason: &gt;-
+      ARL5A-dependent retrograde trafficking is essential for maintaining the
+      localization of TGN-resident proteins at the Golgi. When ARL5 is depleted,
+      cargo proteins accumulate in endosomes rather than at the TGN. The IBA
+      annotation accurately reflects this role. This is a downstream consequence
+      of GARP-mediated retrograde transport.
+- term:
+    id: GO:0003924
+    label: GTPase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      InterPro-based annotation of GTPase activity derived from the ARF/SAR
+      family domain (IPR006689). ARL5A is a small GTPase that hydrolyzes GTP to
+      GDP plus inorganic phosphate. The GTPase cycle (GTP-bound active to
+      GDP-bound inactive) is the core molecular switch mechanism that controls
+      ARL5A effector recruitment and membrane trafficking function.
+    action: ACCEPT
+    reason: &gt;-
+      GTPase activity is a core molecular function of ARL5A. As an ARF-family
+      GTPase, the protein hydrolyzes GTP as part of its regulatory cycle. The
+      InterPro domain assignment (IPR006689, Small_GTPase_ARF/SAR) is correct,
+      and the P-loop NTPase fold with conserved catalytic residues supports
+      GTPase activity. This is distinct from but complementary to the GTP binding
+      annotation -- together they describe the complete GTPase cycle.
+- term:
+    id: GO:0005525
+    label: GTP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      InterPro-based annotation of GTP binding derived from multiple domain hits
+      (IPR005225 Small_GTP-bd, IPR006689 Small_GTPase_ARF/SAR, IPR024156
+      Small_GTPase_ARF). This annotation is redundant with the IBA annotation
+      for the same term (GO:0005525) but derives from a different evidence source.
+      The GTP-binding site residues are annotated in the UniProt entry at positions
+      23-30, 69, and 125-128.
+    action: ACCEPT
+    reason: &gt;-
+      GTP binding is a fundamental function of ARL5A confirmed by multiple
+      independent domain annotations. While redundant with the IBA annotation for
+      the same GO term, the InterPro evidence provides independent computational
+      support. The domain architecture (Arf domain, P-loop NTPase fold) is
+      fully consistent with GTP binding activity.
+- term:
+    id: GO:1903292
+    label: protein localization to Golgi membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      ARBA machine learning prediction of involvement in protein localization to
+      Golgi membrane. This is redundant with the IBA annotation for the same term
+      (GO:1903292) but derives from an independent computational method. ARL5A
+      promotes retrograde transport from endosomes to the TGN, maintaining
+      steady-state localization of TGN-resident proteins at the Golgi membrane.
+    action: ACCEPT
+    reason: &gt;-
+      The ARBA prediction is consistent with established ARL5A function in
+      retrograde trafficking to the TGN. While redundant with the IBA annotation,
+      the ARBA prediction provides independent computational support. The
+      biological role in maintaining Golgi membrane protein localization through
+      GARP-dependent retrograde trafficking is well-established in mammalian
+      systems.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+core_functions:
+  - description: &gt;-
+      ARL5A is a small GTPase of the ARF family that functions as a molecular switch
+      at the trans-Golgi network, regulating endosome-to-TGN retrograde membrane
+      trafficking and phosphoinositide metabolism. In its GTP-bound state, ARL5A
+      recruits the GARP tethering complex to promote SNARE-dependent fusion of
+      endosome-derived transport carriers with the TGN membrane, enabling recycling
+      of TGN-resident proteins (TGN46, mannose-6-phosphate receptors, furin,
+      sortilin). ARL5A also recruits ARMH3, which activates PI4KB to synthesize
+      PI4P at the TGN. TGN localization of ARL5A depends on the upstream ARFRP1-SYS1
+      complex. Additionally, ARL5A interacts with the Ragulator complex at
+      endolysosomes in an amino acid-sensitive manner, linking nutrient sensing to
+      retrograde trafficking independently of the Rag-mTORC1 pathway. No
+      Xenopus-specific studies exist; annotation is based on conserved orthology
+      with mammalian ARL5A/ARL5B.
+    molecular_function:
+      id: GO:0003924
+      label: GTPase activity
+    directly_involved_in:
+      - id: GO:0006886
+        label: intracellular protein transport
+      - id: GO:0016192
+        label: vesicle-mediated transport
+    locations:
+      - id: GO:0005802
+        label: trans-Golgi network
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -101,3 +101,52 @@ Synonyms: CPP32, Yama, apopain, SCA-1. Heterotetramer of two p17 (large) + p12 (
   polymerase" (DIP/E2F1 intrinsic apoptosis).
 - PMID:33852854: GSDME "cleaved by apoptosis-associated CASP3"; non-cleavable GSDME D270A "altered at the CASP3
   cleavage and activation site."
+
+## Falcon deep research integration (2026-06-21)
+
+Falcon (Edison) deep-research report is in `CASP3-deep-research-falcon.md`; it strongly corroborates the existing
+review/annotations (executioner cysteine-aspartate protease, EC 3.4.22.56, DxxD specificity, CASP8/9 activation,
+PARP1/ICAD/GSDME substrates, cytoplasmic+nuclear localization, non-apoptotic differentiation roles, IFN restraint),
+adding no contradictions but a few refinements. All Falcon-sourced citations below are not yet independently verified
+against full text.
+
+New / refined points (beyond existing notes):
+- Refined cleavage motif: native-lysate subtiligase N-terminomics gives a stronger CASP3 consensus DEVD↓(G/S/A) at
+  P4-P1↓P1' (not just generic DxxD↓), with cleavage also gated by local structural accessibility. [Araya et al.,
+  ACS Chem Biol 2021, doi:10.1021/acschembio.1c00456; Soni & Hardy, Biochemistry 2021, doi:10.1021/acs.biochem.1c00459]
+  (not yet independently verified against full text)
+- Scale of substrate repertoire quantified: ~906 putative substrates / 1126 cleavage sites in native lysates, of which
+  577 sites and 257 substrates were novel vs the apoptosis DegraBase; substrates ~49% cytoplasmic and ~48% nuclear.
+  [Araya et al., ACS Chem Biol 2021, doi:10.1021/acschembio.1c00456] (not yet independently verified against full text)
+- CASP3 vs CASP7 non-redundancy: human GSDME is cleaved efficiently by CASP3 but not by CASP7 (attributed to CASP7 p10
+  subunit / prime-side recognition differences), supporting CASP3 as the dominant/most proteolytically proficient
+  executioner. [Blais & Denault, Biosci Rep 2026, doi:10.1042/bsr20254030; Mustafa et al., Cells 2024,
+  doi:10.3390/cells13221838] (not yet independently verified against full text)
+- New substrate: CAD (carbamoyl-phosphate synthetase 2/aspartate transcarbamylase/dihydroorotase, CAD enzyme of
+  pyrimidine synthesis) cleaved at Asp1371 prior to degradation, linking CASP3 to pyrimidine synthesis control and
+  chemosensitivity. [Tannous et al., Bioconjug Chem 2025, doi:10.1021/acs.bioconjchem.5c00151] (not yet independently
+  verified against full text) — note potential ambiguity: report's "CAD" elsewhere also denotes caspase-activated DNase.
+- Non-apoptotic cytoprotective autophagy / DDR: CASP3+CASP7 promote starvation- or proteasome-inhibition-induced
+  cytoprotective autophagy and the DNA-damage response in breast cancer cells; loss reduces LC3B/ATG7 and H2AX
+  phosphorylation, and is synthetic-lethal with BRCA1 deficiency. [Samarasekera et al., PLoS Biol 2025,
+  doi:10.1371/journal.pbio.3003034] (not yet independently verified against full text) — relevant to existing
+  GO:0016241 regulation of macroautophagy annotation.
+- IFN restraint mechanism specified: CASP3/7 prevent MOMP-released mtRNA from triggering the MDA5/MAVS/IRF3 type I IFN
+  pathway, keeping apoptosis immunologically silent. [Killarney et al., Nat Commun 2023, doi:10.1038/s41467-023-37146-z]
+  (not yet independently verified against full text) — consistent with existing GO:0001818 negative regulation of
+  cytokine production / cGAS-MAVS-IRF3 cleavage notes (PMID:30878284).
+- Neural stem cell differentiation: non-apoptotic CASP3/7 events bias adult NSCs toward direct (division-independent)
+  neuronal conversion, requiring transcription factor Atf3 (zebrafish tracer). [Rosa et al., Development 2024,
+  doi:10.1242/dev.204381] (not yet independently verified against full text) — supports existing neuron-differentiation
+  / non-core developmental annotations.
+- Non-apoptotic synaptic role + context-dependent pro-oncogenic role: CASP3 drives synaptic pruning / dendritic-spine
+  loss / LTD without death (Parkinson model), and via EndoG->nucleus and Src-STAT3 can promote oncogenic transformation.
+  [Fieblinger et al., Int J Mol Sci 2022, doi:10.3390/ijms23105470] (not yet independently verified against full text) —
+  consistent with existing synapse-pruning (GO:0098883) non-core annotations.
+
+Discrepancies / annotations to revisit:
+- No direct contradictions with the existing review were found; Falcon is consistent with the curated picture.
+- The execution/substrate-cleavage themes (autophagy regulation, IFN/cytokine restraint, NSC and synaptic roles) are
+  already captured as ACCEPT or KEEP_AS_NON_CORE, so no action implied for those. The only candidate for a possible
+  NEW supporting annotation is the CASP3-vs-CASP7 substrate-discrimination point, but this is a comparative-biochemistry
+  observation rather than a new GO term for CASP3 itself; no annotation change recommended from Falcon alone.

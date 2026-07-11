@@ -100,15 +100,15 @@ def parse_frontmatter(content: str) -> Tuple[Dict[str, Any], str]:
     '# No frontmatter here'
     """
     # Check if content starts with frontmatter delimiter
-    if not content.startswith('---'):
+    if not content.startswith("---"):
         return {}, content
 
     # Find the closing delimiter
-    lines = content.split('\n')
+    lines = content.split("\n")
     end_idx = None
 
     for i, line in enumerate(lines[1:], start=1):
-        if line.strip() == '---':
+        if line.strip() == "---":
             end_idx = i
             break
 
@@ -118,7 +118,7 @@ def parse_frontmatter(content: str) -> Tuple[Dict[str, Any], str]:
 
     # Extract and parse frontmatter
     frontmatter_lines = lines[1:end_idx]
-    frontmatter_text = '\n'.join(frontmatter_lines)
+    frontmatter_text = "\n".join(frontmatter_lines)
 
     try:
         frontmatter = yaml.safe_load(frontmatter_text) or {}
@@ -126,7 +126,7 @@ def parse_frontmatter(content: str) -> Tuple[Dict[str, Any], str]:
         frontmatter = {}
 
     # Return remaining content (after the closing ---)
-    remaining = '\n'.join(lines[end_idx + 1:])
+    remaining = "\n".join(lines[end_idx + 1 :])
 
     return frontmatter, remaining
 
@@ -148,6 +148,15 @@ def _frontmatter_bool(value: Any, default: bool) -> bool:
     return default
 
 
+def _as_string_list(value: Any) -> List[str]:
+    """Normalize a frontmatter scalar/list to a list of strings."""
+    if value is None:
+        return []
+    if isinstance(value, (list, tuple, set)):
+        return [str(v) for v in value]
+    return [str(value)]
+
+
 def should_autolink_gene_symbols(frontmatter: Dict[str, Any]) -> bool:
     """Return whether automatic prose gene-symbol linking should run.
 
@@ -166,6 +175,70 @@ def should_autolink_gene_symbols(frontmatter: Dict[str, Any]) -> bool:
             default=False,
         )
     return True
+
+
+def resolve_frontmatter_gene_links(
+    genes_value: Any,
+    symbol_index: Dict[str, List[str]],
+    species_hints: Optional[List[str]] = None,
+    genes_dir: Path = Path("genes"),
+    base_path: str = "../../genes",
+) -> Tuple[List[Dict[str, str]], List[str]]:
+    """Resolve ``genes:`` frontmatter entries to gene-review links.
+
+    Bare symbols use the same priority-ordered ``species:`` hint semantics as
+    prose autolinking. Entries may also be species-qualified as ``CODE/symbol``
+    to target a specific review in multispecies projects.
+    """
+    species_hints = species_hints or []
+    links: List[Dict[str, str]] = []
+    warnings: List[str] = []
+
+    for raw_gene in _as_string_list(genes_value):
+        label = raw_gene
+        species = ""
+        symbol = raw_gene
+        url = ""
+
+        if "/" in raw_gene:
+            code, candidate_symbol = raw_gene.split("/", 1)
+            if (genes_dir / code / candidate_symbol).is_dir():
+                species = code
+                symbol = candidate_symbol
+                url = f"{base_path}/{species}/{symbol}/{symbol}-ai-review.html"
+            elif (genes_dir / code).is_dir():
+                warnings.append(
+                    f"Frontmatter gene '{raw_gene}' not found "
+                    f"(no genes/{code}/{candidate_symbol})."
+                )
+        else:
+            species_list = symbol_index.get(raw_gene, [])
+            if len(species_list) == 1:
+                species = species_list[0]
+                url = f"{base_path}/{species}/{symbol}/{symbol}-ai-review.html"
+            elif species_list:
+                for hint in species_hints:
+                    if hint in species_list:
+                        species = hint
+                        url = f"{base_path}/{species}/{symbol}/{symbol}-ai-review.html"
+                        break
+                if not url:
+                    warnings.append(
+                        f"Ambiguous frontmatter gene '{raw_gene}' found in species: "
+                        f"{', '.join(species_list)}. Add a matching species hint "
+                        "or use CODE/symbol in genes: to resolve."
+                    )
+
+        links.append(
+            {
+                "label": label,
+                "species": species,
+                "symbol": symbol,
+                "url": url,
+            }
+        )
+
+    return links, warnings
 
 
 def replace_gene_symbols(
@@ -246,7 +319,7 @@ def replace_gene_symbols(
     # The displayed text is always whatever the author wrote; only the link
     # URL uses the canonical directory casing.
     def _rule_a(symbol: str) -> bool:
-        return ('-' in symbol) or any(ch.isdigit() for ch in symbol)
+        return ("-" in symbol) or any(ch.isdigit() for ch in symbol)
 
     def _rule_b(symbol: str) -> bool:
         return (
@@ -310,7 +383,7 @@ def replace_gene_symbols(
     def replace_match(match: re.Match) -> str:
         """Replace a matched symbol with a link if resolvable."""
         full_match = match.group(0)
-        matched = match.group('symbol')
+        matched = match.group("symbol")
 
         symbol = canonical_symbol(matched)
         if symbol is None:
@@ -324,7 +397,7 @@ def replace_gene_symbols(
         link = make_link(matched, symbol, species)
 
         # Preserve bold markers if present
-        if full_match.startswith('**') and full_match.endswith('**'):
+        if full_match.startswith("**") and full_match.endswith("**"):
             return f"**{link}**"
 
         return link
@@ -370,26 +443,28 @@ def replace_gene_symbols(
             alternatives.append(escaped)
             if _rule_b(s):
                 alternatives.append(re.escape(s[0].upper() + s[1:]))
-    symbols_pattern = '|'.join(alternatives)
+    symbols_pattern = "|".join(alternatives)
 
     # Pattern to match:
     # 1. Bold symbols: **SYMBOL**
     # 2. Plain symbols at word boundaries
     # Negative lookbehind for alphanumeric/underscore to avoid partial matches
     # Negative lookahead for alphanumeric/underscore/hyphen to avoid partial matches
-    pattern = rf'(?P<bold>\*\*)?(?P<symbol>{symbols_pattern})(?P=bold)?(?![a-zA-Z0-9_-])'
+    pattern = (
+        rf"(?P<bold>\*\*)?(?P<symbol>{symbols_pattern})(?P=bold)?(?![a-zA-Z0-9_-])"
+    )
 
     # Use a more careful approach: only match at word boundaries
     # This pattern handles:
     # - Start of line or after whitespace/punctuation
     # - End of line or before whitespace/punctuation
-    pattern = rf'(?<![a-zA-Z0-9_/])(?P<bold>\*\*)?(?P<symbol>{symbols_pattern})(?(bold)\*\*)(?![a-zA-Z0-9_-])'
+    pattern = rf"(?<![a-zA-Z0-9_/])(?P<bold>\*\*)?(?P<symbol>{symbols_pattern})(?(bold)\*\*)(?![a-zA-Z0-9_-])"
 
     symbol_regex = re.compile(pattern)
     preserve_regex = re.compile(
-        r'(?P<fenced>```.*?```)'
-        r'|(?P<code>`[^`]*`)'
-        r'|(?P<link>\[[^\]]*\]\([^)]*\))',
+        r"(?P<fenced>```.*?```)"
+        r"|(?P<code>`[^`]*`)"
+        r"|(?P<link>\[[^\]]*\]\([^)]*\))",
         flags=re.DOTALL,
     )
 
@@ -400,14 +475,16 @@ def replace_gene_symbols(
     last_end = 0
     for match in preserve_regex.finditer(content):
         if match.start() > last_end:
-            parts.append(symbol_regex.sub(replace_match, content[last_end:match.start()]))
+            parts.append(
+                symbol_regex.sub(replace_match, content[last_end : match.start()])
+            )
         parts.append(match.group(0))
         last_end = match.end()
 
     if last_end < len(content):
         parts.append(symbol_regex.sub(replace_match, content[last_end:]))
 
-    result = ''.join(parts)
+    result = "".join(parts)
 
     return result, warnings
 
@@ -430,9 +507,7 @@ def replace_gene_tags(
         r"<gene\b(?P<attrs>[^>]*)>(?P<label>.*?)</gene>",
         flags=re.DOTALL,
     )
-    attr_regex = re.compile(
-        r"""([A-Za-z_][\w:-]*)\s*=\s*(?:"([^"]*)"|'([^']*)')"""
-    )
+    attr_regex = re.compile(r"""([A-Za-z_][\w:-]*)\s*=\s*(?:"([^"]*)"|'([^']*)')""")
 
     def replace_tag(match: re.Match) -> str:
         attrs = {
@@ -505,7 +580,9 @@ def replace_species_qualified_symbols(
     """
     warnings: List[str] = []
 
-    code_alt = "|".join(["[A-Z0-9]{5}", *(re.escape(c) for c in SPECIES_CODE_EXCEPTIONS)])
+    code_alt = "|".join(
+        ["[A-Z0-9]{5}", *(re.escape(c) for c in SPECIES_CODE_EXCEPTIONS)]
+    )
     # Not preceded by a word char or '/' (so paths like genes/POPTR/CASPL4C1 do
     # not match), CODE/symbol, not followed by a word char.
     pattern = re.compile(
@@ -517,9 +594,9 @@ def replace_species_qualified_symbols(
         rf"(?![A-Za-z0-9_])"
     )
     preserve_regex = re.compile(
-        r'(?P<fenced>```.*?```)'
-        r'|(?P<code>`[^`]*`)'
-        r'|(?P<link>\[[^\]]*\]\([^)]*\))',
+        r"(?P<fenced>```.*?```)"
+        r"|(?P<code>`[^`]*`)"
+        r"|(?P<link>\[[^\]]*\]\([^)]*\))",
         flags=re.DOTALL,
     )
 
@@ -543,7 +620,7 @@ def replace_species_qualified_symbols(
     last_end = 0
     for match in preserve_regex.finditer(content):
         if match.start() > last_end:
-            parts.append(pattern.sub(replace_match, content[last_end:match.start()]))
+            parts.append(pattern.sub(replace_match, content[last_end : match.start()]))
         parts.append(match.group(0))
         last_end = match.end()
     if last_end < len(content):
@@ -616,15 +693,15 @@ def link_go_ids(
     # 3. Markdown links [...](...) — preserve
     # 4. Bare GO:NNNNNNN — replace with link
     pattern = (
-        r'(?P<fenced>```.*?```)'
-        r'|(?P<code>`[^`]*`)'
-        r'|(?P<link>\[[^\]]*\]\([^)]*\))'
-        r'|(?P<go_id>GO:\d{7})'
+        r"(?P<fenced>```.*?```)"
+        r"|(?P<code>`[^`]*`)"
+        r"|(?P<link>\[[^\]]*\]\([^)]*\))"
+        r"|(?P<go_id>GO:\d{7})"
     )
 
     def _replace(match: re.Match) -> str:
-        if match.group('go_id'):
-            go_id = match.group('go_id')
+        if match.group("go_id"):
+            go_id = match.group("go_id")
             return f"[{go_id}]({base_url}{go_id})"
         return match.group(0)
 
@@ -654,6 +731,7 @@ def process_markdown_content(content: str) -> str:
     >>> "http://example.com/page.md" in process_markdown_content("[ext](http://example.com/page.md)")
     True
     """
+
     # Process mermaid blocks for HTML
     def replace_mermaid(match: re.Match) -> str:
         mermaid_code = match.group(1)
@@ -661,10 +739,7 @@ def process_markdown_content(content: str) -> str:
 
     # Replace mermaid code blocks with div elements
     processed = re.sub(
-        r'```mermaid\n(.*?)\n```',
-        replace_mermaid,
-        content,
-        flags=re.DOTALL
+        r"```mermaid\n(.*?)\n```", replace_mermaid, content, flags=re.DOTALL
     )
 
     def convert_rendered_link(match: re.Match) -> str:
@@ -684,30 +759,55 @@ def process_markdown_content(content: str) -> str:
             path = path + ".html"
 
         url = parsed._replace(path=path).geturl()
-        return f'[{text}]({url})'
+        return f"[{text}]({url})"
 
-    processed = re.sub(
-        r'\[([^\]]+)\]\(([^)]+)\)',
-        convert_rendered_link,
-        processed
-    )
+    processed = re.sub(r"\[([^\]]+)\]\(([^)]+)\)", convert_rendered_link, processed)
 
     # Enable markdown processing inside HTML blocks like <details>
-    processed = processed.replace('<details>', '<details markdown="1">')
+    processed = processed.replace("<details>", '<details markdown="1">')
 
     # Convert markdown to HTML
-    md = markdown.Markdown(extensions=[
-        'tables',
-        'fenced_code',
-        'codehilite',
-        'toc',
-        'attr_list',
-        'def_list',
-        'nl2br',
-        'md_in_html',
-    ])
+    md = markdown.Markdown(
+        extensions=[
+            "tables",
+            "fenced_code",
+            "codehilite",
+            "toc",
+            "attr_list",
+            "def_list",
+            "nl2br",
+            "md_in_html",
+        ]
+    )
 
     return md.convert(processed)
+
+
+def is_slides_markdown(path: Path) -> bool:
+    """Return True for Marp slide-deck markdown.
+
+    Two naming conventions are recognized: ``*-slides.md`` (the
+    ``just gen-project-slides`` convention) and a bare ``slides.md`` (a
+    manually built Marp deck living alongside its ``slides.html``, e.g. under a
+    project's ``article/`` folder). Both are built with Marp, not by the project
+    renderer; rendering them as ordinary project pages produces a mangled
+    single-page HTML that overwrites the real deck, so they are excluded from
+    project-page collection.
+
+    >>> is_slides_markdown(Path("projects/FOO/slides/FOO-slides.md"))
+    True
+    >>> is_slides_markdown(Path("projects/FOO/article/slides.md"))
+    True
+    >>> is_slides_markdown(Path("projects/FOO.md"))
+    False
+    """
+    name = path.name.lower()
+    return (
+        name.endswith("-slides.md")
+        or name.endswith("-slides.markdown")
+        or name == "slides.md"
+        or name == "slides.markdown"
+    )
 
 
 def project_bundle_markdown_files(md_path: Path, projects_dir: Path) -> List[Path]:
@@ -715,7 +815,8 @@ def project_bundle_markdown_files(md_path: Path, projects_dir: Path) -> List[Pat
 
     Rendering ``projects/FOO.md`` should include supporting pages under
     ``projects/FOO/``. Rendering a file that is already inside a support folder
-    remains scoped to that single file.
+    remains scoped to that single file. Marp slide decks (``*-slides.md``) are
+    excluded; they are built separately by ``just gen-project-slides``.
     """
     if not md_path.exists():
         raise FileNotFoundError(f"Markdown file not found: {md_path}")
@@ -729,7 +830,11 @@ def project_bundle_markdown_files(md_path: Path, projects_dir: Path) -> List[Pat
         if len(rel_path.parts) == 1 and md_path.suffix.lower() in MARKDOWN_SUFFIXES:
             support_dir = projects_root / md_path.stem
             if support_dir.is_dir():
-                files.extend(sorted(support_dir.rglob("*.md")))
+                files.extend(
+                    p
+                    for p in sorted(support_dir.rglob("*.md"))
+                    if not is_slides_markdown(p)
+                )
 
     # De-duplicate while preserving deterministic order.
     seen: set[Path] = set()
@@ -950,9 +1055,7 @@ def convert_referenced_notebooks(
                     )
                 )
             except Exception as e:
-                warnings.append(
-                    f"{notebook_path.name}: Error rendering notebook - {e}"
-                )
+                warnings.append(f"{notebook_path.name}: Error rendering notebook - {e}")
 
     return output_paths, warnings
 
@@ -1048,9 +1151,20 @@ def render_project(
     symbol_index = build_symbol_to_species_index(genes_dir)
 
     # Get species hints from frontmatter
-    species_hints = frontmatter.get('species', [])
+    species_hints = frontmatter.get("species", [])
     if isinstance(species_hints, str):
         species_hints = [species_hints]
+
+    frontmatter = dict(frontmatter)
+    gene_links, frontmatter_gene_warnings = resolve_frontmatter_gene_links(
+        frontmatter.get("genes"),
+        symbol_index,
+        species_hints=species_hints,
+        genes_dir=genes_dir,
+        base_path=genes_base_path,
+    )
+    if gene_links:
+        frontmatter["gene_links"] = gene_links
 
     # Replace explicit gene tags first. The generated markdown links are then
     # preserved by the ordinary auto-linker.
@@ -1080,7 +1194,9 @@ def render_project(
         )
     else:
         linked_content, symbol_warnings = content, []
-    warnings = tag_warnings + qualified_warnings + symbol_warnings
+    warnings = (
+        frontmatter_gene_warnings + tag_warnings + qualified_warnings + symbol_warnings
+    )
 
     # Link raw SPKW sample rows such as `MCP/P06491` to UniProt. Local review
     # links are already explicit via <gene> tags or ordinary symbol autolinks.
@@ -1093,10 +1209,10 @@ def render_project(
     html_content = process_markdown_content(linked_content)
 
     # Determine title
-    title = frontmatter.get('title')
+    title = frontmatter.get("title")
     if not title:
         # Try to extract from first heading
-        heading_match = re.search(r'^#\s+(.+)$', content, re.MULTILINE)
+        heading_match = re.search(r"^#\s+(.+)$", content, re.MULTILINE)
         if heading_match:
             title = heading_match.group(1).strip()
         else:
@@ -1113,7 +1229,7 @@ def render_project(
     # Set up Jinja2 environment
     env = Environment(
         loader=FileSystemLoader(template_path.parent),
-        autoescape=select_autoescape(['html', 'j2'])
+        autoescape=select_autoescape(["html", "j2"]),
     )
     template = env.get_template(template_path.name)
 
@@ -1125,6 +1241,7 @@ def render_project(
         warnings=warnings,
         frontmatter=frontmatter,
     )
+    html = "\n".join(line.rstrip() for line in html.splitlines()) + "\n"
 
     # Create output directory and write file, mirroring subfolder structure
     output_path = output_dir / rel_path.with_suffix(".html")
@@ -1314,9 +1431,7 @@ def render_projects_table(
 
         manual_reviews = frontmatter.get("manual_reviews")
         review_status = latest_review_status(manual_reviews)
-        review_count = (
-            len(manual_reviews) if isinstance(manual_reviews, list) else 0
-        )
+        review_count = len(manual_reviews) if isinstance(manual_reviews, list) else 0
 
         rows.append(
             {
@@ -1340,7 +1455,9 @@ def render_projects_table(
     maturity_order = ["SCOPING", "IN_PROGRESS", "MATURE", "COMPLETE", "ARCHIVED"]
     tag_order = ["FLAGSHIP", "BIOLOGY_DOMAIN", "PIPELINE", "OBSOLETION"]
     review_status_order = ["READY", "CHANGES_REQUESTED"]
-    all_maturities = [m for m in maturity_order if any(r["maturity"] == m for r in rows)]
+    all_maturities = [
+        m for m in maturity_order if any(r["maturity"] == m for r in rows)
+    ]
     all_tags = [t for t in tag_order if any(t in r["tags"] for r in rows)]
     all_species = sorted({s for r in rows for s in r["species"]})
     all_review_statuses = [
@@ -1359,6 +1476,7 @@ def render_projects_table(
         all_species=all_species,
         all_review_statuses=all_review_statuses,
     )
+    html = "\n".join(line.rstrip() for line in html.splitlines()) + "\n"
 
     output_dir.mkdir(parents=True, exist_ok=True)
     output_path = output_dir / "all-projects.html"
@@ -1390,7 +1508,11 @@ def render_all_projects(
 
     # Render top-level project pages (FOO.md) and any supporting markdown that
     # lives inside a project's FOO/ folder, mirroring the subfolder structure.
-    md_files = sorted(projects_dir.rglob("*.md"))
+    # Marp slide decks (*-slides.md) are built separately by gen-project-slides
+    # and must not be rendered as plain project pages.
+    md_files = [
+        p for p in sorted(projects_dir.rglob("*.md")) if not is_slides_markdown(p)
+    ]
 
     if not md_files:
         print(f"No markdown files found in {projects_dir}")
@@ -1413,7 +1535,9 @@ def render_all_projects(
 
             if warnings:
                 all_warnings.extend([f"{md_file.name}: {w}" for w in warnings])
-                print(f"  {md_file.name} -> {output_path.name} ({len(warnings)} warnings)")
+                print(
+                    f"  {md_file.name} -> {output_path.name} ({len(warnings)} warnings)"
+                )
             else:
                 print(f"  {md_file.name} -> {output_path.name}")
 

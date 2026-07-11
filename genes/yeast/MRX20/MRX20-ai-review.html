@@ -1,0 +1,2913 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MRX20 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>MRX20</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P43617" target="_blank" class="term-link">
+                        P43617
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Saccharomyces cerevisiae</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+
+                    <span class="badge">YFR045W</span>
+
+                </div>
+            </div>
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "MRX20";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P43617" data-a="DESCRIPTION: MRX20 (YFR045W) is an uncharacterized inner-membra..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>MRX20 (YFR045W) is an uncharacterized inner-membrane protein of Saccharomyces cerevisiae mitochondria that belongs to the mitochondrial carrier family (SLC25/MCF; TC 2.A.29). Its sequence has the canonical mitochondrial-carrier architecture: three tandem Solcar repeats and six predicted transmembrane helices forming the pseudo-threefold-symmetric fold typical of metabolite carriers, and it retains the conserved carrier signature residues found in functionally characterized carriers. Within its family it falls in a fungal-specific subfamily whose members are all uncharacterized, so no specific transported substrate has been established for MRX20; the protein is therefore best described as a putative mitochondrial metabolite carrier of unknown substrate. The gene is non-essential, expressed at low abundance, and its transcription is induced under stress. It was given the &#34;Mrx&#34; name after it co-purified with native mitochondrial-ribosome (MIOREX) complexes in a proteomic study, but a direct role in mitochondrial gene expression has not been demonstrated.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P43617" data-a="GO:0005739" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but non-specific mitochondrial localization from phylogenetic propagation. MRX20 is an integral mitochondrial inner-membrane carrier, so &#34;mitochondrion&#34; is accurate but subsumed by the more specific inner-membrane annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the mitochondrial-carrier family assignment and the ISS inner-membrane annotation, but less informative than GO:0005743 (mitochondrial inner membrane).
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071913" target="_blank" class="term-link">
+                                    GO:0071913
+                                </a>
+                            </span>
+                            <span class="term-label">citrate secondary active transmembrane transporter activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P43617" data-a="GO:0071913" data-r="GO_REF:0000033" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Over-specific molecular-function propagation. The citrate-transporter activity is driven by the characterized tricarboxylate/citrate carriers in the broad PANTHER family PTHR45788 (CTP1, human SLC25A1, SFC1), but MRX20 falls in the fungal-specific subfamily PTHR45788:SF5 whose members are all uncharacterized mitochondrial carriers with no demonstrated substrate. No citrate-transport activity has been shown for MRX20, and its specific substrate is unknown.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Family-level IBA over-propagation of a specific substrate to a gene in an uncharacterized subfamily; the transported substrate of MRX20 is genuinely unknown. The general carrier/transporter nature is retained in core_functions as transmembrane transporter activity without asserting citrate.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">TERM SCOPING PROBLEM</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">GRANULARITY MISMATCH</span>
+
+                                <span class="badge">FUNCTIONAL DIVERGENCE</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTHR45788</span>
+
+                                    &middot; SUCCINATE/FUMARATE MITOCHONDRIAL TRANSPORTER-RELATED
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                    <div class="propagation-comment">Broad family node carrying the citrate-carrier signal from characterized members (CTP1, human SLC25A1, SFC1); too general to fix the substrate for MRX20.</div>
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTHR45788:SF5</span>
+
+                                    &middot; AFR253WP
+
+
+                                    <span class="badge">SOURCE WEAK OR INFERRED</span>
+
+
+                                    <div class="propagation-comment">MRX20&#39;s own subfamily; all members (P43617, SCY_1795, SCRG_05595, AWRI1631_61110) are uncharacterized mitochondrial carriers with no demonstrated citrate transport.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0022857" target="_blank" class="term-link">
+                                    transmembrane transporter activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006843" target="_blank" class="term-link">
+                                    GO:0006843
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial citrate transmembrane transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P43617" data-a="GO:0006843" data-r="GO_REF:0000033" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Over-specific biological-process propagation, mirroring the citrate-transporter molecular-function annotation. The citrate-transport process is inferred from the characterized citrate carriers of the family, not from MRX20 or its uncharacterized subfamily.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Same family-level over-propagation as the citrate transporter activity; MRX20&#39;s transported substrate is unknown. A general transmembrane-transport process is retained instead.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">TERM SCOPING PROBLEM</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">GRANULARITY MISMATCH</span>
+
+                                <span class="badge">FUNCTIONAL DIVERGENCE</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTHR45788</span>
+
+                                    &middot; SUCCINATE/FUMARATE MITOCHONDRIAL TRANSPORTER-RELATED
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                    <div class="propagation-comment">Citrate-transport process propagated from characterized citrate carriers in the broad family, not from MRX20 or its uncharacterized subfamily.</div>
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTHR45788:SF5</span>
+
+                                    &middot; AFR253WP
+
+
+                                    <span class="badge">SOURCE WEAK OR INFERRED</span>
+
+
+                                    <div class="propagation-comment">MRX20&#39;s subfamily is uncharacterized; no member has a demonstrated citrate-transport process.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1990542" target="_blank" class="term-link">
+                                    mitochondrial transmembrane transport
+                                </a>
+                            </span>
+
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P43617" data-a="GO:0005743" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Inner-membrane localization from UniProt Subcellular Location mapping, consistent with the multi-pass mitochondrial-carrier assignment and with the ISS annotation from PMID:10930523. This is the best-supported and most specific localization for MRX20.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Agrees with the mitochondrial carrier (SLC25/MCF) family membership, six predicted transmembrane helices, and the independent ISS inner-membrane call.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0055085" target="_blank" class="term-link">
+                                    GO:0055085
+                                </a>
+                            </span>
+                            <span class="term-label">transmembrane transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P43617" data-a="GO:0055085" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> General transmembrane-transport process from the InterPro mitochondrial-carrier domain signature. Appropriately generic for a carrier whose specific substrate is unknown.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Well supported by the mitochondrial-carrier domain architecture; does not overreach on substrate specificity.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10930523" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10930523
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The yeast mitochondrial transport proteins: new sequences an...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P43617" data-a="GO:0005743" data-r="PMID:10930523" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Inner-membrane localization inferred by SGD from sequence/structural similarity, based on the mitochondrial transport protein survey. Concordant with the UniProt SubCell IEA and with the family assignment; this is the core localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> MRX20 has the canonical mitochondrial-carrier fold (three Solcar repeats, six TM helices) and retains the carrier consensus residues; inner-membrane localization is strongly supported.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003674" target="_blank" class="term-link">
+                                    GO:0003674
+                                </a>
+                            </span>
+                            <span class="term-label">molecular_function</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P43617" data-a="GO:0003674" data-r="GO_REF:0000015" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root molecular_function with ND (no biological data). This honestly records that no specific molecular function has been experimentally determined for MRX20. Given that the transported substrate is unknown and the subfamily is uncharacterized, retaining ND is appropriate rather than asserting a specific activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correctly represents the genuine absence of a demonstrated molecular function; a general transmembrane transporter activity is proposed in core_functions on family grounds but no specific catalytic/substrate activity is experimentally established.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006839" target="_blank" class="term-link">
+                                    GO:0006839
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10930523" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10930523
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The yeast mitochondrial transport proteins: new sequences an...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P43617" data-a="GO:0006839" data-r="PMID:10930523" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> General mitochondrial-transport process inferred by SGD from similarity to characterized mitochondrial transport proteins. Appropriately generic and consistent with the carrier-family assignment without committing to a substrate.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Supported by mitochondrial-carrier family membership; correctly avoids substrate-specific over-annotation. Retained as a general (non-core-defining) process for this dark gene.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0022857" target="_blank" class="term-link">
+                                    GO:0022857
+                                </a>
+                            </span>
+                            <span class="term-label">transmembrane transporter activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10930523" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10930523
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The yeast mitochondrial transport proteins: new sequences an...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P43617" data-a="GO:0022857" data-r="PMID:10930523" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed general molecular-function annotation replacing the over-specific citrate-transporter IBA. MRX20 has the mitochondrial-carrier fold and retained carrier consensus residues, supporting a transmembrane transporter activity without committing to a substrate that has not been experimentally determined.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Captures the defensible, substrate-agnostic transporter activity of this carrier on domain/family grounds, in place of the family-level citrate over-propagation.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1990542" target="_blank" class="term-link">
+                                    GO:1990542
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial transmembrane transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10930523" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10930523
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The yeast mitochondrial transport proteins: new sequences an...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P43617" data-a="GO:1990542" data-r="PMID:10930523" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed mitochondrial transmembrane-transport process replacing the over-specific mitochondrial citrate transport IBA. Reflects the carrier&#39;s role in moving a solute across the mitochondrial inner membrane without asserting citrate.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Provides the correctly scoped process term for a mitochondrial carrier of unknown substrate, consistent with the accepted general transmembrane-transport annotations.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Putative mitochondrial inner-membrane metabolite carrier. MRX20 has the canonical SLC25/mitochondrial-carrier fold (three Solcar repeats, six transmembrane helices) and retains the conserved carrier signature residues, indicating a solute transmembrane transport activity across the mitochondrial inner membrane. The specific transported substrate is not established, so only a general transporter activity is asserted.</h3>
+                <span class="vote-buttons" data-g="P43617" data-a="FUNCTION: Putative mitochondrial inner-membrane metabolite c..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0022857" target="_blank" class="term-link">
+                            transmembrane transporter activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1990542" target="_blank" class="term-link">
+                                mitochondrial transmembrane transport
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                mitochondrial inner membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10930523" target="_blank" class="term-link">
+                                PMID:10930523
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Mitochondrial transport proteins (MTP) typically are homodimeric with a 30-kDa subunit with six transmembrane helices.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10930523" target="_blank" class="term-link">
+                                PMID:10930523
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">We do now find these five consensus residues also in the new sequences of YNL083W and YFR045W.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000015.md" target="_blank" class="term-link">
+                            GO_REF:0000015
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Use of the ND evidence code for Gene Ontology (GO) terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10930523" target="_blank" class="term-link">
+                            PMID:10930523
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The yeast mitochondrial transport proteins: new sequences and consensus residues, lack of direct relation between consensus residues and transmembrane helices, expression patterns of the transport protein genes, and protein-protein interactions with other proteins.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">YFR045W is one of the 35 S. cerevisiae mitochondrial transport protein (MTP) genes; MTPs have the six-transmembrane-helix, three-repeat carrier architecture.</div>
+
+                        <div class="finding-text">"Mitochondrial transport proteins (MTP) typically are homodimeric with a 30-kDa subunit with six transmembrane helices."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">After resequencing, YFR045W was found to retain the five carrier consensus residues shared by MTPs with identified transport function.</div>
+
+                        <div class="finding-text">"We do now find these five consensus residues also in the new sequences of YNL083W and YFR045W."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Expression of YFR045W is induced by stress.</div>
+
+                        <div class="finding-text">"the expressions of YFR045W, YPR021C, and YDR470C are induced by various stress situations."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25683707" target="_blank" class="term-link">
+                            PMID:25683707
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Organization of Mitochondrial Gene Expression in Two Distinct Ribosome-Containing Assemblies.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Native mitochondrial-ribosome complexes (MIOREX) were purified and their interactome defined by quantitative mass spectrometry; this study is the source of the &#34;Mrx&#34; gene-name series (including MRX20) for previously uncharacterized co-purifying proteins.</div>
+
+                        <div class="finding-text">"These interactions result in large expressosome-like assemblies that we termed mitochondrial organization of gene expression (MIOREX) complexes."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What metabolite(s) does MRX20 transport across the mitochondrial inner membrane, and is the family-level citrate assignment correct for the fungal PTHR45788:SF5 subfamily?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P43617" data-a="Q: What metabolite(s) does MRX20 transport across the..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is the co-purification of MRX20 with MIOREX/mitochondrial-ribosome complexes a direct, functionally meaningful interaction, or an abundance-driven artifact of a membrane protein?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P43617" data-a="Q: Is the co-purification of MRX20 with MIOREX/mitoch..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Express and purify recombinant MRX20, reconstitute into proteoliposomes, and assay uptake/exchange of candidate solutes (citrate and other di-/tricarboxylates, amino acids, nucleotides, cofactors) to identify the transported substrate.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: MRX20 is a functional mitochondrial metabolite carrier with a substrate distinct from citrate.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: in vitro transport reconstitution</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P43617" data-a="EXPERIMENT: Express and purify recombinant MRX20, reconstitute..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Phenotype the MRX20 deletion across respiratory/non-fermentable carbon sources and stress conditions, with mitochondrial metabolomics and synthetic genetic array analysis to place MRX20 in a pathway.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Loss of MRX20 perturbs a specific mitochondrial process under particular growth or stress conditions.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: conditional phenotyping and genetic interaction mapping</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P43617" data-a="EXPERIMENT: Phenotype the MRX20 deletion across respiratory/no..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The physiological substrate transported by MRX20 is unknown. It has the mitochondrial-carrier fold and the conserved carrier signature residues, but its specific solute (whether a tricarboxylate/citrate as in related family members, another metabolite, or none) has never been measured, and no transport assay for MRX20 exists.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> It is firmly established that MRX20 is an integral mitochondrial inner-membrane protein of the SLC25/mitochondrial-carrier family with the canonical three-repeat, six-transmembrane-helix architecture and retained carrier consensus residues. What is unknown is the identity of the transported substrate; the GOA citrate-transporter annotations derive from characterized citrate carriers elsewhere in the family, not from MRX20 or its uncharacterized fungal subfamily (PTHR45788:SF5).</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Assigning MRX20&#39;s substrate would convert a &#34;putative carrier of unknown substrate&#34; into a defined metabolite-transport function and would test whether the family-level citrate propagation is correct or an over-annotation for the fungal subfamily.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Reconstitute recombinant MRX20 into liposomes and screen candidate solutes (di-/tricarboxylates, amino acids, nucleotides, cofactors) for transport, and/or perform targeted mitochondrial metabolomics in an MRX20 deletion strain.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"RecName: Full=Uncharacterized mitochondrial carrier YFR045W;"</em> — file:yeast/MRX20/MRX20-uniprot.txt</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> Whether MRX20 has any direct role in mitochondrial gene expression is unknown. The &#34;Mrx&#34; name reflects only proteomic co-purification with mitochondrial-ribosome (MIOREX) complexes, and no experiment has shown that MRX20 participates in transcription, RNA processing, translation, or ribosome assembly.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">BP_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> MRX20 was recovered in the interactome of native mitochondrial-ribosome (MIOREX) complexes and named accordingly. It is otherwise characterized only as a membrane-embedded carrier-family protein; a functional (as opposed to co-purification) link to gene-expression machinery has not been demonstrated.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> A carrier that genuinely couples metabolite transport to the organization of mitochondrial gene expression would be mechanistically novel; conversely, confirming it is a bystander of the pulldown would clarify that the &#34;Mrx&#34; name is associative only.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Test MRX20 deletion/depletion for mitochondrial transcription, mt-mRNA stability, and translation phenotypes, and determine whether the MIOREX association is direct and stoichiometric or an abundance-driven co-purification.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"These interactions result in large expressosome-like assemblies that we termed mitochondrial organization of gene expression (MIOREX) complexes."</em> — PMID:25683707</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The biological process MRX20 serves and the basis of its loss-of-function phenotypes are unknown. The deletion is viable with only weak, pleiotropic high-throughput phenotypes, none of which points to a specific pathway.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">BP_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> MRX20 is non-essential, expressed at low abundance, and stress-inducible. Reported deletion phenotypes are mild and non-specific, so they do not define the pathway in which MRX20 acts.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Linking MRX20 to a defined metabolic or mitochondrial-maintenance pathway would turn a stress-inducible dark carrier into an interpretable node of mitochondrial physiology.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Condition-specific phenotyping (respiratory/non-fermentable carbon sources, metabolic and oxidative stresses) combined with synthetic-genetic-array and metabolomic profiling of the deletion strain.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"the expressions of YFR045W, YPR021C, and YDR470C are induced by various stress situations."</em> — PMID:10930523</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(MRX20-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P43617" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="mrx20-yfr045w-p43617-curation-notes">MRX20 (YFR045W / P43617) — curation notes</h1>
+<p>Journal for the AI GO-annotation review of <em>Saccharomyces cerevisiae</em> MRX20.<br />
+Provenance is recorded inline as [SOURCE "verbatim supporting text"] where possible.</p>
+<h2 id="identity-resolved-carefully-there-is-a-genuine-namefunction-tension">Identity (resolved carefully — there is a genuine name/function tension)</h2>
+<ul>
+<li>SGD <strong>standard name = MRX20</strong>; systematic name <strong>YFR045W</strong>; UniProt <strong>P43617</strong><br />
+  (entry name YFL5_YEAST). SGD confirms MRX20 is the standard name and expands it<br />
+  as "Mitochondrial oRganization of gene eXpression"<br />
+  [https://www.yeastgenome.org/locus/YFR045W].</li>
+<li><strong>Important</strong>: UniProt P43617 itself does NOT carry the MRX20 gene name; it lists<br />
+  only <code>OrderedLocusNames=YFR045W</code> and describes the protein as<br />
+  "Uncharacterized mitochondrial carrier YFR045W" (RecName)<br />
+  [genes/yeast/MRX20/MRX20-uniprot.txt line 6-7].</li>
+<li>The <strong>"Mrx" name series (Mrx1–Mrx21)</strong> was coined by the MIOREX study<br />
+  (Kehrein et al. 2015, Cell Reports, PMID:25683707): previously uncharacterized<br />
+  proteins that co-purified by quantitative mass spectrometry with native<br />
+  mitochondrial-ribosome ("MIOREX") complexes were given Mrx numbers. SGD's<br />
+  "name description" reference for MRX20 is this paper. <strong>Being pulled down with<br />
+  MIOREX complexes is a proteomic association, not a demonstrated molecular<br />
+  function.</strong> The abstract describes MIOREX as ribosome interactomes<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/25683707" title="These interactions result in large expressosome-like assemblies   that we termed mitochondrial organization of gene expression (MIOREX) complexes.">PMID:25683707</a>.<br />
+  I could NOT obtain the full text (not open access; PubMed MCP unauthenticated),<br />
+  so I do not have a verbatim, MRX20-specific quote from this paper and treat its<br />
+  MRX20-specific content as an association only.</li>
+</ul>
+<h3 id="the-core-tension">The core tension</h3>
+<p>The name "MRX20" suggests a role in mitochondrial gene expression, but every<br />
+structural/sequence line of evidence says this is a <strong>mitochondrial carrier<br />
+(SLC25 / MCF; TC 2.A.29) family</strong> inner-membrane transporter. These two facts are<br />
+not contradictory — an integral inner-membrane carrier could plausibly be found in<br />
+the vicinity of membrane-tethered translation machinery — but they mean the gene's<br />
+<strong>actual molecular function (what it transports, if anything) is unknown</strong>.</p>
+<h2 id="domain-sequence-analysis-done-inline-from-the-uniprot-record">Domain / sequence analysis (done inline from the UniProt record)</h2>
+<p>Source: genes/yeast/MRX20/MRX20-uniprot.txt</p>
+<ul>
+<li>309 aa, ~34.4 kDa. PE=3 (inferred from homology). No experimental structure; AlphaFold model exists.</li>
+<li><strong>Mitochondrial carrier family (MCF/SLC25)</strong>: <code>SIMILARITY ... Belongs to the
+  mitochondrial carrier (TC 2.A.29) family</code> (line 73). Pfam PF00153 Mito_carr ×3;<br />
+  PROSITE PS50920 SOLCAR ×3; PRINTS MITOCARRIER; InterPro IPR002067 (MCP),<br />
+  IPR023395 (MCP_dom_sf), IPR018108 (MCP_transmembrane), IPR049563 (TXTP-like);<br />
+  Gene3D 1.50.40.10 mitochondrial carrier domain; SUPFAM SSF103506 (lines 116–126).</li>
+<li><strong>Six TM helices</strong> (12–32, 47–67, 100–120, 184–204, 222–242, 285–305) and<br />
+<strong>three tandem Solcar repeats</strong> (6–83, 97–211, 216–302) (lines 133–156) — the<br />
+  canonical MCF three-repeat / six-TM architecture (pseudo-3-fold symmetry).</li>
+<li><strong>Subcellular location</strong>: <code>Mitochondrion inner membrane {ECO:0000305};
+  Multi-pass membrane protein {ECO:0000305}</code> (lines 71–72). KW Mitochondrion,<br />
+  Mitochondrion inner membrane, Transmembrane, Transport (lines 128–129).</li>
+<li>PANTHER: family <strong>PTHR45788</strong> "SUCCINATE/FUMARATE MITOCHONDRIAL<br />
+  TRANSPORTER-RELATED"; <strong>subfamily PTHR45788:SF5 "AFR253WP"</strong> (lines 121–122).</li>
+</ul>
+<h3 id="subfamily-context-is-decisive-for-judging-the-iba-citrate-annotations">Subfamily context is decisive for judging the IBA "citrate" annotations</h3>
+<p>From interpro/panther/PTHR45788/PTHR45788-entries.csv (reviewed members):<br />
+- The <strong>broad family PTHR45788</strong> contains the characterized tricarboxylate/citrate<br />
+  carriers CTP1 (P38152, <em>S. cerevisiae</em>), SLC25A1 (human P53007, bovine P79110,<br />
+  rat P32089, mouse), SFC1 succinate/fumarate carrier (P33303, <em>S. cerevisiae</em>),<br />
+  plant SFC1 (Q9M038), Aspergillus ctpA/B/C, etc.<br />
+- <strong>But MRX20's own subfamily PTHR45788:SF5 ("AFR253WP")</strong> contains ONLY<br />
+<em>Saccharomyces</em>-lineage <strong>uncharacterized</strong> carriers: P43617 (YFR045W itself),<br />
+  A7A285 (SCY_1795), B3LUQ6 (SCRG_05595), B5VI70 (AWRI1631_61110) — all annotated<br />
+  "Uncharacterized mitochondrial carrier". No SF5 member has a demonstrated<br />
+  substrate.<br />
+- =&gt; The GOA IBA annotations for <strong>citrate secondary active transmembrane<br />
+  transporter activity</strong> (GO:0071913) and <strong>mitochondrial citrate transmembrane<br />
+  transport</strong> (GO:0006843) are propagated from the <strong>family level</strong> (driven by the<br />
+  CTP1/SLC25A1 clade), NOT from MRX20's own uncharacterized subfamily. This is a<br />
+  classic over-specific IBA propagation: MRX20 is very likely a carrier, but the<br />
+<em>citrate</em> substrate assignment is not supported for it specifically.</p>
+<h2 id="literature-sparse-this-is-a-dark-gene">Literature (sparse — this is a dark gene)</h2>
+<ol>
+<li><strong>Belenkiy et al. 2000, Biochim Biophys Acta, PMID:10930523</strong> (abstract only).</li>
+<li>Systematic survey/resequencing of the 35 yeast mitochondrial transport<br />
+     proteins (MTPs); YFR045W is one of them.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/10930523" title="Mitochondrial transport proteins (MTP) typically are      homodimeric with a 30-kDa subunit with six transmembrane helices.">PMID:10930523</a></li>
+<li>The five MTP consensus residues (present in MTPs with identified transport<br />
+     function) were confirmed present in YFR045W after resequencing<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/10930523" title="We do now find these five consensus residues also in the new      sequences of YNL083W and YFR045W.">PMID:10930523</a>.</li>
+<li>Expression of YFR045W is stress-inducible<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/10930523" title="the expressions of YFR045W, YPR021C, and YDR470C are induced      by various stress situations.">PMID:10930523</a>.</li>
+<li>This is the <strong>ISS source</strong> SGD used for the "mitochondrial inner membrane"<br />
+     and "mitochondrial transport" annotations (GOA original_reference_id<br />
+     PMID:10930523; note SGD's with/from points to paralogs SGD:S000003838 and<br />
+     SGD:S000005027).</li>
+<li>
+<p>NOTE: abstract reports YFR045W resequenced to 285 aa; current UniProt sequence<br />
+     is 309 aa (SEQUENCE CAUTION notes an earlier erroneous gene model / frameshift,<br />
+     lines 75–78) — the annotation predates the corrected model but the MCF family<br />
+     assignment is unaffected.</p>
+</li>
+<li>
+<p><strong>Kehrein et al. 2015, Cell Reports, PMID:25683707</strong> (abstract only).</p>
+</li>
+<li>
+<p>Source of the MRX20 name; MIOREX (mitochondrial ribosome) co-purification by<br />
+     quantitative MS. Provides only an <em>association</em>, no molecular function for<br />
+     MRX20. (See "Identity" above.)</p>
+</li>
+<li>
+<p><strong>SGD large-scale phenotype data</strong> (https://www.yeastgenome.org/locus/YFR045W):<br />
+   null mutant is <strong>viable</strong>; "decreased levels of chitin and normal resistance to<br />
+   calcofluor white"; high-throughput screens additionally report decreased chitin<br />
+   deposition, decreased competitive fitness, increased chronological lifespan, and<br />
+   abnormal vacuolar morphology. All non-specific/pleiotropic; none pins a molecular<br />
+   function. Protein abundance ~710 molecules/cell (low). Not recorded as a<br />
+   dedicated citable PMID here; treated as background, not used for a specific GO<br />
+   claim.</p>
+</li>
+</ol>
+<h2 id="assessment-summary-what-is-known-vs-not-known">Assessment summary (what is KNOWN vs NOT known)</h2>
+<p>KNOWN (well supported):<br />
+- Integral <strong>mitochondrial inner-membrane</strong> protein, multi-pass (6 TM). [homology/ISS/subcell]<br />
+- Member of the <strong>mitochondrial carrier (SLC25/MCF) family</strong> with canonical<br />
+  three-repeat architecture. [Pfam/PROSITE/PANTHER/InterPro]<br />
+- Almost certainly functions in <strong>transmembrane transport</strong> (family-level). [InterPro IEA + family]<br />
+- Stress-inducible expression; non-essential; low abundance. [PMID:10930523; SGD HTP]</p>
+<p>NOT known (genuine knowledge gaps):<br />
+- <strong>Transported substrate / specific molecular function</strong> — SF5 subfamily is<br />
+  entirely uncharacterized; citrate assignment is a family-level IBA over-propagation.<br />
+- Whether MRX20 has any <strong>direct role in mitochondrial gene expression</strong> (the "MRX"<br />
+  name reflects only MIOREX proteomic co-purification, not a demonstrated function).<br />
+- <strong>Physiological process / pathway</strong> it serves; loss-of-function phenotypes are<br />
+  weak and pleiotropic.<br />
+- Whether it is a genuine transporter or a pseudo-transporter (no substrate assay exists).</p>
+<h2 id="curation-decisions-rationale">Curation decisions (rationale)</h2>
+<ul>
+<li>C: mitochondrial inner membrane (ISS, PMID:10930523) → ACCEPT (core; strong homology + MCF membrane protein).</li>
+<li>C: mitochondrial inner membrane (IEA, GO_REF:0000044 SubCell) → ACCEPT (consistent, redundant with ISS).</li>
+<li>C: mitochondrion (IBA) → ACCEPT as non-core (correct but less specific than inner membrane).</li>
+<li>P: transmembrane transport (IEA InterPro) → ACCEPT (family-level; correct general process).</li>
+<li>P: mitochondrial transport (ISS, PMID:10930523) → ACCEPT/KEEP (general, defensible).</li>
+<li>F: citrate secondary active transmembrane transporter activity (IBA) → MARK_AS_OVER_ANNOTATED<br />
+  (family-level propagation; MRX20's SF5 subfamily has no citrate-transport member; substrate unknown).</li>
+<li>P: mitochondrial citrate transmembrane transport (IBA) → MARK_AS_OVER_ANNOTATED (same reason).</li>
+<li>F: molecular_function (ND) → ACCEPT (honestly records that MF is unknown; do not invent one).</li>
+</ul>
+<p>core_functions: only the defensible general MF ("transmembrane transporter activity",<br />
+GO:0022857) with location mitochondrial inner membrane (GO:0005743). No specific<br />
+substrate claimed.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P43617
+gene_symbol: MRX20
+aliases:
+- YFR045W
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:559292
+  label: Saccharomyces cerevisiae
+description: &gt;-
+  MRX20 (YFR045W) is an uncharacterized inner-membrane protein of Saccharomyces
+  cerevisiae mitochondria that belongs to the mitochondrial carrier family
+  (SLC25/MCF; TC 2.A.29). Its sequence has the canonical mitochondrial-carrier
+  architecture: three tandem Solcar repeats and six predicted transmembrane
+  helices forming the pseudo-threefold-symmetric fold typical of metabolite
+  carriers, and it retains the conserved carrier signature residues found in
+  functionally characterized carriers. Within its family it falls in a fungal-specific
+  subfamily whose members are all uncharacterized, so no specific transported
+  substrate has been established for MRX20; the protein is therefore best described
+  as a putative mitochondrial metabolite carrier of unknown substrate. The gene is
+  non-essential, expressed at low abundance, and its transcription is induced under
+  stress. It was given the &#34;Mrx&#34; name after it co-purified with native
+  mitochondrial-ribosome (MIOREX) complexes in a proteomic study, but a direct role
+  in mitochondrial gene expression has not been demonstrated.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000015
+  title: Use of the ND evidence code for Gene Ontology (GO) terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: PMID:10930523
+  title: &#39;The yeast mitochondrial transport proteins: new sequences and consensus
+    residues, lack of direct relation between consensus residues and transmembrane
+    helices, expression patterns of the transport protein genes, and protein-protein
+    interactions with other proteins.&#39;
+  findings:
+  - statement: &gt;-
+      YFR045W is one of the 35 S. cerevisiae mitochondrial transport protein (MTP)
+      genes; MTPs have the six-transmembrane-helix, three-repeat carrier architecture.
+    supporting_text: &gt;-
+      Mitochondrial transport proteins (MTP) typically are homodimeric with a 30-kDa
+      subunit with six transmembrane helices.
+  - statement: &gt;-
+      After resequencing, YFR045W was found to retain the five carrier consensus
+      residues shared by MTPs with identified transport function.
+    supporting_text: &gt;-
+      We do now find these five consensus residues also in the new sequences of
+      YNL083W and YFR045W.
+  - statement: Expression of YFR045W is induced by stress.
+    supporting_text: &gt;-
+      the expressions of YFR045W, YPR021C, and YDR470C are induced by various stress
+      situations.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Abstract-only cache (full_text_available: false). PubMed-verified: this is the
+      survey of the 35 yeast mitochondrial transport proteins that includes YFR045W
+      and is the ISS source SGD used for the inner-membrane and mitochondrial-transport
+      annotations. Supporting_text quotes are verbatim from the cached abstract.
+- id: PMID:25683707
+  title: Organization of Mitochondrial Gene Expression in Two Distinct Ribosome-Containing
+    Assemblies.
+  findings:
+  - statement: &gt;-
+      Native mitochondrial-ribosome complexes (MIOREX) were purified and their
+      interactome defined by quantitative mass spectrometry; this study is the source
+      of the &#34;Mrx&#34; gene-name series (including MRX20) for previously uncharacterized
+      co-purifying proteins.
+    supporting_text: &gt;-
+      These interactions result in large expressosome-like assemblies that we termed
+      mitochondrial organization of gene expression (MIOREX) complexes.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Abstract-only cache (not open access; full text could not be retrieved). This is
+      the MIOREX study that assigned the Mrx1-Mrx21 names (SGD &#34;name description&#34;
+      reference for MRX20). It establishes proteomic co-purification of MRX20 with
+      mitochondrial-ribosome complexes but does NOT demonstrate a molecular function;
+      the MRX20-specific assignment is in the supplementary data, not the abstract, so
+      no MRX20-specific verbatim quote is cited.
+existing_annotations:
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Correct but non-specific mitochondrial localization from phylogenetic
+      propagation. MRX20 is an integral mitochondrial inner-membrane carrier, so
+      &#34;mitochondrion&#34; is accurate but subsumed by the more specific inner-membrane
+      annotation.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Consistent with the mitochondrial-carrier family assignment and the ISS
+      inner-membrane annotation, but less informative than GO:0005743
+      (mitochondrial inner membrane).
+- term:
+    id: GO:0071913
+    label: citrate secondary active transmembrane transporter activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Over-specific molecular-function propagation. The citrate-transporter activity
+      is driven by the characterized tricarboxylate/citrate carriers in the broad
+      PANTHER family PTHR45788 (CTP1, human SLC25A1, SFC1), but MRX20 falls in the
+      fungal-specific subfamily PTHR45788:SF5 whose members are all uncharacterized
+      mitochondrial carriers with no demonstrated substrate. No citrate-transport
+      activity has been shown for MRX20, and its specific substrate is unknown.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Family-level IBA over-propagation of a specific substrate to a gene in an
+      uncharacterized subfamily; the transported substrate of MRX20 is genuinely
+      unknown. The general carrier/transporter nature is retained in core_functions
+      as transmembrane transporter activity without asserting citrate.
+    proposed_replacement_terms:
+    - id: GO:0022857
+      label: transmembrane transporter activity
+    propagation_review:
+      root_cause: TERM_SCOPING_PROBLEM
+      failure_modes:
+      - GRANULARITY_MISMATCH
+      - FUNCTIONAL_DIVERGENCE
+      source_entities:
+      - source_id: PANTHER:PTHR45788
+        source_label: SUCCINATE/FUMARATE MITOCHONDRIAL TRANSPORTER-RELATED
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+        comment: &gt;-
+          Broad family node carrying the citrate-carrier signal from characterized
+          members (CTP1, human SLC25A1, SFC1); too general to fix the substrate for
+          MRX20.
+      - source_id: PANTHER:PTHR45788:SF5
+        source_label: AFR253WP
+        source_status: SOURCE_WEAK_OR_INFERRED
+        comment: &gt;-
+          MRX20&#39;s own subfamily; all members (P43617, SCY_1795, SCRG_05595,
+          AWRI1631_61110) are uncharacterized mitochondrial carriers with no
+          demonstrated citrate transport.
+- term:
+    id: GO:0006843
+    label: mitochondrial citrate transmembrane transport
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Over-specific biological-process propagation, mirroring the citrate-transporter
+      molecular-function annotation. The citrate-transport process is inferred from
+      the characterized citrate carriers of the family, not from MRX20 or its
+      uncharacterized subfamily.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Same family-level over-propagation as the citrate transporter activity; MRX20&#39;s
+      transported substrate is unknown. A general transmembrane-transport process is
+      retained instead.
+    proposed_replacement_terms:
+    - id: GO:1990542
+      label: mitochondrial transmembrane transport
+    propagation_review:
+      root_cause: TERM_SCOPING_PROBLEM
+      failure_modes:
+      - GRANULARITY_MISMATCH
+      - FUNCTIONAL_DIVERGENCE
+      source_entities:
+      - source_id: PANTHER:PTHR45788
+        source_label: SUCCINATE/FUMARATE MITOCHONDRIAL TRANSPORTER-RELATED
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+        comment: &gt;-
+          Citrate-transport process propagated from characterized citrate carriers in
+          the broad family, not from MRX20 or its uncharacterized subfamily.
+      - source_id: PANTHER:PTHR45788:SF5
+        source_label: AFR253WP
+        source_status: SOURCE_WEAK_OR_INFERRED
+        comment: &gt;-
+          MRX20&#39;s subfamily is uncharacterized; no member has a demonstrated
+          citrate-transport process.
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Inner-membrane localization from UniProt Subcellular Location mapping,
+      consistent with the multi-pass mitochondrial-carrier assignment and with the
+      ISS annotation from PMID:10930523. This is the best-supported and most specific
+      localization for MRX20.
+    action: ACCEPT
+    reason: &gt;-
+      Agrees with the mitochondrial carrier (SLC25/MCF) family membership, six
+      predicted transmembrane helices, and the independent ISS inner-membrane call.
+- term:
+    id: GO:0055085
+    label: transmembrane transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      General transmembrane-transport process from the InterPro mitochondrial-carrier
+      domain signature. Appropriately generic for a carrier whose specific substrate
+      is unknown.
+    action: ACCEPT
+    reason: &gt;-
+      Well supported by the mitochondrial-carrier domain architecture; does not
+      overreach on substrate specificity.
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: ISS
+  original_reference_id: PMID:10930523
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Inner-membrane localization inferred by SGD from sequence/structural similarity,
+      based on the mitochondrial transport protein survey. Concordant with the UniProt
+      SubCell IEA and with the family assignment; this is the core localization.
+    action: ACCEPT
+    reason: &gt;-
+      MRX20 has the canonical mitochondrial-carrier fold (three Solcar repeats, six TM
+      helices) and retains the carrier consensus residues; inner-membrane localization
+      is strongly supported.
+- term:
+    id: GO:0003674
+    label: molecular_function
+  evidence_type: ND
+  original_reference_id: GO_REF:0000015
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Root molecular_function with ND (no biological data). This honestly records that
+      no specific molecular function has been experimentally determined for MRX20.
+      Given that the transported substrate is unknown and the subfamily is
+      uncharacterized, retaining ND is appropriate rather than asserting a specific
+      activity.
+    action: ACCEPT
+    reason: &gt;-
+      Correctly represents the genuine absence of a demonstrated molecular function;
+      a general transmembrane transporter activity is proposed in core_functions on
+      family grounds but no specific catalytic/substrate activity is experimentally
+      established.
+- term:
+    id: GO:0006839
+    label: mitochondrial transport
+  evidence_type: ISS
+  original_reference_id: PMID:10930523
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      General mitochondrial-transport process inferred by SGD from similarity to
+      characterized mitochondrial transport proteins. Appropriately generic and
+      consistent with the carrier-family assignment without committing to a substrate.
+    action: ACCEPT
+    reason: &gt;-
+      Supported by mitochondrial-carrier family membership; correctly avoids
+      substrate-specific over-annotation. Retained as a general (non-core-defining)
+      process for this dark gene.
+- term:
+    id: GO:0022857
+    label: transmembrane transporter activity
+  evidence_type: ISS
+  original_reference_id: PMID:10930523
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Proposed general molecular-function annotation replacing the over-specific
+      citrate-transporter IBA. MRX20 has the mitochondrial-carrier fold and retained
+      carrier consensus residues, supporting a transmembrane transporter activity
+      without committing to a substrate that has not been experimentally determined.
+    action: NEW
+    reason: &gt;-
+      Captures the defensible, substrate-agnostic transporter activity of this carrier
+      on domain/family grounds, in place of the family-level citrate over-propagation.
+- term:
+    id: GO:1990542
+    label: mitochondrial transmembrane transport
+  evidence_type: ISS
+  original_reference_id: PMID:10930523
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Proposed mitochondrial transmembrane-transport process replacing the
+      over-specific mitochondrial citrate transport IBA. Reflects the carrier&#39;s role in
+      moving a solute across the mitochondrial inner membrane without asserting citrate.
+    action: NEW
+    reason: &gt;-
+      Provides the correctly scoped process term for a mitochondrial carrier of unknown
+      substrate, consistent with the accepted general transmembrane-transport
+      annotations.
+core_functions:
+- description: &gt;-
+    Putative mitochondrial inner-membrane metabolite carrier. MRX20 has the canonical
+    SLC25/mitochondrial-carrier fold (three Solcar repeats, six transmembrane helices)
+    and retains the conserved carrier signature residues, indicating a solute
+    transmembrane transport activity across the mitochondrial inner membrane. The
+    specific transported substrate is not established, so only a general transporter
+    activity is asserted.
+  molecular_function:
+    id: GO:0022857
+    label: transmembrane transporter activity
+  directly_involved_in:
+  - id: GO:1990542
+    label: mitochondrial transmembrane transport
+  locations:
+  - id: GO:0005743
+    label: mitochondrial inner membrane
+  supported_by:
+  - reference_id: PMID:10930523
+    supporting_text: &gt;-
+      Mitochondrial transport proteins (MTP) typically are homodimeric with a 30-kDa
+      subunit with six transmembrane helices.
+  - reference_id: PMID:10930523
+    supporting_text: &gt;-
+      We do now find these five consensus residues also in the new sequences of
+      YNL083W and YFR045W.
+knowledge_gaps:
+- gap_statement: &gt;-
+    The physiological substrate transported by MRX20 is unknown. It has the
+    mitochondrial-carrier fold and the conserved carrier signature residues, but its
+    specific solute (whether a tricarboxylate/citrate as in related family members,
+    another metabolite, or none) has never been measured, and no transport assay for
+    MRX20 exists.
+  boundary: &gt;-
+    It is firmly established that MRX20 is an integral mitochondrial inner-membrane
+    protein of the SLC25/mitochondrial-carrier family with the canonical three-repeat,
+    six-transmembrane-helix architecture and retained carrier consensus residues. What
+    is unknown is the identity of the transported substrate; the GOA citrate-transporter
+    annotations derive from characterized citrate carriers elsewhere in the family, not
+    from MRX20 or its uncharacterized fungal subfamily (PTHR45788:SF5).
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    Assigning MRX20&#39;s substrate would convert a &#34;putative carrier of unknown substrate&#34;
+    into a defined metabolite-transport function and would test whether the
+    family-level citrate propagation is correct or an over-annotation for the fungal
+    subfamily.
+  resolution: &gt;-
+    Reconstitute recombinant MRX20 into liposomes and screen candidate solutes
+    (di-/tricarboxylates, amino acids, nucleotides, cofactors) for transport, and/or
+    perform targeted mitochondrial metabolomics in an MRX20 deletion strain.
+  provenance:
+  - reference_id: file:yeast/MRX20/MRX20-uniprot.txt
+    supporting_text: &gt;-
+      RecName: Full=Uncharacterized mitochondrial carrier YFR045W;
+- gap_statement: &gt;-
+    Whether MRX20 has any direct role in mitochondrial gene expression is unknown. The
+    &#34;Mrx&#34; name reflects only proteomic co-purification with mitochondrial-ribosome
+    (MIOREX) complexes, and no experiment has shown that MRX20 participates in
+    transcription, RNA processing, translation, or ribosome assembly.
+  boundary: &gt;-
+    MRX20 was recovered in the interactome of native mitochondrial-ribosome (MIOREX)
+    complexes and named accordingly. It is otherwise characterized only as a
+    membrane-embedded carrier-family protein; a functional (as opposed to
+    co-purification) link to gene-expression machinery has not been demonstrated.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: BP_DARK
+  status: OPEN
+  significance: &gt;-
+    A carrier that genuinely couples metabolite transport to the organization of
+    mitochondrial gene expression would be mechanistically novel; conversely,
+    confirming it is a bystander of the pulldown would clarify that the &#34;Mrx&#34; name is
+    associative only.
+  resolution: &gt;-
+    Test MRX20 deletion/depletion for mitochondrial transcription, mt-mRNA stability,
+    and translation phenotypes, and determine whether the MIOREX association is direct
+    and stoichiometric or an abundance-driven co-purification.
+  provenance:
+  - reference_id: PMID:25683707
+    supporting_text: &gt;-
+      These interactions result in large expressosome-like assemblies that we termed
+      mitochondrial organization of gene expression (MIOREX) complexes.
+- gap_statement: &gt;-
+    The biological process MRX20 serves and the basis of its loss-of-function
+    phenotypes are unknown. The deletion is viable with only weak, pleiotropic
+    high-throughput phenotypes, none of which points to a specific pathway.
+  boundary: &gt;-
+    MRX20 is non-essential, expressed at low abundance, and stress-inducible. Reported
+    deletion phenotypes are mild and non-specific, so they do not define the pathway in
+    which MRX20 acts.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: BP_DARK
+  status: OPEN
+  significance: &gt;-
+    Linking MRX20 to a defined metabolic or mitochondrial-maintenance pathway would
+    turn a stress-inducible dark carrier into an interpretable node of mitochondrial
+    physiology.
+  resolution: &gt;-
+    Condition-specific phenotyping (respiratory/non-fermentable carbon sources,
+    metabolic and oxidative stresses) combined with synthetic-genetic-array and
+    metabolomic profiling of the deletion strain.
+  provenance:
+  - reference_id: PMID:10930523
+    supporting_text: &gt;-
+      the expressions of YFR045W, YPR021C, and YDR470C are induced by various stress
+      situations.
+suggested_questions:
+- question: &gt;-
+    What metabolite(s) does MRX20 transport across the mitochondrial inner membrane,
+    and is the family-level citrate assignment correct for the fungal PTHR45788:SF5
+    subfamily?
+- question: &gt;-
+    Is the co-purification of MRX20 with MIOREX/mitochondrial-ribosome complexes a
+    direct, functionally meaningful interaction, or an abundance-driven artifact of a
+    membrane protein?
+suggested_experiments:
+- hypothesis: &gt;-
+    MRX20 is a functional mitochondrial metabolite carrier with a substrate distinct
+    from citrate.
+  description: &gt;-
+    Express and purify recombinant MRX20, reconstitute into proteoliposomes, and assay
+    uptake/exchange of candidate solutes (citrate and other di-/tricarboxylates,
+    amino acids, nucleotides, cofactors) to identify the transported substrate.
+  experiment_type: in vitro transport reconstitution
+- hypothesis: &gt;-
+    Loss of MRX20 perturbs a specific mitochondrial process under particular growth or
+    stress conditions.
+  description: &gt;-
+    Phenotype the MRX20 deletion across respiratory/non-fermentable carbon sources and
+    stress conditions, with mitochondrial metabolomics and synthetic genetic array
+    analysis to place MRX20 in a pathway.
+  experiment_type: conditional phenotyping and genetic interaction mapping
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

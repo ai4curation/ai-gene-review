@@ -1,0 +1,2597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mtl3 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>mtl3</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O94317" target="_blank" class="term-link">
+                        O94317
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Schizosaccharomyces pombe (strain 972 / ATCC 24843)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+
+                    <span class="badge">SPBC215.13</span>
+
+                    <span class="badge">mtl1</span>
+
+                </div>
+            </div>
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "mtl3";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O94317" data-a="DESCRIPTION: mtl3 (systematic name SPBC215.13; UniProt O94317) ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>mtl3 (systematic name SPBC215.13; UniProt O94317) is a Schizosaccharomyces-specific, GPI-anchored, serine/threonine-rich plasma-membrane glycoprotein of the fungal Mid2-like cell-wall stress-sensor family (the name Mtl denotes &#34;Mid Two-Like&#34;; it is distinct from and unrelated to the Mtr4-like nuclear RNA helicase, which in S. pombe is the separately named mtl1/SPAC17H9.02). The 534-residue precursor has the canonical architecture of a single-pass fungal cell-surface sensor: an N-terminal secretion signal peptide and a single transmembrane segment, a long serine/threonine-rich, O-mannosylation-prone extracellular ectodomain that is intrinsically disordered/low-complexity, N-linked glycosylation, and a C-terminal GPI-anchor addition signal that tethers the mature protein to the outer face of the plasma membrane. It carries no enzymatic domain of any kind (no helicase, ATPase/P-loop, or other catalytic module). Genome-wide deletion phenotyping shows mtl3 loss alters sensitivity and resistance to cell-wall-perturbing and ionic stresses (e.g. altered responses to SDS combined with salts, ethanol, lithium, and oxidants) and reduces viability in stationary phase, consistent with a role at the cell surface in sensing envelope/membrane stress. By family membership its inferred role is to transmit cell-wall/membrane stress to intracellular signaling (as for the related fission-yeast sensors Wsc1 and Mtl2, which activate the Rho1 GTPase), but a direct molecular activity, ligand, signaling partner, or pathway output has not been experimentally established for mtl3 itself.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O94317" data-a="GO:0005783" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ER localization is supported by the systematic GFP-localization dataset cited by UniProt (ECO:0000269|PubMed:16823372) and is plausible as a secretory-pathway transit compartment for a signal-peptide-bearing, GPI-anchored membrane protein en route to the cell surface. It is not the primary functional site of the protein, which is the plasma membrane.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16823372" target="_blank" class="term-link">
+                                        PMID:16823372
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">ORFeome cloning and global analysis of protein localization</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O94317" data-a="GO:0005886" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Plasma-membrane localization is consistent with the protein&#39;s architecture (signal peptide, single transmembrane segment, and C-terminal GPI-anchor addition signal) and with its predicted GPI-anchored cell-surface status. This is a core localization, although the more specific term GO:0009897 (external side of plasma membrane) better captures where the GPI-anchored ectodomain resides.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003674" target="_blank" class="term-link">
+                                    GO:0003674
+                                </a>
+                            </span>
+                            <span class="term-label">molecular_function</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O94317" data-a="GO:0003674" data-r="GO_REF:0000015" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> No molecular function has been experimentally determined for mtl3, so the ND (No Data) root annotation is an honest and appropriate reflection of the current state of knowledge. Although family membership (a Mid2-like cell-wall sensor) suggests a stress-sensing/signal-transducing role, there is no direct assay of ligand binding, signaling output, or any catalytic activity for this protein, and its sequence lacks any enzymatic domain. The unknown molecular function is recorded as a knowledge gap rather than filled by an unsupported specific term.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008150" target="_blank" class="term-link">
+                                    GO:0008150
+                                </a>
+                            </span>
+                            <span class="term-label">biological_process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O94317" data-a="GO:0008150" data-r="GO_REF:0000015" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> No biological process has been directly demonstrated for mtl3, so the ND root annotation is appropriate. Deletion phenotypes (altered sensitivity/resistance to cell-wall/membrane and ionic stressors; reduced stationary-phase viability) and membership in the Mid2-like sensor family point toward a role in cell-wall-integrity / stress signaling, but this is inferred, not established. A specific BP term should not be asserted from the current evidence; the gap is recorded below.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009897" target="_blank" class="term-link">
+                                    GO:0009897
+                                </a>
+                            </span>
+                            <span class="term-label">external side of plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12845604" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12845604
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Genome-wide identification of fungal GPI proteins.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O94317" data-a="GO:0009897" data-r="PMID:12845604" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the most specific and best-supported localization: a GPI-anchored, serine/threonine-rich ectodomain displayed on the outer (external) face of the plasma membrane, exactly as expected for a fungal cell-wall stress sensor. Supported by the genome-wide GPI-protein prediction study and consistent with the UniProt GPI-anchor and topology features.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12845604" target="_blank" class="term-link">
+                                        PMID:12845604
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">only 33 GPI candidates were identified</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Displays a serine/threonine-rich, GPI-anchored ectodomain on the external face of the plasma membrane. mtl3 belongs to the fungal Mid2-like cell-wall stress-sensor family and is inferred to participate in sensing cell-wall/membrane stress at the cell surface, but its molecular activity and downstream signaling partners are undetermined; only its cell-surface localization is directly supported.</h3>
+                <span class="vote-buttons" data-g="O94317" data-a="FUNCTION: Displays a serine/threonine-rich, GPI-anchored ect..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009897" target="_blank" class="term-link">
+                                external side of plasma membrane
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12845604" target="_blank" class="term-link">
+                                PMID:12845604
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">only 33 GPI candidates were identified</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000015.md" target="_blank" class="term-link">
+                            GO_REF:0000015
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Use of the ND evidence code for Gene Ontology (GO) terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12845604" target="_blank" class="term-link">
+                            PMID:12845604
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Genome-wide identification of fungal GPI proteins.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Genome-wide computational screen predicting GPI-anchored proteins across fungi; the S. pombe GPI proteome is small, and mtl3/SPBC215.13 was identified as a predicted GPI-anchored cell-surface protein, supporting its localization to the outer face of the plasma membrane.</div>
+
+                        <div class="finding-text">"only 33 GPI candidates were identified"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16823372" target="_blank" class="term-link">
+                            PMID:16823372
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">ORFeome cloning and global analysis of protein localization in the fission yeast Schizosaccharomyces pombe.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Systematic GFP-fusion localization study; the source of the UniProt endoplasmic reticulum subcellular-location assignment for mtl3 (a secretory-pathway compartment consistent with a GPI-anchored membrane protein en route to the cell surface).</div>
+
+                        <div class="finding-text">"ORFeome cloning and global analysis of protein localization"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/37787768" target="_blank" class="term-link">
+                            PMID:37787768
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Broad functional profiling of fission yeast proteins using phenomics and machine learning.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Genome-wide phenomics/machine-learning profiling of S. pombe deletion mutants; the source of the curated mtl3-delta stress-response phenotypes (altered sensitivity and resistance to cell-wall/membrane and ionic stressors; reduced stationary-phase viability). mtl3 appears in the supplementary phenotype matrix rather than being discussed by name in the text.</div>
+
+                        <div class="finding-text">"Broad functional profiling of fission yeast proteins using phenomics and machine learning"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25375137" target="_blank" class="term-link">
+                            PMID:25375137
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Systematic analysis of the role of RNA-binding proteins in the regulation of RNA stability.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Systematic RNA-stability / RNA-binding-protein study; the basis for PomBase&#39;s record of mtl3 mRNA as a regulatory target (of the zinc-finger RNA-binding protein zfs1), indicating post-transcriptional control of mtl3 expression.</div>
+
+                        <div class="finding-text">"Systematic analysis of the role of RNA-binding proteins in the regulation of RNA stability"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23907979" target="_blank" class="term-link">
+                            PMID:23907979
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The fission yeast cell wall stress sensor-like proteins Mtl2 and Wsc1 act by turning on the GTPase Rho1p but act independently of the cell wall integrity pathway.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Characterizes the related fission-yeast plasma-membrane cell-wall stress sensors Mtl2 and Wsc1, which signal by activating the Rho1 GTPase. Provides family/architecture context for mtl3 (a Mid2-like sensor of the same class); it does not study mtl3 itself, so its findings are contextual rather than direct evidence for mtl3.</div>
+
+                        <div class="finding-text">"The fission yeast cell wall stress sensor-like proteins Mtl2 and Wsc1 act by turning on the GTPase Rho1p but act independently of the cell wall integrity pathway"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does mtl3 function as a cell-wall/membrane stress sensor that activates Rho1 and/or the Pmk1 cell-wall-integrity MAP kinase pathway, and is this activity redundant with wsc1 and mtl2?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O94317" data-a="Q: Does mtl3 function as a cell-wall/membrane stress ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What cue does the serine/threonine-rich, O-mannosylated ectodomain of mtl3 sense, and does the cytoplasmic/juxtamembrane region recruit any GEF or signaling partner?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O94317" data-a="Q: What cue does the serine/threonine-rich, O-mannosy..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Why is mtl3 mRNA a target of the RNA-binding protein zfs1, and does this post-transcriptional control couple mtl3 levels to a specific stress condition?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O94317" data-a="Q: Why is mtl3 mRNA a target of the RNA-binding prote..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Construct single and combinatorial deletions (mtl3-delta alone and with wsc1-delta, mtl2-delta, mid2-delta) and assay growth and morphology under cell-wall/membrane stress (SDS, caspofungin/echinocandins, calcofluor, sorbitol osmotic support), scoring for synthetic phenotypes that reveal redundancy within the sensor family.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="O94317" data-a="EXPERIMENT: Construct single and combinatorial deletions (mtl3..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Measure Rho1-GTP loading and Pmk1 MAPK phosphorylation in mtl3-delta versus wild type under cell-wall stress to test whether mtl3 feeds the Rho1/CWI signaling axis.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="O94317" data-a="EXPERIMENT: Measure Rho1-GTP loading and Pmk1 MAPK phosphoryla..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Perform proximity-labeling or affinity-purification mass spectrometry on tagged mtl3 to identify cell-surface and cytoplasmic interaction partners, and biochemically confirm the predicted GPI anchor and O-mannosylated ectodomain.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="O94317" data-a="EXPERIMENT: Perform proximity-labeling or affinity-purificatio..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> mtl3 has no experimentally established molecular function, no identified binding partner or ligand, and no directly demonstrated biological process. Its assignment to the Mid2-like cell-wall stress-sensor family and its inferred role in transmitting cell-wall/membrane stress to intracellular signaling (e.g. via Rho1, as shown for the related sensors Wsc1 and Mtl2) are extrapolations from family membership, sequence architecture, and deletion phenotypes, not from direct study of the mtl3 protein.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">WHOLLY_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Firmly established: subcellular localization (GPI-anchored, external face of the plasma membrane; ER in transit); protein architecture (signal peptide, single N-terminal transmembrane segment, long serine/threonine-rich disordered/low-complexity ectodomain, N-glycosylation, C-terminal GPI-anchor signal; no enzymatic domain); genome-wide deletion phenotypes (altered sensitivity/resistance to cell-wall/membrane and ionic stressors, reduced stationary-phase viability); post-transcriptional regulation of its mRNA (a zfs1 target); and a single S. japonicus ortholog (SJAG_00415). The gene is Schizosaccharomyces- specific.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Fission yeast maintains cell-wall integrity through a set of cell-surface sensors, but the specific contribution, redundancy, and signaling wiring of mtl3 within this system are unknown. mtl3 is a genuinely understudied (&#34;dark&#34;) gene whose only high-confidence GO statement is its cell-surface localization; both its molecular function and biological process remain at the ND root.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Direct functional study of mtl3: epistasis/redundancy analysis with wsc1, mtl2, mid2 and the Rho1/Pmk1 CWI machinery; sensor-activation assays under defined cell-wall/membrane stress; identification of interacting proteins; and structural/biochemical confirmation of the ectodomain modifications. Any positive result would move both the MF and BP aspects off the ND root.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Use of the ND evidence code for Gene Ontology (GO) terms"</em> — GO_REF:0000015</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(mtl3-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O94317" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">20 citations</span>
+
+
+                    <span class="report-badge">1 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-06T16:50:46.719743</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="mtl3-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-mtl3-spbc21513-uniprot-o94317-in-schizosaccharomyces-pombe">Research Report: mtl3 / SPBC215.13 (UniProt O94317) in <em>Schizosaccharomyces pombe</em></h2>
+<h3 id="1-gene-identity-and-nomenclature">1. Gene Identity and Nomenclature</h3>
+<p>The gene <strong>mtl3</strong> corresponds to the systematic open reading frame <strong>SPBC215.13</strong> in <em>Schizosaccharomyces pombe</em> (strain 972 / ATCC 24843), encoding a protein annotated in UniProt (accession O94317) as an <strong>"Uncharacterized serine-rich protein C215.13"</strong> flagged as a <strong>precursor</strong>. Extensive literature searching revealed that the gene symbol "mtl3" does not appear directly in any of the retrieved primary research papers. The naming convention "mtl" in <em>S. pombe</em> follows the pattern established by the well-characterized gene <strong>mtl2</strong> (Mid two-like 2), which encodes a cell wall stress sensor protein structurally related to <em>Saccharomyces cerevisiae</em> Mid2 (cruz2013thefissionyeast pages 1-2). The "mtl3" designation thus likely denotes "<strong>Mid two-like 3</strong>," implying membership in the same family of serine/threonine-rich cell surface proteins, although this relationship has not been experimentally validated for SPBC215.13.</p>
+<p><strong>Important caveat:</strong> This protein is largely <strong>uncharacterized</strong> in the published literature. No primary study was identified that directly investigates the biochemical function, localization, or phenotypic consequences of mtl3/SPBC215.13 deletion or mutation. The information below is therefore predominantly <strong>inference-based</strong>, drawn from computational predictions, genome-wide surveys, and analogy with better-characterized family members.</p>
+<h3 id="2-protein-features-and-predicted-structure">2. Protein Features and Predicted Structure</h3>
+<p>SPBC215.13 was identified as a <strong>putative GPI (glycosylphosphatidylinositol)-anchored protein</strong> in a genome-wide computational survey of fungal GPI proteins by de Groot et al. (2003). In that study, the <em>S. pombe</em> genome was screened using a C-terminal GPI-signal algorithm, and SPBC215.13 was among 33 GPI protein candidates identified from 4,950 ORFs (groot2003genome‐wideidentificationof pages 10-10, groot2003genome‐wideidentificationof pages 10-12). The protein was reported as approximately <strong>226 amino acids</strong> in length with a <strong>serine/threonine (S/T) content of 22%</strong> (groot2003genome‐wideidentificationof pages 10-10). The unannotated ORFs identified in that study had an average S/T content of 41%, and the authors noted that high S/T content strengthened the likelihood that these were indeed GPI proteins (groot2003genome‐wideidentificationof pages 10-12).</p>
+<p>The UniProt "precursor" flag indicates the presence of an <strong>N-terminal signal peptide</strong> directing the protein into the secretory pathway, consistent with its predicted cell-surface localization. GPI-anchored proteins in fungi typically possess both an N-terminal signal peptide and a C-terminal GPI-anchor addition signal that is cleaved and replaced with a GPI moiety in the endoplasmic reticulum.</p>
+<p>The following table summarizes key features and contextual information for mtl3/SPBC215.13:</p>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Description/Details</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Target identity</td>
+<td><strong>mtl3 / SPBC215.13 / UniProt O94317</strong> in <em>Schizosaccharomyces pombe</em> strain 972. UniProt describes the product as an <strong>uncharacterized serine-rich precursor protein</strong>. Direct primary literature using the name <strong>mtl3</strong> was not found in the retrieved corpus, so identity must be anchored to the systematic ID <strong>SPBC215.13</strong> and UniProt accession <strong>O94317</strong>.</td>
+</tr>
+<tr>
+<td>Evidence status</td>
+<td>Literature for this specific protein is <strong>very limited</strong>. No direct biochemical, genetic, or localization study for SPBC215.13/mtl3 was retrieved. Most conclusions are therefore <strong>inference-based</strong>, drawn from prediction studies and comparison with related fungal cell-surface proteins (groot2003genome‐wideidentificationof pages 10-10, groot2003genome‐wideidentificationof pages 10-12).</td>
+</tr>
+<tr>
+<td>Predicted protein class</td>
+<td>A genome-wide survey of fungal GPI proteins identified <strong>SPBC215.13</strong> among <em>S. pombe</em> <strong>putative GPI-anchored proteins</strong>, supporting classification as a likely <strong>cell-surface/cell-wall-associated glycoprotein</strong> rather than a soluble intracellular factor (groot2003genome‐wideidentificationof pages 10-10, groot2003genome‐wideidentificationof pages 10-12).</td>
+</tr>
+<tr>
+<td>Size and composition</td>
+<td>In the de Groot et al. table, <strong>SPBC215.13</strong> is listed as <strong>226 aa</strong> with <strong>22% serine/threonine content</strong>, consistent with a <strong>serine-rich</strong> extracellular protein subject to extensive glycosylation, a common feature of fungal surface proteins (groot2003genome‐wideidentificationof pages 10-10).</td>
+</tr>
+<tr>
+<td>Precursor/signal features</td>
+<td>UniProt flags the protein as a <strong>precursor</strong>, consistent with entry into the secretory pathway. In fungal GPI proteins, this generally implies an <strong>N-terminal signal peptide</strong> plus a <strong>C-terminal GPI-anchor addition signal</strong>, although these exact features were not experimentally validated here for SPBC215.13 (groot2003genome‐wideidentificationof pages 10-10, groot2003genome‐wideidentificationof pages 10-12).</td>
+</tr>
+<tr>
+<td>Predicted localization</td>
+<td>Best current inference: <strong>cell surface</strong>, likely <strong>plasma membrane outer leaflet and/or covalently associated cell wall space</strong> after GPI anchoring/remodeling. This inference follows from the GPI-protein prediction and general fungal GPI biology (groot2003genome‐wideidentificationof pages 10-10, groot2003genome‐wideidentificationof pages 10-12, yoshimi2022cellwallintegrity pages 7-8).</td>
+</tr>
+<tr>
+<td>Likely molecular role</td>
+<td>No catalytic activity is known. The most plausible current interpretation is that SPBC215.13 is a <strong>structural or sensor-like cell-envelope protein</strong>, potentially contributing to <strong>cell wall organization, stress sensing, or wall–membrane coupling</strong> rather than acting as an enzyme with defined substrate specificity (cansado2021thefissionyeast pages 2-3, yoshimi2022cellwallintegrity pages 7-8).</td>
+</tr>
+<tr>
+<td>Relationship to the name “mtl3”</td>
+<td>The symbol <strong>mtl3</strong> appears consistent with a <strong>Mid2-like naming convention</strong>, but this specific protein was <strong>not directly discussed</strong> in the retrieved papers. Thus, the name suggests possible membership in a broader family of cell-surface proteins related by architecture/function, but this remains <strong>unproven</strong> from current evidence.</td>
+</tr>
+<tr>
+<td>Comparison to S. pombe Mtl2</td>
+<td><strong>Mtl2</strong> is a <strong>characterized cell wall stress sensor</strong> in <em>S. pombe</em> that localizes to the <strong>cell periphery</strong> and promotes survival under cell wall stress by activating <strong>Rho1</strong> signaling (cruz2013thefissionyeast pages 1-2). SPBC215.13/mtl3 has <strong>no comparable direct evidence</strong> yet; similarity is currently only conceptual/name-based, not experimentally demonstrated.</td>
+</tr>
+<tr>
+<td>Comparison to S. pombe Wsc1</td>
+<td><strong>Wsc1</strong> is another characterized <em>S. pombe</em> cell wall sensor that acts in a distinct <strong>Rho1-dependent</strong> network and localizes to growth zones/tips; it is <strong>not</strong> the same protein as mtl3/SPBC215.13 (cruz2013thefissionyeast pages 1-2, cansado2021thefissionyeast pages 2-3).</td>
+</tr>
+<tr>
+<td>Comparison to S. cerevisiae Mid2/Mtl1</td>
+<td>In budding yeast, <strong>Mid2/Mtl1</strong> proteins are <strong>cell wall integrity sensors</strong> with <strong>single-pass membrane anchoring</strong>, small cytosolic tails, and <strong>serine/threonine-rich, highly O-mannosylated extracellular domains</strong> that function as mechanosensors (levin2005cellwallintegrity pages 8-9, levin2005cellwallintegrity pages 9-10, cruz2013thefissionyeast pages 1-2). SPBC215.13 shares the <strong>serine-rich surface-protein logic</strong>, but unlike those classical sensors it is currently only predicted to be <strong>GPI-anchored</strong>, not experimentally shown to be a transmembrane signaling receptor.</td>
+</tr>
+<tr>
+<td>Structural features of related sensors</td>
+<td>Related fungal wall sensors typically contain <strong>STR (Ser/Thr-rich) regions</strong> that become heavily <strong>O-mannosylated</strong>, stiffening the ectodomain and enabling <strong>mechanosensory</strong> behavior at the wall–membrane interface (cansado2021thefissionyeast pages 2-3, levin2005cellwallintegrity pages 9-10, yoshimi2022cellwallintegrity pages 2-4, cruz2013thefissionyeast pages 1-2). This provides a plausible framework for interpreting a serine-rich protein such as mtl3/SPBC215.13.</td>
+</tr>
+<tr>
+<td>Pathway involvement</td>
+<td><strong>No direct pathway assignment</strong> is currently supported for SPBC215.13. By analogy only, it could participate in <strong>cell wall integrity/homeostasis</strong> or extracellular stress-response processes, but there is <strong>no direct evidence</strong> connecting it to <strong>Rho1</strong>, <strong>Pmk1/CIP</strong>, or other defined signaling modules.</td>
+</tr>
+<tr>
+<td>Biochemical activity / substrate specificity</td>
+<td><strong>Unknown.</strong> No enzymatic function, transported substrate, or binding partner has been experimentally established for SPBC215.13 in the retrieved literature.</td>
+</tr>
+<tr>
+<td>Practical interpretation</td>
+<td>The safest current annotation is: <strong>uncharacterized serine-rich predicted GPI-anchored cell-surface protein of S. pombe, probably associated with the cell wall/plasma membrane interface</strong>. Any stronger claim—such as calling it a bona fide mechanosensor or assigning a defined signaling role—would presently be <strong>speculative</strong>.</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes what can currently be said about the S. pombe gene mtl3/SPBC215.13 from the available literature and database-linked evidence. It distinguishes direct evidence from inference and clarifies how mtl3 relates to the better-characterized cell wall sensor proteins Mtl2, Wsc1, and budding-yeast Mid2/Mtl1.</em></p>
+<h3 id="3-predicted-subcellular-localization">3. Predicted Subcellular Localization</h3>
+<p>No direct experimental localization data exists for mtl3/SPBC215.13. However, several lines of evidence support a <strong>cell surface</strong> localization:</p>
+<ul>
+<li><strong>GPI-anchor prediction:</strong> The protein was computationally identified as a GPI protein candidate, which in fungi are typically anchored to the outer leaflet of the plasma membrane or covalently transferred to cell wall glucans (groot2003genome‐wideidentificationof pages 10-10, groot2003genome‐wideidentificationof pages 10-12).</li>
+<li><strong>Signal peptide:</strong> The precursor designation indicates entry into the secretory pathway.</li>
+<li><strong>Analogy to Mtl2:</strong> The related <em>S. pombe</em> protein Mtl2 localizes to the <strong>cell periphery</strong> as demonstrated by Mtl2-GFP imaging (cruz2013thefissionyeast pages 1-2). In <em>S. cerevisiae</em>, the analogous sensors Mid2 and Mtl1 are <strong>plasma membrane-associated</strong> with their ectodomains extending into the cell wall space (levin2005cellwallintegrity pages 8-9, levin2005cellwallintegrity pages 9-10).</li>
+</ul>
+<p>The most parsimonious prediction is that mtl3/SPBC215.13 localizes to the <strong>plasma membrane and/or cell wall interface</strong>, with its serine-rich domain facing the extracellular/periplasmic space.</p>
+<h3 id="4-inferred-function-and-pathway-context">4. Inferred Function and Pathway Context</h3>
+<h4 id="41-no-known-enzymatic-activity-or-substrate">4.1 No Known Enzymatic Activity or Substrate</h4>
+<p>No catalytic activity, transported substrate, or direct binding partner has been experimentally established for mtl3/SPBC215.13. The protein lacks recognized enzymatic domains based on its UniProt annotation.</p>
+<h4 id="42-relationship-to-the-mid2-like-cell-wall-sensor-family">4.2 Relationship to the Mid2-Like Cell Wall Sensor Family</h4>
+<p>The naming convention and structural features of mtl3 suggest it may belong to the broader family of <strong>cell wall sensor-like proteins</strong>. In <em>S. pombe</em>, two such sensors have been functionally characterized:</p>
+<ul>
+<li>
+<p><strong>Mtl2 (Mid two-like 2):</strong> A cell wall stress sensor that localizes to the cell periphery and is essential for survival under various cell wall stresses. Mtl2 activates the <strong>Rho1 GTPase</strong> and signals through <strong>Pck1</strong> kinase. Deletion of <em>mtl2</em> causes sensitivity to caspofungin, caffeine, vanadate, NaCl, H₂O₂, and SDS, and is associated with decreased β-1,3-glucan content (cruz2013thefissionyeast pages 1-2, yoshimi2022cellwallintegrity pages 4-5, cruz2013thefissionyeast pages 11-13).</p>
+</li>
+<li>
+<p><strong>Wsc1:</strong> A WSC-type sensor concentrated at cell tips that interacts with the Rho-GEF <strong>Rgf2</strong> and activates <strong>glucan synthase</strong> through Rho1. Wsc1 and Mtl2 have complementary essential functions—simultaneous deletion of both is lethal, rescuable by overexpression of Rho1 or its GEFs (cruz2013thefissionyeast pages 1-2, cansado2021thefissionyeast pages 2-3).</p>
+</li>
+</ul>
+<p>These sensors share common structural features: small C-terminal cytoplasmic domains, a single transmembrane domain (or GPI anchor), and a <strong>periplasmic domain rich in serine/threonine residues</strong> that is extensively O-mannosylated (cansado2021thefissionyeast pages 2-3, levin2005cellwallintegrity pages 8-9, levin2005cellwallintegrity pages 9-10, cruz2013thefissionyeast pages 1-2). The O-mannosylation extends and stiffens the polypeptide, and these proteins have been proposed to function as <strong>mechanosensors</strong> whose ectodomains act as rigid probes of the extracellular matrix (levin2005cellwallintegrity pages 9-10, yoshimi2022cellwallintegrity pages 2-4).</p>
+<p>In <em>S. cerevisiae</em>, the analogous family includes <strong>Wsc1-3, Mid2, and Mtl1</strong>, all of which are plasma membrane sensors for cell wall integrity that signal through <strong>Rom2</strong> (a Rho1 GEF) to activate the <strong>cell wall integrity (CWI) MAPK pathway</strong> (levin2005cellwallintegrity pages 8-9, levin2005cellwallintegrity pages 9-10).</p>
+<h4 id="43-possible-role-in-cell-wall-organization">4.3 Possible Role in Cell Wall Organization</h4>
+<p>Given its predicted GPI-anchored, serine-rich surface protein nature, mtl3/SPBC215.13 likely participates in <strong>cell wall organization or homeostasis</strong> at the cell surface. However, whether it functions as a bona fide stress sensor (like Mtl2), a structural cell wall component, or has another role remains entirely speculative without experimental data.</p>
+<h3 id="5-relationship-to-the-mtrec-complex-and-mtl1-helicase">5. Relationship to the MTREC Complex and Mtl1 Helicase</h3>
+<p>It is important to distinguish mtl3/SPBC215.13 from the unrelated <em>S. pombe</em> protein <strong>Mtl1</strong> (Mtr4-like 1), which is an <strong>ATP-dependent RNA helicase</strong> and a core component of the <strong>MTREC (Mtl1-Red1 core) complex</strong>. The MTREC complex is an 11-subunit nuclear RNA surveillance complex that targets cryptic unstable transcripts (CUTs), meiotic mRNAs, and unspliced pre-mRNAs for degradation by the nuclear exosome (zhou2015thefissionyeast pages 2-3, zhou2015thefissionyeast pages 8-8, dobrev2021thezincfingerprotein pages 1-2, zhou2015thefissionyeast pages 1-2). Mtl1 is an Mtr4 paralogue with 52% identity and 73% similarity to Mtr4 (dobrev2021thezincfingerprotein pages 1-2). Despite the superficial similarity in naming ("Mtl"), the MTREC helicase Mtl1 and the cell wall-associated protein mtl3/SPBC215.13 are <strong>functionally and structurally unrelated</strong>.</p>
+<h3 id="6-conclusions-and-limitations">6. Conclusions and Limitations</h3>
+<p>The gene <strong>mtl3</strong> (SPBC215.13, UniProt O94317) in <em>S. pombe</em> encodes an <strong>uncharacterized serine-rich protein</strong> that is computationally predicted to be <strong>GPI-anchored</strong> and localized at the <strong>cell surface/cell wall interface</strong> (groot2003genome‐wideidentificationof pages 10-10, groot2003genome‐wideidentificationof pages 10-12). Its naming suggests it belongs to the <strong>Mid2-like family</strong> of cell wall-associated proteins, alongside the well-characterized sensor Mtl2 (cruz2013thefissionyeast pages 1-2, cansado2021thefissionyeast pages 2-3). However, no direct experimental evidence exists for its biochemical function, subcellular localization, protein interactions, or deletion phenotype. The protein has no known enzymatic activity, and no signaling pathway has been definitively linked to it.</p>
+<p>The safest current annotation is: <strong>an uncharacterized serine-rich predicted GPI-anchored cell-surface protein</strong>, likely associated with the cell wall/plasma membrane interface, with possible involvement in cell wall organization or integrity based solely on structural analogy to related proteins. Any stronger functional claim would be speculative pending direct experimental characterization.</p>
+<h3 id="key-references">Key References</h3>
+<ul>
+<li>De Groot, P. W. J., Hellingwerf, K. J., &amp; Klis, F. M. (2003). Genome-wide identification of fungal GPI proteins. <em>Yeast</em>, 20, 781–796 (groot2003genome‐wideidentificationof pages 10-10, groot2003genome‐wideidentificationof pages 10-12).</li>
+<li>Cruz, S., et al. (2013). The fission yeast cell wall stress sensor-like proteins Mtl2 and Wsc1 act by turning on the GTPase Rho1p. <em>MicrobiologyOpen</em>, 2, 778–794 (cruz2013thefissionyeast pages 1-2, cruz2013thefissionyeast pages 11-13).</li>
+<li>Cansado, J., et al. (2021). The fission yeast cell integrity pathway. <em>Journal of Fungi</em>, 8, 32 (cansado2021thefissionyeast pages 2-3).</li>
+<li>Levin, D. E. (2005). Cell wall integrity signaling in <em>Saccharomyces cerevisiae</em>. <em>Microbiol. Mol. Biol. Rev.</em>, 69, 262–291 (levin2005cellwallintegrity pages 8-9, levin2005cellwallintegrity pages 9-10).</li>
+<li>Yoshimi, A., et al. (2022). Cell wall integrity and its industrial applications in filamentous fungi. <em>Journal of Fungi</em>, 8, 435 (yoshimi2022cellwallintegrity pages 4-5, yoshimi2022cellwallintegrity pages 2-4).</li>
+<li>Zhou, Y., et al. (2015). The fission yeast MTREC complex targets CUTs and unspliced pre-mRNAs to the nuclear exosome. <em>Nature Communications</em>, 6, 7050 (zhou2015thefissionyeast pages 2-3, zhou2015thefissionyeast pages 8-8).</li>
+<li>Dobrev, N., et al. (2021). The zinc-finger protein Red1 orchestrates MTREC submodules. <em>Nature Communications</em>, 12 (dobrev2021thezincfingerprotein pages 1-2, dobrev2021thezincfingerprotein pages 3-4).</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(cruz2013thefissionyeast pages 1-2): Sandra Cruz, Sofía Muñoz, Elvira Manjón, Patricia García, and Yolanda Sanchez. The fission yeast cell wall stress sensor-like proteins mtl2 and wsc1 act by turning on the gtpase rho1p but act independently of the cell wall integrity pathway. MicrobiologyOpen, 2:778-794, Jul 2013. URL: https://doi.org/10.1002/mbo3.113, doi:10.1002/mbo3.113. This article has 55 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(groot2003genome‐wideidentificationof pages 10-10): Piet W. J. de Groot, Klaas J. Hellingwerf, and Frans M. Klis. Genome‐wide identification of fungal gpi proteins. Yeast, 20:781-796, Jul 2003. URL: https://doi.org/10.1002/yea.1007, doi:10.1002/yea.1007. This article has 388 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(groot2003genome‐wideidentificationof pages 10-12): Piet W. J. de Groot, Klaas J. Hellingwerf, and Frans M. Klis. Genome‐wide identification of fungal gpi proteins. Yeast, 20:781-796, Jul 2003. URL: https://doi.org/10.1002/yea.1007, doi:10.1002/yea.1007. This article has 388 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(yoshimi2022cellwallintegrity pages 7-8): Akira Yoshimi, Ken Miyazawa, Moriyuki Kawauchi, and Keietsu Abe. Cell wall integrity and its industrial applications in filamentous fungi. Journal of Fungi, 8:435, Apr 2022. URL: https://doi.org/10.3390/jof8050435, doi:10.3390/jof8050435. This article has 50 citations.</p>
+</li>
+<li>
+<p>(cansado2021thefissionyeast pages 2-3): José Cansado, Teresa Soto, Alejandro Franco, Jero Vicente-Soler, and Marisa Madrid. The fission yeast cell integrity pathway: a functional hub for cell survival upon stress and beyond. Journal of Fungi, 8:32, Dec 2021. URL: https://doi.org/10.3390/jof8010032, doi:10.3390/jof8010032. This article has 42 citations.</p>
+</li>
+<li>
+<p>(levin2005cellwallintegrity pages 8-9): David E. Levin. Cell wall integrity signaling in saccharomyces cerevisiae. Microbiology and Molecular Biology Reviews, 69:262-291, Jun 2005. URL: https://doi.org/10.1128/mmbr.69.2.262-291.2005, doi:10.1128/mmbr.69.2.262-291.2005. This article has 1478 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(levin2005cellwallintegrity pages 9-10): David E. Levin. Cell wall integrity signaling in saccharomyces cerevisiae. Microbiology and Molecular Biology Reviews, 69:262-291, Jun 2005. URL: https://doi.org/10.1128/mmbr.69.2.262-291.2005, doi:10.1128/mmbr.69.2.262-291.2005. This article has 1478 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(yoshimi2022cellwallintegrity pages 2-4): Akira Yoshimi, Ken Miyazawa, Moriyuki Kawauchi, and Keietsu Abe. Cell wall integrity and its industrial applications in filamentous fungi. Journal of Fungi, 8:435, Apr 2022. URL: https://doi.org/10.3390/jof8050435, doi:10.3390/jof8050435. This article has 50 citations.</p>
+</li>
+<li>
+<p>(yoshimi2022cellwallintegrity pages 4-5): Akira Yoshimi, Ken Miyazawa, Moriyuki Kawauchi, and Keietsu Abe. Cell wall integrity and its industrial applications in filamentous fungi. Journal of Fungi, 8:435, Apr 2022. URL: https://doi.org/10.3390/jof8050435, doi:10.3390/jof8050435. This article has 50 citations.</p>
+</li>
+<li>
+<p>(cruz2013thefissionyeast pages 11-13): Sandra Cruz, Sofía Muñoz, Elvira Manjón, Patricia García, and Yolanda Sanchez. The fission yeast cell wall stress sensor-like proteins mtl2 and wsc1 act by turning on the gtpase rho1p but act independently of the cell wall integrity pathway. MicrobiologyOpen, 2:778-794, Jul 2013. URL: https://doi.org/10.1002/mbo3.113, doi:10.1002/mbo3.113. This article has 55 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(zhou2015thefissionyeast pages 2-3): Yang Zhou, Jianguo Zhu, Géza Schermann, Corina Ohle, Katja Bendrin, Rie Sugioka-Sugiyama, Tomoyasu Sugiyama, and Tamás Fischer. The fission yeast mtrec complex targets cuts and unspliced pre-mrnas to the nuclear exosome. Nature Communications, May 2015. URL: https://doi.org/10.1038/ncomms8050, doi:10.1038/ncomms8050. This article has 139 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(zhou2015thefissionyeast pages 8-8): Yang Zhou, Jianguo Zhu, Géza Schermann, Corina Ohle, Katja Bendrin, Rie Sugioka-Sugiyama, Tomoyasu Sugiyama, and Tamás Fischer. The fission yeast mtrec complex targets cuts and unspliced pre-mrnas to the nuclear exosome. Nature Communications, May 2015. URL: https://doi.org/10.1038/ncomms8050, doi:10.1038/ncomms8050. This article has 139 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(dobrev2021thezincfingerprotein pages 1-2): Nikolay Dobrev, Yasar Luqman Ahmed, Anusree Sivadas, Komal Soni, Tamás Fischer, and Irmgard Sinning. The zinc-finger protein red1 orchestrates mtrec submodules and binds the mtl1 helicase arch domain. Nature Communications, Jun 2021. URL: https://doi.org/10.1038/s41467-021-23565-3, doi:10.1038/s41467-021-23565-3. This article has 30 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(zhou2015thefissionyeast pages 1-2): Yang Zhou, Jianguo Zhu, Géza Schermann, Corina Ohle, Katja Bendrin, Rie Sugioka-Sugiyama, Tomoyasu Sugiyama, and Tamás Fischer. The fission yeast mtrec complex targets cuts and unspliced pre-mrnas to the nuclear exosome. Nature Communications, May 2015. URL: https://doi.org/10.1038/ncomms8050, doi:10.1038/ncomms8050. This article has 139 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(dobrev2021thezincfingerprotein pages 3-4): Nikolay Dobrev, Yasar Luqman Ahmed, Anusree Sivadas, Komal Soni, Tamás Fischer, and Irmgard Sinning. The zinc-finger protein red1 orchestrates mtrec submodules and binds the mtl1 helicase arch domain. Nature Communications, Jun 2021. URL: https://doi.org/10.1038/s41467-021-23565-3, doi:10.1038/s41467-021-23565-3. This article has 30 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="mtl3-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>cruz2013thefissionyeast pages 1-2</li>
+<li>dobrev2021thezincfingerprotein pages 1-2</li>
+<li>cansado2021thefissionyeast pages 2-3</li>
+<li>yoshimi2022cellwallintegrity pages 7-8</li>
+<li>levin2005cellwallintegrity pages 8-9</li>
+<li>levin2005cellwallintegrity pages 9-10</li>
+<li>yoshimi2022cellwallintegrity pages 2-4</li>
+<li>yoshimi2022cellwallintegrity pages 4-5</li>
+<li>cruz2013thefissionyeast pages 11-13</li>
+<li>zhou2015thefissionyeast pages 2-3</li>
+<li>zhou2015thefissionyeast pages 8-8</li>
+<li>zhou2015thefissionyeast pages 1-2</li>
+<li>dobrev2021thezincfingerprotein pages 3-4</li>
+<li>https://doi.org/10.1002/mbo3.113,</li>
+<li>https://doi.org/10.1002/yea.1007,</li>
+<li>https://doi.org/10.3390/jof8050435,</li>
+<li>https://doi.org/10.3390/jof8010032,</li>
+<li>https://doi.org/10.1128/mmbr.69.2.262-291.2005,</li>
+<li>https://doi.org/10.1038/ncomms8050,</li>
+<li>https://doi.org/10.1038/s41467-021-23565-3,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(mtl3-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O94317" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="mtl3-spbc21513-uniprot-o94317-curation-notes">mtl3 (SPBC215.13, UniProt O94317) — curation notes</h1>
+<h2 id="identity-and-a-critical-name-disambiguation">Identity and a critical name disambiguation</h2>
+<p><strong>mtl3</strong> is the PomBase standard name for <em>S. pombe</em> systematic-name <strong>SPBC215.13</strong>,<br />
+UniProt <strong>O94317</strong> (entry name <code>YH5D_SCHPO</code>, 534 aa). PomBase product description<br />
+(verbatim): <strong>"plasma membrane-associated serine-rich cell wall sensor Mtl1/Mtl3"</strong>;<br />
+PomBase name description: <strong>"S. cerevisiae Mid Two-Like"</strong>; PomBase exact synonym: <strong>mtl1</strong>.<br />
+So the gene symbol string "mtl1"/"mtl3" here means <strong>"Mid Two-Like"</strong> (Mtl = <em>Mid Two-Like</em>),<br />
+i.e. this is a <strong>Mid2-like cell-wall-integrity (CWI) stress sensor</strong>.</p>
+<p><strong>IMPORTANT — this is NOT the Mtr4-like RNA helicase.</strong> The curation task described mtl3 as<br />
+"a Mtr4-like DExH RNA-helicase-family member related to the nuclear RNA-surveillance/MTREC<br />
+machinery." That description is a <strong>name collision</strong>: in <em>S. pombe</em> the <strong>Mtr4-like helicase</strong><br />
+is a <em>different</em> gene, PomBase standard name <strong>mtl1 = SPAC17H9.02</strong> (an MTREC/NURS-complex<br />
+DExH-box RNA helicase; UniProt O60058), reviewed e.g. in<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/24210919" title="Mtr4-like protein coordinates nuclear RNA processing...">PMID:24210919</a> and<br />
+[PMID:26089201 (MTREC targets CUTs), Nat Commun 6:7050]. The two share the abbreviation<br />
+"Mtl" but stand for entirely different things (Mid-Two-Like vs Mtr4-Like). The UniProt<br />
+record for O94317 is decisive: it is a <strong>serine-rich GPI-anchored plasma-membrane/ER<br />
+precursor with a signal peptide and a single N-terminal transmembrane segment — there is<br />
+NO helicase domain, NO DExH/DEAD box, NO Walker A/B (P-loop) NTPase motif, and NO<br />
+arch/KOW domain</strong>. All downstream reasoning below treats mtl3/SPBC215.13 strictly as the<br />
+Mid2-like cell-wall sensor.</p>
+<h2 id="domain-sequence-analysis-inline-from-the-uniprot-record-o94317">Domain / sequence analysis (inline, from the UniProt record O94317)</h2>
+<ul>
+<li>534 aa; MW 53.4 kDa. <code>PE 1: Evidence at protein level</code>.</li>
+<li><strong>Signal peptide</strong> 1–22 (ECO:0000255) → secretory-pathway entry.</li>
+<li><strong>Single transmembrane segment</strong> ~7–29 (TMHMM, PomBase) near the N-terminus.</li>
+<li><strong>GPI-anchor</strong> predicted (KW GPI-anchor, Lipoprotein; PROPEP <code>?..534</code> "Removed in mature form",<br />
+  ECO:0000255) — C-terminal signal for GPI attachment; MOD:00818 (PomBase).</li>
+<li><strong>Two large disordered / low-complexity regions</strong> (MobiDB-lite: 70–145 and 176–418;<br />
+  PomBase low-complexity: 62–89, 92–420, 426–445, 449–492, 501–517). The sequence is<br />
+  strikingly <strong>serine-rich</strong> (long runs of S/T/P), the hallmark of the O-mannosylated,<br />
+  cell-wall-facing ectodomain of fungal CWI mechanosensors.</li>
+<li><strong>N-glycosylation</strong> at N31 and N426 (ECO:0000255; PMID:36408920 for the PSI-MOD sites).</li>
+<li>Subcellular location (UniProt): <strong>Endoplasmic reticulum</strong> (ECO:0000269|PubMed:16823372,<br />
+  ORFeome GFP localization) and <strong>Cell membrane; Lipid-anchor, GPI-anchor</strong> (ECO:0000305).</li>
+<li><strong>Catalytic competence:</strong> none inferred — no enzymatic domain of any kind. This is a<br />
+  structural/signaling single-pass membrane glycoprotein, consistent with a cell-surface sensor.</li>
+</ul>
+<p>Architecture summary: N-terminal signal peptide + single TM anchor → long serine/threonine-rich<br />
+(O-mannosylation-prone) extracellular ectodomain → C-terminal GPI-anchor addition. This is the<br />
+canonical architecture of fungal plasma-membrane cell-wall stress sensors (Wsc/Mid2/Mtl family).</p>
+<h2 id="what-is-known-with-provenance">What is KNOWN (with provenance)</h2>
+<ul>
+<li><strong>Localization:</strong> external side of the plasma membrane / cell surface; GPI-anchored.<br />
+  [GOA GO:0009897 external side of plasma membrane, TAS PMID:12845604]; ER + cell membrane<br />
+  [UniProt, PubMed:16823372 ORFeome localization; PubMed:12845604 GPI prediction].<br />
+  PMID:12845604 is the genome-wide fungal-GPI-protein prediction study<br />
+  ["only 33 GPI candidates were identified" in Sz. pombe] — supports GPI/cell-surface class,<br />
+  abstract-only (full_text_available: false).</li>
+<li><strong>It is a member of the Mid2-like cell-wall sensor family</strong> (PomBase name "Mid Two-Like";<br />
+  product "cell wall sensor Mtl1/Mtl3"). The <em>S. pombe</em> CWI sensor family (Wsc1, Mtl2, Mid2-like<br />
+  proteins) are single-pass, Ser/Thr-rich, O-mannosylated membrane sensors that signal to the<br />
+  Rho1 GTPase [PMID:23907979 Cruz et al. 2013 MicrobiologyOpen; Mtl2 and Wsc1 turn on Rho1p;<br />
+  family context, not mtl3-specific evidence].</li>
+<li><strong>Deletion phenotypes (mtl3Δ), curated in PomBase from a genome-wide phenomics screen</strong><br />
+  [PMID:37787768 Rodríguez-López et al. 2023 eLife, phenomics/ML dataset]:<br />
+  altered sensitivity/resistance to cell-wall/membrane and ionic stressors — sensitive to<br />
+  SDS + MgCl2, ethanol, lithium, cycloheximide; resistant to EGTA, KCl+SDS, MgCl2+SDS,<br />
+  tert-butyl hydroperoxide; loss of viability in stationary phase; increased vegetative<br />
+  growth; otherwise viable with normal morphology (FYPO terms listed in PomBase). These are<br />
+  the classic phenotypic signatures of a CWI/membrane stress sensor. NOTE: this is a<br />
+  large-scale dataset paper; it does not discuss mtl3 by name in the text, so no verbatim<br />
+  mtl3-specific quote is available — the annotations derive from the supplementary phenotype matrix.</li>
+<li><strong>Post-transcriptional regulation:</strong> mtl3 mRNA is a target in a systematic RNA-stability /<br />
+  RNA-binding-protein study [PMID:25375137 Hasan et al. 2014 PLoS Genet]; PomBase records mtl3<br />
+  as a target-of (zfs1) mRNA-binding annotation. Again a systematic dataset (no in-text mtl3 prose).</li>
+<li><strong>Ortholog:</strong> <em>S. japonicus</em> SJAG_00415 (also named mtl3) [PMID:21511999, PomBase ortholog annotation].<br />
+  Taxonomic distribution "Schizosaccharomyces specific" per PomBase.</li>
+<li>PomBase characterization status: <strong>"biological role published"</strong> (i.e. a biological role has<br />
+  been assigned, chiefly via the phenomics phenotype profile and family membership).</li>
+</ul>
+<h2 id="what-is-not-known-knowledge-gaps">What is NOT known (knowledge gaps)</h2>
+<ul>
+<li><strong>No experimentally demonstrated molecular function.</strong> GOA MF is GO:0003674 (ND). No ligand,<br />
+  no direct binding partner, no signaling-output assay published <em>for mtl3 specifically</em>. Its<br />
+  proposed role as a Rho1/CWI-pathway sensor is inferred from family membership and phenotypes,<br />
+  not shown directly for this protein.</li>
+<li><strong>No direct evidence of the signaling pathway it feeds</strong> (Rho1 GEFs? Pmk1 MAPK? Mkh1–Pek1–Pmk1<br />
+  cascade?). Note the related sensors Mtl2/Wsc1 signal to Rho1 but were reported to act<br />
+<em>independently of</em> Pmk1 MAPK <a href="https://pubmed.ncbi.nlm.nih.gov/23907979">PMID:23907979</a>; whether mtl3 uses the MAPK-independent Rho1 route is unknown.</li>
+<li><strong>Redundancy / genetic relationships</strong> with the other S. pombe cell-wall sensors (wsc1, mtl2,<br />
+  and any mid2-like paralog) are not established for mtl3.</li>
+<li><strong>No structure</strong> (only AlphaFold model). No biochemistry (glycosylation confirmed only by<br />
+  prediction + one PSI-MOD dataset). The Ser/Thr-rich ectodomain O-mannosylation is inferred.</li>
+<li>Whether the ER localization (ORFeome GFP) is the mature steady-state site or an<br />
+  overexpression/trafficking artifact vs. the functional plasma-membrane pool is unresolved.</li>
+</ul>
+<h2 id="curation-plan-for-the-5-goa-annotations">Curation plan for the 5 GOA annotations</h2>
+<ol>
+<li>GO:0005783 endoplasmic reticulum (IEA, GO_REF:0000044, located_in) — KEEP_AS_NON_CORE.<br />
+   Supported by UniProt SubCell (ORFeome GFP, PubMed:16823372); plausible as secretory-pathway<br />
+   transit; not the primary functional site.</li>
+<li>GO:0005886 plasma membrane (IEA, GO_REF:0000044, located_in) — ACCEPT (core location; but the<br />
+   more specific external-side term below is preferable). Keep; MF/location core is the cell surface.</li>
+<li>GO:0003674 molecular_function (ND, GO_REF:0000015) — KEEP_AS_NON_CORE / accept the ND: honestly<br />
+   reflects that no MF has been experimentally determined. (ND root — cannot MODIFY to a specific<br />
+   MF without evidence; flag as knowledge gap rather than invent an MF.)</li>
+<li>GO:0008150 biological_process (ND, GO_REF:0000015) — same: ND root reflects no assigned BP.<br />
+   A cell-wall-integrity/stress-response BP is <em>inferred</em> from phenotypes but not directly shown;<br />
+   do not over-annotate. Keep ND; note gap.</li>
+<li>GO:0009897 external side of plasma membrane (TAS, PMID:12845604, is_active_in) — ACCEPT.<br />
+   Most specific, best-supported localization (GPI-anchored ectodomain on the outer PM face).</li>
+</ol>
+<h2 id="falcon-deep-research-corroboration-independent">Falcon deep-research corroboration (independent)</h2>
+<p>The falcon deep-research report (<code>mtl3-deep-research-falcon.md</code>, generated 2026-07-06 with the<br />
+correct O94317/SPBC215.13 context) independently reached the SAME identity and disambiguation:<br />
+it classifies mtl3/SPBC215.13 as a putative GPI-anchored, serine/threonine-rich cell-surface<br />
+glycoprotein of the "Mid two-like" family, and includes a dedicated section explicitly stating<br />
+that mtl3 is "functionally and structurally unrelated" to the Mtr4-like MTREC helicase Mtl1<br />
+"despite the superficial similarity in naming". It likewise notes that the symbol "mtl3" does<br />
+not appear in the retrieved primary literature (dark gene), so identity is anchored to the<br />
+systematic ID + UniProt accession. This is independent confirmation of the review's central<br />
+finding; no fabricated function was introduced.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O94317
+gene_symbol: mtl3
+aliases:
+  - SPBC215.13
+  - mtl1
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:284812
+  label: Schizosaccharomyces pombe (strain 972 / ATCC 24843)
+description: &gt;-
+  mtl3 (systematic name SPBC215.13; UniProt O94317) is a Schizosaccharomyces-specific,
+  GPI-anchored, serine/threonine-rich plasma-membrane glycoprotein of the fungal Mid2-like
+  cell-wall stress-sensor family (the name Mtl denotes &#34;Mid Two-Like&#34;; it is distinct from
+  and unrelated to the Mtr4-like nuclear RNA helicase, which in S. pombe is the separately
+  named mtl1/SPAC17H9.02). The 534-residue precursor has the canonical architecture of a
+  single-pass fungal cell-surface sensor: an N-terminal secretion signal peptide and a single
+  transmembrane segment, a long serine/threonine-rich, O-mannosylation-prone extracellular
+  ectodomain that is intrinsically disordered/low-complexity, N-linked glycosylation, and a
+  C-terminal GPI-anchor addition signal that tethers the mature protein to the outer face of
+  the plasma membrane. It carries no enzymatic domain of any kind (no helicase, ATPase/P-loop,
+  or other catalytic module). Genome-wide deletion phenotyping shows mtl3 loss alters
+  sensitivity and resistance to cell-wall-perturbing and ionic stresses (e.g. altered
+  responses to SDS combined with salts, ethanol, lithium, and oxidants) and reduces viability
+  in stationary phase, consistent with a role at the cell surface in sensing envelope/membrane
+  stress. By family membership its inferred role is to transmit cell-wall/membrane stress to
+  intracellular signaling (as for the related fission-yeast sensors Wsc1 and Mtl2, which
+  activate the Rho1 GTPase), but a direct molecular activity, ligand, signaling partner, or
+  pathway output has not been experimentally established for mtl3 itself.
+references:
+  - id: GO_REF:0000015
+    title: Use of the ND evidence code for Gene Ontology (GO) terms
+    findings: []
+  - id: GO_REF:0000044
+    title: &gt;-
+      Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary
+      mapping, accompanied by conservative changes to GO terms applied by UniProt
+    findings: []
+  - id: PMID:12845604
+    title: Genome-wide identification of fungal GPI proteins.
+    findings:
+      - statement: &gt;-
+          Genome-wide computational screen predicting GPI-anchored proteins across fungi; the
+          S. pombe GPI proteome is small, and mtl3/SPBC215.13 was identified as a predicted
+          GPI-anchored cell-surface protein, supporting its localization to the outer face of
+          the plasma membrane.
+        supporting_text: &#34;only 33 GPI candidates were identified&#34;
+        reference_section_type: ABSTRACT
+    reference_review:
+      relevance: MEDIUM
+      correctness: VERIFIED
+      review_notes: &gt;-
+        PubMed-verified genome-wide fungal GPI-protein prediction study (De Groot et al. 2003,
+        Yeast). Abstract-only in cache (full_text_available: false). It establishes mtl3 as a
+        predicted GPI-anchored cell-surface protein (basis of the TAS GO:0009897 annotation),
+        but says nothing about its molecular function or signaling role.
+  - id: PMID:16823372
+    title: &gt;-
+      ORFeome cloning and global analysis of protein localization in the fission yeast
+      Schizosaccharomyces pombe.
+    findings:
+      - statement: &gt;-
+          Systematic GFP-fusion localization study; the source of the UniProt endoplasmic
+          reticulum subcellular-location assignment for mtl3 (a secretory-pathway compartment
+          consistent with a GPI-anchored membrane protein en route to the cell surface).
+        supporting_text: &#34;ORFeome cloning and global analysis of protein localization&#34;
+        reference_section_type: TITLE
+    reference_review:
+      relevance: MEDIUM
+      correctness: VERIFIED
+      review_notes: &gt;-
+        PubMed-verified large-scale GFP-localization dataset (Matsuyama et al. 2006, Nat
+        Biotechnol); cited by UniProt (ECO:0000269|PubMed:16823372) as the source of the ER
+        localization. A systematic dataset, not an mtl3-focused study.
+  - id: PMID:37787768
+    title: Broad functional profiling of fission yeast proteins using phenomics and machine learning.
+    findings:
+      - statement: &gt;-
+          Genome-wide phenomics/machine-learning profiling of S. pombe deletion mutants; the
+          source of the curated mtl3-delta stress-response phenotypes (altered sensitivity and
+          resistance to cell-wall/membrane and ionic stressors; reduced stationary-phase
+          viability). mtl3 appears in the supplementary phenotype matrix rather than being
+          discussed by name in the text.
+        supporting_text: &#34;Broad functional profiling of fission yeast proteins using phenomics and machine learning&#34;
+        reference_section_type: TITLE
+    reference_review:
+      relevance: MEDIUM
+      correctness: VERIFIED
+      review_notes: &gt;-
+        PubMed/PMC-verified (Rodriguez-Lopez et al. 2023, eLife; PMC10547477). Full text
+        available but mtl3-specific data live in the genome-wide phenotype dataset, so no
+        mtl3-specific prose quote is available; supports the deletion phenotypes at the
+        dataset level, consistent with a cell-surface stress-sensor role.
+  - id: PMID:25375137
+    title: Systematic analysis of the role of RNA-binding proteins in the regulation of RNA stability.
+    findings:
+      - statement: &gt;-
+          Systematic RNA-stability / RNA-binding-protein study; the basis for PomBase&#39;s record
+          of mtl3 mRNA as a regulatory target (of the zinc-finger RNA-binding protein zfs1),
+          indicating post-transcriptional control of mtl3 expression.
+        supporting_text: &#34;Systematic analysis of the role of RNA-binding proteins in the regulation of RNA stability&#34;
+        reference_section_type: TITLE
+    reference_review:
+      relevance: LOW
+      correctness: VERIFIED
+      review_notes: &gt;-
+        PubMed/PMC-verified (Hasan et al. 2014, PLoS Genet; PMC4222612). Systematic dataset;
+        mtl3 is a target in the supplementary data, not discussed by name. Relevant to mtl3
+        regulation, not to its molecular function.
+  - id: PMID:23907979
+    title: &gt;-
+      The fission yeast cell wall stress sensor-like proteins Mtl2 and Wsc1 act by turning on
+      the GTPase Rho1p but act independently of the cell wall integrity pathway.
+    findings:
+      - statement: &gt;-
+          Characterizes the related fission-yeast plasma-membrane cell-wall stress sensors Mtl2
+          and Wsc1, which signal by activating the Rho1 GTPase. Provides family/architecture
+          context for mtl3 (a Mid2-like sensor of the same class); it does not study mtl3
+          itself, so its findings are contextual rather than direct evidence for mtl3.
+        supporting_text: &gt;-
+          The fission yeast cell wall stress sensor-like proteins Mtl2 and Wsc1 act by turning
+          on the GTPase Rho1p but act independently of the cell wall integrity pathway
+        reference_section_type: TITLE
+    reference_review:
+      relevance: LOW
+      correctness: VERIFIED
+      review_notes: &gt;-
+        PubMed-verified (Cruz et al. 2013, MicrobiologyOpen; PMC3831639). Family/pathway context
+        for the S. pombe cell-wall sensor class; explicitly about paralogous sensors (Mtl2,
+        Wsc1), NOT about mtl3. Included to frame the inferred sensor role and to keep the
+        mtl3 (Mid-Two-Like) vs mtl1 (Mtr4-Like helicase) distinction clear.
+existing_annotations:
+  - term:
+      id: GO:0005783
+      label: endoplasmic reticulum
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000044
+    qualifier: located_in
+    review:
+      summary: &gt;-
+        ER localization is supported by the systematic GFP-localization dataset cited by
+        UniProt (ECO:0000269|PubMed:16823372) and is plausible as a secretory-pathway transit
+        compartment for a signal-peptide-bearing, GPI-anchored membrane protein en route to
+        the cell surface. It is not the primary functional site of the protein, which is the
+        plasma membrane.
+      action: KEEP_AS_NON_CORE
+      supported_by:
+        - reference_id: PMID:16823372
+          supporting_text: &#34;ORFeome cloning and global analysis of protein localization&#34;
+          reference_section_type: TITLE
+  - term:
+      id: GO:0005886
+      label: plasma membrane
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000044
+    qualifier: located_in
+    review:
+      summary: &gt;-
+        Plasma-membrane localization is consistent with the protein&#39;s architecture (signal
+        peptide, single transmembrane segment, and C-terminal GPI-anchor addition signal) and
+        with its predicted GPI-anchored cell-surface status. This is a core localization,
+        although the more specific term GO:0009897 (external side of plasma membrane) better
+        captures where the GPI-anchored ectodomain resides.
+      action: ACCEPT
+  - term:
+      id: GO:0003674
+      label: molecular_function
+    evidence_type: ND
+    original_reference_id: GO_REF:0000015
+    qualifier: enables
+    review:
+      summary: &gt;-
+        No molecular function has been experimentally determined for mtl3, so the ND (No
+        Data) root annotation is an honest and appropriate reflection of the current state of
+        knowledge. Although family membership (a Mid2-like cell-wall sensor) suggests a
+        stress-sensing/signal-transducing role, there is no direct assay of ligand binding,
+        signaling output, or any catalytic activity for this protein, and its sequence lacks
+        any enzymatic domain. The unknown molecular function is recorded as a knowledge gap
+        rather than filled by an unsupported specific term.
+      action: KEEP_AS_NON_CORE
+  - term:
+      id: GO:0008150
+      label: biological_process
+    evidence_type: ND
+    original_reference_id: GO_REF:0000015
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        No biological process has been directly demonstrated for mtl3, so the ND root
+        annotation is appropriate. Deletion phenotypes (altered sensitivity/resistance to
+        cell-wall/membrane and ionic stressors; reduced stationary-phase viability) and
+        membership in the Mid2-like sensor family point toward a role in cell-wall-integrity /
+        stress signaling, but this is inferred, not established. A specific BP term should not
+        be asserted from the current evidence; the gap is recorded below.
+      action: KEEP_AS_NON_CORE
+  - term:
+      id: GO:0009897
+      label: external side of plasma membrane
+    evidence_type: TAS
+    original_reference_id: PMID:12845604
+    qualifier: is_active_in
+    review:
+      summary: &gt;-
+        This is the most specific and best-supported localization: a GPI-anchored,
+        serine/threonine-rich ectodomain displayed on the outer (external) face of the plasma
+        membrane, exactly as expected for a fungal cell-wall stress sensor. Supported by the
+        genome-wide GPI-protein prediction study and consistent with the UniProt GPI-anchor
+        and topology features.
+      action: ACCEPT
+      supported_by:
+        - reference_id: PMID:12845604
+          supporting_text: &#34;only 33 GPI candidates were identified&#34;
+          reference_section_type: ABSTRACT
+core_functions:
+  - description: &gt;-
+      Displays a serine/threonine-rich, GPI-anchored ectodomain on the external face of the
+      plasma membrane. mtl3 belongs to the fungal Mid2-like cell-wall stress-sensor family and
+      is inferred to participate in sensing cell-wall/membrane stress at the cell surface, but
+      its molecular activity and downstream signaling partners are undetermined; only its
+      cell-surface localization is directly supported.
+    supported_by:
+      - reference_id: PMID:12845604
+        supporting_text: &#34;only 33 GPI candidates were identified&#34;
+        reference_section_type: ABSTRACT
+    locations:
+      - id: GO:0009897
+        label: external side of plasma membrane
+      - id: GO:0005886
+        label: plasma membrane
+    knowledge_gaps:
+      - gap_statement: &gt;-
+          The molecular function of mtl3 is undetermined: it is unknown what (if any) cell-wall
+          or membrane cue it senses, what its direct binding partner or signaling output is, and
+          whether it acts as a bona fide stress sensor/receptor, a purely structural cell-surface
+          glycoprotein, or an adhesion/mannoprotein-like component. No molecular-function GO term
+          is currently justified beyond the ND root.
+        boundary: &gt;-
+          Firmly established: mtl3 is a Schizosaccharomyces-specific, GPI-anchored,
+          serine/threonine-rich, N-glycosylated single-pass glycoprotein displayed on the
+          external face of the plasma membrane, with the canonical architecture of the fungal
+          Mid2-like cell-wall sensor family and stress-related deletion phenotypes. It has no
+          catalytic/enzymatic domain.
+        gap_kind:
+          - BIOLOGY
+        dark_aspect: MF_DARK
+        status: OPEN
+        significance: &gt;-
+          mtl3 is a candidate component of the fission-yeast cell-surface stress-sensing system
+          (alongside Wsc1 and Mtl2, which activate Rho1); establishing whether and how it
+          transduces cell-wall/membrane stress would clarify redundancy within this sensor family
+          and how fission yeast couples envelope integrity to intracellular signaling.
+        resolution: &gt;-
+          Test genetic interactions and redundancy with wsc1, mtl2 and other cell-wall sensors;
+          assay activation of Rho1/CWI signaling (e.g. Pmk1 MAPK phosphorylation, Rho1-GTP
+          levels) in mtl3-delta under cell-wall stress; identify interacting partners of the
+          cytoplasmic region by proximity/affinity proteomics; and confirm the O-mannosylated
+          ectodomain and GPI anchor biochemically.
+        provenance:
+          - reference_id: GO_REF:0000015
+            supporting_text: Use of the ND evidence code for Gene Ontology (GO) terms
+            reference_section_type: OTHER
+knowledge_gaps:
+  - gap_statement: &gt;-
+      mtl3 has no experimentally established molecular function, no identified binding partner
+      or ligand, and no directly demonstrated biological process. Its assignment to the Mid2-like
+      cell-wall stress-sensor family and its inferred role in transmitting cell-wall/membrane
+      stress to intracellular signaling (e.g. via Rho1, as shown for the related sensors Wsc1
+      and Mtl2) are extrapolations from family membership, sequence architecture, and deletion
+      phenotypes, not from direct study of the mtl3 protein.
+    boundary: &gt;-
+      Firmly established: subcellular localization (GPI-anchored, external face of the plasma
+      membrane; ER in transit); protein architecture (signal peptide, single N-terminal
+      transmembrane segment, long serine/threonine-rich disordered/low-complexity ectodomain,
+      N-glycosylation, C-terminal GPI-anchor signal; no enzymatic domain); genome-wide deletion
+      phenotypes (altered sensitivity/resistance to cell-wall/membrane and ionic stressors,
+      reduced stationary-phase viability); post-transcriptional regulation of its mRNA (a zfs1
+      target); and a single S. japonicus ortholog (SJAG_00415). The gene is Schizosaccharomyces-
+      specific.
+    gap_kind:
+      - BIOLOGY
+    dark_aspect: WHOLLY_DARK
+    status: OPEN
+    significance: &gt;-
+      Fission yeast maintains cell-wall integrity through a set of cell-surface sensors, but the
+      specific contribution, redundancy, and signaling wiring of mtl3 within this system are
+      unknown. mtl3 is a genuinely understudied (&#34;dark&#34;) gene whose only high-confidence GO
+      statement is its cell-surface localization; both its molecular function and biological
+      process remain at the ND root.
+    resolution: &gt;-
+      Direct functional study of mtl3: epistasis/redundancy analysis with wsc1, mtl2, mid2 and
+      the Rho1/Pmk1 CWI machinery; sensor-activation assays under defined cell-wall/membrane
+      stress; identification of interacting proteins; and structural/biochemical confirmation of
+      the ectodomain modifications. Any positive result would move both the MF and BP aspects off
+      the ND root.
+    provenance:
+      - reference_id: GO_REF:0000015
+        supporting_text: Use of the ND evidence code for Gene Ontology (GO) terms
+        reference_section_type: OTHER
+suggested_questions:
+  - question: &gt;-
+      Does mtl3 function as a cell-wall/membrane stress sensor that activates Rho1 and/or the
+      Pmk1 cell-wall-integrity MAP kinase pathway, and is this activity redundant with wsc1 and
+      mtl2?
+  - question: &gt;-
+      What cue does the serine/threonine-rich, O-mannosylated ectodomain of mtl3 sense, and does
+      the cytoplasmic/juxtamembrane region recruit any GEF or signaling partner?
+  - question: &gt;-
+      Why is mtl3 mRNA a target of the RNA-binding protein zfs1, and does this post-transcriptional
+      control couple mtl3 levels to a specific stress condition?
+suggested_experiments:
+  - description: &gt;-
+      Construct single and combinatorial deletions (mtl3-delta alone and with wsc1-delta,
+      mtl2-delta, mid2-delta) and assay growth and morphology under cell-wall/membrane stress
+      (SDS, caspofungin/echinocandins, calcofluor, sorbitol osmotic support), scoring for
+      synthetic phenotypes that reveal redundancy within the sensor family.
+  - description: &gt;-
+      Measure Rho1-GTP loading and Pmk1 MAPK phosphorylation in mtl3-delta versus wild type
+      under cell-wall stress to test whether mtl3 feeds the Rho1/CWI signaling axis.
+  - description: &gt;-
+      Perform proximity-labeling or affinity-purification mass spectrometry on tagged mtl3 to
+      identify cell-surface and cytoplasmic interaction partners, and biochemically confirm the
+      predicted GPI anchor and O-mannosylated ectodomain.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

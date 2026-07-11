@@ -2,6 +2,7 @@
 title: "Enzyme Specificity Project"
 maturity: COMPLETE
 tags: [PIPELINE, FLAGSHIP]
+species: [CANAL, human, SACEN]
 ---
 
 # Enzyme Specificity Project
@@ -101,6 +102,54 @@ Enzyme specificity is crucial for accurate functional annotation. Misannotated s
 
 **Notes**: 6-phosphogluconate dehydrogenase with interesting dual localization (cytosol and peroxisome via alternative splicing). Review needed for specificity annotations.
 
+### Mitochondrial fatty acid β-oxidation (acyl-chain-length specificity)
+
+**Species**: human · **Status**: COMPLETE · **Module**: `MODULE:fatty_acid_beta_oxidation`
+
+A clean, paralog-rich worked example of **substrate (acyl-chain-length)
+specificity**. The four-step β-oxidation spiral (dehydrogenase → hydratase →
+3-hydroxyacyl-CoA dehydrogenase → thiolase) is run by families of chain-length-
+specific isozymes; the curation principle is **use the chain-length-specific MF
+term where one exists, and fall back to the general term where it does not**
+("not all MF have them"). Reviewed across all ten human enzymes:
+
+| Step | Gene | UniProt | MF term | Chain-length specificity |
+|------|------|---------|---------|--------------------------|
+| ① dehydrogenase | ACADVL | P49748 | `GO:0017099` | very-long/long-chain-specific |
+| ① dehydrogenase | ACAD9 | Q9H845 | `GO:0017099` | VLC + complex I assembly factor |
+| ① dehydrogenase | ACADM | P11310 | `GO:0070991` | medium-chain-specific |
+| ① dehydrogenase | ACADS | P16219 | `GO:0016937` | short-chain-specific |
+| ② hydratase | HADHA | P40939 | `GO:0004300` | long-chain (no LC-specific MF; in MTP) |
+| ② hydratase | ECHS1 | P30084 | `GO:0004300` | short/medium (no SC-specific MF) |
+| ③ 3-OH-acyl-CoA DH | HADHA | P40939 | `GO:0016509` | long-chain-specific (in MTP) |
+| ③ 3-OH-acyl-CoA DH | HADH | Q16836 | `GO:0003857` | short/medium (no SC-specific MF) |
+| ④ thiolase | HADHB | P55084 | `GO:0003988` | long-chain (in MTP; no chain-specific MF) |
+| ④ thiolase | ACAA2 | P42765 | `GO:0003988` | medium/long straight-chain (no chain-specific MF) |
+| ④ thiolase | ACAT1 | P24752 | `GO:0003985` | acetoacetyl-CoA (C4; ketone-body/Ile, not the spiral) |
+
+**Specificity errors caught:**
+- **Too broad → specific (MODIFY)**: HADHA's generic 3-hydroxyacyl-CoA
+  dehydrogenase annotations modified to the long-chain-specific `GO:0016509`.
+- **Wrong chain-length (over-annotation)**: long-chain `GO:0016509` annotated on
+  **HADH**, which is the *short/medium*-chain enzyme — that activity is HADHA's.
+- **Wrong subunit / activity (REMOVE)**: thiolase MF (`GO:0003985`) on **HADHA** —
+  thiolase is the HADHB subunit's activity; the cited paper itself shows the
+  α-cDNA yields only hydratase + dehydrogenase.
+- **Cross-gene mis-attribution (REMOVE)**: cholesterol O-acyltransferase +
+  ER localization on **ACAT1** — these came from a SOAT1/SOAT2 paper via the
+  historical "ACAT1" nickname collision; mitochondrial T2 has no sterol activity.
+- **Paralog cross-transfer (REMOVE)**: several IEA/ISS terms on **ACADVL** were
+  propagated from mouse LCAD (*Acadl*), including a self-contradictory
+  "negative regulation of fatty acid oxidation".
+
+**Reaction-specificity / mapping gap (links to RHEA project):** the GO→RHEA
+chaining check on the module flags ① → ② as a break — step ① makes
+(2E)-enoyl-CoA, but the hydratase MF `GO:0004300` maps only to RHEA:20724 (the
+(3E)-enoyl-CoA variant), not the canonical (2E) crotonase RHEA:16105. The
+chemistry is correct; the gap is in the **GO:0004300 → RHEA** mapping. See
+`projects/RHEA/RHEA-EC-SPECIFICITY.md` and the module's
+`modules/fatty_acid_beta_oxidation/RESULTS.md`.
+
 ## Genes for Review
 
 ### Priority 1: Completed
@@ -114,6 +163,20 @@ Enzyme specificity is crucial for accurate functional annotation. Misannotated s
 EryCIII (EC 2.4.1.278) was IEA-annotated `GO:0008194` UDP-glycosyltransferase activity, but it
 transfers **TDP-D-desosamine** (a dTDP-sugar), not a UDP-sugar (PMID:15303858). MODIFY to the
 accurate, IDA-supported `GO:0016758` hexosyltransferase activity. See `genes/SACEN/eryCIII/`.
+
+### Priority 1: Completed — fatty acid β-oxidation (acyl-chain-length specificity)
+| Gene | Species | Issue | Status |
+|------|---------|-------|--------|
+| ACADVL | human | Chain-length-specific MF; mouse-LCAD paralog cross-transfer removed | COMPLETE |
+| ACAD9 | human | VLC dehydrogenase + complex I assembly factor | COMPLETE |
+| ACADM | human | Medium-chain-specific MF (`GO:0070991`) | COMPLETE |
+| ACADS | human | Short-chain-specific MF (`GO:0016937`) | COMPLETE |
+| HADHA | human | Generic→long-chain-specific MODIFY; thiolase MF removed (HADHB's) | COMPLETE |
+| HADHB | human | Long-chain thiolase (MTP β subunit) | COMPLETE |
+| ECHS1 | human | General hydratase MF (no SC-specific term) | COMPLETE |
+| HADH | human | Short/medium MF; long-chain `GO:0016509` over-annotation flagged | COMPLETE |
+| ACAT1 | human | SOAT1/cholesterol mis-attribution removed | COMPLETE |
+| ACAA2 | human | Straight-chain 3-ketoacyl-CoA thiolase | COMPLETE |
 
 ### Priority 2: Pending
 | Gene | Species | Issue | Status |
@@ -134,11 +197,12 @@ accurate, IDA-supported `GO:0016758` hexosyltransferase activity. See `genes/SAC
 ## Completed Reviews
 - [x] CANAL/LPL1 - Phospholipase B specificity
 - [x] human/PHYKPL - Phospho-lyase vs transaminase
+- [x] human β-oxidation acyl-chain-length set (ACADVL, ACAD9, ACADM, ACADS, HADHA, HADHB, ECHS1, HADH, ACAT1, ACAA2)
 
 ## Pending Reviews
 - [ ] CANAL/GND1 - 6-phosphogluconate dehydrogenase
 
-Last updated: 2026-01-22
+Last updated: 2026-06-30
 
 # NOTES
 
@@ -159,3 +223,26 @@ Created project to track enzyme specificity annotation issues.
 - Biochemically: "did not act as transaminases"
 - Functions as phospho-lyase (EC 4.2.3.134)
 - Needs specific GO term for its reaction
+
+## 2026-06-30
+
+**Added the mitochondrial fatty acid β-oxidation acyl-chain-length specificity set.**
+
+Reviewed all ten human β-oxidation enzymes as a paralog-rich worked example of
+substrate-chain-length specificity (a flavour of categories 1 "too broad" and
+"wrong substrate"). Curation principle confirmed: use the chain-length-specific
+MF where it exists (VLCAD `GO:0017099`, MCAD `GO:0070991`, SCAD `GO:0016937`,
+long-chain 3-OH-acyl-CoA DH `GO:0016509`) and fall back to the general term where
+none exists (the hydratases ECHS1/HADHA → `GO:0004300`; the straight-chain
+thiolases HADHB/ACAA2 → `GO:0003988`; short/medium HADH → `GO:0003857`).
+
+Specificity errors removed/modified: HADHA generic→long-chain MODIFY and the
+mis-attributed thiolase MF removed; the long-chain `GO:0016509` over-annotation
+on short-chain HADH flagged; ACAT1's SOAT1/cholesterol terms removed
+(nickname collision); ACADVL's mouse-LCAD paralog cross-transfers removed.
+
+Cross-link: the cross-species `MODULE:fatty_acid_beta_oxidation` and its
+GO→RHEA chaining check (now generalized into the module tooling) surface a
+reaction-specificity mapping gap — `GO:0004300` maps to RHEA:20724 (the (3E)
+variant) rather than the canonical (2E) crotonase RHEA:16105. Logged for the
+RHEA project (`projects/RHEA/RHEA-EC-SPECIFICITY.md`).

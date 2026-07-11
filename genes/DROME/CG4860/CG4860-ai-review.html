@@ -1,0 +1,3660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CG4860 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>CG4860</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9VGC2" target="_blank" class="term-link">
+                        Q9VGC2
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Drosophila melanogaster</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "CG4860";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9VGC2" data-a="DESCRIPTION: CG4860 (Dmel\CG4860; FBgn0037999; UniProt Q9VGC2) ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>CG4860 (Dmel\CG4860; FBgn0037999; UniProt Q9VGC2) is a Drosophila melanogaster mitochondrial flavoenzyme of the acyl-CoA dehydrogenase (ACAD) family. The 415-residue protein contains the three canonical ACAD domains (N-terminal, middle and C-terminal) and is assigned to the short-/branched-chain ACAD subfamily by CDD (SCAD_SBCAD), with a non-covalently bound FAD cofactor; it is predicted to act in mitochondrial fatty acid beta-oxidation, catalyzing the FAD-dependent alpha,beta-dehydrogenation of a saturated acyl-CoA thioester to the corresponding trans-2-enoyl-CoA with electron transfer to electron-transfer flavoprotein (ETF). It is one of two Drosophila genes (the other being its paralog Arc42/CG4703) predicted by orthology to correspond to human ACADS/SCAD. The precise acyl-chain-length substrate specificity of CG4860 is uncertain: the &#34;short-chain specific&#34;/butyryl-CoA (EC 1.3.8.1) designation carried by the protein derives entirely from automated rule-based (ARBA/InterPro/EC) inference rather than direct characterization, and the only in vivo functional test in the fly indicates that loss of the paralog Arc42, not CG4860, reproduces the short-chain (C4/butyrylcarnitine) profile of human SCAD deficiency, so CG4860&#39;s exact substrate range and physiological role within fly beta-oxidation remain to be established experimentally.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016937" target="_blank" class="term-link">
+                                    GO:0016937
+                                </a>
+                            </span>
+                            <span class="term-label">short-chain fatty acyl-CoA dehydrogenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VGC2" data-a="GO:0016937" data-r="GO_REF:0000033" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically inferred (IBA) short-chain acyl-CoA dehydrogenase activity, propagated from the ACADS/SCAD PANTHER clade. CG4860 is a bona fide ACAD-family member, but its restriction to the short-chain (butyryl-CoA/C4) substrate class is not supported for this specific paralog: it is a family/clade inference, and the only in vivo fly test (Geronazzo et al. 2025) shows that loss of the paralog Arc42 - not CG4860 - reproduces the elevated-C4 (butyrylcarnitine) profile of human SCAD deficiency, while CG4860 knockout does not accumulate C4.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The molecular function (an acyl-CoA dehydrogenase) is sound, but the short-chain chain-length specificity is an over-specific rule/clade inference that direct fly evidence does not support (and partly contradicts) for CG4860. Generalize to the parent acyl-CoA dehydrogenase activity term, which is well supported by domain architecture and the ISS/IEA evidence. An independent OpenScientist analysis (run blinded to this review action as a neutral function-assignment hypothesis) reached the same verdict - retain the general GO:0003995 and flag GO:0016937 as over-specific - and adds a structural determinant: a Leu-to-Thr substitution at the RIGIA+8 substrate-specificity position lining CG4860&#39;s binding pocket (CG4860 has a small polar Thr, whereas both human ACADS and the fly paralog Arc42 carry the bulky hydrophobic Leu), which could shift CG4860 away from strict short-chain specificity.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003995" target="_blank" class="term-link">
+                                    acyl-CoA dehydrogenase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/40519079" target="_blank" class="term-link">
+                                        PMID:40519079
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In contrast, we did not observe an elevation of acylcarnitine C4 in the homozygous CG4860 mutant flies as compared to controls in either condition</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/CG4860/CG4860-hypotheses/function-hypothesis-go-0016937/openscientist.md
+
+                                </span>
+
+                                <div class="support-text">The smaller, polar threonine could accommodate longer or differently branched substrates, potentially shifting CG4860&#39;s substrate preference away from strict short-chain specificity.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/40519079" target="_blank" class="term-link">
+                                        PMID:40519079
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the acylcarnitine profile for Arc42 loss of function mimics that of ACADS loss of function, while that of CG4860 does not</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VGC2" data-a="GO:0005739" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically inferred mitochondrial localization (is_active_in), propagated from the mitochondrial ACAD clade. Consistent with the ACAD family (mitochondrial matrix beta-oxidation enzymes) and with the UniProt &#34;mitochondrial&#34; naming; there is no fly-specific localization datum but the assignment is biologically appropriate for this enzyme class.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Mitochondrial localization is the expected and consistent compartment for an acyl-CoA dehydrogenase family beta-oxidation enzyme; the IBA parent term is appropriate.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/CG4860/CG4860-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Lipid metabolism; mitochondrial fatty acid beta-oxidation</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033539" target="_blank" class="term-link">
+                                    GO:0033539
+                                </a>
+                            </span>
+                            <span class="term-label">fatty acid beta-oxidation using acyl-CoA dehydrogenase</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VGC2" data-a="GO:0033539" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically inferred involvement in the acyl-CoA dehydrogenase-catalyzed step of fatty acid beta-oxidation. CG4860 is an ACAD-family enzyme and its knockout perturbs the fly acylcarnitine (beta-oxidation) pool, so participation in the ACAD step of beta-oxidation is a reasonable process annotation even though the specific substrate chain length is uncertain.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The process (the ACAD step of fatty acid beta-oxidation) is concordant with CG4860 being an ACAD-family enzyme whose loss alters the acylcarnitine profile; this is more informative than generic fatty acid beta-oxidation and does not over-commit on substrate specificity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/40519079" target="_blank" class="term-link">
+                                        PMID:40519079
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Instead, we observed a significantly lower concentration of C4, and a significant elevation of C2 (acteylcarnitine)</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/CG4860/CG4860-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Belongs to the acyl-CoA dehydrogenase family</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046359" target="_blank" class="term-link">
+                                    GO:0046359
+                                </a>
+                            </span>
+                            <span class="term-label">butyrate catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VGC2" data-a="GO:0046359" data-r="GO_REF:0000033" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically inferred butyrate (butanoate, C4) catabolic process - a substrate-specific restatement of short-chain (butyryl-CoA/C4) ACAD activity. This is precisely the activity that the in vivo fly evidence attributes to the paralog Arc42 rather than to CG4860: CG4860 knockout does not accumulate C4 (butyrylcarnitine) and if anything shows lower C4. The C4-specific catabolic framing is therefore not supported for this paralog.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The narrow C4/butyrate-specific process is an over-specific clade inference that the direct fly knockout does not support (and partly contradicts) for CG4860; short-chain/butyryl-CoA function maps to the paralog Arc42. Retained but flagged as over-annotated rather than removed, since it derives from a genuine phylogenetic propagation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/40519079" target="_blank" class="term-link">
+                                        PMID:40519079
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">we did not observe an elevation of acylcarnitine C4 in the homozygous CG4860 mutant flies as compared to controls in either condition</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/40519079" target="_blank" class="term-link">
+                                        PMID:40519079
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In human individuals with SCAD (short-chain acyl-CoA dehydrogenase) deficiency, the stereotypical acylcarnitine profile is dominated by elevated C4 (butyrylcarnitine)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003995" target="_blank" class="term-link">
+                                    GO:0003995
+                                </a>
+                            </span>
+                            <span class="term-label">acyl-CoA dehydrogenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VGC2" data-a="GO:0003995" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (ARBA/InterPro) annotation to the parent acyl-CoA dehydrogenase activity term. This family-level molecular function is well supported by the domain architecture (three ACAD domains; CDD SCAD_SBCAD) and the FAD cofactor, and it does not over-commit on chain-length specificity. This is the most defensible molecular-function annotation for CG4860.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The general ACAD activity is strongly supported by conserved domains and FAD binding and is the appropriate, non-over-specific molecular function for this uncharacterized paralog.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/CG4860/CG4860-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Belongs to the acyl-CoA dehydrogenase family</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016627" target="_blank" class="term-link">
+                                    GO:0016627
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity, acting on the CH-CH group of donors</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VGC2" data-a="GO:0016627" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro-derived electronic annotation to an intermediate oxidoreductase term. The acyl-CoA dehydrogenase reaction oxidizes the alpha,beta (C2-C3) CH-CH bond of the acyl-CoA thioester, so this parent term is accurate for CG4860 as an ACAD-family enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct intermediate-level term subsumed by the more specific acyl-CoA dehydrogenase activity; retained as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/CG4860/CG4860-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Belongs to the acyl-CoA dehydrogenase family</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016937" target="_blank" class="term-link">
+                                    GO:0016937
+                                </a>
+                            </span>
+                            <span class="term-label">short-chain fatty acyl-CoA dehydrogenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000003
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VGC2" data-a="GO:0016937" data-r="GO_REF:0000003" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation derived from the EC 1.3.8.1 mapping (GO_REF:0000003). The EC number and the short-chain designation for CG4860 come from automated ARBA/EC rule inference on family membership, not from measured activity of this protein. As with the IBA short-chain term, the chain-length specificity is over-specific for CG4860, whose in vivo knockout does not reproduce short-chain (C4) SCAD deficiency (that phenotype maps to the paralog Arc42).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The dehydrogenase molecular function is correct, but the EC/rule-derived short-chain specificity is not supported for this paralog. Generalize to the parent acyl-CoA dehydrogenase activity term.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003995" target="_blank" class="term-link">
+                                    acyl-CoA dehydrogenase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/40519079" target="_blank" class="term-link">
+                                        PMID:40519079
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the acylcarnitine profile for Arc42 loss of function mimics that of ACADS loss of function, while that of CG4860 does not</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050660" target="_blank" class="term-link">
+                                    GO:0050660
+                                </a>
+                            </span>
+                            <span class="term-label">flavin adenine dinucleotide binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VGC2" data-a="GO:0050660" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro-derived FAD binding annotation. Acyl-CoA dehydrogenases are FAD-dependent flavoproteins, and UniProt records FAD as the cofactor for CG4860. FAD binding is intrinsic to the dehydrogenase mechanism and is well supported by the conserved ACAD flavoprotein architecture.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> FAD binding is a genuine, mechanistically essential molecular function for any ACAD-family enzyme and is consistent with the UniProt cofactor annotation and conserved domains.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/CG4860/CG4860-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Belongs to the acyl-CoA dehydrogenase family</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003995" target="_blank" class="term-link">
+                                    GO:0003995
+                                </a>
+                            </span>
+                            <span class="term-label">acyl-CoA dehydrogenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22758915" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22758915
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    An inventory of peroxisomal proteins and pathways in Drosoph...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VGC2" data-a="GO:0003995" data-r="PMID:22758915" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS annotation curated by FlyBase transferring the general acyl-CoA dehydrogenase activity from a reference protein (WITH UniProtKB:Q709F0), associated with the Drosophila peroxisomal proteome inventory (Faust et al. 2012). The transferred function is the family-level ACAD activity, not a short-chain-specific claim, and is consistent with the domain architecture and the general FAO role. The cached publication is abstract-only and does not itself discuss CG4860, but per curation guidance an experimental/ISS curator judgment to the general term should not be overruled from incomplete cached evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Homology-based transfer to the general (non-over-specific) ACAD activity term is defensible and concordant with CG4860 being an ACAD-family enzyme; the curator judgment stands.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/CG4860/CG4860-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Belongs to the acyl-CoA dehydrogenase family</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006635" target="_blank" class="term-link">
+                                    GO:0006635
+                                </a>
+                            </span>
+                            <span class="term-label">fatty acid beta-oxidation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22758915" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22758915
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    An inventory of peroxisomal proteins and pathways in Drosoph...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VGC2" data-a="GO:0006635" data-r="PMID:22758915" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS annotation (FlyBase, WITH UniProtKB:Q709F0) placing CG4860 in fatty acid beta-oxidation. This general process is supported by CG4860&#39;s ACAD-family membership and by the fly knockout altering the acylcarnitine (beta-oxidation) pool. It does not commit to a specific acyl-chain length, so it remains appropriate despite the substrate-specificity uncertainty.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Involvement in fatty acid beta-oxidation is concordant with the enzyme family and with the in vivo perturbation of acylcarnitines on CG4860 loss; the general BP term is safe and appropriate.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/40519079" target="_blank" class="term-link">
+                                        PMID:40519079
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Instead, we observed a significantly lower concentration of C4, and a significant elevation of C2 (acteylcarnitine)</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/CG4860/CG4860-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Lipid metabolism; mitochondrial fatty acid beta-oxidation</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>CG4860 is a mitochondrial FAD-dependent acyl-CoA dehydrogenase (ACAD) family enzyme that acts in fatty acid beta-oxidation, catalyzing FAD-dependent oxidation at the CH-CH (alpha,beta) bond of a saturated acyl-CoA thioester. The specific acyl-chain-length substrate range is uncertain: the short-chain/butyryl-CoA (EC 1.3.8.1) designation is rule-based (ARBA/EC) rather than measured, and the sole in vivo fly knockout study shows that CG4860 loss - unlike loss of its paralog Arc42 - does not reproduce the short-chain (C4) profile of human SCAD/ACADS deficiency. The general (chain-length-agnostic) acyl-CoA dehydrogenase molecular function, FAD binding, mitochondrial localization, and participation in fatty acid beta-oxidation are the defensible core assignments.</h3>
+                <span class="vote-buttons" data-g="Q9VGC2" data-a="FUNCTION: CG4860 is a mitochondrial FAD-dependent acyl-CoA d..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003995" target="_blank" class="term-link">
+                            acyl-CoA dehydrogenase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006635" target="_blank" class="term-link">
+                                fatty acid beta-oxidation
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033539" target="_blank" class="term-link">
+                                fatty acid beta-oxidation using acyl-CoA dehydrogenase
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                mitochondrion
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:DROME/CG4860/CG4860-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Belongs to the acyl-CoA dehydrogenase family</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:DROME/CG4860/CG4860-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Lipid metabolism; mitochondrial fatty acid beta-oxidation</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/40519079" target="_blank" class="term-link">
+                                PMID:40519079
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">the acylcarnitine profile for Arc42 loss of function mimics that of ACADS loss of function, while that of CG4860 does not</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Cofactor binding required for catalysis. As an acyl-CoA dehydrogenase family flavoprotein, CG4860 binds one non-covalently associated FAD per subunit, the redox cofactor that accepts the two electrons removed from the acyl-CoA substrate before passing them to electron-transfer flavoprotein (ETF); FAD is essential for the dehydrogenase mechanism.</h3>
+                <span class="vote-buttons" data-g="Q9VGC2" data-a="FUNCTION: Cofactor binding required for catalysis. As an acy..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050660" target="_blank" class="term-link">
+                            flavin adenine dinucleotide binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006635" target="_blank" class="term-link">
+                                fatty acid beta-oxidation
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                mitochondrion
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:DROME/CG4860/CG4860-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Name=FAD; Xref=ChEBI:CHEBI:57692</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:DROME/CG4860/CG4860-hypotheses/function-hypothesis-go-0016937/openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist function-assignment hypothesis: CG4860 (Q9VGC2) short-chain acyl-CoA dehydrogenase activity (GO:0016937)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Independent AI-scientist analysis (run blinded to our MODIFY action) concludes the short-chain assignment is over-specific and should be generalized to GO:0003995, independently re-deriving the Arc42-vs-CG4860 disambiguation and adding a binding-pocket determinant (a Leu-to-Thr substitution at the RIGIA+8 substrate-specificity position; CG4860 has small polar Thr where ACADS and Arc42 have bulky hydrophobic Leu).</div>
+
+                        <div class="finding-text">"The smaller, polar threonine could accommodate longer or differently branched substrates, potentially shifting CG4860&#39;s substrate preference away from strict short-chain specificity."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000003.md" target="_blank" class="term-link">
+                            GO_REF:0000003
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on Enzyme Commission mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22758915" target="_blank" class="term-link">
+                            PMID:22758915
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">An inventory of peroxisomal proteins and pathways in Drosophila melanogaster.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">A proteome-wide inventory of Drosophila peroxisomal proteins and metabolic pathways; the associated reference protein (Q709F0) underlies the FlyBase ISS transfer of general acyl-CoA dehydrogenase activity and fatty acid beta-oxidation to CG4860.</div>
+
+                        <div class="finding-text">"metabolic enzymes that function within the organelle"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/40519079" target="_blank" class="term-link">
+                            PMID:40519079
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Characterizing fatty acid oxidation genes in Drosophila.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">CG4860 and its paralog Arc42 are both DIOPT-predicted Drosophila orthologs of human ACADS, with CG4860 receiving the lower prediction score.</div>
+
+                        <div class="finding-text">"Two different fly genes were predicted by DIOPT to be orthologs of human ACADS: Arc42 and CG4860"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">A CRISPR-Cas9 knockout of CG4860 does NOT reproduce the elevated-C4 (butyrylcarnitine) acylcarnitine profile of human short-chain acyl-CoA dehydrogenase (SCAD/ACADS) deficiency; instead C4 is lower and C2 (acetylcarnitine) is elevated. The paralog Arc42 knockout does reproduce the elevated-C4 SCAD profile.</div>
+
+                        <div class="finding-text">"In contrast, we did not observe an elevation of acylcarnitine C4 in the homozygous CG4860 mutant flies as compared to controls in either condition"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Overall, loss of Arc42 - not CG4860 - mirrors human ACADS loss of function.</div>
+
+                        <div class="finding-text">"the acylcarnitine profile for Arc42 loss of function mimics that of ACADS loss of function, while that of CG4860 does not"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the actual acyl-chain-length substrate specificity of CG4860, and does it differ from its paralog Arc42 (which appears to carry the canonical short-chain/butyryl-CoA SCAD activity in the fly)?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9VGC2" data-a="Q: What is the actual acyl-chain-length substrate spe..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Given that CG4860 knockout lowers C4 and uniquely elevates C2 (acetylcarnitine), does CG4860 have a role in ketone/acetyl-CoA utilization or in short-chain acyl-CoA synthesis rather than classical butyryl-CoA dehydrogenation, as tentatively suggested by Geronazzo et al. 2025?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9VGC2" data-a="Q: Given that CG4860 knockout lowers C4 and uniquely ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Enzyme kinetics on purified recombinant CG4860 across a panel of acyl-CoA substrates (C4-C12, plus branched-chain substrates such as isovaleryl-CoA, given the CDD SCAD_SBCAD / PANTHER IVD subfamily assignment) with ETF as electron acceptor, to define its true substrate preference and test whether it is genuinely short-chain-specific or has a different/broader specificity than Arc42.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q9VGC2" data-a="EXPERIMENT: Enzyme kinetics on purified recombinant CG4860 acr..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Metabolic and genetic dissection of the CG4860 knockout (and CG4860; Arc42 double mutant), including targeted acyl-CoA/acylcarnitine and ketone-body metabolomics under fed and starved conditions, to test the proposed roles in SCAD synthesis and/or ketone (acetyl-CoA) utilization and to distinguish CG4860&#39;s physiological function from that of Arc42.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q9VGC2" data-a="EXPERIMENT: Metabolic and genetic dissection of the CG4860 kno..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(CG4860-hypotheses/function-hypothesis-go-0016937/openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9VGC2" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Final Report: CG4860 Short-Chain Acyl-CoA Dehydrogenase Activity (GO:0016937) Hypothesis Evaluation</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">6 citations</span>
+
+
+                    <span class="report-badge">14 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-01T06:24:12.068350</span>
+
+
+
+                    <a href="CG4860-hypotheses/function-hypothesis-go-0016937/openscientist.md.citations.md" class="term-link">citations file</a>
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="CG4860-hypotheses/function-hypothesis-go-0016937/openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="CG4860-hypotheses/function-hypothesis-go-0016937/openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="CG4860-hypotheses/function-hypothesis-go-0016937/openscientist_artifacts/provenance_evidence_comparison.json" class="term-link">OpenScientist evidence comparison</a>
+                        <span>(application/json)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="CG4860-hypotheses/function-hypothesis-go-0016937/openscientist_artifacts/provenance_evidence_comparison.png" class="term-link">OpenScientist evidence comparison</a>
+                        <span>(image/png)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="CG4860-hypotheses/function-hypothesis-go-0016937/openscientist_artifacts/provenance_go_decision_summary.json" class="term-link">OpenScientist go decision summary</a>
+                        <span>(application/json)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="CG4860-hypotheses/function-hypothesis-go-0016937/openscientist_artifacts/provenance_go_decision_summary.png" class="term-link">OpenScientist go decision summary</a>
+                        <span>(image/png)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="CG4860-hypotheses/function-hypothesis-go-0016937/openscientist_artifacts/provenance_go_hierarchy_evidence.json" class="term-link">OpenScientist go hierarchy evidence</a>
+                        <span>(application/json)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="CG4860-hypotheses/function-hypothesis-go-0016937/openscientist_artifacts/provenance_go_hierarchy_evidence.png" class="term-link">OpenScientist go hierarchy evidence</a>
+                        <span>(image/png)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="CG4860-hypotheses/function-hypothesis-go-0016937/openscientist_artifacts/provenance_plot_1.json" class="term-link">OpenScientist plot 1</a>
+                        <span>(application/json)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="CG4860-hypotheses/function-hypothesis-go-0016937/openscientist_artifacts/provenance_plot_1.png" class="term-link">OpenScientist plot 1</a>
+                        <span>(image/png)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="CG4860-hypotheses/function-hypothesis-go-0016937/openscientist_artifacts/provenance_plot_2.json" class="term-link">OpenScientist plot 2</a>
+                        <span>(application/json)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="CG4860-hypotheses/function-hypothesis-go-0016937/openscientist_artifacts/provenance_plot_2.png" class="term-link">OpenScientist plot 2</a>
+                        <span>(image/png)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="CG4860-hypotheses/function-hypothesis-go-0016937/openscientist_artifacts/provenance_plot_3.json" class="term-link">OpenScientist plot 3</a>
+                        <span>(application/json)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="CG4860-hypotheses/function-hypothesis-go-0016937/openscientist_artifacts/provenance_plot_3.png" class="term-link">OpenScientist plot 3</a>
+                        <span>(image/png)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="final-report-cg4860-short-chain-acyl-coa-dehydrogenase-activity-go0016937-hypothesis-evaluation">Final Report: CG4860 Short-Chain Acyl-CoA Dehydrogenase Activity (GO:0016937) Hypothesis Evaluation</h1>
+<h2 id="executive-judgment">Executive Judgment</h2>
+<p><strong>Verdict: Over-annotated</strong></p>
+<p>The GO:0016937 (short-chain fatty acyl-CoA dehydrogenase activity) annotation for <em>Drosophila melanogaster</em> CG4860 (Q9VGC2) is <strong>over-specific</strong> and should be generalized. While CG4860 possesses clear ACAD-family sequence features — including 57.1% identity to human ACADS, 100% conserved catalytic glutamate, and all three canonical Pfam domains — every line of evidence assigning SCAD-specific activity is computationally derived (IBA, IEA, ARBA). No direct enzymatic assay has ever been performed on CG4860. Critically, the sole experimental study directly testing this prediction (<a href="https://pubmed.ncbi.nlm.nih.gov/40519079/">PMID: 40519079</a>) demonstrates that only the paralog Arc42 (Q9VDT1) — not CG4860 — recapitulates the metabolic signature of SCAD deficiency in CRISPR loss-of-function mutants. Furthermore, a Leu→Thr substitution at a key substrate-specificity position in the CG4860 binding pocket, and the FlyBase ISS annotation referencing ACAD11 (a long/very-long-chain ACAD) rather than ACADS, introduce additional uncertainty about substrate specificity. The broader parent term GO:0003995 (acyl-CoA dehydrogenase activity) is well-supported and should be retained; GO:0016937 should be flagged as over-specific pending direct enzymatic characterization of CG4860's substrate preference.</p>
+<p><strong>Most important caveats:</strong> (1) No direct enzymatic assay of recombinant CG4860 protein has been published; the in vivo data show CG4860 does not serve as the primary SCAD but do not exclude residual or overlapping activity. (2) The acylcarnitine profile of CG4860 mutants is described in <a href="https://pubmed.ncbi.nlm.nih.gov/40519079/">PMID: 40519079</a> but the abstract does not specify what profile CG4860 LOF does produce, leaving the alternative substrate preference uncharacterized. (3) GO:0016937 is broader than the common biochemical term "SCAD" — it encompasses any short-chain acyl-CoA dehydrogenase including branched-chain substrates (IVD: GO:0008470, SBCAD: GO:0003853 are children of GO:0016937). CG4860 could still correctly carry GO:0016937 if it acts on any short-chain (&lt;6C) acyl-CoA, even non-canonical substrates.</p>
+<hr />
+<h2 id="summary">Summary</h2>
+<p>CG4860 (UniProt: Q9VGC2) is one of two <em>Drosophila melanogaster</em> genes predicted to be orthologs of human ACADS, the short-chain acyl-CoA dehydrogenase. It currently carries GO:0016937 (short-chain fatty acyl-CoA dehydrogenase activity) via IBA evidence from PANTHER phylogenetic inference (GO_REF:0000033). This investigation evaluated whether that specific functional assignment is justified.</p>
+<p>Through sequence analysis, literature review, annotation provenance tracing, and substrate-binding site comparison, we find that CG4860 is unambiguously a member of the acyl-CoA dehydrogenase family but cannot be confidently assigned SCAD-specific activity. The paralog Arc42 (Q9VDT1) has substantially higher sequence identity to human ACADS (71.1% vs 57.1%), and is the only <em>Drosophila</em> gene whose loss-of-function mirrors SCAD deficiency metabolically. CG4860 shows binding-pocket substitutions that may alter substrate specificity, and the only non-PAINT annotation pathway (FlyBase ISS) references ACAD11, a structurally and functionally distant long-chain ACAD. All SCAD-specific annotations on CG4860 trace back to computational pipelines with no experimental corroboration.</p>
+<p>We recommend that curators retain the general acyl-CoA dehydrogenase activity term (GO:0003995) for CG4860, flag GO:0016937 as over-specific, and prioritize direct substrate-specificity assays to resolve CG4860's true chain-length preference.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-cg4860-has-scad-like-sequence-features-but-lacks-functional-validation">Finding 1: CG4860 Has SCAD-Like Sequence Features but Lacks Functional Validation</h3>
+<p>Pairwise alignment using BLOSUM62 scoring reveals that CG4860 shares 57.1% identity and 75.5% similarity with human ACADS (P16219), confirming membership in the SCAD-type ACAD subfamily. All three canonical Pfam domains are present (Acyl-CoA_dh_N, Acyl-CoA_dh_M, Acyl-CoA_dh_1), and the catalytic glutamate within the EIYEGTSEIQ motif is 100% conserved. The ALSEPGNGSDAGAA motif, characteristic of SCAD-family enzymes, is also 100% identical between CG4860 and human ACADS.</p>
+<p>However, CG4860 has never been subjected to direct enzymatic characterization. No published study has measured its substrate specificity, kinetic parameters, or dehydrogenase activity on any acyl-CoA substrate. The single experimental study that examines CG4860 function <em>in vivo</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/40519079/">PMID: 40519079</a>) found that CG4860 CRISPR loss-of-function mutants <strong>do not</strong> produce the acylcarnitine profile expected for SCAD deficiency:</p>
+<blockquote>
+<p><em>"We find that while Arc42 and CG4860 are both predicted orthologs of human ACADS, only Arc42 loss of function mirrors the acylcarnitine profile of ACADS loss of function."</em> — <a href="https://pubmed.ncbi.nlm.nih.gov/40519079/">PMID: 40519079</a></p>
+</blockquote>
+<p>This is the most important piece of evidence in this evaluation. Sequence similarity predicts SCAD activity, but functional testing contradicts the prediction for CG4860 while confirming it for Arc42.</p>
+<p>{{figure:evidence_comparison.png|caption=Comparison of CG4860 and Arc42 as candidate SCAD orthologs. Sequence identity heatmap and functional evidence summary showing Arc42 as the primary functional SCAD in Drosophila.}}</p>
+<h3 id="finding-2-arc42-is-the-primary-functional-scad-ortholog-in-drosophila">Finding 2: Arc42 Is the Primary Functional SCAD Ortholog in Drosophila</h3>
+<p>Arc42 (Q9VDT1) has substantially higher sequence identity to human ACADS than CG4860 does (71.1% vs 57.1%, with 84.9% similarity). More importantly, CRISPR-Cas9 loss-of-function analysis in <a href="https://pubmed.ncbi.nlm.nih.gov/40519079/">PMID: 40519079</a> demonstrates that only Arc42 mutants recapitulate the acylcarnitine signature of human SCAD deficiency. Both CG4860 and Arc42 carry GO:0016937 IBA annotations, but the functional validation supports only Arc42.</p>
+<p>This finding is significant for curation because it establishes that the PANTHER phylogenetic inference, while correctly identifying both genes as SCAD-related, does not distinguish between a gene that performs SCAD activity <em>in vivo</em> (Arc42) and a paralog that may have diverged in substrate specificity (CG4860).</p>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>CG4860 (Q9VGC2)</th>
+<th>Arc42 (Q9VDT1)</th>
+<th>Human ACADS (P16219)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity to HsACADS</td>
+<td>57.1%</td>
+<td>71.1%</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Similarity to HsACADS</td>
+<td>75.5%</td>
+<td>84.9%</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Catalytic Glu (EIYEGTSEIQ)</td>
+<td>Conserved</td>
+<td>Conserved</td>
+<td>Reference</td>
+</tr>
+<tr>
+<td>ALSEPGNGSDAGAA motif</td>
+<td>Conserved</td>
+<td>Conserved</td>
+<td>Reference</td>
+</tr>
+<tr>
+<td>RIGIA+8 residue</td>
+<td><strong>Thr</strong> (diverged)</td>
+<td>Leu (conserved)</td>
+<td>Leu</td>
+</tr>
+<tr>
+<td>LOF mirrors SCAD deficiency</td>
+<td><strong>No</strong></td>
+<td><strong>Yes</strong></td>
+<td>—</td>
+</tr>
+<tr>
+<td>GO:0016937 annotation</td>
+<td>IBA (computational)</td>
+<td>IBA + functional</td>
+<td>IDA (experimental)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="finding-3-panther-subfamily-pthr43884sf12-encompasses-both-scad-and-ivd">Finding 3: PANTHER Subfamily PTHR43884:SF12 Encompasses Both SCAD and IVD</h3>
+<p>The PANTHER subfamily PTHR43884:SF12, which provides the basis for the IBA annotation, is labeled "ISOVALERYL-COA DEHYDROGENASE, MITOCHONDRIAL-RELATED" but actually contains both SCAD-type and IVD-type members: Q9VGC2 (CG4860), P16219 (human ACADS), P26440 (human IVD), Q9VSL9 (<em>Drosophila</em> IVD), and Q9VDT1 (Arc42). This broad grouping means the subfamily assignment alone does not distinguish SCAD from IVD specificity.</p>
+<p>Our pairwise identity analysis confirmed that CG4860 is SCAD-type rather than IVD-type (57.1% to HsACADS vs 36.4% to HsIVD), so the PANTHER grouping is not a source of misannotation per se — but it does illustrate that the subfamily is broader than its name implies, and curators should not rely on the subfamily label alone.</p>
+<h3 id="finding-4-substrate-binding-pocket-substitutions-distinguish-cg4860-from-scad">Finding 4: Substrate-Binding Pocket Substitutions Distinguish CG4860 from SCAD</h3>
+<p>Detailed comparison of the substrate-binding cavity residues revealed a critical Leu→Thr substitution at the RIGIA+8 position in CG4860. This position lines the substrate-binding pocket and influences chain-length preference:</p>
+<ul>
+<li><strong>CG4860</strong>: Thr (polar, small side chain)</li>
+<li><strong>Human ACADS</strong>: Leu (hydrophobic, bulky)</li>
+<li><strong>Arc42</strong>: Leu (hydrophobic, conserved with ACADS)</li>
+</ul>
+<p>Additional divergences include:<br />
+- RIGIA+5: CG4860 has Ala (unique) vs Ser (HsACADS) / Gly (Arc42)<br />
+- Upstream pocket: CG4860 has SLDCG vs TLDMG (HsACADS) / TLDAG (Arc42)</p>
+<p>The Leu→Thr change at a binding-pocket position is structurally significant. The smaller, polar threonine could accommodate longer or differently branched substrates, potentially shifting CG4860's substrate preference away from strict short-chain specificity. This structural evidence independently supports the hypothesis that CG4860 may not be a canonical SCAD.</p>
+<h3 id="finding-5-flybase-iss-annotation-references-acad11-not-acads">Finding 5: FlyBase ISS Annotation References ACAD11, Not ACADS</h3>
+<p>The FlyBase ISS annotation for CG4860 (GO:0003995, acyl-CoA dehydrogenase activity, <a href="https://pubmed.ncbi.nlm.nih.gov/22758915/">PMID: 22758915</a>) uses ACAD11 (UniProtKB:Q709F0) as its "with/from" reference. ACAD11 is a human long-chain/very-long-chain ACAD (780 amino acids, optimal substrate C22:0 docosanoyl-CoA) with IDA evidence for GO:0004466 (long-chain-acyl-CoA dehydrogenase activity), GO:0070991, and GO:0017099. ACAD11 belongs to a different PANTHER family (PTHR48083) than CG4860 (PTHR43884) and lacks the SCAD-specific conserved motifs.</p>
+<p>The source paper (<a href="https://pubmed.ncbi.nlm.nih.gov/22758915/">PMID: 22758915</a>) is a peroxisomal proteome inventory:</p>
+<blockquote>
+<p><em>"We have analyzed the proteome of Drosophila to identify the proteins involved in peroxisomal biogenesis and homeostasis as well as metabolic enzymes that function within the organelle."</em> — <a href="https://pubmed.ncbi.nlm.nih.gov/22758915/">PMID: 22758915</a></p>
+</blockquote>
+<p>This means the FlyBase ISS annotation actually connects CG4860 to peroxisomal metabolism via similarity to a long-chain ACAD — a functionally different context from mitochondrial short-chain fatty acid oxidation. Importantly, FlyBase correctly assigned only the general term GO:0003995, not the specific GO:0016937, suggesting curatorial caution even before the recent experimental evidence.</p>
+<p>{{figure:go_hierarchy_evidence.png|caption=GO term hierarchy and evidence flow diagram showing all annotation paths to CG4860's GO:0016937 assignment. All paths are computational; the sole experimental evidence challenges the assignment.}}</p>
+<h3 id="finding-6-all-scad-specific-annotations-are-computationally-derived">Finding 6: All SCAD-Specific Annotations Are Computationally Derived</h3>
+<p>A complete provenance trace of CG4860's GO:0016937 annotation reveals that every contributing evidence line is computational:</p>
+<ol>
+<li><strong>GO:0016937 IBA</strong> — PANTHER phylogenetic inference (GO_REF:0000033), with/from P16219 (HsACADS) + Q3ZBF6 (bovine ACADS)</li>
+<li><strong>GO:0016937 IEA</strong> — EC:1.3.8.1 mapping (GO_REF:0000003)</li>
+<li><strong>EC:1.3.8.1</strong> — assigned by ARBA automatic rule (ECO:0000256, ARBA00012046)</li>
+<li><strong>GO:0003995 ISS</strong> — FlyBase, with/from Q709F0 (HsACAD11, a long-chain ACAD)</li>
+</ol>
+<p>No evidence code is experimental (IDA, IMP, IEP, or IGI). The only experimental paper directly examining CG4860 function (<a href="https://pubmed.ncbi.nlm.nih.gov/40519079/">PMID: 40519079</a>) challenges rather than supports the SCAD assignment.</p>
+<p>{{figure:go_decision_summary.png|caption=GO annotation decision summary showing the complete provenance chain, verdict, and curation recommendations for CG4860 GO:0016937. All annotations are computationally derived, and the sole experimental study challenges the SCAD-specific assignment.}}</p>
+<hr />
+<h2 id="evidence-matrix">Evidence Matrix</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Citation</th>
+<th>Evidence Type</th>
+<th>Direction</th>
+<th>Claim Tested</th>
+<th>Key Finding</th>
+<th>Context</th>
+<th>Confidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/40519079/">PMID: 40519079</a></td>
+<td>Mutant phenotype (CRISPR LOF, acylcarnitine profiling)</td>
+<td><strong>Refutes GO:0016937 for CG4860</strong></td>
+<td>CG4860 has SCAD activity in vivo</td>
+<td>Only Arc42 LOF mirrors human ACADS acylcarnitine profile; CG4860 LOF does not</td>
+<td><em>D. melanogaster</em>, whole organism, CRISPR-Cas9 mutants</td>
+<td><strong>High</strong> — direct genetic test with metabolomic readout</td>
+</tr>
+<tr>
+<td>2</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/40519079/">PMID: 40519079</a></td>
+<td>Mutant phenotype</td>
+<td><strong>Supports Arc42 as SCAD</strong></td>
+<td>Arc42 is the functional SCAD ortholog</td>
+<td>Arc42 LOF mirrors human SCAD deficiency</td>
+<td><em>D. melanogaster</em>, whole organism</td>
+<td><strong>High</strong></td>
+</tr>
+<tr>
+<td>3</td>
+<td>GO_REF:0000033 (PAINT)</td>
+<td>Computational (IBA)</td>
+<td>Supports GO:0016937</td>
+<td>Phylogenetic inference of SCAD activity</td>
+<td>CG4860 placed in SCAD clade with human ACADS</td>
+<td>Cross-species phylogeny</td>
+<td><strong>Moderate</strong> — does not distinguish paralogs with diverged function</td>
+</tr>
+<tr>
+<td>4</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/22758915/">PMID: 22758915</a></td>
+<td>Computational (ISS)</td>
+<td><strong>Qualifies</strong></td>
+<td>CG4860 similarity to ACAD11</td>
+<td>FlyBase ISS references ACAD11 (long-chain ACAD), not ACADS</td>
+<td><em>D. melanogaster</em>, peroxisomal proteome</td>
+<td><strong>Low for SCAD</strong> — supports general ACAD membership only</td>
+</tr>
+<tr>
+<td>5</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/41898520/">PMID: 41898520</a></td>
+<td>Structural/evolutionary</td>
+<td>Qualifies</td>
+<td>Human SCAD substrate specificity determinants</td>
+<td>Crystal structure identifies binding-pocket residues critical for short-chain specificity</td>
+<td>Human SCAD, X-ray crystallography</td>
+<td><strong>High for mechanism</strong> — identifies key positions where CG4860 diverges</td>
+</tr>
+<tr>
+<td>6</td>
+<td>This study: pairwise alignment</td>
+<td>Computational</td>
+<td>Supports ACAD, qualifies SCAD</td>
+<td>CG4860 subfamily membership</td>
+<td>57.1% identity to HsACADS (75.5% similarity); 36.4% to HsIVD; clearly SCAD-type</td>
+<td>Computational sequence analysis</td>
+<td><strong>High</strong> for subfamily; does not prove specific activity</td>
+</tr>
+<tr>
+<td>7</td>
+<td>This study: active site analysis</td>
+<td>Computational</td>
+<td>Supports</td>
+<td>Catalytic machinery present</td>
+<td>Catalytic Glu (EIYEGTSEIQ) 100% conserved; FAD binding conserved; all 3 ACAD Pfam domains</td>
+<td>Computational</td>
+<td><strong>High</strong> for general ACAD activity</td>
+</tr>
+<tr>
+<td>8</td>
+<td>This study: binding pocket comparison</td>
+<td>Structural/evolutionary</td>
+<td><strong>Qualifies</strong></td>
+<td>CG4860 has SCAD substrate pocket</td>
+<td>Leu→Thr at RIGIA+8 (specificity position); Ala unique at RIGIA+5; divergent upstream pocket</td>
+<td>Computational; mapped to known specificity determinants</td>
+<td><strong>Moderate</strong> — single-residue changes can alter specificity</td>
+</tr>
+<tr>
+<td>9</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/31133529/">PMID: 31133529</a></td>
+<td>Direct assay (human cells)</td>
+<td>Qualifies</td>
+<td>BCAA ACAD cross-reactivity</td>
+<td>SCAD, IBDH, SBCADH show cross-pathway activity; substrate specificity not absolute</td>
+<td>Human fibroblasts, stable isotope metabolomics</td>
+<td><strong>Moderate</strong> — demonstrates ACAD promiscuity</td>
+</tr>
+<tr>
+<td>10</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/17304052/">PMID: 17304052</a></td>
+<td>Clinical/biochemical</td>
+<td>Qualifies</td>
+<td>C4-acylcarnitine as SCAD biomarker</td>
+<td>C4-acylcarnitine elevation shared between SCAD and IBDH deficiency</td>
+<td>Human newborn screening</td>
+<td><strong>Moderate</strong> — shows ACAD substrate overlap</td>
+</tr>
+<tr>
+<td>11</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/29563254/">PMID: 29563254</a></td>
+<td>Mutant phenotype</td>
+<td>Qualifies (context)</td>
+<td>MCAD role in <em>Drosophila</em> metabolism</td>
+<td>MCAD (not SCAD) is the ACAD involved in PINK1-linked metabolic disruption</td>
+<td><em>D. melanogaster</em>, PINK1 null</td>
+<td><strong>Moderate</strong> — shows distinct ACAD roles in fly</td>
+</tr>
+<tr>
+<td>12</td>
+<td>PANTHER PTHR43884:SF12</td>
+<td>Computational</td>
+<td>Qualifies</td>
+<td>Subfamily assignment specificity</td>
+<td>Subfamily contains both SCAD and IVD members; name misleading</td>
+<td>Cross-species protein family</td>
+<td><strong>Low</strong> — subfamily too broad for specific assignment</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="go-curation-implications">GO Curation Implications</h2>
+<h3 id="current-annotation-status">Current Annotation Status</h3>
+<ul>
+<li><strong>GO:0016937</strong> (short-chain fatty acyl-CoA dehydrogenase activity) — IBA (GO_Central) + IEA (UniProt) — <strong>Under review</strong></li>
+<li><strong>GO:0003995</strong> (acyl-CoA dehydrogenase activity) — ISS (FlyBase, with/from Q709F0/ACAD11) + IEA (UniProt) — Well supported</li>
+<li><strong>GO:0006635</strong> (fatty acid beta-oxidation) — ISS (FlyBase) — Reasonable but not specifically validated</li>
+<li><strong>GO:0050660</strong> (FAD binding) — IEA (InterPro) — Well supported by domain analysis</li>
+<li><strong>GO:0016627</strong> (oxidoreductase activity, acting on CH-CH) — IEA (InterPro) — Well supported</li>
+</ul>
+<h3 id="go-hierarchy-context-critical-for-interpretation">GO Hierarchy Context (Critical for Interpretation)</h3>
+<p>GO:0016937 (short-chain fatty acyl-CoA dehydrogenase activity) is <strong>broader</strong> than the common biochemical term "SCAD." In the GO hierarchy:<br />
+- GO:0016937 is a <strong>child</strong> of GO:0003995 (acyl-CoA dehydrogenase activity)<br />
+- GO:0016937 is the <strong>parent</strong> of GO:0008470 (IVD/3-methylbutanoyl-CoA DH activity) and GO:0003853 (SBCAD activity)<br />
+- GO:0016937 encompasses activity on any short-chain acyl-CoA substrate (&lt;6 carbons), including branched-chain substrates like isovaleryl-CoA and 2-methylbutyryl-CoA</p>
+<p>This means that if CG4860 acts on any short-chain acyl-CoA (straight or branched), GO:0016937 would be technically correct. The annotation would only be definitively wrong if CG4860 acts exclusively on medium- or long-chain substrates. However, the lack of positive evidence for any short-chain activity, combined with the negative LOF data, makes the annotation unsupported.</p>
+<h3 id="annotation-provenance-all-computational-no-experimental-evidence">Annotation Provenance (All Computational — No Experimental Evidence)</h3>
+<p>All SCAD-specific annotations on CG4860 are computationally derived:<br />
+- <strong>GO:0016937 IBA</strong>: PAINT phylogenetic inference (GO_REF:0000033), with/from P16219 (HsACADS)<br />
+- <strong>GO:0016937 IEA</strong>: EC:1.3.8.1 mapping (GO_REF:0000003); EC itself assigned by ARBA automatic rule (ECO:0000256)<br />
+- <strong>GO:0003995 ISS</strong>: FlyBase (<a href="https://pubmed.ncbi.nlm.nih.gov/22758915/">PMID: 22758915</a>), with/from Q709F0 (HsACAD11, a long-chain ACAD)<br />
+- <strong>EC:1.3.8.1</strong>: ARBA automatic rule (ARBA00012046) — not from experimental enzyme assay</p>
+<p>The sole experimental paper mentioning CG4860 (<a href="https://pubmed.ncbi.nlm.nih.gov/40519079/">PMID: 40519079</a>) provides <strong>counter-evidence</strong> against SCAD function.</p>
+<h3 id="recommended-curation-actions-leads-requiring-curator-verification">Recommended Curation Actions (Leads Requiring Curator Verification)</h3>
+<p><strong>Lead 1 (High priority): Generalize GO:0016937 to GO:0003995</strong></p>
+<p>Consider removing or NOT-qualifying GO:0016937 (short-chain fatty acyl-CoA dehydrogenase activity) for CG4860; retain GO:0003995 (acyl-CoA dehydrogenase activity). The IBA-level annotation is challenged by experimental evidence (<a href="https://pubmed.ncbi.nlm.nih.gov/40519079/">PMID: 40519079</a>) showing CG4860 does not serve the SCAD function in vivo. If retained, the annotation should be flagged as potentially over-specific and not elevated above IBA evidence without direct enzymatic data.</p>
+<p><strong>Lead 2 (Moderate priority): Review the FlyBase ISS reference protein</strong></p>
+<p>Verify whether the FlyBase ISS annotation (GO:0003995, with/from ACAD11 Q709F0) is appropriate given that ACAD11 is phylogenetically distant and functionally distinct from the SCAD subfamily. ACAD11 is in PANTHER family PTHR48083, while CG4860 is in PTHR43884.</p>
+<p><strong>Lead 3 (Moderate priority): Flag GO:0046359 (butyrate catabolic process) for review</strong></p>
+<p>If CG4860 does not function as a SCAD, it likely does not participate in butyrate catabolism. This IBA annotation follows from the GO:0016937 assignment and should be reviewed concurrently.</p>
+<p><strong>Lead 4 (Lower priority): Strengthen Arc42 SCAD annotation</strong></p>
+<p>Consider adding experimental evidence-supported annotation for Arc42 (Q9VDT1) GO:0016937, citing <a href="https://pubmed.ncbi.nlm.nih.gov/40519079/">PMID: 40519079</a>. Arc42 LOF mirrors human ACADS deficiency acylcarnitine profile — this constitutes mutant phenotype evidence (IMP) supporting the SCAD function.</p>
+<p><strong>Lead 5 (Lower priority): Review EC:1.3.8.1 assignment</strong></p>
+<p>EC:1.3.8.1 was assigned by ARBA automatic rule, not experiment. This feeds the IEA GO:0016937 annotation. If the specific SCAD GO term is flagged, the EC assignment should also be reconsidered to prevent re-propagation of over-specific terms.</p>
+<h3 id="go-term-decision-table">GO Term Decision Table</h3>
+<table>
+<thead>
+<tr>
+<th>GO Term</th>
+<th>ID</th>
+<th>Current Status</th>
+<th>Recommended Action</th>
+<th>Rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Short-chain fatty acyl-CoA DH activity</td>
+<td>GO:0016937</td>
+<td>IBA + IEA</td>
+<td><strong>Flag as over-specific / remove</strong></td>
+<td>No experimental support; contradicted by PMID:40519079</td>
+</tr>
+<tr>
+<td>Acyl-CoA dehydrogenase activity</td>
+<td>GO:0003995</td>
+<td>ISS + IEA</td>
+<td><strong>Retain</strong></td>
+<td>Supported by domain architecture and catalytic residue conservation</td>
+</tr>
+<tr>
+<td>Fatty acid beta-oxidation</td>
+<td>GO:0006635</td>
+<td>ISS</td>
+<td><strong>Retain with caution</strong></td>
+<td>ACAD family membership supports general role; substrate uncertain</td>
+</tr>
+<tr>
+<td>Butyrate catabolic process</td>
+<td>GO:0046359</td>
+<td>IBA</td>
+<td><strong>Flag for review</strong></td>
+<td>Follows from GO:0016937; if SCAD annotation removed, this should be too</td>
+</tr>
+<tr>
+<td>FAD binding</td>
+<td>GO:0050660</td>
+<td>IEA</td>
+<td><strong>Retain</strong></td>
+<td>Strongly supported by domain analysis</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="mechanistic-scope">Mechanistic Scope</h2>
+<h3 id="direct-gene-product-activity">Direct Gene Product Activity</h3>
+<p>CG4860 encodes a 415-amino acid protein with all three canonical acyl-CoA dehydrogenase domains (N-terminal IPR013786, middle IPR006091, C-terminal IPR009075), FAD as cofactor, and a perfectly conserved catalytic glutamate. The protein is predicted to catalyze the alpha,beta-dehydrogenation of an acyl-CoA thioester substrate, transferring electrons to electron transfer flavoprotein (ETF). This is a direct enzymatic activity — the general ACAD function is well-supported.</p>
+<h3 id="uncertainty-in-substrate-specificity">Uncertainty in Substrate Specificity</h3>
+<p>What remains uncertain is the chain-length and branching preference of CG4860's substrate. Three lines of evidence suggest it may differ from canonical short-chain (C4-C6) specificity:</p>
+<ol>
+<li><strong>Binding-pocket divergence</strong>: The Leu→Thr substitution at RIGIA+8 alters the hydrophobic character of the substrate-binding cavity, potentially accommodating longer or branched substrates</li>
+<li><strong>No SCAD-deficient phenotype on LOF</strong>: CG4860 CRISPR mutants do not accumulate the short-chain acylcarnitines expected in SCAD deficiency</li>
+<li><strong>FlyBase cross-reference to ACAD11</strong>: The ISS annotation references a very-long-chain ACAD, suggesting computational methods detect broader ACAD-family similarity</li>
+</ol>
+<h3 id="separation-from-downstream-phenotypes">Separation from Downstream Phenotypes</h3>
+<p>It is important to distinguish the molecular function question (what substrate does CG4860 dehydrogenate?) from downstream biological consequences. The loss-of-function phenotype in <a href="https://pubmed.ncbi.nlm.nih.gov/40519079/">PMID: 40519079</a> is informative because it uses a direct metabolic readout (acylcarnitine profiling) rather than a distal developmental or behavioral phenotype. The absence of a SCAD-deficient acylcarnitine signature in CG4860 mutants is therefore strong evidence against SCAD-specific activity, not merely a failure to observe a downstream consequence.</p>
+<div class="codehilite"><pre><span></span><code>ACAD Family Substrate Hierarchy in Drosophila:
+
+  C2-C6 (short-chain) ──── SCAD ──── Arc42 (confirmed, PMID:40519079)
+                                      CG4860 (?? — NOT confirmed as SCAD)
+  C6-C12 (medium-chain) ── MCAD ──── CG3902/Mcad (Drosophila)
+  C12-C20 (long/very-long) LCAD/VLCAD ── distinct ACAD families
+  Branched-chain ────────── IVD/IBDH/SBCADH ── CG4860 may overlap here?
+
+  All share: FAD cofactor, ETF electron transfer, ACAD fold
+  Differ in: substrate binding pocket → chain-length selectivity
+</code></pre></div>
+
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>The evidence supports a model of <strong>paralog functional divergence</strong> following gene duplication in the <em>Drosophila</em> lineage. CG4860 and Arc42 both descended from an ancestral SCAD-type ACAD but have diverged in substrate specificity. Arc42 retained the canonical SCAD function, as demonstrated by its higher sequence identity to human ACADS (71.1%), conservation of substrate-pocket residues (Leu at RIGIA+8), and functional validation through CRISPR LOF metabolomics.</p>
+<p>CG4860, while retaining the overall ACAD architecture and catalytic machinery, has accumulated binding-pocket substitutions — particularly Leu→Thr at RIGIA+8 — that may shift its substrate preference. The direction of this shift is unknown but could include:</p>
+<ol>
+<li><strong>Branched-chain short acyl-CoAs</strong> (e.g., isobutyryl-CoA, 2-methylbutyryl-CoA) — consistent with the PANTHER subfamily's inclusion of IVD members and with documented cross-reactivity between BCAA ACAD pathways (<a href="https://pubmed.ncbi.nlm.nih.gov/31133529/">PMID: 31133529</a>)</li>
+<li><strong>Medium-chain acyl-CoAs</strong> — the smaller Thr residue could enlarge the pocket to accommodate longer substrates</li>
+<li><strong>A unique or partially overlapping substrate range</strong> — CG4860 may retain low-level SCAD activity but primarily function on alternative substrates</li>
+</ol>
+<p>The FlyBase ISS connection to ACAD11 (a peroxisomal long-chain ACAD) via <a href="https://pubmed.ncbi.nlm.nih.gov/22758915/">PMID: 22758915</a> raises the additional possibility of subcellular compartment divergence — if CG4860 localizes to peroxisomes rather than mitochondria, its functional context would be fundamentally different from mitochondrial SCAD. However, this remains speculative without localization data.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<h3 id="primary-literature">Primary Literature</h3>
+<p><strong><a href="https://pubmed.ncbi.nlm.nih.gov/40519079/">PMID: 40519079</a></strong> — <em>Characterizing fatty acid oxidation genes in Drosophila</em></p>
+<p>This is the most important paper for this evaluation. Using CRISPR-Cas9 to generate loss-of-function alleles for both Arc42 and CG4860, the authors performed acylcarnitine profiling and found that only Arc42 LOF recapitulates the metabolic signature of human SCAD deficiency. This directly challenges the GO:0016937 annotation on CG4860. The verified snippet: <em>"We find that while Arc42 and CG4860 are both predicted orthologs of human ACADS, only Arc42 loss of function mirrors the acylcarnitine profile of ACADS loss of function."</em></p>
+<p><strong><a href="https://pubmed.ncbi.nlm.nih.gov/41898520/">PMID: 41898520</a></strong> — <em>Structure and Substrate Specificity of Human Short-Chain Acyl-CoA Dehydrogenase and Insights into Pathogenicity of Disease-Associated Mutations</em></p>
+<p>Provides structural context for understanding which binding-pocket residues determine short-chain specificity in SCAD. The substrate-binding cavity residues identified in human ACADS served as the basis for our comparison showing CG4860's divergence at key positions.</p>
+<p><strong><a href="https://pubmed.ncbi.nlm.nih.gov/22758915/">PMID: 22758915</a></strong> — <em>An inventory of peroxisomal proteins and pathways in Drosophila melanogaster</em></p>
+<p>The source paper for the FlyBase ISS annotation connecting CG4860 to ACAD11. This study cataloged peroxisomal proteins in <em>Drosophila</em> and identified CG4860 as similar to ACAD11, a long-chain peroxisomal ACAD — a very different functional context from mitochondrial SCAD activity. The verified snippet: <em>"We have analyzed the proteome of Drosophila to identify the proteins involved in peroxisomal biogenesis and homeostasis as well as metabolic enzymes that function within the organelle."</em></p>
+<p><strong><a href="https://pubmed.ncbi.nlm.nih.gov/31133529/">PMID: 31133529</a></strong> — <em>Metabolic analysis reveals evidence for branched chain amino acid catabolism crosstalk and the potential for improved treatment of organic acidurias</em></p>
+<p>Demonstrates that ACAD substrate specificity is not absolute in mammalian systems. IBDH and SBCADH show cross-pathway activity in branched-chain amino acid catabolism, raising the possibility that CG4860 could function in BCAA catabolism rather than (or in addition to) fatty acid oxidation.</p>
+<p><strong><a href="https://pubmed.ncbi.nlm.nih.gov/29563254/">PMID: 29563254</a></strong> — <em>Phosphorylation of MCAD selectively rescues PINK1 deficiencies in behavior and metabolism</em></p>
+<p>Establishes that specific ACAD family members have distinct, non-redundant roles in <em>Drosophila</em> mitochondrial metabolism, supporting the principle that ACAD paralogs should not be assumed to share identical substrate specificity.</p>
+<p><strong><a href="https://pubmed.ncbi.nlm.nih.gov/17304052/">PMID: 17304052</a></strong> — <em>Development of a newborn screening follow-up algorithm for the diagnosis of isobutyryl-CoA dehydrogenase deficiency</em></p>
+<p>Provides context on the overlap between SCAD and IBDH deficiency biomarkers, particularly C4-acylcarnitine, which represents both butyrylcarnitine and isobutyrylcarnitine and is relevant for interpreting acylcarnitine profiling results.</p>
+<hr />
+<h2 id="conflicts-and-alternatives">Conflicts and Alternatives</h2>
+<h3 id="central-conflict-sequence-vs-function">Central Conflict: Sequence vs Function</h3>
+<p>The central conflict is between <strong>sequence-based annotation</strong> (supporting SCAD activity) and <strong>in vivo functional evidence</strong> (failing to support SCAD as the primary role):</p>
+<ul>
+<li><strong>Sequence says</strong>: CG4860 is a SCAD-subfamily member (57.1% identity to human ACADS, conserved catalytic glutamate, SCAD-specific motifs)</li>
+<li><strong>Genetics says</strong>: CG4860 LOF does not mirror SCAD deficiency; Arc42 LOF does</li>
+</ul>
+<h3 id="alternative-interpretations">Alternative Interpretations</h3>
+<ol>
+<li>
+<p><strong>Functional redundancy</strong>: CG4860 could have SCAD activity but be expressed in different tissues or at lower levels than Arc42. Loss of CG4860 alone may not produce a detectable phenotype if Arc42 compensates. Bgee expression data show partially overlapping but distinct expression: CG4860 is highest in Malpighian tubule (+ 56 tissues), while Arc42 is highest in enteroendocrine cells (+ 77 tissues).</p>
+</li>
+<li>
+<p><strong>Subfunctionalization after duplication</strong>: CG4860 and Arc42 may have arisen from a gene duplication and partitioned the ancestral function. CG4860 may act on slightly different substrates (e.g., C4-branched or C5 substrates).</p>
+</li>
+<li>
+<p><strong>Neofunctionalization</strong>: CG4860 may have evolved a new substrate preference. The Leu→Thr change and other pocket substitutions could shift specificity toward branched-chain, odd-chain, or other acyl-CoA substrates.</p>
+</li>
+<li>
+<p><strong>Paralog over-annotation risk</strong>: The PAINT/IBA annotation system annotates based on phylogenetic position. When two paralogs both fall in the SCAD clade, both receive GO:0016937. This is a known limitation of phylogenetic annotation: it cannot distinguish which paralog retains the ancestral function after duplication and divergence.</p>
+</li>
+<li>
+<p><strong>ISS reference discrepancy</strong>: FlyBase's ISS annotation for CG4860 uses ACAD11 (Q709F0) as the reference — a long-chain/very-long-chain ACAD in a different PANTHER family (PTHR48083 vs PTHR43884). This likely reflects broad ACAD-family similarity used in the peroxisome proteome inventory, not a substrate-specificity-level assignment. Notably, FlyBase correctly assigned only the general term GO:0003995, not GO:0016937.</p>
+</li>
+</ol>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<h3 id="gap-1-no-direct-enzymatic-assay-on-cg4860">Gap 1: No Direct Enzymatic Assay on CG4860</h3>
+<p><strong>What was checked:</strong> Literature searches (PubMed), UniProt, FlyBase, QuickGO evidence codes. No published enzymatic assay found.</p>
+<p><strong>Why it matters:</strong> The fundamental question — what substrates does CG4860 dehydrogenate? — cannot be answered without measuring enzyme kinetics on purified CG4860 protein with a panel of acyl-CoA substrates.</p>
+<p><strong>What would resolve it:</strong> Recombinant expression, purification, and kinetic characterization (Km, Vmax, kcat) with butyryl-CoA (C4), hexanoyl-CoA (C6), octanoyl-CoA (C8), isobutyryl-CoA, 2-methylbutyryl-CoA, and isovaleryl-CoA.</p>
+<h3 id="gap-2-cg4860-lof-metabolic-profile-not-fully-characterized">Gap 2: CG4860 LOF Metabolic Profile Not Fully Characterized</h3>
+<p><strong>What was checked:</strong> Abstract and citation information from <a href="https://pubmed.ncbi.nlm.nih.gov/40519079/">PMID: 40519079</a>. The abstract states CG4860 LOF does not mirror SCAD deficiency but does not specify what metabolic signature CG4860 mutants do produce.</p>
+<p><strong>Why it matters:</strong> The mutant profile could reveal the actual substrate preference of CG4860.</p>
+<p><strong>What would resolve it:</strong> Full-text review of <a href="https://pubmed.ncbi.nlm.nih.gov/40519079/">PMID: 40519079</a>, particularly supplementary acylcarnitine data for CG4860 mutants.</p>
+<h3 id="gap-3-cg4860-subcellular-localization-unknown">Gap 3: CG4860 Subcellular Localization Unknown</h3>
+<p><strong>What was checked:</strong> FlyBase ISS references peroxisomal study (<a href="https://pubmed.ncbi.nlm.nih.gov/22758915/">PMID: 22758915</a>); ACAD family members are typically mitochondrial; N-terminal targeting peptide predicted for mitochondria.</p>
+<p><strong>Why it matters:</strong> If CG4860 localizes to peroxisomes rather than mitochondria, its substrate specificity and biological role would differ substantially from mitochondrial SCAD.</p>
+<p><strong>What would resolve it:</strong> Fluorescent protein tagging or immunolocalization of CG4860 in <em>Drosophila</em> tissues.</p>
+<h3 id="gap-4-structural-prediction-of-altered-substrate-preference">Gap 4: Structural Prediction of Altered Substrate Preference</h3>
+<p><strong>What was checked:</strong> Sequence-level binding-pocket residue comparison against human ACADS crystal structure positions.</p>
+<p><strong>Why it matters:</strong> AlphaFold model comparison with substrate docking could predict whether the Leu→Thr substitution meaningfully alters cavity volume and substrate accommodation.</p>
+<p><strong>What would resolve it:</strong> AlphaFold structure comparison (AF-Q9VGC2-F1) with human ACADS crystal structure, computational docking with different acyl-CoA substrates.</p>
+<h3 id="gap-5-double-mutant-cg4860-arc42-phenotype-unknown">Gap 5: Double Mutant (CG4860 + Arc42) Phenotype Unknown</h3>
+<p><strong>What was checked:</strong> Only single-mutant data available from <a href="https://pubmed.ncbi.nlm.nih.gov/40519079/">PMID: 40519079</a>.</p>
+<p><strong>Why it matters:</strong> If CG4860 has partially redundant SCAD activity, it would only manifest when Arc42 is also absent.</p>
+<p><strong>What would resolve it:</strong> CG4860/Arc42 double-mutant acylcarnitine profiling.</p>
+<hr />
+<h2 id="proposed-follow-up-experiments-discriminating-tests">Proposed Follow-up Experiments / Discriminating Tests</h2>
+<h3 id="test-1-recombinant-cg4860-enzyme-kinetics-highest-priority-definitive">Test 1: Recombinant CG4860 Enzyme Kinetics (Highest Priority — Definitive)</h3>
+<p>Express and purify CG4860 protein, measure Km and kcat for a substrate panel: butyryl-CoA (C4), hexanoyl-CoA (C6), octanoyl-CoA (C8), isobutyryl-CoA, 2-methylbutyryl-CoA, isovaleryl-CoA, and palmitoyl-CoA (C16). Compare kinetic parameters to those of Arc42 and human ACADS. This is the gold-standard test that would definitively resolve the GO:0016937 annotation question.</p>
+<h3 id="test-2-branched-chain-acylcarnitine-profiling-of-cg4860-mutants">Test 2: Branched-Chain Acylcarnitine Profiling of CG4860 Mutants</h3>
+<p>Analyze CG4860 CRISPR mutant flies (from <a href="https://pubmed.ncbi.nlm.nih.gov/40519079/">PMID: 40519079</a>) for branched-chain acylcarnitines (C4-isobutyryl, C5-isovaleryl, C5-2-methylbutyryl). Accumulation of any of these would suggest CG4860 functions in BCAA catabolism rather than fatty acid beta-oxidation.</p>
+<h3 id="test-3-cg4860arc42-double-mutant-analysis">Test 3: CG4860/Arc42 Double Mutant Analysis</h3>
+<p>Generate double mutants and profile acylcarnitines. If C4:0-acylcarnitine accumulates beyond Arc42-single-mutant levels, CG4860 has partial SCAD activity. If not, CG4860 is functionally distinct from SCAD.</p>
+<h3 id="test-4-cg4860-subcellular-localization">Test 4: CG4860 Subcellular Localization</h3>
+<p>Tag CG4860 with GFP or mCherry at the endogenous locus and co-stain with mitochondrial (MitoTracker) and peroxisomal (anti-SKL/PTS1) markers. Peroxisomal localization would fundamentally redefine the annotation framework.</p>
+<h3 id="test-5-structural-comparison-via-alphafold">Test 5: Structural Comparison via AlphaFold</h3>
+<p>Compare CG4860 AlphaFold model (AF-Q9VGC2-F1) to human ACADS crystal structure with substrate docked. Measure binding-pocket volume differences caused by the Leu→Thr substitution. This computational analysis could predict altered substrate preference without wet-lab experiments.</p>
+<hr />
+<h2 id="curation-leads">Curation Leads</h2>
+<h3 id="lead-1-generalize-go0016937-to-go0003995-high-priority">Lead 1: Generalize GO:0016937 to GO:0003995 (High Priority)</h3>
+<ul>
+<li><strong>Action</strong>: Remove or NOT-qualify GO:0016937 (short-chain fatty acyl-CoA dehydrogenase activity) for CG4860; retain GO:0003995 (acyl-CoA dehydrogenase activity)</li>
+<li><strong>Rationale</strong>: All SCAD-specific evidence is computational; sole experimental study contradicts SCAD-specific function; general ACAD activity well-supported by domain architecture</li>
+<li><strong>Candidate reference to verify</strong>: <a href="https://pubmed.ncbi.nlm.nih.gov/40519079/">PMID: 40519079</a> — snippet: <em>"We find that while Arc42 and CG4860 are both predicted orthologs of human ACADS, only Arc42 loss of function mirrors the acylcarnitine profile of ACADS loss of function."</em></li>
+</ul>
+<h3 id="lead-2-review-flybase-iss-reference-protein-moderate-priority">Lead 2: Review FlyBase ISS Reference Protein (Moderate Priority)</h3>
+<ul>
+<li><strong>Action</strong>: Verify whether the FlyBase ISS annotation (GO:0003995, with/from ACAD11 Q709F0) is appropriate given ACAD11's distant phylogenetic and functional relationship</li>
+<li><strong>Reference to verify</strong>: <a href="https://pubmed.ncbi.nlm.nih.gov/22758915/">PMID: 22758915</a> — check whether CG4860 was identified as peroxisomal in this proteomics study</li>
+</ul>
+<h3 id="lead-3-flag-go0046359-butyrate-catabolic-process-moderate-priority">Lead 3: Flag GO:0046359 (Butyrate Catabolic Process) (Moderate Priority)</h3>
+<ul>
+<li><strong>Action</strong>: Consider removing butyrate catabolism annotation for CG4860</li>
+<li><strong>Rationale</strong>: If CG4860 does not function as a SCAD, it likely does not participate in butyrate catabolism. This IBA annotation follows from the GO:0016937 assignment.</li>
+</ul>
+<h3 id="lead-4-strengthen-arc42-scad-annotation-lower-priority">Lead 4: Strengthen Arc42 SCAD Annotation (Lower Priority)</h3>
+<ul>
+<li><strong>Action</strong>: Consider adding IMP-level annotation for Arc42 (Q9VDT1) GO:0016937, citing <a href="https://pubmed.ncbi.nlm.nih.gov/40519079/">PMID: 40519079</a></li>
+<li><strong>Rationale</strong>: Arc42 LOF mirrors human ACADS deficiency acylcarnitine profile — mutant phenotype evidence supporting SCAD function</li>
+</ul>
+<h3 id="lead-5-review-ec1381-assignment-lower-priority">Lead 5: Review EC:1.3.8.1 Assignment (Lower Priority)</h3>
+<ul>
+<li><strong>Action</strong>: EC:1.3.8.1 was assigned by ARBA automatic rule, not experiment. If the SCAD GO term is flagged, the EC assignment should also be reconsidered to prevent re-propagation</li>
+<li><strong>Rationale</strong>: The EC number drives automatic GO annotation through IEA mapping</li>
+</ul>
+<h3 id="lead-6-consider-not-annotation-for-go0016937">Lead 6: Consider NOT Annotation for GO:0016937</h3>
+<ul>
+<li><strong>Action</strong>: If full data from <a href="https://pubmed.ncbi.nlm.nih.gov/40519079/">PMID: 40519079</a> robustly shows no SCAD-deficient phenotype in CG4860 mutants, consider a NOT annotation for GO:0016937 with IMP evidence</li>
+<li><strong>Caveat</strong>: Appropriate only if authors specifically tested and excluded C4:0-acylcarnitine accumulation; partial redundancy with Arc42 cannot be excluded without double-mutant data</li>
+</ul>
+<h3 id="lead-7-candidate-alternative-go-terms">Lead 7: Candidate Alternative GO Terms</h3>
+<p>If future experiments reveal CG4860's actual substrate preference, consider:<br />
+- <strong>GO:0003995</strong> — acyl-CoA dehydrogenase activity (general; currently recommended)<br />
+- <strong>GO:0008470</strong> — isovaleryl-CoA dehydrogenase activity (if isovaleryl-CoA is preferred)<br />
+- <strong>GO:0003853</strong> — 2-methylacyl-CoA dehydrogenase activity (if branched-chain short substrates)<br />
+- A new child term of GO:0003995 if CG4860 has a unique substrate profile</p>
+<hr />
+<h2 id="investigation-timeline">Investigation Timeline</h2>
+<table>
+<thead>
+<tr>
+<th>Iteration</th>
+<th>Focus</th>
+<th>Key Outcome</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Sequence analysis, literature review, paralog comparison</td>
+<td>Established CG4860 has SCAD-like features but Arc42 is the functional ortholog; Leu→Thr binding pocket substitution identified</td>
+</tr>
+<tr>
+<td>2</td>
+<td>GO hierarchy analysis, annotation provenance tracing</td>
+<td>Discovered GO:0016937 is broader than "SCAD"; FlyBase ISS uses ACAD11 (not ACADS) as reference; all annotations computational</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Comprehensive annotation audit, evidence synthesis</td>
+<td>Confirmed all SCAD-specific annotations are computationally derived; the sole experimental paper challenges the assignment; verdict: over-annotated</td>
+</tr>
+</tbody>
+</table>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="CG4860-hypotheses/function-hypothesis-go-0016937/openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="CG4860-hypotheses/function-hypothesis-go-0016937/openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+<li><a href="CG4860-hypotheses/function-hypothesis-go-0016937/openscientist_artifacts/provenance_evidence_comparison.json">OpenScientist evidence comparison</a><br />
+<img alt="OpenScientist evidence comparison" src="CG4860-hypotheses/function-hypothesis-go-0016937/openscientist_artifacts/provenance_evidence_comparison.png" /></li>
+<li><a href="CG4860-hypotheses/function-hypothesis-go-0016937/openscientist_artifacts/provenance_go_decision_summary.json">OpenScientist go decision summary</a><br />
+<img alt="OpenScientist go decision summary" src="CG4860-hypotheses/function-hypothesis-go-0016937/openscientist_artifacts/provenance_go_decision_summary.png" /></li>
+<li><a href="CG4860-hypotheses/function-hypothesis-go-0016937/openscientist_artifacts/provenance_go_hierarchy_evidence.json">OpenScientist go hierarchy evidence</a><br />
+<img alt="OpenScientist go hierarchy evidence" src="CG4860-hypotheses/function-hypothesis-go-0016937/openscientist_artifacts/provenance_go_hierarchy_evidence.png" /></li>
+<li><a href="CG4860-hypotheses/function-hypothesis-go-0016937/openscientist_artifacts/provenance_plot_1.json">OpenScientist plot 1</a><br />
+<img alt="OpenScientist plot 1" src="CG4860-hypotheses/function-hypothesis-go-0016937/openscientist_artifacts/provenance_plot_1.png" /></li>
+<li><a href="CG4860-hypotheses/function-hypothesis-go-0016937/openscientist_artifacts/provenance_plot_2.json">OpenScientist plot 2</a><br />
+<img alt="OpenScientist plot 2" src="CG4860-hypotheses/function-hypothesis-go-0016937/openscientist_artifacts/provenance_plot_2.png" /></li>
+<li><a href="CG4860-hypotheses/function-hypothesis-go-0016937/openscientist_artifacts/provenance_plot_3.json">OpenScientist plot 3</a><br />
+<img alt="OpenScientist plot 3" src="CG4860-hypotheses/function-hypothesis-go-0016937/openscientist_artifacts/provenance_plot_3.png" /></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(CG4860-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9VGC2" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="cg4860-dmelcg4860-fbgn0037999-uniprot-q9vgc2-research-notes">CG4860 (Dmel\CG4860, FBgn0037999, UniProt Q9VGC2) — research notes</h1>
+<p>Research journal for the AI GO-annotation review of <em>Drosophila melanogaster</em> CG4860, a fatty<br />
+acid oxidation-family (acyl-CoA dehydrogenase) enzyme related to human ACADS/SCAD.</p>
+<h2 id="identity-and-sequence-facts-from-local-uniprot-record">Identity and sequence facts (from local UniProt record)</h2>
+<ul>
+<li>UniProt: <strong>Q9VGC2</strong> (<code>Q9VGC2_DROME</code>), <strong>Unreviewed (TrEMBL)</strong>, 415 aa, 44,880 MW. Protein<br />
+  existence level <code>PE 3: Inferred from homology</code>.</li>
+<li>Names in the record are all electronic/rule-based:<br />
+  RecName <code>Short-chain specific acyl-CoA dehydrogenase, mitochondrial</code> and EC <code>1.3.8.1</code> come<br />
+  from <strong>ARBA</strong> (<code>{ECO:0000256|ARBA:...}</code>), AltName <code>Butyryl-CoA dehydrogenase</code> from ARBA.<br />
+  GN synonyms <code>ACAD11</code>, <code>ACADS</code> come only from <code>{ECO:0000313|EMBL:AAF54761.1}</code> (the genome<br />
+  submission), not from experiment.</li>
+<li>Gene: <code>Dmel\CG4860</code>, ORFName CG4860, FlyBase <code>FBgn0037999</code>, GeneID 41480, chromosome 3R.</li>
+<li>Family / domains (InterPro, Pfam, CDD): acyl-CoA dehydrogenase family. Three canonical ACAD<br />
+  domains present — N-terminal (PF02771, res 38–149), middle (PF02770, 154–248), C-terminal<br />
+  (PF00441, 260–408). CDD <code>cd01158; SCAD_SBCAD</code> (short-/branched-chain ACAD subfamily model).<br />
+  PANTHER <code>PTHR43884:SF12; ISOVALERYL-COA DEHYDROGENASE, MITOCHONDRIAL-RELATED</code>.</li>
+<li>Cofactor: FAD (flavoprotein), from ARBA/RuleBase.</li>
+<li>Pathway (ARBA): <code>Lipid metabolism; mitochondrial fatty acid beta-oxidation.</code></li>
+<li>Catalytic activities listed (all ARBA-inferred, not curated from experiment on this protein):<br />
+  butanoyl-CoA (C4; RHEA:24004), pentanoyl-CoA (C5; RHEA:43456), hexanoyl-CoA (C6; RHEA:43464),<br />
+  each + oxidized ETF -&gt; (2E)-enoyl-CoA + reduced ETF.</li>
+<li>Expression (Bgee, from record): <code>Expressed in adult Malpighian tubule (Drosophila) and 56
+  other cell types or tissues.</code></li>
+<li><strong>Important caveat</strong>: every functional statement in the UniProt record carries an<br />
+<code>ECO:0000256</code> (ARBA/RuleBase, automatic annotation) or <code>ECO:0000313</code> (imported) evidence code.<br />
+  There is <strong>no experimental (<code>ECO:0000269</code>) characterization of Q9VGC2 itself</strong> in the record.<br />
+  The FUNCTION text describing "short-chain specific ... acts specifically on acyl-CoAs with<br />
+  saturated 4 to 6 carbons long primary chains" is the generic ARBA rule text<br />
+  (<code>{ECO:0000256|ARBA:ARBA00045387}</code>), i.e. family boilerplate, not a measurement of CG4860.</li>
+</ul>
+<h2 id="two-drosophila-acads-like-genes-cg4860-vs-arc42-cg4703">Two Drosophila ACADS-like genes: CG4860 vs Arc42 (CG4703)</h2>
+<p>Drosophila has (at least) two DIOPT-predicted orthologs of human ACADS: <strong>Arc42</strong> and <strong>CG4860</strong>.<br />
+The decisive fly-specific evidence comes from Geronazzo et al. 2025 (G3), who made CRISPR-Cas9<br />
+knockouts of putative FAO genes and read acylcarnitine profiles.</p>
+<ul>
+<li>Both predicted ACADS orthologs:<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/40519079" title="Two different fly genes were predicted by DIOPT to be orthologs of human ACADS: Arc42 and CG4860">PMID:40519079</a></li>
+<li>CG4860 scored <strong>lower</strong> than Arc42:<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/40519079" title="While CG4860 received a lower prediction score from the algorithm, they are both annotated on FlyBase as predicted orthologs of ACADS">PMID:40519079</a><br />
+  and <a href="https://pubmed.ncbi.nlm.nih.gov/40519079" title="Arc42 received a higher score, but both are annotated on FlyBase as orthologous to ACADS, so we were interested in observing both">PMID:40519079</a></li>
+<li>Human/mouse SCAD (ACADS) deficiency = elevated C4 (butyrylcarnitine):<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/40519079" title="In human individuals with SCAD (short-chain acyl-CoA dehydrogenase) deficiency, the stereotypical acylcarnitine profile is dominated by elevated C4 (butyrylcarnitine)">PMID:40519079</a></li>
+<li><strong>Arc42</strong> knockout mirrors ACADS loss (elevated C4); <strong>CG4860 does not</strong>:<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/40519079" title="C4 was elevated in the homozygous Arc42 mutant flies, and this elevation was exacerbated in the starved condition, as expected">PMID:40519079</a><br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/40519079" title="In contrast, we did not observe an elevation of acylcarnitine C4 in the homozygous CG4860 mutant flies as compared to controls in either condition">PMID:40519079</a></li>
+<li>Instead, CG4860 knockout showed <strong>lower</strong> C4 and elevated C2 (acetylcarnitine):<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/40519079" title="Instead, we observed a significantly lower concentration of C4, and a significant elevation of C2 (acteylcarnitine). This is the only genotype for which we observed an elevation in C2">PMID:40519079</a></li>
+<li>The authors' summary statement:<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/40519079" title="the acylcarnitine profile for Arc42 loss of function mimics that of ACADS loss of function, while that of CG4860 does not">PMID:40519079</a></li>
+<li>Speculative interpretations of CG4860's actual role (explicitly hedged by the authors):<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/40519079" title="Instead, we observe a significantly lower level of C4 in starved CG4860 knockout flies, which could indicate a role in SCAD synthesis. In addition, this is the only fly for which we observe a modest but significant elevation of C2, which could be related to a role in ketone utilization">PMID:40519079</a></li>
+<li>CRISPR allele: CG4860 carried a <strong>1 bp deletion, predicted frameshift</strong> (Table 4), and the<br />
+  KO was <strong>viable</strong> (acylcarnitine profiling was done on homozygous mutant adults, unlike the<br />
+  homozygous-lethal Etf-QO/CG7834). Table 4 records CG4860 phenotype as<br />
+  "Lower C4 acylcarnitine, elevated C2 acylcarnitine".</li>
+</ul>
+<h3 id="interpretation-for-annotation">Interpretation for annotation</h3>
+<p>The only <em>in vivo, fly-specific</em> functional test of CG4860 (Geronazzo et al. 2025) argues<br />
+<strong>against</strong> CG4860 being the enzyme responsible for short-chain (butyryl-CoA / C4) acyl-CoA<br />
+dehydrogenation in the fly — that role belongs to its paralog Arc42. CG4860 KO does not<br />
+accumulate C4; if anything C4 falls. So the ARBA-derived "<strong>short-chain specific</strong>" and<br />
+"<strong>butyrate catabolic process</strong>" annotations are over-specific for this particular paralog:<br />
+they are family/rule inferences that the direct experiment does not support (and partly<br />
+contradicts) for CG4860.</p>
+<p>However, CG4860 is unambiguously a member of the <strong>acyl-CoA dehydrogenase family</strong> (domains,<br />
+CDD SCAD_SBCAD, FAD cofactor) and participates in <strong>mitochondrial fatty acid beta-oxidation /<br />
+lipid catabolism</strong>; its knockout perturbs the acylcarnitine (β-oxidation) pool. So the<br />
+general family-level MF (<code>acyl-CoA dehydrogenase activity</code>, oxidoreductase acting on CH-CH,<br />
+FAD binding), the mitochondrial localization, and the general fatty-acid β-oxidation process<br />
+remain reasonable. What is NOT supported is the confident restriction to the <strong>short-chain /<br />
+butyryl-CoA (C4)</strong> substrate class <em>for CG4860 specifically</em>.</p>
+<p>This is consistent with the review task guidance: treat chain-length specificity cautiously;<br />
+mark over-specific chain-length claims as over-annotated where unsupported.</p>
+<h2 id="provenance-of-the-existing-goa-annotations-cg4860-goatsv">Provenance of the existing GOA annotations (CG4860-goa.tsv)</h2>
+<ul>
+<li>IBA (GO_REF:0000033, PANTHER PTN000097838 / PTN000856533) propagates short-chain ACAD<br />
+  activity (GO:0016937), mitochondrion (GO:0005739), FAO-using-ACAD (GO:0033539), and butyrate<br />
+  catabolic process (GO:0046359) from the ACADS/SCAD phylogenetic clade. These are family/clade<br />
+  inferences, not fly measurements.</li>
+<li>IEA: GO:0003995 (ARBA, GO_REF:0000120), GO:0016627 (InterPro), GO:0016937 (EC:1.3.8.1 -&gt;<br />
+  GO_REF:0000003), GO:0050660 FAD binding (InterPro).</li>
+<li>ISS (GO_REF via FlyBase, WITH UniProtKB:Q709F0, cited PMID:22758915): GO:0003995 acyl-CoA<br />
+  dehydrogenase activity and GO:0006635 fatty acid beta-oxidation. Q709F0 is a peroxisomal-<br />
+  inventory-associated reference protein; the ISS is a homology transfer of the generic ACAD<br />
+  activity + β-oxidation, not a short-chain-specific claim. PMID:22758915 (Faust et al. 2012)<br />
+  is a Drosophila <strong>peroxisomal proteome inventory</strong> paper; its cached record is abstract-only<br />
+  (<code>full_text_available: false</code>) and the abstract does not mention CG4860 or SCAD specifically.</li>
+</ul>
+<h2 id="key-conclusions-for-the-review">Key conclusions for the review</h2>
+<ol>
+<li><code>description</code>: SCAD-<strong>like</strong> / acyl-CoA-dehydrogenase-family mitochondrial flavoenzyme,<br />
+   predicted to act in fatty acid β-oxidation; <strong>note substrate-specificity uncertainty</strong> — the<br />
+   "short-chain specific / butyryl-CoA" designation is rule-based (ARBA/TrEMBL) and is not<br />
+   supported (and is partly contradicted) by the one in vivo fly knockout study, in which the<br />
+   paralog Arc42, not CG4860, reproduces short-chain (C4) ACADS deficiency.</li>
+<li>Downgrade / flag the over-specific short-chain (GO:0016937) and butyrate catabolic<br />
+   (GO:0046359) annotations for CG4860; retain the general ACAD-family MF (GO:0003995),<br />
+   oxidoreductase (GO:0016627), FAD binding (GO:0050660), mitochondrion (GO:0005739), and<br />
+   general/ACAD-step fatty-acid β-oxidation (GO:0006635, GO:0033539) as reasonable.</li>
+<li>Do NOT overrule the FlyBase ISS experimental-transfer annotations to the general terms<br />
+   (GO:0003995, GO:0006635) — those are the safe, family-level claims and are consistent with<br />
+   the KO perturbing the β-oxidation/acylcarnitine pool.</li>
+</ol>
+<h2 id="references-consulted">References consulted</h2>
+<ul>
+<li>UniProt Q9VGC2 (local record).</li>
+<li>PMID:40519079 — Geronazzo et al. 2025, G3, "Characterizing fatty acid oxidation genes in<br />
+  Drosophila." Full text available; directly assays CG4860. <strong>Most important reference.</strong></li>
+<li>PMID:22758915 — Faust et al. 2012, Traffic, Drosophila peroxisomal proteome inventory.<br />
+  Abstract-only in cache; basis of the FlyBase ISS annotations (WITH Q709F0).</li>
+<li>Human ortholog review genes/human/ACADS/ACADS-ai-review.yaml for grounding.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9VGC2
+gene_symbol: CG4860
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:7227
+  label: Drosophila melanogaster
+description: &gt;-
+  CG4860 (Dmel\CG4860; FBgn0037999; UniProt Q9VGC2) is a Drosophila melanogaster mitochondrial
+  flavoenzyme of the acyl-CoA dehydrogenase (ACAD) family. The 415-residue protein contains the
+  three canonical ACAD domains (N-terminal, middle and C-terminal) and is assigned to the
+  short-/branched-chain ACAD subfamily by CDD (SCAD_SBCAD), with a non-covalently bound FAD
+  cofactor; it is predicted to act in mitochondrial fatty acid beta-oxidation, catalyzing the
+  FAD-dependent alpha,beta-dehydrogenation of a saturated acyl-CoA thioester to the corresponding
+  trans-2-enoyl-CoA with electron transfer to electron-transfer flavoprotein (ETF). It is one of
+  two Drosophila genes (the other being its paralog Arc42/CG4703) predicted by orthology to
+  correspond to human ACADS/SCAD. The precise acyl-chain-length substrate specificity of CG4860 is
+  uncertain: the &#34;short-chain specific&#34;/butyryl-CoA (EC 1.3.8.1) designation carried by the protein
+  derives entirely from automated rule-based (ARBA/InterPro/EC) inference rather than direct
+  characterization, and the only in vivo functional test in the fly indicates that loss of the
+  paralog Arc42, not CG4860, reproduces the short-chain (C4/butyrylcarnitine) profile of human SCAD
+  deficiency, so CG4860&#39;s exact substrate range and physiological role within fly beta-oxidation
+  remain to be established experimentally.
+existing_annotations:
+# --- short-chain fatty acyl-CoA dehydrogenase activity (IBA) ---
+- term:
+    id: GO:0016937
+    label: short-chain fatty acyl-CoA dehydrogenase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetically inferred (IBA) short-chain acyl-CoA dehydrogenase activity, propagated from
+      the ACADS/SCAD PANTHER clade. CG4860 is a bona fide ACAD-family member, but its restriction to
+      the short-chain (butyryl-CoA/C4) substrate class is not supported for this specific paralog:
+      it is a family/clade inference, and the only in vivo fly test (Geronazzo et al. 2025) shows
+      that loss of the paralog Arc42 - not CG4860 - reproduces the elevated-C4 (butyrylcarnitine)
+      profile of human SCAD deficiency, while CG4860 knockout does not accumulate C4.
+    action: MODIFY
+    reason: &gt;-
+      The molecular function (an acyl-CoA dehydrogenase) is sound, but the short-chain chain-length
+      specificity is an over-specific rule/clade inference that direct fly evidence does not support
+      (and partly contradicts) for CG4860. Generalize to the parent acyl-CoA dehydrogenase activity
+      term, which is well supported by domain architecture and the ISS/IEA evidence. An independent
+      OpenScientist analysis (run blinded to this review action as a neutral function-assignment
+      hypothesis) reached the same verdict - retain the general GO:0003995 and flag GO:0016937 as
+      over-specific - and adds a structural determinant: a Leu-to-Thr substitution at the RIGIA+8
+      substrate-specificity position lining CG4860&#39;s binding pocket (CG4860 has a small polar Thr,
+      whereas both human ACADS and the fly paralog Arc42 carry the bulky hydrophobic Leu), which
+      could shift CG4860 away from strict short-chain specificity.
+    proposed_replacement_terms:
+      - id: GO:0003995
+        label: acyl-CoA dehydrogenase activity
+    supported_by:
+      - reference_id: PMID:40519079
+        supporting_text: &#34;In contrast, we did not observe an elevation of acylcarnitine C4 in the homozygous CG4860 mutant flies as compared to controls in either condition&#34;
+      - reference_id: file:DROME/CG4860/CG4860-hypotheses/function-hypothesis-go-0016937/openscientist.md
+        supporting_text: &#34;The smaller, polar threonine could accommodate longer or differently branched substrates, potentially shifting CG4860&#39;s substrate preference away from strict short-chain specificity.&#34;
+      - reference_id: PMID:40519079
+        supporting_text: &#34;the acylcarnitine profile for Arc42 loss of function mimics that of ACADS loss of function, while that of CG4860 does not&#34;
+# --- mitochondrion (IBA, is_active_in) ---
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetically inferred mitochondrial localization (is_active_in), propagated from the
+      mitochondrial ACAD clade. Consistent with the ACAD family (mitochondrial matrix beta-oxidation
+      enzymes) and with the UniProt &#34;mitochondrial&#34; naming; there is no fly-specific localization
+      datum but the assignment is biologically appropriate for this enzyme class.
+    action: ACCEPT
+    reason: &gt;-
+      Mitochondrial localization is the expected and consistent compartment for an acyl-CoA
+      dehydrogenase family beta-oxidation enzyme; the IBA parent term is appropriate.
+    supported_by:
+      - reference_id: file:DROME/CG4860/CG4860-uniprot.txt
+        supporting_text: &#34;Lipid metabolism; mitochondrial fatty acid beta-oxidation&#34;
+# --- fatty acid beta-oxidation using acyl-CoA dehydrogenase (IBA) ---
+- term:
+    id: GO:0033539
+    label: fatty acid beta-oxidation using acyl-CoA dehydrogenase
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetically inferred involvement in the acyl-CoA dehydrogenase-catalyzed step of fatty
+      acid beta-oxidation. CG4860 is an ACAD-family enzyme and its knockout perturbs the fly
+      acylcarnitine (beta-oxidation) pool, so participation in the ACAD step of beta-oxidation is a
+      reasonable process annotation even though the specific substrate chain length is uncertain.
+    action: ACCEPT
+    reason: &gt;-
+      The process (the ACAD step of fatty acid beta-oxidation) is concordant with CG4860 being an
+      ACAD-family enzyme whose loss alters the acylcarnitine profile; this is more informative than
+      generic fatty acid beta-oxidation and does not over-commit on substrate specificity.
+    supported_by:
+      - reference_id: PMID:40519079
+        supporting_text: &#34;Instead, we observed a significantly lower concentration of C4, and a significant elevation of C2 (acteylcarnitine)&#34;
+      - reference_id: file:DROME/CG4860/CG4860-uniprot.txt
+        supporting_text: &#34;Belongs to the acyl-CoA dehydrogenase family&#34;
+# --- butyrate catabolic process (IBA) ---
+- term:
+    id: GO:0046359
+    label: butyrate catabolic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetically inferred butyrate (butanoate, C4) catabolic process - a substrate-specific
+      restatement of short-chain (butyryl-CoA/C4) ACAD activity. This is precisely the activity that
+      the in vivo fly evidence attributes to the paralog Arc42 rather than to CG4860: CG4860 knockout
+      does not accumulate C4 (butyrylcarnitine) and if anything shows lower C4. The C4-specific
+      catabolic framing is therefore not supported for this paralog.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The narrow C4/butyrate-specific process is an over-specific clade inference that the direct fly
+      knockout does not support (and partly contradicts) for CG4860; short-chain/butyryl-CoA function
+      maps to the paralog Arc42. Retained but flagged as over-annotated rather than removed, since it
+      derives from a genuine phylogenetic propagation.
+    supported_by:
+      - reference_id: PMID:40519079
+        supporting_text: &#34;we did not observe an elevation of acylcarnitine C4 in the homozygous CG4860 mutant flies as compared to controls in either condition&#34;
+      - reference_id: PMID:40519079
+        supporting_text: &#34;In human individuals with SCAD (short-chain acyl-CoA dehydrogenase) deficiency, the stereotypical acylcarnitine profile is dominated by elevated C4 (butyrylcarnitine)&#34;
+# --- acyl-CoA dehydrogenase activity (IEA, ARBA) ---
+- term:
+    id: GO:0003995
+    label: acyl-CoA dehydrogenase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic (ARBA/InterPro) annotation to the parent acyl-CoA dehydrogenase activity term. This
+      family-level molecular function is well supported by the domain architecture (three ACAD
+      domains; CDD SCAD_SBCAD) and the FAD cofactor, and it does not over-commit on chain-length
+      specificity. This is the most defensible molecular-function annotation for CG4860.
+    action: ACCEPT
+    reason: &gt;-
+      The general ACAD activity is strongly supported by conserved domains and FAD binding and is the
+      appropriate, non-over-specific molecular function for this uncharacterized paralog.
+    supported_by:
+      - reference_id: file:DROME/CG4860/CG4860-uniprot.txt
+        supporting_text: &#34;Belongs to the acyl-CoA dehydrogenase family&#34;
+# --- oxidoreductase activity, acting on the CH-CH group of donors (IEA, InterPro) ---
+- term:
+    id: GO:0016627
+    label: oxidoreductase activity, acting on the CH-CH group of donors
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      InterPro-derived electronic annotation to an intermediate oxidoreductase term. The acyl-CoA
+      dehydrogenase reaction oxidizes the alpha,beta (C2-C3) CH-CH bond of the acyl-CoA thioester, so
+      this parent term is accurate for CG4860 as an ACAD-family enzyme.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct intermediate-level term subsumed by the more specific acyl-CoA dehydrogenase activity;
+      retained as non-core.
+    supported_by:
+      - reference_id: file:DROME/CG4860/CG4860-uniprot.txt
+        supporting_text: &#34;Belongs to the acyl-CoA dehydrogenase family&#34;
+# --- short-chain fatty acyl-CoA dehydrogenase activity (IEA, EC 1.3.8.1) ---
+- term:
+    id: GO:0016937
+    label: short-chain fatty acyl-CoA dehydrogenase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000003
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic annotation derived from the EC 1.3.8.1 mapping (GO_REF:0000003). The EC number and
+      the short-chain designation for CG4860 come from automated ARBA/EC rule inference on family
+      membership, not from measured activity of this protein. As with the IBA short-chain term, the
+      chain-length specificity is over-specific for CG4860, whose in vivo knockout does not reproduce
+      short-chain (C4) SCAD deficiency (that phenotype maps to the paralog Arc42).
+    action: MODIFY
+    reason: &gt;-
+      The dehydrogenase molecular function is correct, but the EC/rule-derived short-chain
+      specificity is not supported for this paralog. Generalize to the parent acyl-CoA dehydrogenase
+      activity term.
+    proposed_replacement_terms:
+      - id: GO:0003995
+        label: acyl-CoA dehydrogenase activity
+    supported_by:
+      - reference_id: PMID:40519079
+        supporting_text: &#34;the acylcarnitine profile for Arc42 loss of function mimics that of ACADS loss of function, while that of CG4860 does not&#34;
+# --- flavin adenine dinucleotide binding (IEA, InterPro) ---
+- term:
+    id: GO:0050660
+    label: flavin adenine dinucleotide binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      InterPro-derived FAD binding annotation. Acyl-CoA dehydrogenases are FAD-dependent
+      flavoproteins, and UniProt records FAD as the cofactor for CG4860. FAD binding is intrinsic to
+      the dehydrogenase mechanism and is well supported by the conserved ACAD flavoprotein
+      architecture.
+    action: ACCEPT
+    reason: &gt;-
+      FAD binding is a genuine, mechanistically essential molecular function for any ACAD-family
+      enzyme and is consistent with the UniProt cofactor annotation and conserved domains.
+    supported_by:
+      - reference_id: file:DROME/CG4860/CG4860-uniprot.txt
+        supporting_text: &#34;Belongs to the acyl-CoA dehydrogenase family&#34;
+# --- acyl-CoA dehydrogenase activity (ISS, FlyBase, WITH Q709F0) ---
+- term:
+    id: GO:0003995
+    label: acyl-CoA dehydrogenase activity
+  evidence_type: ISS
+  original_reference_id: PMID:22758915
+  qualifier: enables
+  review:
+    summary: &gt;-
+      ISS annotation curated by FlyBase transferring the general acyl-CoA dehydrogenase activity from
+      a reference protein (WITH UniProtKB:Q709F0), associated with the Drosophila peroxisomal proteome
+      inventory (Faust et al. 2012). The transferred function is the family-level ACAD activity, not a
+      short-chain-specific claim, and is consistent with the domain architecture and the general FAO
+      role. The cached publication is abstract-only and does not itself discuss CG4860, but per
+      curation guidance an experimental/ISS curator judgment to the general term should not be
+      overruled from incomplete cached evidence.
+    action: ACCEPT
+    reason: &gt;-
+      Homology-based transfer to the general (non-over-specific) ACAD activity term is defensible and
+      concordant with CG4860 being an ACAD-family enzyme; the curator judgment stands.
+    supported_by:
+      - reference_id: file:DROME/CG4860/CG4860-uniprot.txt
+        supporting_text: &#34;Belongs to the acyl-CoA dehydrogenase family&#34;
+# --- fatty acid beta-oxidation (ISS, FlyBase, WITH Q709F0) ---
+- term:
+    id: GO:0006635
+    label: fatty acid beta-oxidation
+  evidence_type: ISS
+  original_reference_id: PMID:22758915
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      ISS annotation (FlyBase, WITH UniProtKB:Q709F0) placing CG4860 in fatty acid beta-oxidation.
+      This general process is supported by CG4860&#39;s ACAD-family membership and by the fly knockout
+      altering the acylcarnitine (beta-oxidation) pool. It does not commit to a specific acyl-chain
+      length, so it remains appropriate despite the substrate-specificity uncertainty.
+    action: ACCEPT
+    reason: &gt;-
+      Involvement in fatty acid beta-oxidation is concordant with the enzyme family and with the in
+      vivo perturbation of acylcarnitines on CG4860 loss; the general BP term is safe and appropriate.
+    supported_by:
+      - reference_id: PMID:40519079
+        supporting_text: &#34;Instead, we observed a significantly lower concentration of C4, and a significant elevation of C2 (acteylcarnitine)&#34;
+      - reference_id: file:DROME/CG4860/CG4860-uniprot.txt
+        supporting_text: &#34;Lipid metabolism; mitochondrial fatty acid beta-oxidation&#34;
+references:
+- id: file:DROME/CG4860/CG4860-hypotheses/function-hypothesis-go-0016937/openscientist.md
+  title: &#34;OpenScientist function-assignment hypothesis: CG4860 (Q9VGC2) short-chain acyl-CoA dehydrogenase activity (GO:0016937)&#34;
+  findings:
+  - statement: Independent AI-scientist analysis (run blinded to our MODIFY action) concludes the
+      short-chain assignment is over-specific and should be generalized to GO:0003995, independently
+      re-deriving the Arc42-vs-CG4860 disambiguation and adding a binding-pocket determinant (a
+      Leu-to-Thr substitution at the RIGIA+8 substrate-specificity position; CG4860 has small polar
+      Thr where ACADS and Arc42 have bulky hydrophobic Leu).
+    supporting_text: &#34;The smaller, polar threonine could accommodate longer or differently branched substrates, potentially shifting CG4860&#39;s substrate preference away from strict short-chain specificity.&#34;
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &#34;In-repo OpenScientist report for the chain-length-specificity hypothesis. Verdict
+      over-specific (retain general acyl-CoA dehydrogenase GO:0003995, flag GO:0016937) -
+      independently corroborates our MODIFY. The binding-pocket residue analysis (Leu-to-Thr at
+      RIGIA+8) is a computational lead from this report; the in vivo disambiguation it also relies
+      on (PMID:40519079) is independently cited and verbatim-checked in this review.&#34;
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000003
+  title: Gene Ontology annotation based on Enzyme Commission mapping
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:22758915
+  title: An inventory of peroxisomal proteins and pathways in Drosophila melanogaster.
+  full_text_unavailable: true
+  findings:
+    - statement: &gt;-
+        A proteome-wide inventory of Drosophila peroxisomal proteins and metabolic pathways; the
+        associated reference protein (Q709F0) underlies the FlyBase ISS transfer of general acyl-CoA
+        dehydrogenase activity and fatty acid beta-oxidation to CG4860.
+      supporting_text: &gt;-
+        metabolic enzymes that function within the organelle
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified Drosophila peroxisomal proteome inventory (Faust et al. 2012). Cited by FlyBase
+      as the reference for the ISS annotations (WITH UniProtKB:Q709F0) to the general ACAD activity
+      and fatty acid beta-oxidation terms. Cached record is abstract-only (full_text_available:
+      false) and does not itself name CG4860; the ISS transfers only the family-level (not
+      short-chain-specific) function, which is consistent with the evidence.
+- id: PMID:40519079
+  title: Characterizing fatty acid oxidation genes in Drosophila.
+  findings:
+    - statement: &gt;-
+        CG4860 and its paralog Arc42 are both DIOPT-predicted Drosophila orthologs of human ACADS,
+        with CG4860 receiving the lower prediction score.
+      supporting_text: &gt;-
+        Two different fly genes were predicted by DIOPT to be orthologs of human ACADS: Arc42 and
+        CG4860
+    - statement: &gt;-
+        A CRISPR-Cas9 knockout of CG4860 does NOT reproduce the elevated-C4 (butyrylcarnitine)
+        acylcarnitine profile of human short-chain acyl-CoA dehydrogenase (SCAD/ACADS) deficiency;
+        instead C4 is lower and C2 (acetylcarnitine) is elevated. The paralog Arc42 knockout does
+        reproduce the elevated-C4 SCAD profile.
+      supporting_text: &gt;-
+        In contrast, we did not observe an elevation of acylcarnitine C4 in the homozygous CG4860
+        mutant flies as compared to controls in either condition
+    - statement: &gt;-
+        Overall, loss of Arc42 - not CG4860 - mirrors human ACADS loss of function.
+      supporting_text: &gt;-
+        the acylcarnitine profile for Arc42 loss of function mimics that of ACADS loss of function,
+        while that of CG4860 does not
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Primary research paper (Geronazzo et al. 2025, G3), full text available and cached. This is the
+      only in vivo, fly-specific functional study of CG4860. It directly tests CG4860 by CRISPR
+      knockout and acylcarnitine profiling and shows that CG4860 loss does not phenocopy human SCAD
+      (ACADS) deficiency, whereas the paralog Arc42 does. This is the key evidence for treating the
+      short-chain/butyryl-CoA substrate-specificity annotations on CG4860 as over-specific and
+      unverified for this paralog.
+core_functions:
+- description: &gt;-
+    CG4860 is a mitochondrial FAD-dependent acyl-CoA dehydrogenase (ACAD) family enzyme that acts in
+    fatty acid beta-oxidation, catalyzing FAD-dependent oxidation at the CH-CH (alpha,beta) bond of a
+    saturated acyl-CoA thioester. The specific acyl-chain-length substrate range is uncertain: the
+    short-chain/butyryl-CoA (EC 1.3.8.1) designation is rule-based (ARBA/EC) rather than measured,
+    and the sole in vivo fly knockout study shows that CG4860 loss - unlike loss of its paralog
+    Arc42 - does not reproduce the short-chain (C4) profile of human SCAD/ACADS deficiency. The
+    general (chain-length-agnostic) acyl-CoA dehydrogenase molecular function, FAD binding,
+    mitochondrial localization, and participation in fatty acid beta-oxidation are the defensible
+    core assignments.
+  molecular_function:
+    id: GO:0003995
+    label: acyl-CoA dehydrogenase activity
+  directly_involved_in:
+  - id: GO:0006635
+    label: fatty acid beta-oxidation
+  - id: GO:0033539
+    label: fatty acid beta-oxidation using acyl-CoA dehydrogenase
+  locations:
+  - id: GO:0005739
+    label: mitochondrion
+  supported_by:
+  - reference_id: file:DROME/CG4860/CG4860-uniprot.txt
+    supporting_text: &#34;Belongs to the acyl-CoA dehydrogenase family&#34;
+  - reference_id: file:DROME/CG4860/CG4860-uniprot.txt
+    supporting_text: &#34;Lipid metabolism; mitochondrial fatty acid beta-oxidation&#34;
+  - reference_id: PMID:40519079
+    supporting_text: &#34;the acylcarnitine profile for Arc42 loss of function mimics that of ACADS loss of function, while that of CG4860 does not&#34;
+- description: &gt;-
+    Cofactor binding required for catalysis. As an acyl-CoA dehydrogenase family flavoprotein,
+    CG4860 binds one non-covalently associated FAD per subunit, the redox cofactor that accepts the
+    two electrons removed from the acyl-CoA substrate before passing them to electron-transfer
+    flavoprotein (ETF); FAD is essential for the dehydrogenase mechanism.
+  molecular_function:
+    id: GO:0050660
+    label: flavin adenine dinucleotide binding
+  directly_involved_in:
+  - id: GO:0006635
+    label: fatty acid beta-oxidation
+  locations:
+  - id: GO:0005739
+    label: mitochondrion
+  supported_by:
+  - reference_id: file:DROME/CG4860/CG4860-uniprot.txt
+    supporting_text: &#34;Name=FAD; Xref=ChEBI:CHEBI:57692&#34;
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    What is the actual acyl-chain-length substrate specificity of CG4860, and does it differ from its
+    paralog Arc42 (which appears to carry the canonical short-chain/butyryl-CoA SCAD activity in the
+    fly)?
+- question: &gt;-
+    Given that CG4860 knockout lowers C4 and uniquely elevates C2 (acetylcarnitine), does CG4860 have
+    a role in ketone/acetyl-CoA utilization or in short-chain acyl-CoA synthesis rather than classical
+    butyryl-CoA dehydrogenation, as tentatively suggested by Geronazzo et al. 2025?
+suggested_experiments:
+- description: &gt;-
+    Enzyme kinetics on purified recombinant CG4860 across a panel of acyl-CoA substrates (C4-C12,
+    plus branched-chain substrates such as isovaleryl-CoA, given the CDD SCAD_SBCAD / PANTHER IVD
+    subfamily assignment) with ETF as electron acceptor, to define its true substrate preference and
+    test whether it is genuinely short-chain-specific or has a different/broader specificity than
+    Arc42.
+- description: &gt;-
+    Metabolic and genetic dissection of the CG4860 knockout (and CG4860; Arc42 double mutant),
+    including targeted acyl-CoA/acylcarnitine and ketone-body metabolomics under fed and starved
+    conditions, to test the proposed roles in SCAD synthesis and/or ketone (acetyl-CoA) utilization
+    and to distinguish CG4860&#39;s physiological function from that of Arc42.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

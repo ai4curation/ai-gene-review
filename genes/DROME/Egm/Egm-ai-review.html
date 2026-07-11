@@ -1,0 +1,4251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Egm - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Egm</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q5U117" target="_blank" class="term-link">
+                        Q5U117
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Drosophila melanogaster</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "Egm";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q5U117" data-a="DESCRIPTION: Egm (Complex I assembly factor Egm, mitochondrial;..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Egm (Complex I assembly factor Egm, mitochondrial; also known as dACAD9 or Enigma; gene CG9006) is the single Drosophila melanogaster ortholog of human ACAD9. It is a nuclear-encoded, mitochondrially targeted member of the acyl-CoA dehydrogenase (ACAD) family bearing an N-terminal transit peptide and the ACAD9/ACADVL-like domain architecture. Its dominant, essential role is as a mitochondrial respiratory chain complex I (CI) assembly factor: Egm is a core component of the mitochondrial complex I intermediate assembly (MCIA) complex, together with the Drosophila orthologs of ECSIT, NDUFAF1, TMEM126B and TMEM186, and it regulates biogenesis of the membrane-arm PP-b (ND2) sub-module of CI. Loss of Egm destabilizes the other MCIA components in assembly intermediates, and Egm remains associated with the assembled CI holoenzyme for a period after assembly, consistent with an assembly-chaperone/adaptor role. Egm localizes to mitochondria, including the mitochondrial matrix/inner-membrane compartment. Like human ACAD9, Egm retains an ACAD fold and is predicted to bind FAD and may retain residual FAD-dependent acyl-CoA dehydrogenase activity toward long/very-long-chain acyl-CoA substrates, although direct enzymatic activity of the fly protein has not been biochemically demonstrated. Egm is essential for viability: null larvae die at the third instar and show systemic metabolic defects (reduced triglycerides, malformed fat bodies, small imaginal discs), while partial-loss-of-function alleles confer increased oxidative-stress resistance and a female-specific lifespan extension, phenotypes consistent with impaired mitochondrial oxidative phosphorylation.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q5U117" data-a="GO:0005737" data-r="GO_REF:0000033" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically inferred cytoplasmic localization propagated across the ACAD family tree. Egm is experimentally a mitochondrial protein (matrix/inner-membrane compartment); &#34;cytoplasm&#34; is an over-broad and imprecise compartment call for a mitochondrially imported protein whose specific localization (mitochondrion, mitochondrial matrix) is captured by more accurate annotations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The IBA cytoplasm call reflects the mixed subcellular localizations of the broad ACAD panel used for the phylogenetic inference (some family members are cytosolic/peroxisomal). For Egm, direct experimental evidence places the protein in mitochondria (PMID:16434470), so the more specific GO:0005739 / GO:0005759 annotations should be preferred over the generic cytoplasm term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16434470" target="_blank" class="term-link">
+                                        PMID:16434470
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In Drosophila Kc-167 and SL2 cells, Egm is found almost exclusively in the mitochondrion.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5U117" data-a="GO:0005739" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically inferred mitochondrial localization. This is correct for Egm and directly corroborated by experimental data (immunocytochemistry, cell fractionation) in Drosophila cells.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Egm is experimentally established as a mitochondrial protein (PMID:16434470), so the IBA mitochondrion annotation is accurate. It is subsumed by the more specific mitochondrial matrix annotation but is not incorrect.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16434470" target="_blank" class="term-link">
+                                        PMID:16434470
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the endogenous Egm protein is highly enriched in the fraction that contains the mitochondria</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051793" target="_blank" class="term-link">
+                                    GO:0051793
+                                </a>
+                            </span>
+                            <span class="term-label">medium-chain fatty acid catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q5U117" data-a="GO:0051793" data-r="GO_REF:0000033" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically inferred participation in medium-chain fatty acid catabolism, propagated from medium-chain ACAD (MCAD) family members. There is no evidence that Egm functions specifically in medium-chain fatty acid catabolism in Drosophila; the ACAD9 ortholog clade is characterized by long/very-long-chain preference and, dominantly, a CI-assembly role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Medium-chain specificity is a property of dedicated MCAD family members, not of the ACAD9/Egm subfamily. The fly protein&#39;s dominant, experimentally supported role is CI assembly (PMID:34386730); any residual dehydrogenase activity is expected to be long/very-long-chain by orthology to human ACAD9. This IBA term over-states a specific medium-chain catabolic role.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34386730" target="_blank" class="term-link">
+                                        PMID:34386730
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">ACAD9 regulates biogenesis of some sub-assemblies in the PP-b sub-module</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033539" target="_blank" class="term-link">
+                                    GO:0033539
+                                </a>
+                            </span>
+                            <span class="term-label">fatty acid beta-oxidation using acyl-CoA dehydrogenase</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q5U117" data-a="GO:0033539" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically inferred role in the acyl-CoA dehydrogenase step of fatty acid beta-oxidation. Egm belongs to the ACAD family and retains the ACAD fold, so a residual FAO-enzyme role is plausible by orthology to human ACAD9. However, the fly protein&#39;s dehydrogenase activity has not been directly demonstrated, and its dominant role is CI assembly. Retained as a non-core, by-similarity annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> By orthology to human ACAD9 (a bona fide, if secondary, acyl-CoA dehydrogenase), Egm may contribute to the ACAD step of beta-oxidation, and homology-plus-phenotype evidence in the fly (PMID:16434470) is consistent with a lipid-metabolism role. This is a plausible secondary function but not the core function, which is CI assembly.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16434470" target="_blank" class="term-link">
+                                        PMID:16434470
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">homology to ACADs, the enzymes that catalyze the first of four reactions that constitute one cycle of the β-oxidation pathway</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070991" target="_blank" class="term-link">
+                                    GO:0070991
+                                </a>
+                            </span>
+                            <span class="term-label">medium-chain fatty acyl-CoA dehydrogenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q5U117" data-a="GO:0070991" data-r="GO_REF:0000033" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically inferred medium-chain acyl-CoA dehydrogenase activity, propagated from MCAD-clade members. The ACAD9/Egm subfamily is not a dedicated medium-chain dehydrogenase; human ACAD9 has optimal activity on long/very-long-chain substrates, with only modest medium-chain activity, and Egm&#39;s own activity is undemonstrated. The medium-chain-specific MF call over-states Egm&#39;s likely substrate preference.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Medium-chain acyl-CoA dehydrogenase activity is the defining activity of MCAD, not of the ACAD9/Egm subfamily. By orthology to human ACAD9, any residual activity of Egm is expected to be long/very-long-chain-biased, and Egm&#39;s dominant function is CI assembly (PMID:34386730). This IBA term reflects tree-wide propagation rather than Egm-specific specificity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34386730" target="_blank" class="term-link">
+                                        PMID:34386730
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the MCIA complex is known to consist of ACAD9</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5U117" data-a="GO:0005739" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation from UniProt subcellular-location mapping (SL-0173, Mitochondrion). Egm&#39;s mitochondrial localization is experimentally established, so this IEA term is correct.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The UniProt subcellular-location term derives from the experimentally supported mitochondrial localization (PMID:16434470). Correct, though subsumed by the more specific mitochondrial matrix annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16434470" target="_blank" class="term-link">
+                                        PMID:16434470
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In Drosophila Kc-167 and SL2 cells, Egm is found almost exclusively in the mitochondrion.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006631" target="_blank" class="term-link">
+                                    GO:0006631
+                                </a>
+                            </span>
+                            <span class="term-label">fatty acid metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q5U117" data-a="GO:0006631" data-r="GO_REF:0000117" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARBA machine-learning electronic annotation placing Egm in fatty acid metabolism, based on ACAD family membership. Plausible by orthology to human ACAD9&#39;s secondary FAO activity, but broad and not directly demonstrated for the fly protein. Retained as a non-core, by-similarity annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> As an ACAD-family member, Egm is plausibly involved in fatty acid metabolism (consistent with the reduced-triglyceride phenotype of null larvae; PMID:16434470), but this is a broad parent term and a secondary function relative to CI assembly.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16434470" target="_blank" class="term-link">
+                                        PMID:16434470
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the stored fatty acids in the form of triglycerides are almost halved in larvae lacking zygotically expressed Egm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016627" target="_blank" class="term-link">
+                                    GO:0016627
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity, acting on the CH-CH group of donors</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q5U117" data-a="GO:0016627" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro-based electronic annotation to the intermediate oxidoreductase term. The acyl-CoA dehydrogenase reaction introduces a double bond between the alpha and beta carbons (oxidation of a CH-CH group). Egm contains the ACAD catalytic domains, so the term is structurally appropriate, but the activity of the fly protein has not been directly measured.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Egm carries the acyl-CoA dehydrogenase domain signature (Pfam PF00441/PF02770/PF02771; InterPro IPR006091 etc.), making this intermediate oxidoreductase term appropriate by domain content. It is a by-similarity/domain-based call for a residual enzymatic activity, subordinate to the CI-assembly core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16434470" target="_blank" class="term-link">
+                                        PMID:16434470
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">homology to ACADs, the enzymes that catalyze the first of four reactions that constitute one cycle of the β-oxidation pathway</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050660" target="_blank" class="term-link">
+                                    GO:0050660
+                                </a>
+                            </span>
+                            <span class="term-label">flavin adenine dinucleotide binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q5U117" data-a="GO:0050660" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro-based electronic annotation for FAD binding. Egm is an ACAD-family flavoprotein (UniProt COFACTOR: FAD, by RuleBase), and FAD binding is a conserved feature of the fold. In human ACAD9, FAD binding is directly demonstrated and is functionally coupled to the assembly switch (ECSIT-induced deflavination). FAD binding of the fly protein is inferred by similarity/domain content but not directly measured.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> FAD binding is a conserved property of the ACAD9/ACAD fold and is annotated in UniProt as a cofactor. This is a well-supported by-similarity molecular-function feature, but for Egm it has not been directly demonstrated, and in the ACAD9 orthology group the FAD/enzymatic activity is secondary to (and, in the human protein, mutually exclusive with) the CI-assembly role. Deliberately kept non-core here (unlike the FAD core-function entries in the catabolic ACAD reviews Acadvl, Mcad, Arc42, and CG4860), because Egm&#39;s primary role is complex I assembly (GO:0030674), not fatty acid beta-oxidation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16434470" target="_blank" class="term-link">
+                                        PMID:16434470
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">homology to ACADs, the enzymes that catalyze the first of four reactions that constitute one cycle of the β-oxidation pathway</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0017099" target="_blank" class="term-link">
+                                    GO:0017099
+                                </a>
+                            </span>
+                            <span class="term-label">very-long-chain fatty acyl-CoA dehydrogenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q5U117" data-a="GO:0017099" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS annotation transferred by curator judgment of sequence similarity from human ACAD9 (UniProtKB:Q9H845). Human ACAD9 does have FAD-dependent acyl-CoA dehydrogenase activity toward long/very-long-chain acyl-CoA substrates, but this activity is modest (~18% of VLCAD) and is a secondary/moonlighting function; in the human ACAD9 review the &#34;very-long-chain&#34; specificity is argued to over-state substrate preference (long-chain is the primary specificity). For Egm the activity is undemonstrated. Kept as a non-core, by-similarity annotation rather than removed.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Transferred from human ACAD9, whose residual dehydrogenase activity is genuine but secondary. The &#34;very-long-chain&#34; level may over-state specificity (the human review MODIFIES the corresponding IDA annotations toward long-chain), and the fly protein&#39;s activity has not been biochemically characterized. Retained as non-core because the core role of both ACAD9 and Egm is CI assembly.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16434470" target="_blank" class="term-link">
+                                        PMID:16434470
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">homology to ACADs, the enzymes that catalyze the first of four reactions that constitute one cycle of the β-oxidation pathway</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030674" target="_blank" class="term-link">
+                                    GO:0030674
+                                </a>
+                            </span>
+                            <span class="term-label">protein-macromolecule adaptor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5U117" data-a="GO:0030674" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS annotation transferred from human ACAD9 (UniProtKB:Q9H845), where ACAD9 functions as a protein-macromolecule adaptor/scaffold bridging ECSIT (and through it NDUFAF1) to CI assembly intermediates within the MCIA complex. Drosophila data directly support the same role: Egm (dACAD9) is an MCIA core member whose loss destabilizes the other MCIA components in assembly intermediates, consistent with a scaffolding/adaptor function. This is the best molecular-function representation of Egm&#39;s core CI-assembly role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The adaptor/scaffold molecular function is conserved and supported directly in the fly: dACAD9 knockdown reduces dNDUFAF1 and dECSIT in assembly intermediates (PMID:34386730), mirroring human ACAD9&#39;s central, MCIA-stabilizing adaptor role (transferred by ISS from Q9H845). This is far more informative than a generic protein-binding term and captures Egm&#39;s core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34386730" target="_blank" class="term-link">
+                                        PMID:34386730
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">RNAi-mediated knockdown of dACAD9 resulted in a reduction in the amount of dNDUFAF1 and dECSIT that accumulates in AIs in ACAD9-kd samples</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0160295" target="_blank" class="term-link">
+                                    GO:0160295
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial complex I intermediate assembly complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34386730" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34386730
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dissecting the concordant and disparate roles of NDUFAF3 and...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5U117" data-a="GO:0160295" data-r="PMID:34386730" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation from FlyBase based on Murari et al. 2021, which demonstrated that the fly ortholog of ACAD9 (dACAD9/CG9006/Egm) is a core member of the Drosophila MCIA complex, together with the orthologs of ECSIT, NDUFAF1, TMEM126B and TMEM186, and that these components co-migrate with CI assembly intermediates and the holoenzyme. This is a core cellular-component annotation for Egm.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct Drosophila evidence places Egm/dACAD9 in the MCIA complex: all five MCIA components (including dACAD9) were found associated with CI subcomplexes/holoenzyme, and dACAD9 knockdown destabilizes the other MCIA members (PMID:34386730). This mirrors the well-established human ACAD9 MCIA membership and is Egm&#39;s core localization/complex.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34386730" target="_blank" class="term-link">
+                                        PMID:34386730
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">all 5 components of the MCIA complex were associated with subcomplexes in FAF4-kd and FAF3-kd samples</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34386730" target="_blank" class="term-link">
+                                        PMID:34386730
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Drosophila orthologs of ACAD9 (CG9006), ECSIT (CG10610), NDUFAF1 (CG7598), TMEM126B (CG13392), TMEM186 (CG4627)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007320" target="_blank" class="term-link">
+                                    GO:0007320
+                                </a>
+                            </span>
+                            <span class="term-label">insemination</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HEP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18666829" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18666829
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Proteomics reveals novel Drosophila seminal fluid proteins t...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q5U117" data-a="GO:0007320" data-r="PMID:18666829" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HEP annotation from Findlay et al. 2008, a seminal-fluid proteomics study in which Egm was detected among transferred male seminal fluid proteins (classed among lipid-metabolism proteins). This is a mass-spectrometric co-occurrence in seminal fluid, not a demonstration that Egm has a dedicated insemination/reproductive function; the protein&#39;s characterized role is mitochondrial CI assembly.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Detection of a mitochondrial ACAD-family protein in the seminal-fluid proteome (HEP, expression pattern evidence) does not establish a functional role in insemination. Many metabolic/mitochondrial proteins are incidentally present in seminal fluid; no mechanistic link to the insemination process is shown. The annotation over-interprets a proteomic detection.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18666829" target="_blank" class="term-link">
+                                        PMID:18666829
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">proteins involved in lipid metabolism</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032981" target="_blank" class="term-link">
+                                    GO:0032981
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial respiratory chain complex I assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34386730" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34386730
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dissecting the concordant and disparate roles of NDUFAF3 and...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5U117" data-a="GO:0032981" data-r="PMID:34386730" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TAS annotation from Murari et al. 2021. Egm/dACAD9 participates in CI assembly as an MCIA-complex factor that regulates biogenesis of the PP-b (ND2) sub-module of the CI membrane arm; disruption of dACAD9 stalls assembly intermediates and destabilizes partner MCIA factors. This is the core biological process for Egm and represents its most important physiological function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> CI assembly is Egm&#39;s core biological process, directly supported in the fly: dACAD9 regulates PP-b sub-module biogenesis and its knockdown reduces partner MCIA factors in assembly intermediates (PMID:34386730), consistent with the essential, conserved ACAD9 CI-assembly role.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34386730" target="_blank" class="term-link">
+                                        PMID:34386730
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">ACAD9 regulates biogenesis of some sub-assemblies in the PP-b sub-module</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34386730" target="_blank" class="term-link">
+                                        PMID:34386730
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">when dACAD9 is disrupted, the paucity of the PP-b sub-module will cause the Q/PP-a AI to stall and accumulate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26362788" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26362788
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Proteomic mapping in live Drosophila tissues using an engine...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5U117" data-a="GO:0005759" data-r="PMID:26362788" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation from Chen et al. 2015, an APEX-based proteomic mapping of the Drosophila muscle mitochondrial matrix (&#34;MitoMax&#34;) in which Egm was catalogued as a matrix protein. This is consistent with Egm being a peripheral, matrix-facing inner-membrane MCIA factor (like human ACAD9, which is peripheral on the matrix side of the inner membrane).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> APEX matrix proteomics places Egm in the mitochondrial matrix compartment (PMID:26362788), consistent with the matrix-facing localization of the MCIA complex and with the immunolocalization of Egm to mitochondria (PMID:16434470). Appropriate, specific compartmental annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26362788" target="_blank" class="term-link">
+                                        PMID:26362788
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">maps the mitochondrial matrix proteome of Drosophila muscle</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34386730" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34386730
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dissecting the concordant and disparate roles of NDUFAF3 and...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5U117" data-a="GO:0005739" data-r="PMID:34386730" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation from Murari et al. 2021. Egm/dACAD9 acts within mitochondria as an MCIA-complex CI assembly factor (co-migrating with mitochondrial CI subcomplexes and holoenzyme). Mitochondrial localization is well supported.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Egm functions in mitochondria as a CI assembly factor (PMID:34386730), corroborated by independent immunolocalization/fractionation (PMID:16434470). Correct, though subsumed by the more specific mitochondrial matrix annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34386730" target="_blank" class="term-link">
+                                        PMID:34386730
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">all 5 components of the MCIA complex were associated with subcomplexes in FAF4-kd and FAF3-kd samples</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034976" target="_blank" class="term-link">
+                                    GO:0034976
+                                </a>
+                            </span>
+                            <span class="term-label">response to endoplasmic reticulum stress</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23667151" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23667151
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Using natural variation in Drosophila to discover previously...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q5U117" data-a="GO:0034976" data-r="PMID:23667151" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HMP annotation from Chow et al. 2013, a DGRP natural-variation study of tunicamycin-induced ER stress survival in which Egm was one of six lipid-metabolism-related association candidates (and a P-element functional-test candidate). This is a genetic-association/mutant-phenotype signal suggesting a modifier role rather than a direct, mechanistic function of Egm in the ER stress response; the connection is most plausibly indirect (via mitochondrial/lipid metabolism).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Egm surfaced as an ER-stress-survival association candidate with a putative lipid-metabolism link (PMID:23667151); the effect is likely an indirect consequence of its metabolic/mitochondrial role rather than a dedicated ER-stress function. Retained as a non-core annotation reflecting the experimental modifier evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23667151" target="_blank" class="term-link">
+                                        PMID:23667151
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">with known or putative roles in lipid metabolism</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16434470" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16434470
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Enigma, a mitochondrial protein affecting lifespan and oxida...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5U117" data-a="GO:0005739" data-r="PMID:16434470" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation from Mourikis et al. 2006, the foundational Enigma paper, which localized Egm to mitochondria by immunocytochemistry (colocalization with MitoTracker and the inner-membrane marker prohibitin) and by cell fractionation. This is direct experimental evidence for mitochondrial localization of Egm.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct experimental localization of endogenous and tagged Egm to mitochondria in Drosophila cells, confirmed by fractionation (PMID:16434470). Well-supported core localization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16434470" target="_blank" class="term-link">
+                                        PMID:16434470
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the endogenous Egm protein is highly enriched in the fraction that contains the mitochondria</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16434470" target="_blank" class="term-link">
+                                        PMID:16434470
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In Drosophila Kc-167 and SL2 cells, Egm is found almost exclusively in the mitochondrion.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006635" target="_blank" class="term-link">
+                                    GO:0006635
+                                </a>
+                            </span>
+                            <span class="term-label">fatty acid beta-oxidation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16434470" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16434470
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Enigma, a mitochondrial protein affecting lifespan and oxida...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q5U117" data-a="GO:0006635" data-r="PMID:16434470" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation from Mourikis et al. 2006, based on the metabolic phenotype of Egm-null larvae (halved triglycerides, upregulated lipase-3, mitochondrial localization, and eye-clone phenotype resembling the beta-oxidation mutant scully) plus ACAD homology. The authors are explicit that the beta-oxidation involvement is indirect. In light of the later demonstration that ACAD9/Egm is primarily a CI assembly factor, these metabolic phenotypes are equally (and more parsimoniously) explained by CI/OXPHOS deficiency. Retained as a non-core, experimentally-grounded annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is a legitimate experimental (IMP) annotation reflecting real mutant metabolic phenotypes, and the full text (which the curator read) contains the supporting data; per review guidelines it should not be removed on the grounds that the evidence is indirect. However, because Egm&#39;s dominant, directly demonstrated role is CI assembly (PMID:34386730) and the paper itself calls the beta-oxidation link indirect, it is best treated as non-core rather than a core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16434470" target="_blank" class="term-link">
+                                        PMID:16434470
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">indirect evidence suggests that this protein may be involved in β-oxidation</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16434470" target="_blank" class="term-link">
+                                        PMID:16434470
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the stored fatty acids in the form of triglycerides are almost halved in larvae lacking zygotically expressed Egm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0055088" target="_blank" class="term-link">
+                                    GO:0055088
+                                </a>
+                            </span>
+                            <span class="term-label">lipid homeostasis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16434470" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16434470
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Enigma, a mitochondrial protein affecting lifespan and oxida...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q5U117" data-a="GO:0055088" data-r="PMID:16434470" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation from Mourikis et al. 2006. Egm-null larvae show markedly reduced triglyceride stores, malformed fat bodies, and altered expression of lipid-metabolism genes, demonstrating a mutant lipid-homeostasis phenotype. Whether this reflects a direct role of Egm in lipid metabolism or a systemic consequence of mitochondrial CI/OXPHOS deficiency is not resolved by the study, but the mutant phenotype is real and experimentally established.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The lipid-homeostasis phenotype of Egm mutants is directly documented (PMID:16434470) and is a valid experimental annotation. It is retained as non-core because it is a downstream/systemic metabolic consequence rather than Egm&#39;s core molecular role (CI assembly), and the causal directness of the lipid link is uncertain.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16434470" target="_blank" class="term-link">
+                                        PMID:16434470
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the stored fatty acids in the form of triglycerides are almost halved in larvae lacking zygotically expressed Egm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1900408" target="_blank" class="term-link">
+                                    GO:1900408
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of cellular response to oxidative stress</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16434470" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16434470
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Enigma, a mitochondrial protein affecting lifespan and oxida...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q5U117" data-a="GO:1900408" data-r="PMID:16434470" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation from Mourikis et al. 2006. Reduction of Egm (heterozygous nulls / hypomorphs) increases organismal tolerance to paraquat-induced oxidative stress, i.e. reducing Egm enhances oxidative-stress resistance. This phenotype connects Egm dosage to the oxidative-stress response, most plausibly through its effect on mitochondrial OXPHOS/ROS. It is a systemic phenotype rather than a direct molecular function of the protein.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The paraquat-resistance phenotype of Egm mutants is experimentally demonstrated (PMID:16434470) and links Egm to the oxidative-stress response, but the effect is an indirect, dosage-dependent, whole-organism consequence of altered mitochondrial function rather than a core molecular role. Retained as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16434470" target="_blank" class="term-link">
+                                        PMID:16434470
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Egm mutant flies demonstrate a significantly increased resistance to the toxic effects of 7.5 mM paraquat compared with WT flies</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001745" target="_blank" class="term-link">
+                                    GO:0001745
+                                </a>
+                            </span>
+                            <span class="term-label">compound eye morphogenesis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8913755" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8913755
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Analysis of dominant enhancers and suppressors of activated ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q5U117" data-a="GO:0001745" data-r="PMID:8913755" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IGI annotation from Verheyen et al. 1996, a large second-site screen for dominant modifiers of an activated-Notch rough-eye phenotype, in which an Egm allele behaved as a genetic modifier of eye development. The cached record is abstract-only (full text unavailable), so the specific Egm allele data cannot be verified here; this is an experimental genetic-interaction annotation from FlyBase. Egm&#39;s requirement for eye development is independently supported by the cell-autonomous aberrant morphology of Egm-null eye clones (PMID:16434470), consistent with an essential mitochondrial gene being required for the energetically demanding eye morphogenesis rather than a dedicated eye-patterning function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is an experimental (IGI) FlyBase annotation whose full text was read by the curator; per review guidelines it should not be removed merely because the cached entry is abstract-only. The eye requirement is corroborated by cell-autonomous Egm-null clone phenotypes (PMID:16434470). It is a pleiotropic/developmental consequence of Egm&#39;s essential mitochondrial role, so it is retained as non-core rather than a core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16434470" target="_blank" class="term-link">
+                                        PMID:16434470
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">null Egm –/– clones show an aberrant morphology</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8913755" target="_blank" class="term-link">
+                                        PMID:8913755
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">a second-site mutagenesis screen was performed to isolate enhancers and suppressors of the eye phenotype caused by expression of these activated Notch molecules</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Core function. Egm (dACAD9) is a core component of the mitochondrial complex I intermediate assembly (MCIA) complex and functions as a protein-macromolecule adaptor/scaffold that, together with the Drosophila orthologs of ECSIT and NDUFAF1, drives biogenesis of the membrane-arm PP-b (ND2) sub-module of respiratory chain complex I. Loss of Egm stalls CI assembly intermediates and destabilizes the partner MCIA factors, mirroring the essential, conserved CI-assembly role of human ACAD9.</h3>
+                <span class="vote-buttons" data-g="Q5U117" data-a="FUNCTION: Core function. Egm (dACAD9) is a core component of..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030674" target="_blank" class="term-link">
+                            protein-macromolecule adaptor activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032981" target="_blank" class="term-link">
+                                mitochondrial respiratory chain complex I assembly
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                mitochondrial matrix
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0160295" target="_blank" class="term-link">
+                            mitochondrial complex I intermediate assembly complex
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34386730" target="_blank" class="term-link">
+                                PMID:34386730
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">RNAi-mediated knockdown of dACAD9 resulted in a reduction in the amount of dNDUFAF1 and dECSIT that accumulates in AIs in ACAD9-kd samples</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34386730" target="_blank" class="term-link">
+                                PMID:34386730
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">ACAD9 regulates biogenesis of some sub-assemblies in the PP-b sub-module</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34386730" target="_blank" class="term-link">
+                                PMID:34386730
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">all 5 components of the MCIA complex were associated with subcomplexes in FAF4-kd and FAF3-kd samples</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16434470" target="_blank" class="term-link">
+                            PMID:16434470
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Enigma, a mitochondrial protein affecting lifespan and oxidative stress response in Drosophila.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Egm (= CG9006) encodes a 639-aa mitochondrial protein with homology to acyl-CoA dehydrogenases; it is an essential gene (null larvae die at third instar) and localizes to mitochondria.</div>
+
+                        <div class="finding-text">"Egm encodes the CG9006 gene, which corresponds to a 639-aa protein with homology to ACADs, the enzymes that catalyze the first of four reactions that constitute one cycle of the β-oxidation pathway"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Egm mutants have reduced triglyceride stores and increased paraquat/oxidative-stress resistance with a female-specific lifespan extension; the beta-oxidation involvement is described as indirect.</div>
+
+                        <div class="finding-text">"indirect evidence suggests that this protein may be involved in β-oxidation"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18666829" target="_blank" class="term-link">
+                            PMID:18666829
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Proteomics reveals novel Drosophila seminal fluid proteins transferred at mating.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Egm was detected by mass spectrometry among transferred male seminal fluid proteins, in the lipid-metabolism functional category. This is a proteomic co-occurrence, not a demonstrated insemination function.</div>
+
+                        <div class="finding-text">"proteins involved in lipid metabolism"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23667151" target="_blank" class="term-link">
+                            PMID:23667151
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Using natural variation in Drosophila to discover previously unknown endoplasmic reticulum stress genes.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Egm was one of six lipid-metabolism-related association candidates for tunicamycin-induced ER-stress survival in the DGRP, suggesting a putative (likely indirect) modifier role in the ER stress response.</div>
+
+                        <div class="finding-text">"with known or putative roles in lipid metabolism"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26362788" target="_blank" class="term-link">
+                            PMID:26362788
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Proteomic mapping in live Drosophila tissues using an engineered ascorbate peroxidase.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">APEX-based proteomic mapping of the Drosophila muscle mitochondrial matrix (&#34;MitoMax&#34;) catalogued Egm as a mitochondrial matrix protein.</div>
+
+                        <div class="finding-text">"maps the mitochondrial matrix proteome of Drosophila muscle"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34386730" target="_blank" class="term-link">
+                            PMID:34386730
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Dissecting the concordant and disparate roles of NDUFAF3 and NDUFAF4 in mitochondrial complex I biogenesis.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The Drosophila ortholog of ACAD9 (dACAD9/CG9006/Egm) is a core member of the fly MCIA complex; it regulates biogenesis of the PP-b (ND2) sub-module of complex I, and its knockdown destabilizes the partner MCIA factors dNDUFAF1 and dECSIT in assembly intermediates.</div>
+
+                        <div class="finding-text">"RNAi-mediated knockdown of dACAD9 resulted in a reduction in the amount of dNDUFAF1 and dECSIT that accumulates in AIs in ACAD9-kd samples"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The MCIA complex in Drosophila comprises the orthologs of ACAD9, NDUFAF1, ECSIT, TMEM126B and TMEM186, all of which associate with CI subcomplexes/holoenzyme.</div>
+
+                        <div class="finding-text">"all 5 components of the MCIA complex were associated with subcomplexes in FAF4-kd and FAF3-kd samples"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8913755" target="_blank" class="term-link">
+                            PMID:8913755
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Analysis of dominant enhancers and suppressors of activated Notch in Drosophila.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Large-scale second-site screen for dominant modifiers of an activated-Notch rough-eye phenotype; basis for the IGI compound-eye-morphogenesis annotation (Egm as a genetic modifier of eye development).</div>
+
+                        <div class="finding-text">"a second-site mutagenesis screen was performed to isolate enhancers and suppressors of the eye phenotype caused by expression of these activated Notch molecules"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does Drosophila Egm retain measurable FAD-dependent acyl-CoA dehydrogenase activity, and if so with what chain-length preference? By orthology to human ACAD9 a residual long/very-long-chain activity is expected, but the fly protein has never been enzymatically characterized, so the ISS/IEA enzymatic annotations remain unverified for Drosophila.</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q5U117" data-a="Q: Does Drosophila Egm retain measurable FAD-dependen..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Are the lipid-homeostasis, oxidative-stress and lifespan phenotypes of Egm mutants (PMID:16434470) a direct consequence of loss of an acyl-CoA dehydrogenase enzyme, or downstream effects of complex I / OXPHOS deficiency? The 2006 study predates the CI-assembly-factor paradigm, and the two interpretations make different predictions for a catalytically dead but assembly-competent allele.</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q5U117" data-a="Q: Are the lipid-homeostasis, oxidative-stress and li..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Test the assembly-vs-enzyme separation of function in vivo by rescuing Egm-null larvae with (a) wild-type Egm, (b) a catalytically inactive (predicted active-site) Egm variant, and (c) a variant predicted to disrupt ECSIT/MCIA binding, then assay complex I assembly (BN-PAGE), CI activity, triglyceride levels, oxidative-stress resistance and viability. This would establish whether the essential function and the metabolic/longevity phenotypes depend on the CI-assembly activity, the dehydrogenase activity, or both.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The CI-assembly (adaptor) function of Egm, not its residual dehydrogenase activity, accounts for its essential role and for the lipid/oxidative-stress/lifespan phenotypes, paralleling human ACAD9 where a catalytically dead mutant still rescues CI biogenesis.</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q5U117" data-a="EXPERIMENT: Test the assembly-vs-enzyme separation of function..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Biochemically characterize recombinant Egm: measure FAD occupancy and acyl-CoA dehydrogenase activity across a chain-length substrate panel (medium-, long-, very-long-chain acyl-CoA), and test whether the fly ECSIT ortholog induces deflavination of Egm as it does for human ACAD9.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Egm binds FAD and has modest long/very-long-chain (not medium-chain) acyl-CoA dehydrogenase activity that is downregulated by ECSIT binding, consistent with the conserved deflavination switch of human ACAD9.</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q5U117" data-a="EXPERIMENT: Biochemically characterize recombinant Egm: measur..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(Egm-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q5U117" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="egm-dacad9-enigma-cg9006-drosophila-melanogaster-research-notes">Egm (dACAD9 / Enigma / CG9006) — Drosophila melanogaster — Research Notes</h1>
+<p>UniProt: Q5U117 (ACAD9_DROME), 639 aa, Reviewed/Swiss-Prot. FlyBase: FBgn0086712.<br />
+Ortholog of human ACAD9 (Q9H845). PANTHER subfamily PTHR43884:SF9 "COMPLEX I ASSEMBLY<br />
+FACTOR ACAD9, MITOCHONDRIAL". Member of the acyl-CoA dehydrogenase (ACAD) family with a<br />
+predicted mitochondrial transit peptide (residues 1-26) and the ACAD9/ACADV-like C-terminal<br />
+domain (Pfam PF21343 ACAD9-ACADV_C). EC assigned as 1.3.8.- by similarity to human ACAD9.</p>
+<h2 id="summary-of-function-synthesis">Summary of function (synthesis)</h2>
+<p>Egm is the single Drosophila ortholog of human ACAD9. Like human ACAD9, its dominant,<br />
+essential role is as a mitochondrial respiratory chain complex I (CI) assembly factor and a<br />
+core component of the mitochondrial complex I intermediate assembly (MCIA) complex, together<br />
+with the fly orthologs of ECSIT (CG10610), NDUFAF1 (CG7598), TMEM126B (CG13392), and TMEM186<br />
+(CG4627). It retains an ACAD-family fold and (by similarity to human ACAD9) may retain<br />
+residual FAD-dependent acyl-CoA dehydrogenase activity toward long/very-long-chain acyl-CoA,<br />
+but the direct enzymatic activity of the fly protein has not been biochemically demonstrated.</p>
+<h2 id="provenance-from-cached-publications">Provenance from cached publications</h2>
+<h3 id="pmid16434470-mourikis-et-al-2006-pnas-enigma-characterization-full_text_available-true">PMID:16434470 (Mourikis et al. 2006, PNAS) — "Enigma" characterization. full_text_available: true</h3>
+<ul>
+<li>Cloning/identity: Egm = CG9006 = 639-aa ACAD-homologous protein; two null alleles (Egm1, EgmP)<br />
+  are lethal and rescued by a WT genomic copy.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/16434470" title="Egm encodes the CG9006 gene, which corresponds to a 639-aa protein with homology to ACADs, the enzymes that catalyze the first of four reactions that constitute one cycle of the β-oxidation pathway">PMID:16434470</a></li>
+<li>Subcellular localization: mitochondrial by immunocytochemistry (colocalizes with MitoTracker<br />
+  and prohibitin, an inner-membrane marker) and by cell fractionation.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/16434470" title="In Drosophila Kc-167 and SL2 cells, Egm is found almost exclusively in the mitochondrion.">PMID:16434470</a><br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/16434470" title="the endogenous Egm protein is highly enriched in the fraction that contains the mitochondria">PMID:16434470</a></li>
+<li>Essential gene / disruption phenotype: homozygous nulls die at late larval (third instar) stage;<br />
+  develop subcuticular melanotic masses, small eye/wing imaginal discs, malformed fat bodies;<br />
+  ~3.9-fold prolonged larval life; halved triglycerides.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/16434470" title="homozygous null animals ( Egm –/– ) die during the late larval stage (third instar)">PMID:16434470</a><br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/16434470" title="the stored fatty acids in the form of triglycerides are almost halved in larvae lacking zygotically expressed Egm">PMID:16434470</a></li>
+<li>Lipid homeostasis / beta-oxidation link (INDIRECT/inferred): homology to ACADs + mitochondrial<br />
+  localization + reduced triglycerides + upregulated lipase-3 + eye clone phenotype resembling<br />
+  scully (a beta-oxidation component). Authors are explicit this is indirect.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/16434470" title="indirect evidence suggests that this protein may be involved in β-oxidation">PMID:16434470</a></li>
+<li>Oxidative stress / longevity: heterozygous Egm mutants are more paraquat-resistant and longer-lived<br />
+  (female-specific).<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/16434470" title="Egm mutant flies demonstrate a significantly increased resistance to the toxic effects of 7.5 mM paraquat compared with WT flies">PMID:16434470</a></li>
+<li>Eye development (clonal, cell-autonomous):<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/16434470" title="null Egm –/– clones show an aberrant morphology ( Fig. 3 D-1 ), indicating that Egm is required for eye development in a cell autonomous fashion">PMID:16434470</a></li>
+<li>NOTE: this 2006 paper predates the discovery that human ACAD9's primary role is CI assembly<br />
+  (Nouws 2010). Its FAO/lipid-homeostasis interpretation is best read, in light of later work<br />
+  (PMID:34386730 and human ACAD9), as downstream consequences of CI/OXPHOS deficiency in a fly that<br />
+  cannot assemble CI, rather than proof of a direct beta-oxidation enzyme role.</li>
+</ul>
+<h3 id="pmid34386730-murari-et-al-2021-iscience-ci-biogenesis-dacad9-assayed-full_text_available-true">PMID:34386730 (Murari et al. 2021, iScience) — CI biogenesis; dACAD9 assayed. full_text_available: true</h3>
+<ul>
+<li>dACAD9 (= CG9006 = Egm) is treated as the fly ACAD9 ortholog and a component of the MCIA complex.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/34386730" title="Drosophila orthologs of ACAD9 (CG9006), ECSIT (CG10610), NDUFAF1 (CG7598), TMEM126B (CG13392), TMEM186 (CG4627)">PMID:34386730</a><br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/34386730" title="the MCIA complex is known to consist of ACAD9 (Nouws et al., 2010), NDUFAF1 (Vogel et al., 2005), ECSIT (Vogel et al., 2007), TMEM126B (Heide et al., 2012), and TMEM186">PMID:34386730</a></li>
+<li>MCIA components (including dACAD9) remain associated with the assembled CI holoenzyme and with<br />
+  stalled assembly intermediates.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/34386730" title="all 5 components of the MCIA complex were associated with subcomplexes in FAF4-kd and FAF3-kd samples">PMID:34386730</a></li>
+<li>FUNCTION (fly): dACAD9 regulates biogenesis of the PP-b (ND2) sub-module; dACAD9 knockdown<br />
+  destabilizes the other MCIA members (dNDUFAF1, dECSIT) in assembly intermediates.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/34386730" title="ACAD9 regulates biogenesis of some sub-assemblies in the PP-b sub-module">PMID:34386730</a><br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/34386730" title="RNAi-mediated knockdown of dACAD9 resulted in a reduction in the amount of dNDUFAF1 and dECSIT that accumulates in AIs in ACAD9-kd samples">PMID:34386730</a><br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/34386730" title="when dACAD9 is disrupted, the paucity of the PP-b sub-module will cause the Q/PP-a AI to stall and accumulate">PMID:34386730</a></li>
+<li>This directly parallels human ACAD9 in the MCIA complex (Nouws 2010; Formosa 2020) and is the<br />
+  basis for the IDA (GO:0160295, MCIA complex) and TAS (GO:0032981, CI assembly) annotations, and<br />
+  the ISS transfer of the adaptor-activity term from human ACAD9.</li>
+</ul>
+<h3 id="pmid18666829-findlay-et-al-2008-plos-biol-seminal-fluid-proteomics-full_text_available-true">PMID:18666829 (Findlay et al. 2008, PLoS Biol) — seminal fluid proteomics. full_text_available: true</h3>
+<ul>
+<li>Egm was detected among transferred seminal fluid proteins (HEP, GO:0007320 insemination). This is<br />
+  a mass-spec detection of the protein in seminal fluid, categorized under "lipid metabolism"<br />
+  proteins; it is a proteomic co-occurrence, NOT a demonstrated reproductive function of Egm.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/18666829" title="Many of these proteins fell into the same functional categories as the previously predicted set, including proteases, protease inhibitors, mediators of an immune response, and proteins involved in lipid metabolism">PMID:18666829</a><br />
+  (Egm is one of the lipid-metabolism-category Sfps in the paper's protein tables.)</li>
+</ul>
+<h3 id="pmid23667151-chow-et-al-2013-pnas-er-stress-natural-variation-dgrp-full_text_available-true">PMID:23667151 (Chow et al. 2013, PNAS) — ER stress natural variation (DGRP). full_text_available: true</h3>
+<ul>
+<li>Egm was one of six lipid-metabolism-related association candidates for TM-induced ER-stress survival<br />
+  (HMP, GO:0034976). This is a GWAS/association + P-element functional-test candidate; a putative,<br />
+  correlative role rather than a mechanistic one.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/23667151" title="we identified six association candidates ( CG12428 , bgm , Egm , CG9518 , RdgA , and CG5162 ) with known or putative roles in lipid metabolism">PMID:23667151</a></li>
+</ul>
+<h3 id="pmid26362788-chen-et-al-2015-pnas-apex-mitochondrial-matrix-proteomics-full_text_available-true">PMID:26362788 (Chen et al. 2015, PNAS) — APEX mitochondrial-matrix proteomics. full_text_available: true</h3>
+<ul>
+<li>APEX-based proteomic mapping of the Drosophila muscle mitochondrial matrix ("MitoMax"). Egm was<br />
+  catalogued in the matrix proteome (source of the IDA GO:0005759 mitochondrial matrix annotation).<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/26362788" title="maps the mitochondrial matrix proteome of Drosophila muscle">PMID:26362788</a><br />
+  (Egm/CG9006 appears in the MitoMax matrix inventory; matrix placement is consistent with a<br />
+  peripheral inner-membrane, matrix-facing MCIA factor.)</li>
+</ul>
+<h3 id="pmid8913755-verheyen-et-al-1996-genetics-notch-modifier-screen-full_text_available-false-abstract-only">PMID:8913755 (Verheyen et al. 1996, Genetics) — Notch modifier screen. full_text_available: FALSE (abstract only)</h3>
+<ul>
+<li>Large-scale second-site screen for dominant enhancers/suppressors of activated-Notch rough-eye<br />
+  phenotype (137,000 flies, 290 modifiers). Basis for the IGI GO:0001745 compound eye morphogenesis<br />
+  annotation (Egm as a Notch-eye modifier). Abstract-only in cache; the specific Egm/CG9006 allele<br />
+  data are in the full text not available here.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/8913755" title="a second-site mutagenesis screen was performed to isolate enhancers and suppressors of the eye phenotype caused by expression of these activated Notch molecules">PMID:8913755</a></li>
+</ul>
+<h2 id="interpretation-for-review-decisions">Interpretation for review decisions</h2>
+<ul>
+<li>CORE: CI assembly factor / MCIA complex member. Strong: GO:0160295 (IDA), GO:0032981 (TAS),<br />
+  GO:0030674 adaptor activity (ISS from human ACAD9), mitochondrion (IDA x2), mitochondrial matrix (IDA).</li>
+<li>SECONDARY / by-similarity enzymatic: FAD binding (IEA InterPro), oxidoreductase CH-CH (IEA InterPro),<br />
+  VLCAD activity (ISS from human ACAD9), medium-chain ACAD activity (IBA), fatty acid metabolic/beta-ox<br />
+  (IEA/IBA/IMP). The fly's own dehydrogenase activity is not directly demonstrated; human ACAD9's<br />
+  is modest (~18% VLCAD) and its FAO role is secondary/moonlighting. Keep these NON-CORE.</li>
+<li>The IMP FAO/lipid-homeostasis annotations (PMID:16434470) rest on indirect evidence and predate the<br />
+  CI-assembly-factor paradigm. The mutant phenotypes (triglyceride loss, lethality) are equally<br />
+  explained by CI/OXPHOS failure. Keep as non-core (do not REMOVE experimental annotations).</li>
+<li>Insemination (HEP), ER stress (HMP), compound eye (IGI), oxidative-stress (IMP): pleiotropic /<br />
+  systemic-consequence or proteomic-cooccurrence annotations. Keep as non-core; eye/ER/insemination<br />
+  are likely secondary to the gene's essential mitochondrial role. IGI eye annotation (PMID:8913755)<br />
+  is abstract-only in cache — but it is an experimental (IGI) FlyBase call; keep as non-core.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q5U117
+gene_symbol: Egm
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:7227
+  label: Drosophila melanogaster
+description: &gt;-
+  Egm (Complex I assembly factor Egm, mitochondrial; also known as dACAD9 or Enigma; gene
+  CG9006) is the single Drosophila melanogaster ortholog of human ACAD9. It is a nuclear-encoded,
+  mitochondrially targeted member of the acyl-CoA dehydrogenase (ACAD) family bearing an
+  N-terminal transit peptide and the ACAD9/ACADVL-like domain architecture. Its dominant,
+  essential role is as a mitochondrial respiratory chain complex I (CI) assembly factor: Egm is
+  a core component of the mitochondrial complex I intermediate assembly (MCIA) complex, together
+  with the Drosophila orthologs of ECSIT, NDUFAF1, TMEM126B and TMEM186, and it regulates
+  biogenesis of the membrane-arm PP-b (ND2) sub-module of CI. Loss of Egm destabilizes the other
+  MCIA components in assembly intermediates, and Egm remains associated with the assembled CI
+  holoenzyme for a period after assembly, consistent with an assembly-chaperone/adaptor role.
+  Egm localizes to mitochondria, including the mitochondrial matrix/inner-membrane compartment.
+  Like human ACAD9, Egm retains an ACAD fold and is predicted to bind FAD and may retain residual
+  FAD-dependent acyl-CoA dehydrogenase activity toward long/very-long-chain acyl-CoA substrates,
+  although direct enzymatic activity of the fly protein has not been biochemically demonstrated.
+  Egm is essential for viability: null larvae die at the third instar and show systemic metabolic
+  defects (reduced triglycerides, malformed fat bodies, small imaginal discs), while
+  partial-loss-of-function alleles confer increased oxidative-stress resistance and a
+  female-specific lifespan extension, phenotypes consistent with impaired mitochondrial oxidative
+  phosphorylation.
+existing_annotations:
+# --- Annotation 1: cytoplasm (IBA) ---
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetically inferred cytoplasmic localization propagated across the ACAD family tree.
+      Egm is experimentally a mitochondrial protein (matrix/inner-membrane compartment); &#34;cytoplasm&#34;
+      is an over-broad and imprecise compartment call for a mitochondrially imported protein whose
+      specific localization (mitochondrion, mitochondrial matrix) is captured by more accurate
+      annotations.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The IBA cytoplasm call reflects the mixed subcellular localizations of the broad ACAD panel
+      used for the phylogenetic inference (some family members are cytosolic/peroxisomal). For Egm,
+      direct experimental evidence places the protein in mitochondria (PMID:16434470), so the more
+      specific GO:0005739 / GO:0005759 annotations should be preferred over the generic cytoplasm term.
+    supported_by:
+    - reference_id: PMID:16434470
+      supporting_text: &#34;In Drosophila Kc-167 and SL2 cells, Egm is found almost exclusively in the mitochondrion.&#34;
+# --- Annotation 2: mitochondrion (IBA) ---
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetically inferred mitochondrial localization. This is correct for Egm and directly
+      corroborated by experimental data (immunocytochemistry, cell fractionation) in Drosophila cells.
+    action: ACCEPT
+    reason: &gt;-
+      Egm is experimentally established as a mitochondrial protein (PMID:16434470), so the IBA
+      mitochondrion annotation is accurate. It is subsumed by the more specific mitochondrial matrix
+      annotation but is not incorrect.
+    supported_by:
+    - reference_id: PMID:16434470
+      supporting_text: &#34;the endogenous Egm protein is highly enriched in the fraction that contains the mitochondria&#34;
+# --- Annotation 3: medium-chain fatty acid catabolic process (IBA) ---
+- term:
+    id: GO:0051793
+    label: medium-chain fatty acid catabolic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetically inferred participation in medium-chain fatty acid catabolism, propagated from
+      medium-chain ACAD (MCAD) family members. There is no evidence that Egm functions specifically in
+      medium-chain fatty acid catabolism in Drosophila; the ACAD9 ortholog clade is characterized by
+      long/very-long-chain preference and, dominantly, a CI-assembly role.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Medium-chain specificity is a property of dedicated MCAD family members, not of the ACAD9/Egm
+      subfamily. The fly protein&#39;s dominant, experimentally supported role is CI assembly (PMID:34386730);
+      any residual dehydrogenase activity is expected to be long/very-long-chain by orthology to human
+      ACAD9. This IBA term over-states a specific medium-chain catabolic role.
+    supported_by:
+    - reference_id: PMID:34386730
+      supporting_text: &#34;ACAD9 regulates biogenesis of some sub-assemblies in the PP-b sub-module&#34;
+# --- Annotation 4: fatty acid beta-oxidation using acyl-CoA dehydrogenase (IBA) ---
+- term:
+    id: GO:0033539
+    label: fatty acid beta-oxidation using acyl-CoA dehydrogenase
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetically inferred role in the acyl-CoA dehydrogenase step of fatty acid beta-oxidation.
+      Egm belongs to the ACAD family and retains the ACAD fold, so a residual FAO-enzyme role is
+      plausible by orthology to human ACAD9. However, the fly protein&#39;s dehydrogenase activity has not
+      been directly demonstrated, and its dominant role is CI assembly. Retained as a non-core,
+      by-similarity annotation.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      By orthology to human ACAD9 (a bona fide, if secondary, acyl-CoA dehydrogenase), Egm may
+      contribute to the ACAD step of beta-oxidation, and homology-plus-phenotype evidence in the fly
+      (PMID:16434470) is consistent with a lipid-metabolism role. This is a plausible secondary function
+      but not the core function, which is CI assembly.
+    supported_by:
+    - reference_id: PMID:16434470
+      supporting_text: &#34;homology to ACADs, the enzymes that catalyze the first of four reactions that constitute one cycle of the β-oxidation pathway&#34;
+# --- Annotation 5: medium-chain fatty acyl-CoA dehydrogenase activity (IBA) ---
+- term:
+    id: GO:0070991
+    label: medium-chain fatty acyl-CoA dehydrogenase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetically inferred medium-chain acyl-CoA dehydrogenase activity, propagated from MCAD-clade
+      members. The ACAD9/Egm subfamily is not a dedicated medium-chain dehydrogenase; human ACAD9 has
+      optimal activity on long/very-long-chain substrates, with only modest medium-chain activity, and
+      Egm&#39;s own activity is undemonstrated. The medium-chain-specific MF call over-states Egm&#39;s likely
+      substrate preference.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Medium-chain acyl-CoA dehydrogenase activity is the defining activity of MCAD, not of the
+      ACAD9/Egm subfamily. By orthology to human ACAD9, any residual activity of Egm is expected to be
+      long/very-long-chain-biased, and Egm&#39;s dominant function is CI assembly (PMID:34386730). This IBA
+      term reflects tree-wide propagation rather than Egm-specific specificity.
+    supported_by:
+    - reference_id: PMID:34386730
+      supporting_text: &#34;the MCIA complex is known to consist of ACAD9&#34;
+# --- Annotation 6: mitochondrion (IEA, SubCell) ---
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic annotation from UniProt subcellular-location mapping (SL-0173, Mitochondrion). Egm&#39;s
+      mitochondrial localization is experimentally established, so this IEA term is correct.
+    action: ACCEPT
+    reason: &gt;-
+      The UniProt subcellular-location term derives from the experimentally supported mitochondrial
+      localization (PMID:16434470). Correct, though subsumed by the more specific mitochondrial matrix
+      annotation.
+    supported_by:
+    - reference_id: PMID:16434470
+      supporting_text: &#34;In Drosophila Kc-167 and SL2 cells, Egm is found almost exclusively in the mitochondrion.&#34;
+# --- Annotation 7: fatty acid metabolic process (IEA, ARBA) ---
+- term:
+    id: GO:0006631
+    label: fatty acid metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      ARBA machine-learning electronic annotation placing Egm in fatty acid metabolism, based on ACAD
+      family membership. Plausible by orthology to human ACAD9&#39;s secondary FAO activity, but broad and
+      not directly demonstrated for the fly protein. Retained as a non-core, by-similarity annotation.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      As an ACAD-family member, Egm is plausibly involved in fatty acid metabolism (consistent with the
+      reduced-triglyceride phenotype of null larvae; PMID:16434470), but this is a broad parent term and
+      a secondary function relative to CI assembly.
+    supported_by:
+    - reference_id: PMID:16434470
+      supporting_text: &#34;the stored fatty acids in the form of triglycerides are almost halved in larvae lacking zygotically expressed Egm&#34;
+# --- Annotation 8: oxidoreductase activity, acting on the CH-CH group of donors (IEA, InterPro) ---
+- term:
+    id: GO:0016627
+    label: oxidoreductase activity, acting on the CH-CH group of donors
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      InterPro-based electronic annotation to the intermediate oxidoreductase term. The acyl-CoA
+      dehydrogenase reaction introduces a double bond between the alpha and beta carbons (oxidation of a
+      CH-CH group). Egm contains the ACAD catalytic domains, so the term is structurally appropriate,
+      but the activity of the fly protein has not been directly measured.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Egm carries the acyl-CoA dehydrogenase domain signature (Pfam PF00441/PF02770/PF02771; InterPro
+      IPR006091 etc.), making this intermediate oxidoreductase term appropriate by domain content. It is
+      a by-similarity/domain-based call for a residual enzymatic activity, subordinate to the CI-assembly
+      core function.
+    supported_by:
+    - reference_id: PMID:16434470
+      supporting_text: &#34;homology to ACADs, the enzymes that catalyze the first of four reactions that constitute one cycle of the β-oxidation pathway&#34;
+# --- Annotation 9: flavin adenine dinucleotide binding (IEA, InterPro) ---
+- term:
+    id: GO:0050660
+    label: flavin adenine dinucleotide binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      InterPro-based electronic annotation for FAD binding. Egm is an ACAD-family flavoprotein (UniProt
+      COFACTOR: FAD, by RuleBase), and FAD binding is a conserved feature of the fold. In human ACAD9,
+      FAD binding is directly demonstrated and is functionally coupled to the assembly switch
+      (ECSIT-induced deflavination). FAD binding of the fly protein is inferred by similarity/domain
+      content but not directly measured.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      FAD binding is a conserved property of the ACAD9/ACAD fold and is annotated in UniProt as a
+      cofactor. This is a well-supported by-similarity molecular-function feature, but for Egm it has not
+      been directly demonstrated, and in the ACAD9 orthology group the FAD/enzymatic activity is
+      secondary to (and, in the human protein, mutually exclusive with) the CI-assembly role.
+      Deliberately kept non-core here (unlike the FAD core-function entries in the catabolic ACAD
+      reviews Acadvl, Mcad, Arc42, and CG4860), because Egm&#39;s primary role is complex I assembly
+      (GO:0030674), not fatty acid beta-oxidation.
+    supported_by:
+    - reference_id: PMID:16434470
+      supporting_text: &#34;homology to ACADs, the enzymes that catalyze the first of four reactions that constitute one cycle of the β-oxidation pathway&#34;
+# --- Annotation 10: very-long-chain fatty acyl-CoA dehydrogenase activity (ISS from human ACAD9) ---
+- term:
+    id: GO:0017099
+    label: very-long-chain fatty acyl-CoA dehydrogenase activity
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: enables
+  review:
+    summary: &gt;-
+      ISS annotation transferred by curator judgment of sequence similarity from human ACAD9
+      (UniProtKB:Q9H845). Human ACAD9 does have FAD-dependent acyl-CoA dehydrogenase activity toward
+      long/very-long-chain acyl-CoA substrates, but this activity is modest (~18% of VLCAD) and is a
+      secondary/moonlighting function; in the human ACAD9 review the &#34;very-long-chain&#34; specificity is
+      argued to over-state substrate preference (long-chain is the primary specificity). For Egm the
+      activity is undemonstrated. Kept as a non-core, by-similarity annotation rather than removed.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Transferred from human ACAD9, whose residual dehydrogenase activity is genuine but secondary. The
+      &#34;very-long-chain&#34; level may over-state specificity (the human review MODIFIES the corresponding
+      IDA annotations toward long-chain), and the fly protein&#39;s activity has not been biochemically
+      characterized. Retained as non-core because the core role of both ACAD9 and Egm is CI assembly.
+    supported_by:
+    - reference_id: PMID:16434470
+      supporting_text: &#34;homology to ACADs, the enzymes that catalyze the first of four reactions that constitute one cycle of the β-oxidation pathway&#34;
+# --- Annotation 11: protein-macromolecule adaptor activity (ISS from human ACAD9) ---
+- term:
+    id: GO:0030674
+    label: protein-macromolecule adaptor activity
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: enables
+  review:
+    summary: &gt;-
+      ISS annotation transferred from human ACAD9 (UniProtKB:Q9H845), where ACAD9 functions as a
+      protein-macromolecule adaptor/scaffold bridging ECSIT (and through it NDUFAF1) to CI assembly
+      intermediates within the MCIA complex. Drosophila data directly support the same role: Egm
+      (dACAD9) is an MCIA core member whose loss destabilizes the other MCIA components in assembly
+      intermediates, consistent with a scaffolding/adaptor function. This is the best molecular-function
+      representation of Egm&#39;s core CI-assembly role.
+    action: ACCEPT
+    reason: &gt;-
+      The adaptor/scaffold molecular function is conserved and supported directly in the fly: dACAD9
+      knockdown reduces dNDUFAF1 and dECSIT in assembly intermediates (PMID:34386730), mirroring human
+      ACAD9&#39;s central, MCIA-stabilizing adaptor role (transferred by ISS from Q9H845). This is far more
+      informative than a generic protein-binding term and captures Egm&#39;s core function.
+    supported_by:
+    - reference_id: PMID:34386730
+      supporting_text: &#34;RNAi-mediated knockdown of dACAD9 resulted in a reduction in the amount of dNDUFAF1 and dECSIT that accumulates in AIs in ACAD9-kd samples&#34;
+# --- Annotation 12: mitochondrial complex I intermediate assembly complex (IDA) ---
+- term:
+    id: GO:0160295
+    label: mitochondrial complex I intermediate assembly complex
+  evidence_type: IDA
+  original_reference_id: PMID:34386730
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      IDA annotation from FlyBase based on Murari et al. 2021, which demonstrated that the fly ortholog
+      of ACAD9 (dACAD9/CG9006/Egm) is a core member of the Drosophila MCIA complex, together with the
+      orthologs of ECSIT, NDUFAF1, TMEM126B and TMEM186, and that these components co-migrate with CI
+      assembly intermediates and the holoenzyme. This is a core cellular-component annotation for Egm.
+    action: ACCEPT
+    reason: &gt;-
+      Direct Drosophila evidence places Egm/dACAD9 in the MCIA complex: all five MCIA components
+      (including dACAD9) were found associated with CI subcomplexes/holoenzyme, and dACAD9 knockdown
+      destabilizes the other MCIA members (PMID:34386730). This mirrors the well-established human ACAD9
+      MCIA membership and is Egm&#39;s core localization/complex.
+    supported_by:
+    - reference_id: PMID:34386730
+      supporting_text: &#34;all 5 components of the MCIA complex were associated with subcomplexes in FAF4-kd and FAF3-kd samples&#34;
+    - reference_id: PMID:34386730
+      supporting_text: &#34;Drosophila orthologs of ACAD9 (CG9006), ECSIT (CG10610), NDUFAF1 (CG7598), TMEM126B (CG13392), TMEM186 (CG4627)&#34;
+# --- Annotation 13: insemination (HEP) ---
+- term:
+    id: GO:0007320
+    label: insemination
+  evidence_type: HEP
+  original_reference_id: PMID:18666829
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      HEP annotation from Findlay et al. 2008, a seminal-fluid proteomics study in which Egm was detected
+      among transferred male seminal fluid proteins (classed among lipid-metabolism proteins). This is a
+      mass-spectrometric co-occurrence in seminal fluid, not a demonstration that Egm has a dedicated
+      insemination/reproductive function; the protein&#39;s characterized role is mitochondrial CI assembly.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Detection of a mitochondrial ACAD-family protein in the seminal-fluid proteome (HEP, expression
+      pattern evidence) does not establish a functional role in insemination. Many metabolic/mitochondrial
+      proteins are incidentally present in seminal fluid; no mechanistic link to the insemination process
+      is shown. The annotation over-interprets a proteomic detection.
+    supported_by:
+    - reference_id: PMID:18666829
+      supporting_text: &#34;proteins involved in lipid metabolism&#34;
+# --- Annotation 14: mitochondrial respiratory chain complex I assembly (TAS) ---
+- term:
+    id: GO:0032981
+    label: mitochondrial respiratory chain complex I assembly
+  evidence_type: TAS
+  original_reference_id: PMID:34386730
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      TAS annotation from Murari et al. 2021. Egm/dACAD9 participates in CI assembly as an MCIA-complex
+      factor that regulates biogenesis of the PP-b (ND2) sub-module of the CI membrane arm; disruption of
+      dACAD9 stalls assembly intermediates and destabilizes partner MCIA factors. This is the core
+      biological process for Egm and represents its most important physiological function.
+    action: ACCEPT
+    reason: &gt;-
+      CI assembly is Egm&#39;s core biological process, directly supported in the fly: dACAD9 regulates PP-b
+      sub-module biogenesis and its knockdown reduces partner MCIA factors in assembly intermediates
+      (PMID:34386730), consistent with the essential, conserved ACAD9 CI-assembly role.
+    supported_by:
+    - reference_id: PMID:34386730
+      supporting_text: &#34;ACAD9 regulates biogenesis of some sub-assemblies in the PP-b sub-module&#34;
+    - reference_id: PMID:34386730
+      supporting_text: &#34;when dACAD9 is disrupted, the paucity of the PP-b sub-module will cause the Q/PP-a AI to stall and accumulate&#34;
+# --- Annotation 15: mitochondrial matrix (IDA) ---
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: IDA
+  original_reference_id: PMID:26362788
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      IDA annotation from Chen et al. 2015, an APEX-based proteomic mapping of the Drosophila muscle
+      mitochondrial matrix (&#34;MitoMax&#34;) in which Egm was catalogued as a matrix protein. This is
+      consistent with Egm being a peripheral, matrix-facing inner-membrane MCIA factor (like human ACAD9,
+      which is peripheral on the matrix side of the inner membrane).
+    action: ACCEPT
+    reason: &gt;-
+      APEX matrix proteomics places Egm in the mitochondrial matrix compartment (PMID:26362788),
+      consistent with the matrix-facing localization of the MCIA complex and with the immunolocalization
+      of Egm to mitochondria (PMID:16434470). Appropriate, specific compartmental annotation.
+    supported_by:
+    - reference_id: PMID:26362788
+      supporting_text: &#34;maps the mitochondrial matrix proteome of Drosophila muscle&#34;
+# --- Annotation 16: mitochondrion (IDA, PMID:34386730) ---
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IDA
+  original_reference_id: PMID:34386730
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      IDA annotation from Murari et al. 2021. Egm/dACAD9 acts within mitochondria as an MCIA-complex CI
+      assembly factor (co-migrating with mitochondrial CI subcomplexes and holoenzyme). Mitochondrial
+      localization is well supported.
+    action: ACCEPT
+    reason: &gt;-
+      Egm functions in mitochondria as a CI assembly factor (PMID:34386730), corroborated by independent
+      immunolocalization/fractionation (PMID:16434470). Correct, though subsumed by the more specific
+      mitochondrial matrix annotation.
+    supported_by:
+    - reference_id: PMID:34386730
+      supporting_text: &#34;all 5 components of the MCIA complex were associated with subcomplexes in FAF4-kd and FAF3-kd samples&#34;
+# --- Annotation 17: response to endoplasmic reticulum stress (HMP) ---
+- term:
+    id: GO:0034976
+    label: response to endoplasmic reticulum stress
+  evidence_type: HMP
+  original_reference_id: PMID:23667151
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      HMP annotation from Chow et al. 2013, a DGRP natural-variation study of tunicamycin-induced ER
+      stress survival in which Egm was one of six lipid-metabolism-related association candidates (and a
+      P-element functional-test candidate). This is a genetic-association/mutant-phenotype signal
+      suggesting a modifier role rather than a direct, mechanistic function of Egm in the ER stress
+      response; the connection is most plausibly indirect (via mitochondrial/lipid metabolism).
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Egm surfaced as an ER-stress-survival association candidate with a putative lipid-metabolism link
+      (PMID:23667151); the effect is likely an indirect consequence of its metabolic/mitochondrial role
+      rather than a dedicated ER-stress function. Retained as a non-core annotation reflecting the
+      experimental modifier evidence.
+    supported_by:
+    - reference_id: PMID:23667151
+      supporting_text: &#34;with known or putative roles in lipid metabolism&#34;
+# --- Annotation 18: mitochondrion (IDA, PMID:16434470) ---
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IDA
+  original_reference_id: PMID:16434470
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      IDA annotation from Mourikis et al. 2006, the foundational Enigma paper, which localized Egm to
+      mitochondria by immunocytochemistry (colocalization with MitoTracker and the inner-membrane marker
+      prohibitin) and by cell fractionation. This is direct experimental evidence for mitochondrial
+      localization of Egm.
+    action: ACCEPT
+    reason: &gt;-
+      Direct experimental localization of endogenous and tagged Egm to mitochondria in Drosophila cells,
+      confirmed by fractionation (PMID:16434470). Well-supported core localization.
+    supported_by:
+    - reference_id: PMID:16434470
+      supporting_text: &#34;the endogenous Egm protein is highly enriched in the fraction that contains the mitochondria&#34;
+    - reference_id: PMID:16434470
+      supporting_text: &#34;In Drosophila Kc-167 and SL2 cells, Egm is found almost exclusively in the mitochondrion.&#34;
+# --- Annotation 19: fatty acid beta-oxidation (IMP, PMID:16434470) ---
+- term:
+    id: GO:0006635
+    label: fatty acid beta-oxidation
+  evidence_type: IMP
+  original_reference_id: PMID:16434470
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      IMP annotation from Mourikis et al. 2006, based on the metabolic phenotype of Egm-null larvae
+      (halved triglycerides, upregulated lipase-3, mitochondrial localization, and eye-clone phenotype
+      resembling the beta-oxidation mutant scully) plus ACAD homology. The authors are explicit that the
+      beta-oxidation involvement is indirect. In light of the later demonstration that ACAD9/Egm is
+      primarily a CI assembly factor, these metabolic phenotypes are equally (and more parsimoniously)
+      explained by CI/OXPHOS deficiency. Retained as a non-core, experimentally-grounded annotation.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      This is a legitimate experimental (IMP) annotation reflecting real mutant metabolic phenotypes, and
+      the full text (which the curator read) contains the supporting data; per review guidelines it should
+      not be removed on the grounds that the evidence is indirect. However, because Egm&#39;s dominant,
+      directly demonstrated role is CI assembly (PMID:34386730) and the paper itself calls the
+      beta-oxidation link indirect, it is best treated as non-core rather than a core function.
+    supported_by:
+    - reference_id: PMID:16434470
+      supporting_text: &#34;indirect evidence suggests that this protein may be involved in β-oxidation&#34;
+    - reference_id: PMID:16434470
+      supporting_text: &#34;the stored fatty acids in the form of triglycerides are almost halved in larvae lacking zygotically expressed Egm&#34;
+# --- Annotation 20: lipid homeostasis (IMP, PMID:16434470) ---
+- term:
+    id: GO:0055088
+    label: lipid homeostasis
+  evidence_type: IMP
+  original_reference_id: PMID:16434470
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      IMP annotation from Mourikis et al. 2006. Egm-null larvae show markedly reduced triglyceride stores,
+      malformed fat bodies, and altered expression of lipid-metabolism genes, demonstrating a mutant
+      lipid-homeostasis phenotype. Whether this reflects a direct role of Egm in lipid metabolism or a
+      systemic consequence of mitochondrial CI/OXPHOS deficiency is not resolved by the study, but the
+      mutant phenotype is real and experimentally established.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The lipid-homeostasis phenotype of Egm mutants is directly documented (PMID:16434470) and is a
+      valid experimental annotation. It is retained as non-core because it is a downstream/systemic
+      metabolic consequence rather than Egm&#39;s core molecular role (CI assembly), and the causal
+      directness of the lipid link is uncertain.
+    supported_by:
+    - reference_id: PMID:16434470
+      supporting_text: &#34;the stored fatty acids in the form of triglycerides are almost halved in larvae lacking zygotically expressed Egm&#34;
+# --- Annotation 21: negative regulation of cellular response to oxidative stress (IMP, PMID:16434470) ---
+- term:
+    id: GO:1900408
+    label: negative regulation of cellular response to oxidative stress
+  evidence_type: IMP
+  original_reference_id: PMID:16434470
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      IMP annotation from Mourikis et al. 2006. Reduction of Egm (heterozygous nulls / hypomorphs)
+      increases organismal tolerance to paraquat-induced oxidative stress, i.e. reducing Egm enhances
+      oxidative-stress resistance. This phenotype connects Egm dosage to the oxidative-stress response,
+      most plausibly through its effect on mitochondrial OXPHOS/ROS. It is a systemic phenotype rather
+      than a direct molecular function of the protein.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The paraquat-resistance phenotype of Egm mutants is experimentally demonstrated (PMID:16434470) and
+      links Egm to the oxidative-stress response, but the effect is an indirect, dosage-dependent,
+      whole-organism consequence of altered mitochondrial function rather than a core molecular role.
+      Retained as non-core.
+    supported_by:
+    - reference_id: PMID:16434470
+      supporting_text: &#34;Egm mutant flies demonstrate a significantly increased resistance to the toxic effects of 7.5 mM paraquat compared with WT flies&#34;
+# --- Annotation 22: compound eye morphogenesis (IGI, PMID:8913755) ---
+- term:
+    id: GO:0001745
+    label: compound eye morphogenesis
+  evidence_type: IGI
+  original_reference_id: PMID:8913755
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      IGI annotation from Verheyen et al. 1996, a large second-site screen for dominant modifiers of an
+      activated-Notch rough-eye phenotype, in which an Egm allele behaved as a genetic modifier of eye
+      development. The cached record is abstract-only (full text unavailable), so the specific Egm allele
+      data cannot be verified here; this is an experimental genetic-interaction annotation from FlyBase.
+      Egm&#39;s requirement for eye development is independently supported by the cell-autonomous aberrant
+      morphology of Egm-null eye clones (PMID:16434470), consistent with an essential mitochondrial gene
+      being required for the energetically demanding eye morphogenesis rather than a dedicated eye-patterning
+      function.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      This is an experimental (IGI) FlyBase annotation whose full text was read by the curator; per review
+      guidelines it should not be removed merely because the cached entry is abstract-only. The eye
+      requirement is corroborated by cell-autonomous Egm-null clone phenotypes (PMID:16434470). It is a
+      pleiotropic/developmental consequence of Egm&#39;s essential mitochondrial role, so it is retained as
+      non-core rather than a core function.
+    supported_by:
+    - reference_id: PMID:16434470
+      supporting_text: &#34;null Egm –/– clones show an aberrant morphology&#34;
+    - reference_id: PMID:8913755
+      supporting_text: &#34;a second-site mutagenesis screen was performed to isolate enhancers and suppressors of the eye phenotype caused by expression of these activated Notch molecules&#34;
+core_functions:
+- description: &gt;-
+    Core function. Egm (dACAD9) is a core component of the mitochondrial complex I intermediate
+    assembly (MCIA) complex and functions as a protein-macromolecule adaptor/scaffold that, together
+    with the Drosophila orthologs of ECSIT and NDUFAF1, drives biogenesis of the membrane-arm PP-b
+    (ND2) sub-module of respiratory chain complex I. Loss of Egm stalls CI assembly intermediates and
+    destabilizes the partner MCIA factors, mirroring the essential, conserved CI-assembly role of
+    human ACAD9.
+  molecular_function:
+    id: GO:0030674
+    label: protein-macromolecule adaptor activity
+  directly_involved_in:
+  - id: GO:0032981
+    label: mitochondrial respiratory chain complex I assembly
+  locations:
+  - id: GO:0005759
+    label: mitochondrial matrix
+  in_complex:
+    id: GO:0160295
+    label: mitochondrial complex I intermediate assembly complex
+  supported_by:
+  - reference_id: PMID:34386730
+    supporting_text: &#34;RNAi-mediated knockdown of dACAD9 resulted in a reduction in the amount of dNDUFAF1 and dECSIT that accumulates in AIs in ACAD9-kd samples&#34;
+  - reference_id: PMID:34386730
+    supporting_text: &#34;ACAD9 regulates biogenesis of some sub-assemblies in the PP-b sub-module&#34;
+  - reference_id: PMID:34386730
+    supporting_text: &#34;all 5 components of the MCIA complex were associated with subcomplexes in FAF4-kd and FAF3-kd samples&#34;
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Does Drosophila Egm retain measurable FAD-dependent acyl-CoA dehydrogenase activity, and if so
+    with what chain-length preference? By orthology to human ACAD9 a residual long/very-long-chain
+    activity is expected, but the fly protein has never been enzymatically characterized, so the
+    ISS/IEA enzymatic annotations remain unverified for Drosophila.
+- question: &gt;-
+    Are the lipid-homeostasis, oxidative-stress and lifespan phenotypes of Egm mutants (PMID:16434470)
+    a direct consequence of loss of an acyl-CoA dehydrogenase enzyme, or downstream effects of
+    complex I / OXPHOS deficiency? The 2006 study predates the CI-assembly-factor paradigm, and the
+    two interpretations make different predictions for a catalytically dead but assembly-competent allele.
+suggested_experiments:
+- description: &gt;-
+    Test the assembly-vs-enzyme separation of function in vivo by rescuing Egm-null larvae with (a)
+    wild-type Egm, (b) a catalytically inactive (predicted active-site) Egm variant, and (c) a
+    variant predicted to disrupt ECSIT/MCIA binding, then assay complex I assembly (BN-PAGE), CI
+    activity, triglyceride levels, oxidative-stress resistance and viability. This would establish
+    whether the essential function and the metabolic/longevity phenotypes depend on the CI-assembly
+    activity, the dehydrogenase activity, or both.
+  hypothesis: &gt;-
+    The CI-assembly (adaptor) function of Egm, not its residual dehydrogenase activity, accounts for
+    its essential role and for the lipid/oxidative-stress/lifespan phenotypes, paralleling human
+    ACAD9 where a catalytically dead mutant still rescues CI biogenesis.
+- description: &gt;-
+    Biochemically characterize recombinant Egm: measure FAD occupancy and acyl-CoA dehydrogenase
+    activity across a chain-length substrate panel (medium-, long-, very-long-chain acyl-CoA), and
+    test whether the fly ECSIT ortholog induces deflavination of Egm as it does for human ACAD9.
+  hypothesis: &gt;-
+    Egm binds FAD and has modest long/very-long-chain (not medium-chain) acyl-CoA dehydrogenase
+    activity that is downregulated by ECSIT binding, consistent with the conserved deflavination
+    switch of human ACAD9.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: PMID:16434470
+  title: Enigma, a mitochondrial protein affecting lifespan and oxidative stress response
+    in Drosophila.
+  findings:
+  - statement: &gt;-
+      Egm (= CG9006) encodes a 639-aa mitochondrial protein with homology to acyl-CoA dehydrogenases;
+      it is an essential gene (null larvae die at third instar) and localizes to mitochondria.
+    supporting_text: &gt;-
+      Egm encodes the CG9006 gene, which corresponds to a 639-aa protein with homology to ACADs, the enzymes that catalyze the first of four reactions that constitute one cycle of the β-oxidation pathway
+  - statement: &gt;-
+      Egm mutants have reduced triglyceride stores and increased paraquat/oxidative-stress resistance
+      with a female-specific lifespan extension; the beta-oxidation involvement is described as indirect.
+    supporting_text: &gt;-
+      indirect evidence suggests that this protein may be involved in β-oxidation
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified foundational Drosophila paper. Directly supports mitochondrial localization and the
+      essential/lipid/oxidative-stress/lifespan phenotypes. Its beta-oxidation interpretation is explicitly
+      indirect and predates the ACAD9 CI-assembly-factor paradigm; the metabolic phenotypes are equally
+      consistent with complex I / OXPHOS deficiency.
+- id: PMID:18666829
+  title: Proteomics reveals novel Drosophila seminal fluid proteins transferred at
+    mating.
+  findings:
+  - statement: &gt;-
+      Egm was detected by mass spectrometry among transferred male seminal fluid proteins, in the
+      lipid-metabolism functional category. This is a proteomic co-occurrence, not a demonstrated
+      insemination function.
+    supporting_text: &gt;-
+      proteins involved in lipid metabolism
+  reference_review:
+    relevance: LOW
+    correctness: MISCITED
+    review_notes: &gt;-
+      PubMed-verified seminal-fluid proteomics screen. Egm&#39;s presence in seminal fluid is an expression/
+      proteomic detection (HEP); it does not establish a functional role in insemination, so the
+      GO:0007320 annotation is treated as an over-annotation.
+- id: PMID:23667151
+  title: Using natural variation in Drosophila to discover previously unknown endoplasmic
+    reticulum stress genes.
+  findings:
+  - statement: &gt;-
+      Egm was one of six lipid-metabolism-related association candidates for tunicamycin-induced ER-stress
+      survival in the DGRP, suggesting a putative (likely indirect) modifier role in the ER stress response.
+    supporting_text: &gt;-
+      with known or putative roles in lipid metabolism
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified DGRP natural-variation study. Egm is a genetic-association candidate with a putative
+      lipid-metabolism link to ER-stress survival; the connection is plausibly indirect (via mitochondrial/
+      lipid metabolism) rather than a dedicated ER-stress function.
+- id: PMID:26362788
+  title: Proteomic mapping in live Drosophila tissues using an engineered ascorbate
+    peroxidase.
+  findings:
+  - statement: &gt;-
+      APEX-based proteomic mapping of the Drosophila muscle mitochondrial matrix (&#34;MitoMax&#34;) catalogued
+      Egm as a mitochondrial matrix protein.
+    supporting_text: &gt;-
+      maps the mitochondrial matrix proteome of Drosophila muscle
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified APEX matrix proteomics. Supports the mitochondrial matrix localization annotation,
+      consistent with a peripheral, matrix-facing inner-membrane MCIA factor.
+- id: PMID:34386730
+  title: Dissecting the concordant and disparate roles of NDUFAF3 and NDUFAF4 in mitochondrial
+    complex I biogenesis.
+  findings:
+  - statement: &gt;-
+      The Drosophila ortholog of ACAD9 (dACAD9/CG9006/Egm) is a core member of the fly MCIA complex; it
+      regulates biogenesis of the PP-b (ND2) sub-module of complex I, and its knockdown destabilizes the
+      partner MCIA factors dNDUFAF1 and dECSIT in assembly intermediates.
+    supporting_text: &gt;-
+      RNAi-mediated knockdown of dACAD9 resulted in a reduction in the amount of dNDUFAF1 and dECSIT that accumulates in AIs in ACAD9-kd samples
+  - statement: &gt;-
+      The MCIA complex in Drosophila comprises the orthologs of ACAD9, NDUFAF1, ECSIT, TMEM126B and
+      TMEM186, all of which associate with CI subcomplexes/holoenzyme.
+    supporting_text: &gt;-
+      all 5 components of the MCIA complex were associated with subcomplexes in FAF4-kd and FAF3-kd samples
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. The primary Drosophila source establishing Egm/dACAD9 as an MCIA-complex CI
+      assembly factor (PP-b/ND2 sub-module), directly supporting the core CI-assembly annotations.
+- id: PMID:8913755
+  title: Analysis of dominant enhancers and suppressors of activated Notch in Drosophila.
+  findings:
+  - statement: &gt;-
+      Large-scale second-site screen for dominant modifiers of an activated-Notch rough-eye phenotype;
+      basis for the IGI compound-eye-morphogenesis annotation (Egm as a genetic modifier of eye development).
+    supporting_text: &gt;-
+      a second-site mutagenesis screen was performed to isolate enhancers and suppressors of the eye phenotype caused by expression of these activated Notch molecules
+  full_text_unavailable: true
+  reference_review:
+    relevance: LOW
+    correctness: UNVERIFIED
+    review_notes: &gt;-
+      Cached record is abstract-only (full text unavailable); the specific Egm/CG9006 allele data underlying
+      the IGI annotation cannot be verified here. This is an experimental FlyBase genetic-interaction
+      annotation whose full text was read by the curator; the eye requirement is independently consistent
+      with Egm-null eye-clone phenotypes (PMID:16434470).
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

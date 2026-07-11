@@ -55,6 +55,18 @@ GENE_MAP = {
     "Q9L243": ("STRCO", "Q9L243", "Streptomyces coelicolor", "NCBITaxon:100226"),
     "Q9RSY6": ("DEIRA", "Q9RSY6", "Deinococcus radiodurans", "NCBITaxon:243230"),
     "S0EDH7": ("GIBF5", "S0EDH7", "Gibberella fujikuroi", "NCBITaxon:1279085"),
+    # Batch 3: remaining 11 with no GO predictions (name_only or subcellular-only)
+    "A0A1S3BTE3": ("CUCME", "A0A1S3BTE3", "Cucumis melo", "NCBITaxon:3656"),
+    "A0A2I4G8T1": ("JUGRE", "A0A2I4G8T1", "Juglans regia", "NCBITaxon:51240"),
+    "A0A444Z7V7": ("ARAHY", "A0A444Z7V7", "Arachis hypogaea", "NCBITaxon:3818"),
+    "A0A4W3GVU1": ("CALMI", "A0A4W3GVU1", "Callorhinchus milii", "NCBITaxon:7868"),
+    "A0A804UIX9": ("MAIZE", "A0A804UIX9", "Zea mays", "NCBITaxon:4577"),
+    "A0A8B8WEG2": ("BALMU", "A0A8B8WEG2", "Balaenoptera musculus", "NCBITaxon:9771"),
+    "A0A8J1IYX6": ("XENTR", "A0A8J1IYX6", "Xenopus tropicalis", "NCBITaxon:8364"),
+    "B4MAQ2": ("DROVI", "B4MAQ2", "Drosophila virilis", "NCBITaxon:7244"),
+    "F6WPT1": ("XENTR", "F6WPT1", "Xenopus tropicalis", "NCBITaxon:8364"),
+    "Q7NUH2": ("CHRVO", "Q7NUH2", "Chromobacterium violaceum", "NCBITaxon:243365"),
+    "Q7VZI5": ("BORPE", "Q7VZI5", "Bordetella pertussis", "NCBITaxon:257313"),
 }
 
 PROTEIN_NAMES = {
@@ -98,6 +110,18 @@ PROTEIN_NAMES = {
     "Q9L243": "Secreted protein (5'-nucleotidase-like)",
     "Q9RSY6": "Small ribosomal subunit protein bS1",
     "S0EDH7": "Protein kinase domain-containing protein",
+    # Batch 3
+    "A0A1S3BTE3": "Mitogen-activated protein kinase 15",
+    "A0A2I4G8T1": "UDP-glycosyltransferase 73C1",
+    "A0A444Z7V7": "Cellulose synthase-like protein D3",
+    "A0A4W3GVU1": "RRM domain-containing protein",
+    "A0A804UIX9": "PGG domain-containing protein",
+    "A0A8B8WEG2": "Protein kinase domain-containing protein (blue whale)",
+    "A0A8J1IYX6": "Protein kinase domain-containing protein (Xenopus)",
+    "B4MAQ2": "Importin N-terminal domain-containing protein",
+    "F6WPT1": "ADP-ribosylation factor-like protein 1",
+    "Q7NUH2": "HTH marR-type domain-containing protein",
+    "Q7VZI5": "PrpF family protein",
 }
 
 
@@ -169,31 +193,38 @@ def write_yaml(accession: str, predictions: list[dict], out_path: Path) -> None:
     n_incorrect = sum(1 for p in predictions if p["assessment"] in ("PLI", "NPI", "REP"))
     n_uncertain = sum(1 for p in predictions if p["assessment"] == "UNC")
     lines.append(f"description: >-")
-    lines.append(f"  ProtNLM2 predicted {len(predictions)} GO term(s) for {protein_name}.")
-    lines.append(f"  Assessment: {n_correct} correct (CNN/LSP), {n_uncertain} uncertain (UNC),")
-    lines.append(f"  {n_incorrect} incorrect (NPI/PLI).")
+    if not predictions:
+        lines.append(f"  ProtNLM2 made no predictions (GO or subcellular location) for")
+        lines.append(f"  {protein_name}. The model returned only a protein name.")
+    else:
+        lines.append(f"  ProtNLM2 predicted {len(predictions)} GO term(s) for {protein_name}.")
+        lines.append(f"  Assessment: {n_correct} correct (CNN/LSP), {n_uncertain} uncertain (UNC),")
+        lines.append(f"  {n_incorrect} incorrect (NPI/PLI).")
 
     lines.append("source_documents:")
     lines.append(f"  - genes/{org}/{gene}/{gene}-uniprot.txt")
     lines.append(f"  - genes/{org}/{gene}/{gene}-goa.tsv")
     lines.append("predictions:")
 
-    for pred in predictions:
-        lines.append(f"  - source_method: ProtNLM2")
-        lines.append(f"    source_version: UniProt 2024_06 pilot")
-        lines.append(f"    predicted_term:")
-        lines.append(f"      id: {pred['pred_id']}")
-        lines.append(f"      label: {yaml_str(pred['pred_label'])}")
-        lines.append(f"    predicted_term_type: {pred['term_type']}")
-        lines.append(f"    review:")
-        lines.append(f"      assessment: {pred['assessment']}")
-        lines.append(f"      confidence_score: {pred['confidence']}")
-        if pred.get("error_type"):
-            lines.append(f"      error_type: {pred['error_type']}")
-        summary = pred["summary"]
-        lines.append(f"      summary: >-")
-        for sline in wrap_text(summary, 76):
-            lines.append(f"        {sline}")
+    if not predictions:
+        lines.append("  []")
+    else:
+        for pred in predictions:
+            lines.append(f"  - source_method: ProtNLM2")
+            lines.append(f"    source_version: UniProt 2024_06 pilot")
+            lines.append(f"    predicted_term:")
+            lines.append(f"      id: {pred['pred_id']}")
+            lines.append(f"      label: {yaml_str(pred['pred_label'])}")
+            lines.append(f"    predicted_term_type: {pred['term_type']}")
+            lines.append(f"    review:")
+            lines.append(f"      assessment: {pred['assessment']}")
+            lines.append(f"      confidence_score: {pred['confidence']}")
+            if pred.get("error_type"):
+                lines.append(f"      error_type: {pred['error_type']}")
+            summary = pred["summary"]
+            lines.append(f"      summary: >-")
+            for sline in wrap_text(summary, 76):
+                lines.append(f"        {sline}")
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text("\n".join(lines) + "\n")
@@ -246,13 +277,18 @@ def main():
                 evidence_scores.setdefault(acc, {})[row["evidence_key"]] = row
 
     pred_evidence_map = {}
+    subcell_predictions = {}
     with open(proj_dir / "predictions.tsv") as f:
         reader = csv.DictReader(f, delimiter="\t")
         for row in reader:
             acc = row["accession"]
-            if acc in GENE_MAP and row["pred_type"] == "GO":
-                pred_evidence_map[(acc, row["pred_id"])] = row.get("evidence_key", "")
+            if acc in GENE_MAP:
+                if row["pred_type"] == "GO":
+                    pred_evidence_map[(acc, row["pred_id"])] = row.get("evidence_key", "")
+                elif row["pred_type"] == "subcellular_location":
+                    subcell_predictions.setdefault(acc, []).append(row)
 
+    count = 0
     for accession in sorted(GENE_MAP.keys()):
         org, gene, organism, taxon_id = GENE_MAP[accession]
         eval_preds = eval_results.get(accession, [])
@@ -341,11 +377,43 @@ def main():
                 "model_score": model_score,
             })
 
-        if predictions:
-            out_path = PROJ_ROOT / "genes" / org / gene / f"{gene}-protnlm-predictions-review.yaml"
-            write_yaml(accession, predictions, out_path)
+        SUBCELL_TO_GO = {
+            "Nucleus": ("GO:0005634", "nucleus"),
+            "Cytoplasm": ("GO:0005737", "cytoplasm"),
+            "Mitochondrion": ("GO:0005739", "mitochondrion"),
+            "Plastid": ("GO:0009536", "plastid"),
+            "Chloroplast": ("GO:0009507", "chloroplast"),
+            "Membrane": ("GO:0016020", "membrane"),
+            "Secreted": ("GO:0005576", "extracellular region"),
+        }
+        for sp in subcell_predictions.get(accession, []):
+            subcell_label = sp.get("pred_label", "")
+            go_id, go_label = SUBCELL_TO_GO.get(subcell_label, ("", subcell_label))
+            if not go_id:
+                continue
+            predictions.append({
+                "pred_id": go_id,
+                "pred_label": go_label,
+                "term_type": "GO_CC",
+                "assessment": "UNC",
+                "confidence": 1,
+                "error_type": "",
+                "summary": (
+                    f"ProtNLM2 predicted subcellular location '{subcell_label}', "
+                    f"mapped to {go_id} ({go_label}). This is a subcellular "
+                    f"location prediction rather than a direct GO term prediction."
+                ),
+                "model_score": "",
+            })
 
-    print(f"\nGenerated {len(GENE_MAP)} prediction review files.")
+        out_path = PROJ_ROOT / "genes" / org / gene / f"{gene}-protnlm-predictions-review.yaml"
+        only_missing = "--only-missing" in sys.argv
+        if only_missing and out_path.exists():
+            continue
+        write_yaml(accession, predictions, out_path)
+        count += 1
+
+    print(f"\nGenerated {count} prediction review files.")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,5075 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CKB - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>CKB</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P12277" target="_blank" class="term-link">
+                        P12277
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "CKB";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P12277" data-a="DESCRIPTION: CKB encodes the B-type (brain-type) cytosolic crea..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>CKB encodes the B-type (brain-type) cytosolic creatine kinase, a 381-residue enzyme (EC 2.7.3.2) of the ATP:guanido phosphotransferase (phosphagen kinase) family. It reversibly catalyzes transfer of the high-energy phosphoryl group between ATP and creatine (creatine + ATP = N-phosphocreatine + ADP + H+), interconverting ATP and the phosphocreatine energy reservoir. The active enzyme is a dimer: B-CK assembles into CK-BB homodimers and, with the muscle-type subunit CKM, into CK-MB heterodimers. As the cytosolic limb of the phosphocreatine/creatine-kinase shuttle, B-CK is functionally coupled to ATP-consuming processes (e.g. membrane ion transporters and other ATPases), locally regenerating ATP from phosphocreatine and providing temporal and spatial energy buffering in cells with high, fluctuating energy demands. B-CK is the predominant cytosolic creatine kinase of brain and is broadly expressed in smooth muscle and most non-muscle tissues. Beyond catalysis it acts as an ATP-regenerating partner in membrane microcompartments — for example binding the C-terminal domain of the K-Cl cotransporter KCC3 (SLC12A6) and supporting its transport activity — and is a substrate of the ECS(ASB9) Cullin-RING E3 ubiquitin ligase, which targets it for proteasomal degradation.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="P12277" data-a="GO:0005576" data-r="GO_REF:0000033" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference that B-CK is active in the extracellular region. B-CK is a cytosolic enzyme; it is detected in exosomes/secretome but is not active extracellularly. The &#34;is_active_in extracellular region&#34; call is an over-propagation and is biologically incorrect as a site of activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Creatine kinase catalysis requires cytosolic ATP/ADP and creatine; the enzyme is not known to function in the extracellular region. Detection in secreted vesicles does not make the extracellular region a site of activity, so an &#34;is_active_in extracellular region&#34; assertion is incorrect. Aligned with the parallel CKM review, which REMOVEs the identical IBA annotation; genuine extracellular/exosome detection is retained separately under the extracellular-exosome annotations.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004111" target="_blank" class="term-link">
+                                    GO:0004111
+                                </a>
+                            </span>
+                            <span class="term-label">creatine kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P12277" data-a="GO:0004111" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Creatine kinase activity is the core molecular function of CKB, supported phylogenetically (IBA) and experimentally. Accept.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the defining, experimentally established activity of CKB (EC 2.7.3.2); the IBA inference is consistent with direct assays.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8186255" target="_blank" class="term-link">
+                                        PMID:8186255
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The results showed residues Cys-283 and Arg-292 are essential for enzyme catalysis.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046314" target="_blank" class="term-link">
+                                    GO:0046314
+                                </a>
+                            </span>
+                            <span class="term-label">phosphocreatine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P12277" data-a="GO:0046314" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The biological process corresponding to the forward (ATP -&gt; phosphocreatine) direction of the creatine kinase reaction. Core process for CKB. Accept.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly reflects the physiological left-to-right reaction direction catalyzed by CKB; consistent with the experimentally demonstrated activity.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003824" target="_blank" class="term-link">
+                                    GO:0003824
+                                </a>
+                            </span>
+                            <span class="term-label">catalytic activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P12277" data-a="GO:0003824" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic root catalytic-activity term assigned by InterPro2GO. Correct but uninformative; subsumed by the specific creatine kinase activity annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> A high-level ancestor of GO:0004111; adds no information beyond the specific molecular function and should not be retained as a meaningful annotation.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004111" target="_blank" class="term-link">
+                                    GO:0004111
+                                </a>
+                            </span>
+                            <span class="term-label">creatine kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P12277" data-a="GO:0004111" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (IEA) assignment of the core creatine kinase activity, consistent with experimental evidence. Accept (redundant with the experimental annotation but correct).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Same correct core molecular function; electronic support via RHEA/EC mapping aligns with direct evidence.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P12277" data-a="GO:0005739" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic mitochondrion localization transferred by similarity from the mouse ortholog (Q04447) in the context of thermogenic-fat / futile-creatine-cycle biology. Human CKB is predominantly cytosolic; a mitochondrial pool is not directly demonstrated for human B-CK.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> B-CK is the cytosolic creatine kinase isoform; mitochondrial creatine kinase is a distinct gene product (uMtCK/CKMT1). The mitochondrial call is a by-similarity transfer specific to adipocyte thermogenesis and is not the core localization of human CKB.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P12277" data-a="GO:0005829" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic cytosol localization from the UniProt subcellular-location mapping. Correct core localization. Accept.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> B-CK is a cytosolic enzyme; consistent with IDA (HPA) and Reactome TAS annotations to cytosol.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P12277" data-a="GO:0005886" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic plasma-membrane call from UniProt subcellular-location mapping, reflecting peripheral recruitment of B-CK to membrane ATPase microcompartments (e.g. with KCC3). Real but peripheral, not the core compartment.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> CKB is not an integral membrane protein; it is recruited to the membrane to supply ATP to transporters such as KCC3 (PMID:18566107). Retain as a non-core peripheral localization.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016301" target="_blank" class="term-link">
+                                    GO:0016301
+                                </a>
+                            </span>
+                            <span class="term-label">kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P12277" data-a="GO:0016301" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic kinase-activity parent from InterPro2GO; subsumed by the specific creatine kinase activity. Uninformative.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Ancestor of GO:0004111; carries no information beyond the specific molecular function.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016772" target="_blank" class="term-link">
+                                    GO:0016772
+                                </a>
+                            </span>
+                            <span class="term-label">transferase activity, transferring phosphorus-containing groups</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P12277" data-a="GO:0016772" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic phosphotransferase parent from InterPro2GO; subsumed by the specific creatine kinase activity. Uninformative.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> High-level ancestor of GO:0004111; redundant generic term.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016775" target="_blank" class="term-link">
+                                    GO:0016775
+                                </a>
+                            </span>
+                            <span class="term-label">phosphotransferase activity, nitrogenous group as acceptor</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P12277" data-a="GO:0016775" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The immediate parent class of creatine kinase activity (phosphotransfer to a nitrogenous/guanidino acceptor). Correct but redundant with the specific term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct ancestor of GO:0004111; the specific creatine kinase activity term is preferred and makes this generic term redundant.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046314" target="_blank" class="term-link">
+                                    GO:0046314
+                                </a>
+                            </span>
+                            <span class="term-label">phosphocreatine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P12277" data-a="GO:0046314" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic assignment of the core phosphocreatine biosynthetic process, consistent with experimental evidence. Accept.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core process for CKB; redundant with the IDA/IBA annotations but not erroneous.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16189514" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16189514
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Towards a proteome-scale map of the human protein-protein in...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P12277" data-a="GO:0005515" data-r="PMID:16189514" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic &#39;protein binding&#39; from a high-throughput interactome screen. Uninformative as a molecular function; the biologically meaningful interactions are captured by more specific annotations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Bare protein binding does not describe a function; retained as non-core evidence of interaction only.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19060904" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19060904
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    An empirical framework for binary interactome mapping.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P12277" data-a="GO:0005515" data-r="PMID:19060904" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic &#39;protein binding&#39; from a high-throughput binary interactome. Uninformative molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Bare protein binding is not a core function; retained as non-core.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19264780" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19264780
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Involvement of creatine kinase B in hepatitis C virus genome...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P12277" data-a="GO:0005515" data-r="PMID:19264780" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Interaction with hepatitis C virus NS4A, recruiting CKB to the viral replication complex. A genuine moonlighting interaction but represented only as generic &#39;protein binding&#39;.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Biologically real host-factor interaction (PMID:19264780) but a non-core, condition-specific role; the bare term is uninformative as a core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19264780" target="_blank" class="term-link">
+                                        PMID:19264780
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">CKB interacts with HCV NS4A protein and forms a complex with NS3-4A, which possesses multiple enzyme activities.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21145461" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21145461
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dynamics of cullin-RING ubiquitin ligase network revealed by...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P12277" data-a="GO:0005515" data-r="PMID:21145461" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic &#39;protein binding&#39; from a cullin-RING ligase network proteomic study (CUL3 association). Uninformative as a function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Bare protein binding; relates to CKB&#39;s role as a CRL substrate, retained as non-core.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25416956
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A proteome-scale map of the human interactome network.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P12277" data-a="GO:0005515" data-r="PMID:25416956" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic &#39;protein binding&#39; from a high-throughput interactome map. Uninformative molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Bare protein binding is not a core function; retained as non-core.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28514442
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Architecture of the human interactome defines protein commun...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P12277" data-a="GO:0005515" data-r="PMID:28514442" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic &#39;protein binding&#39; from a BioPlex interactome (includes CKM and ASB9 partners). Uninformative as a standalone function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Bare protein binding; the meaningful partners (CKM dimerization, ASB9 E3 ligase) are better captured specifically. Retained as non-core.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P12277" data-a="GO:0005515" data-r="PMID:32296183" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic &#39;protein binding&#39; from the HuRI binary interactome (ASB9). Uninformative molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Bare protein binding is not a core function; retained as non-core.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33961781
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dual proteome-scale networks reveal cell-specific remodeling...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P12277" data-a="GO:0005515" data-r="PMID:33961781" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic &#39;protein binding&#39; from a dual proteome-scale interactome (CKM, ASB9). Uninformative molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Bare protein binding is not a core function; retained as non-core.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/35271311" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:35271311
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    OpenCell: Endogenous tagging for the cartography of human ce...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P12277" data-a="GO:0005515" data-r="PMID:35271311" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic &#39;protein binding&#39; from the OpenCell endogenous-tagging map. Uninformative molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Bare protein binding is not a core function; retained as non-core.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/37207277" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:37207277
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Using brain cell-type-specific protein interactomes to inter...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P12277" data-a="GO:0005515" data-r="PMID:37207277" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic &#39;protein binding&#39; from a brain cell-type interactome (TCF4, CUL3). Uninformative molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Bare protein binding is not a core function; retained as non-core.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/40205054" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:40205054
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Multimodal cell maps as a foundation for structural and func...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P12277" data-a="GO:0005515" data-r="PMID:40205054" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic &#39;protein binding&#39; from a multimodal cell-map interactome (ASB9). Uninformative molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Bare protein binding is not a core function; retained as non-core.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140651" target="_blank" class="term-link">
+                                    GO:0140651
+                                </a>
+                            </span>
+                            <span class="term-label">futile creatine cycle</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P12277" data-a="GO:0140651" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic transfer (from mouse Q04447) of involvement in the futile creatine cycle (adipocyte thermogenesis). This role is characterized for the thermogenic-fat mitochondrial creatine cycle and has not been demonstrated for human B-CK; retain as a non-core, by-similarity possibility.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The futile creatine cycle is a specialized thermogenic-fat process inferred by orthology; it is plausible but not the core energy-buffering function of cytosolic B-CK in humans.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000052
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P12277" data-a="GO:0005829" data-r="GO_REF:0000052" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct immunofluorescence (HPA) localization to the cytosol. This is the core, experimentally supported localization of B-CK. Accept.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> B-CK is a cytosolic enzyme; IDA from HPA directly supports the core localization.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P12277" data-a="GO:0005739" data-r="GO_REF:0000024" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS mitochondrion localization transferred from mouse Q04447 (thermogenic-fat creatine cycle). Not the core compartment of human cytosolic B-CK.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> By-similarity mitochondrial localization tied to adipocyte thermogenesis; human B-CK is the cytosolic isoform and a mitochondrial pool is not directly established.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18566107" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18566107
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    HMSN/ACC truncation mutations disrupt brain-type creatine ki...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P12277" data-a="GO:0005886" data-r="PMID:18566107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental co-localization of CK-B with KCC3 at the plasma membrane, consistent with recruitment of B-CK to membrane ATPase microcompartments. Real but peripheral, not the core cytosolic compartment.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> CKB associates with the membrane via interaction with the KCC3 transporter to supply ATP locally; it is not an integral membrane protein. Retain as a non-core peripheral localization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18566107" target="_blank" class="term-link">
+                                        PMID:18566107
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">immunofluorescence labeling showed that CK-B co-localizes with wild-type KCC3</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004111" target="_blank" class="term-link">
+                                    GO:0004111
+                                </a>
+                            </span>
+                            <span class="term-label">creatine kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8186255" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8186255
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Determination of the catalytic site of creatine kinase by si...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P12277" data-a="GO:0004111" data-r="PMID:8186255" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence (site-directed mutagenesis of human B-CK) for creatine kinase activity, including identification of essential catalytic residues. The strongest support for the core molecular function. Accept.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct assay of human CKB enzymatic activity; defines the core molecular function (EC 2.7.3.2).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8186255" target="_blank" class="term-link">
+                                        PMID:8186255
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The results showed residues Cys-283 and Arg-292 are essential for enzyme catalysis.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046314" target="_blank" class="term-link">
+                                    GO:0046314
+                                </a>
+                            </span>
+                            <span class="term-label">phosphocreatine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8186255" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8186255
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Determination of the catalytic site of creatine kinase by si...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P12277" data-a="GO:0046314" data-r="PMID:8186255" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct evidence for the phosphocreatine-forming (forward) direction of the creatine kinase reaction. Core process for CKB. Accept.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Reflects the physiological left-to-right reaction catalyzed by CKB, directly demonstrated for the human enzyme.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004111" target="_blank" class="term-link">
+                                    GO:0004111
+                                </a>
+                            </span>
+                            <span class="term-label">creatine kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P12277" data-a="GO:0004111" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS support (from ortholog) for the core creatine kinase activity. Consistent with direct evidence. Accept.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core molecular function; redundant with the experimental annotation but not erroneous.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P12277" data-a="GO:0005739" data-r="GO_REF:0000024" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS &#39;is_active_in mitochondrion&#39; transferred from mouse Q04447. Human B-CK is the cytosolic isoform; an active mitochondrial pool is not directly established.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> By-similarity mitochondrial activity tied to thermogenic-fat biology; not the core localization or site of activity of human cytosolic B-CK.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070062" target="_blank" class="term-link">
+                                    GO:0070062
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular exosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11487543" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11487543
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Intestinal epithelial cells secrete exosome-like vesicles.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P12277" data-a="GO:0070062" data-r="PMID:11487543" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput proteomic detection of CKB in exosomes. A real observation but reflects passive secretion/vesicle loading rather than a functional compartment.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Exosome detection is common for abundant cytosolic enzymes; retain as a non-core localization, not a site of creatine kinase function.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P12277" data-a="GO:0005576" data-r="GO_REF:0000024" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS extracellular-region localization transferred from an ortholog. B-CK is a cytosolic enzyme; extracellular detection (exosomes/secretome) does not establish a functional extracellular localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Over-propagated localization for a cytosolic enzyme; not a site of activity. Exosomal detection is better captured by the exosome annotation.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031625" target="_blank" class="term-link">
+                                    GO:0031625
+                                </a>
+                            </span>
+                            <span class="term-label">ubiquitin protein ligase binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19725078" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19725078
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Proteomic analysis of increased Parkin expression and its in...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P12277" data-a="GO:0031625" data-r="PMID:19725078" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CKB binds an E3 ubiquitin ligase component (Parkin/E3 interactant proteomics), consistent with CKB being a substrate of the ECS(ASB9) Cullin-RING E3 ligase that targets it for degradation. A real binding activity but reflecting CKB&#39;s role as a degradation substrate rather than a core enzyme function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Informative interaction (E3 ligase/degradation axis) but not part of CKB&#39;s core energy-metabolism function; retain as non-core.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070062" target="_blank" class="term-link">
+                                    GO:0070062
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular exosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23533145
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    In-depth proteomic analyses of exosomes isolated from expres...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P12277" data-a="GO:0070062" data-r="PMID:23533145" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput proteomic detection of CKB in prostatic-secretion exosomes. Same interpretation as other exosome detections.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Proteomic exosome detection; non-core localization, not a functional compartment for catalysis.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0021762" target="_blank" class="term-link">
+                                    GO:0021762
+                                </a>
+                            </span>
+                            <span class="term-label">substantia nigra development</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HEP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22926577" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22926577
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quantitative proteomic analysis of human substantia nigra in...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P12277" data-a="GO:0021762" data-r="PMID:22926577" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HEP annotation derived from a disease-state differential-abundance proteomic survey of human substantia nigra. Differential expression in neurodegenerative disease does not establish a role in substantia nigra development.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The supporting study compares protein abundance in disease vs control substantia nigra; it does not provide evidence that CKB is involved in the developmental process. Over-interpretation of an expression observation.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070062" target="_blank" class="term-link">
+                                    GO:0070062
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular exosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19056867
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Large-scale proteomics and phosphoproteomics of urinary exos...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P12277" data-a="GO:0070062" data-r="PMID:19056867" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput proteomic detection of CKB in urinary exosomes. Same interpretation as other exosome detections.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Proteomic exosome detection; non-core localization.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-200318
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P12277" data-a="GO:0005829" data-r="Reactome:R-HSA-200318" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Traceable author statement (Reactome) placing the creatine kinase reaction in the cytosol. Consistent with the core cytosolic localization. Accept.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core localization; the creatine kinase reaction catalyzed by CKB occurs in the cytosol.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004111" target="_blank" class="term-link">
+                                    GO:0004111
+                                </a>
+                            </span>
+                            <span class="term-label">creatine kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/3034271" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:3034271
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Human creatine kinase: isolation and sequence analysis of cD...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P12277" data-a="GO:0004111" data-r="PMID:3034271" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Traceable author statement (original CKB cDNA cloning paper) for creatine kinase activity. Core molecular function. Accept.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core molecular function, supported by the foundational cloning/characterization reference.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>B-type cytosolic creatine kinase reversibly transfers the high-energy phosphoryl group between ATP and creatine (creatine + ATP = N-phosphocreatine + ADP + H+), acting in the cytosol to interconvert ATP and the phosphocreatine energy reservoir. The forward direction generates phosphocreatine (phosphocreatine biosynthetic process), buffering cellular ATP in brain and non-muscle tissues.</h3>
+                <span class="vote-buttons" data-g="P12277" data-a="FUNCTION: B-type cytosolic creatine kinase reversibly transf..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004111" target="_blank" class="term-link">
+                            creatine kinase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046314" target="_blank" class="term-link">
+                                phosphocreatine biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8186255" target="_blank" class="term-link">
+                                PMID:8186255
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">The results showed residues Cys-283 and Arg-292 are essential for enzyme catalysis.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11487543" target="_blank" class="term-link">
+                            PMID:11487543
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Intestinal epithelial cells secrete exosome-like vesicles.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16189514" target="_blank" class="term-link">
+                            PMID:16189514
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Towards a proteome-scale map of the human protein-protein interaction network.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18566107" target="_blank" class="term-link">
+                            PMID:18566107
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">HMSN/ACC truncation mutations disrupt brain-type creatine kinase-dependant activation of K+/Cl- co-transporter 3.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link">
+                            PMID:19056867
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Large-scale proteomics and phosphoproteomics of urinary exosomes.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19060904" target="_blank" class="term-link">
+                            PMID:19060904
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">An empirical framework for binary interactome mapping.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19264780" target="_blank" class="term-link">
+                            PMID:19264780
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Involvement of creatine kinase B in hepatitis C virus genome replication through interaction with the viral NS4A protein.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19725078" target="_blank" class="term-link">
+                            PMID:19725078
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Proteomic analysis of increased Parkin expression and its interactants provides evidence for a role in modulation of mitochondrial function.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21145461" target="_blank" class="term-link">
+                            PMID:21145461
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Dynamics of cullin-RING ubiquitin ligase network revealed by systematic quantitative proteomics.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22926577" target="_blank" class="term-link">
+                            PMID:22926577
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Quantitative proteomic analysis of human substantia nigra in Alzheimer&#39;s disease, Huntington&#39;s disease and Multiple sclerosis.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link">
+                            PMID:23533145
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">In-depth proteomic analyses of exosomes isolated from expressed prostatic secretions in urine.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link">
+                            PMID:25416956
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A proteome-scale map of the human interactome network.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link">
+                            PMID:28514442
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Architecture of the human interactome defines protein communities and disease networks.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/3034271" target="_blank" class="term-link">
+                            PMID:3034271
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Human creatine kinase: isolation and sequence analysis of cDNA clones for the B subunit, development of subunit specific probes and determination of gene copy number.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                            PMID:33961781
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Dual proteome-scale networks reveal cell-specific remodeling of the human interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/35271311" target="_blank" class="term-link">
+                            PMID:35271311
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenCell: Endogenous tagging for the cartography of human cellular organization.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/37207277" target="_blank" class="term-link">
+                            PMID:37207277
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Using brain cell-type-specific protein interactomes to interpret neurodevelopmental genetic signals in schizophrenia.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/40205054" target="_blank" class="term-link">
+                            PMID:40205054
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Multimodal cell maps as a foundation for structural and functional genomics.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8186255" target="_blank" class="term-link">
+                            PMID:8186255
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Determination of the catalytic site of creatine kinase by site-directed mutagenesis.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Site-directed mutagenesis of human B-CK shows Cys-283 and Arg-292 are essential for catalysis; mutants abolish homodimer enzymatic activity without preventing dimerization.</div>
+
+                        <div class="finding-text">"The results showed residues Cys-283 and Arg-292 are essential for enzyme catalysis."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18977227" target="_blank" class="term-link">
+                            PMID:18977227
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Structural studies of human brain-type creatine kinase complexed with the ADP-Mg2+-NO3--creatine transition-state analogue complex.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21448658" target="_blank" class="term-link">
+                            PMID:21448658
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The creatine kinase system and pleiotropic effects of creatine.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-200318
+
+                    </span>
+                </div>
+
+                <div class="reference-title">creatine + ATP =&gt; phosphocreatine + ADP [CKB,CKM]</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does human cytosolic B-CK have any direct, functionally relevant mitochondrial or futile-creatine-cycle role, or are the mitochondrion/futile-cycle annotations entirely by-similarity from the mouse thermogenic-fat ortholog?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P12277" data-a="Q: Does human cytosolic B-CK have any direct, functio..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How general is the role of B-CK as an ATP-supplying partner physically coupled to membrane ATPases/transporters (e.g. KCC2/KCC3) across tissues, and is its kinase activity strictly required for transporter function?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P12277" data-a="Q: How general is the role of B-CK as an ATP-supplyin..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Determine the subcellular distribution of endogenous human B-CK (cytosol vs mitochondrion vs membrane microcompartments) across brain, smooth muscle, and adipose tissue using fractionation and quantitative imaging, to test whether any mitochondrial/futile-cycle role exists for the human protein.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Human B-CK is overwhelmingly cytosolic, with membrane and mitochondrial pools being minor and context-specific.</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="P12277" data-a="EXPERIMENT: Determine the subcellular distribution of endogeno..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Reconstitute B-CK with KCC2/KCC3 in a controlled system and measure cotransport activity with catalytically active versus catalytically dead B-CK to test whether local ATP regeneration, rather than mere binding, drives transporter activation.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: B-CK kinase activity is required to sustain KCC transporter activity by locally regenerating ATP at the membrane microcompartment.</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="P12277" data-a="EXPERIMENT: Reconstitute B-CK with KCC2/KCC3 in a controlled s..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(CKB-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P12277" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="ckb-p12277-creatine-kinase-b-type-review-notes">CKB (P12277) — Creatine kinase B-type — review notes</h1>
+<h2 id="identity">Identity</h2>
+<ul>
+<li>UniProt P12277, KCRB_HUMAN, gene CKB (HGNC:1991), synonym CKBB. 381 aa, EC 2.7.3.2.</li>
+<li>Brain-type / B-type cytosolic creatine kinase. Forms CK-BB homodimers and CK-MB heterodimers (with CKM, muscle-type).</li>
+<li>Member of the ATP:guanido phosphotransferase (phosphagen kinase) family.</li>
+</ul>
+<h2 id="catalytic-function-and-reaction-direction">Catalytic function and reaction direction</h2>
+<ul>
+<li>Reversibly catalyzes transfer of the high-energy phosphoryl between ATP and creatine:<br />
+  creatine + ATP = N-phosphocreatine + ADP + H(+) (Rhea:RHEA:17157, EC 2.7.3.2).</li>
+<li>UniProt FUNCTION: "Reversibly catalyzes the transfer of phosphate between ATP and various phosphogens (e.g. creatine phosphate) (PubMed:8186255). Creatine kinase isoenzymes play a central role in energy transduction in tissues with large, fluctuating energy demands, such as skeletal muscle, heart, brain and spermatozoa."</li>
+<li>Catalytic residues established by site-directed mutagenesis: Cys-283 and Arg-292 essential for catalysis <a href="https://pubmed.ncbi.nlm.nih.gov/8186255" title="The results showed residues Cys-283 and Arg-292 are essential for enzyme catalysis">PMID:8186255</a>; Cys283-&gt;Ser/Tyr abolishes activity without affecting dimerization; Asp340-&gt;Glu had no effect. This paper grounds GO:0004111 (creatine kinase activity, IDA) and GO:0046314 (phosphocreatine biosynthetic process, IDA).</li>
+<li>Crystal structure of human B-CK with ADP-Mg2+-NO3--creatine transition-state analogue, 2.0 Å (PMID:18977227; PDB 3B6R, 3DRB, 3DRE), confirms active site and dimer.</li>
+</ul>
+<h2 id="dimer-composition-subunit">Dimer composition / subunit</h2>
+<ul>
+<li>"Dimer of identical or non-identical chains, which can be either B (brain type) or M (muscle type). With MM being the major form in skeletal muscle and myocardium, MB existing in myocardium, and BB existing in many tissues, especially brain." (UniProt SUBUNIT).</li>
+<li>CK-MB (CKB:CKM heterodimer) — IntAct interaction with CKM (P06732) recorded; clinically the CK-MB heterodimer is a cardiac biomarker.</li>
+<li>PMID:8186255 also shows heterodimerization and dominant-negative inhibition of the normal subunit by the mutant subunit in BB and MB dimers.</li>
+</ul>
+<h2 id="cytosolic-localization-coupled-to-atpases-phosphocreatine-shuttle">Cytosolic localization coupled to ATPases / phosphocreatine shuttle</h2>
+<ul>
+<li>Cytosolic (cytoplasm, cytosol) is the canonical localization. GOA: GO:0005829 cytosol IDA (HPA), TAS (Reactome).</li>
+<li>Phosphocreatine/creatine kinase (PCr/CK) shuttle: mitochondrial CK (a separate gene product, uMtCK/CKMT1) regenerates phosphocreatine in mitochondria; PCr diffuses to the cytosol where cytosolic CK (B-CK) coupled to ATPases regenerates ATP locally [Wikipedia/Wallimann review: "PCr generated by mtCK in mitochondria is shuttled to cytosolic CK that is coupled to ATP-dependent processes... CK is associated with the ATPases, forming a coupled microcompartment"].</li>
+<li>Wallimann review (PMID:21448658): CK/PCr functions as (a) temporal energy buffer, (b) spatial energy buffer/shuttle, (c) metabolic regulator.</li>
+<li>CKB is the cytosolic ATP-regenerating limb; it is NOT itself a mitochondrial creatine kinase. The GOA mitochondrion annotations (ISS/IEA from Q04447, the mouse "futile creatine cycle" / thermogenic-fat protein) are by-similarity transfers from the futile-creatine-cycle work and should be treated cautiously — human CKB is overwhelmingly cytosolic. Note Q04447 is itself the brain CK ortholog (mouse Ckb), and the UniProt "futile creatine cycle / thermogenic fat mitochondrion" annotations derive from adipocyte thermogenesis studies (Kazak et al.). For HUMAN CKB the mitochondrial/futile-cycle annotations are by-similarity, not directly demonstrated.</li>
+</ul>
+<h2 id="tissue-expression">Tissue expression</h2>
+<ul>
+<li>BB-CK expressed in brain and in most non-muscle tissues, and in smooth muscle. HPA: "Tissue enhanced (brain, intestine)".</li>
+<li>Brain: cytosolic B-CK is the dominant cytosolic CK isoform; PCr/CK system supports neuronal/astrocytic energy metabolism.</li>
+</ul>
+<h2 id="known-interactions-moonlighting-roles-most-are-go0005515-protein-binding-ipi">Known interactions / moonlighting roles (most are GO:0005515 protein binding, IPI)</h2>
+<ul>
+<li>SLC12A6 / KCC3 (K-Cl cotransporter 3): CK-B binds the C-terminal domain of KCC3; the interaction (and CK-B kinase activity) is required for KCC3 cotransport activity <a href="https://pubmed.ncbi.nlm.nih.gov/18566107" title="the C-terminal domain (CTD) of KCC3... directly interacts with brain-specific creatine kinase (CK-B), an ATP-generating enzyme... CK-B's inhibition by DNFB results in reduction of activity of KCC3">PMID:18566107</a>. CK-B is also a partner of the neuronal KCC2 (PMID:16336223, not in GOA). This is the "ATP-regenerating enzyme coupled to a membrane ATP-consuming transporter" microcompartment paradigm. UniProt records plasma-membrane localization (EXP, PMID:18566107) and the SLC12A6 interaction.</li>
+<li>ASB9 (Q96DX5): substrate-recognition subunit of an ECS(ASB9)/Cullin-RING E3 ligase; CKB is ubiquitinated by ECS(ASB9), leading to proteasomal degradation [UniProt PTM, PMID:33268465]. EM structure of CKB in complex with ASB9-ELOB-ELOC (PMID:32513959, PDB 6V9H). Many IntAct "protein binding" rows (Q96DX5) and the GO:0031625 "ubiquitin protein ligase binding" (IPI, PMID:19725078, with O60260 = Parkin) reflect this E3-ligase/degradation axis. CUL3 (Q13618), CUL5 also recorded.</li>
+<li>HCV NS4A: CKB interacts with hepatitis C virus NS4A and is recruited to the viral replication complex, upregulating NS3-4A helicase/replicase activity — a host-factor/moonlighting role <a href="https://pubmed.ncbi.nlm.nih.gov/19264780" title="CKB interacts with HCV NS4A protein and forms a complex with NS3-4A... important for efficient replication of the viral genome">PMID:19264780</a>. (Q03463 xeno interaction.)</li>
+<li>TCF4 (P15884), various high-throughput interactome maps (PMID:16189514, 19060904, 25416956, 28514442, 32296183, 33961781, 35271311, 37207277, 40205054) — generic Y2H/AP-MS "protein binding" hits, low individual functional informativeness.</li>
+</ul>
+<h2 id="ptms">PTMs</h2>
+<ul>
+<li>Phosphorylated (Ser-4, Thr-35, Ser-199, etc.); ubiquitinated (Lys-45, 101, 107, 381) by ECS(ASB9); nitrated (Tyr-269). Mostly large-scale proteomics.</li>
+</ul>
+<h2 id="annotation-review-judgments-summary">Annotation review judgments (summary)</h2>
+<ul>
+<li>CORE: creatine kinase activity (GO:0004111) — multiple lines (IDA PMID:8186255, IBA, ISS, TAS, IEA). ACCEPT the experimental/IBA; the redundant IEA/ISS/TAS duplicates kept as non-core or accepted.</li>
+<li>CORE: phosphocreatine biosynthetic process (GO:0046314) — the BP for the reaction (left-to-right physiological direction). ACCEPT.</li>
+<li>CORE location: cytosol (GO:0005829) — IDA (HPA) ACCEPT.</li>
+<li>Generic parent MF terms from InterPro IEA (GO:0003824 catalytic activity, GO:0016301 kinase activity, GO:0016772 transferase transferring P, GO:0016775 phosphotransferase N acceptor) — these are correct but uninformative parents of creatine kinase activity → MARK_AS_OVER_ANNOTATED (redundant generic ancestors).</li>
+<li>protein binding (GO:0005515) IPI rows — uninformative bare "protein binding"; KEEP_AS_NON_CORE (real interactions, but term is uninformative; the informative ones, KCC3 and ASB9/E3 ligase, are captured elsewhere). Avoid as core.</li>
+<li>ubiquitin protein ligase binding (GO:0031625) IPI — real (ASB9/Parkin E3 axis); KEEP_AS_NON_CORE (CKB is the substrate, not function of CKB per se, but it does bind the ligase).</li>
+<li>mitochondrion (GO:0005739) ISS/IEA, is_active_in — by-similarity from mouse Q04447 thermogenic-fat work; human CKB is cytosolic. MARK_AS_OVER_ANNOTATED / KEEP_AS_NON_CORE (cannot fully exclude small mito pool, but not the core cytosolic function).</li>
+<li>futile creatine cycle (GO:0140651) IEA (from Q04447) — by-similarity, adipocyte thermogenesis; KEEP_AS_NON_CORE for human (not demonstrated in human CKB).</li>
+<li>plasma membrane (GO:0005886) EXP PMID:18566107 — CK-B co-localizes with KCC3 at membrane microcompartment; KEEP_AS_NON_CORE (peripheral/recruited, not a transmembrane protein).</li>
+<li>extracellular exosome (GO:0070062) HDA, extracellular region (GO:0005576/IBA/ISS), extracellular space — CKB detected in exosomes/secretome (proteomic). KEEP_AS_NON_CORE (real proteomic detection but not the functional compartment); the IBA extracellular_region is questionable for a cytosolic enzyme → MARK_AS_OVER_ANNOTATED for the IBA/ISS extracellular_region (likely over-propagation), KEEP exosome HDA as non-core.</li>
+<li>substantia nigra development (GO:0021762) HEP PMID:22926577 — differential expression in a substantia nigra proteomic disease study; HEP from an abstract about differential protein expression in neurodegenerative disease does not establish a developmental role. MARK_AS_OVER_ANNOTATED.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P12277
+gene_symbol: CKB
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  CKB encodes the B-type (brain-type) cytosolic creatine kinase, a 381-residue
+  enzyme (EC 2.7.3.2) of the ATP:guanido phosphotransferase (phosphagen kinase)
+  family. It reversibly catalyzes transfer of the high-energy phosphoryl group
+  between ATP and creatine (creatine + ATP = N-phosphocreatine + ADP + H+),
+  interconverting ATP and the phosphocreatine energy reservoir. The active enzyme
+  is a dimer: B-CK assembles into CK-BB homodimers and, with the muscle-type
+  subunit CKM, into CK-MB heterodimers. As the cytosolic limb of the
+  phosphocreatine/creatine-kinase shuttle, B-CK is functionally coupled to
+  ATP-consuming processes (e.g. membrane ion transporters and other ATPases),
+  locally regenerating ATP from phosphocreatine and providing temporal and spatial
+  energy buffering in cells with high, fluctuating energy demands. B-CK is the
+  predominant cytosolic creatine kinase of brain and is broadly expressed in smooth
+  muscle and most non-muscle tissues. Beyond catalysis it acts as an
+  ATP-regenerating partner in membrane microcompartments — for example binding the
+  C-terminal domain of the K-Cl cotransporter KCC3 (SLC12A6) and supporting its
+  transport activity — and is a substrate of the ECS(ASB9) Cullin-RING E3 ubiquitin
+  ligase, which targets it for proteasomal degradation.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:11487543
+  title: Intestinal epithelial cells secrete exosome-like vesicles.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: Proteomic exosome study; supports detection of CKB in secreted
+      vesicles but not a functional extracellular role.
+- id: PMID:16189514
+  title: Towards a proteome-scale map of the human protein-protein interaction network.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: High-throughput Y2H interactome map; generic &#39;protein binding&#39;
+      support, low functional informativeness for CKB.
+- id: PMID:18566107
+  title: HMSN/ACC truncation mutations disrupt brain-type creatine kinase-dependant
+    activation of K+/Cl- co-transporter 3.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Establishes CK-B (CKB) binding to the KCC3/SLC12A6 C-terminal
+      domain, co-localization at the membrane, and a kinase-dependent functional
+      role in cotransport.
+- id: PMID:19056867
+  title: Large-scale proteomics and phosphoproteomics of urinary exosomes.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: Exosome proteomic detection of CKB; supports exosome localization
+      annotation, not a functional role.
+- id: PMID:19060904
+  title: An empirical framework for binary interactome mapping.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: High-throughput binary interactome; generic protein-binding hit.
+- id: PMID:19264780
+  title: Involvement of creatine kinase B in hepatitis C virus genome replication
+    through interaction with the viral NS4A protein.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Shows CKB interacts with HCV NS4A and is recruited to the viral
+      replication complex; a moonlighting host-factor role, not a core function.
+- id: PMID:19725078
+  title: Proteomic analysis of increased Parkin expression and its interactants provides
+    evidence for a role in modulation of mitochondrial function.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: Parkin (E3 ligase) interactant proteomics; supports CKB as an E3
+      ligase-binding substrate, not an independent CKB function.
+- id: PMID:21145461
+  title: Dynamics of cullin-RING ubiquitin ligase network revealed by systematic quantitative
+    proteomics.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: CRL network proteomics; CKB recorded as a CUL3-associated protein
+      (consistent with ECS/Cullin-RING substrate role).
+- id: PMID:22926577
+  title: Quantitative proteomic analysis of human substantia nigra in Alzheimer&#39;s
+    disease, Huntington&#39;s disease and Multiple sclerosis.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: MISCITED
+    review_notes: A disease-state differential-abundance proteomic survey of substantia
+      nigra; it does not demonstrate a role for CKB in substantia nigra development.
+- id: PMID:23533145
+  title: In-depth proteomic analyses of exosomes isolated from expressed prostatic
+    secretions in urine.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: Exosome proteomic detection; supports exosome localization, not a
+      functional extracellular role.
+- id: PMID:25416956
+  title: A proteome-scale map of the human interactome network.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: High-throughput interactome map; generic protein-binding support.
+- id: PMID:28514442
+  title: Architecture of the human interactome defines protein communities and disease
+    networks.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: High-throughput interactome (BioPlex); generic protein-binding hits
+      including CKM and ASB9.
+- id: PMID:3034271
+  title: &#39;Human creatine kinase: isolation and sequence analysis of cDNA clones for
+    the B subunit, development of subunit specific probes and determination of gene
+    copy number.&#39;
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Original cloning/sequence of the human CKB (B-subunit) cDNA;
+      cited for creatine kinase activity (TAS).
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: High-throughput binary interactome (HuRI); generic protein-binding
+      hit (ASB9).
+- id: PMID:33961781
+  title: Dual proteome-scale networks reveal cell-specific remodeling of the human
+    interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: High-throughput interactome; generic protein-binding hits (CKM,
+      ASB9).
+- id: PMID:35271311
+  title: &#39;OpenCell: Endogenous tagging for the cartography of human cellular organization.&#39;
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: Endogenous-tagging interactome/localization map; generic protein-binding
+      hit.
+- id: PMID:37207277
+  title: Using brain cell-type-specific protein interactomes to interpret neurodevelopmental
+    genetic signals in schizophrenia.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: Brain cell-type interactome study; generic protein-binding hits
+      (TCF4, CUL3).
+- id: PMID:40205054
+  title: Multimodal cell maps as a foundation for structural and functional genomics.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: Multimodal cell-map interactome; generic protein-binding hit (ASB9).
+- id: PMID:8186255
+  title: Determination of the catalytic site of creatine kinase by site-directed mutagenesis.
+  findings:
+  - statement: Site-directed mutagenesis of human B-CK shows Cys-283 and Arg-292
+      are essential for catalysis; mutants abolish homodimer enzymatic activity
+      without preventing dimerization.
+    supporting_text: The results showed residues Cys-283 and Arg-292 are essential
+      for enzyme catalysis.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Direct functional evidence for human CKB creatine kinase activity
+      and its catalytic residues; basis for the GO:0004111 IDA and GO:0046314 IDA.
+- id: PMID:18977227
+  title: Structural studies of human brain-type creatine kinase complexed with the
+    ADP-Mg2+-NO3--creatine transition-state analogue complex.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Crystal structure of human B-CK with transition-state analogue;
+      confirms active site, substrate binding, and the dimer.
+- id: PMID:21448658
+  title: The creatine kinase system and pleiotropic effects of creatine.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Authoritative review of the PCr/CK shuttle and energy-buffering
+      roles of cytosolic creatine kinases.
+- id: Reactome:R-HSA-200318
+  title: creatine + ATP =&gt; phosphocreatine + ADP [CKB,CKM]
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Reactome reaction for the creatine kinase activity of CKB/CKM.
+existing_annotations:
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: Phylogenetic (IBA) inference that B-CK is active in the extracellular
+      region. B-CK is a cytosolic enzyme; it is detected in exosomes/secretome but
+      is not active extracellularly. The &#34;is_active_in extracellular region&#34; call
+      is an over-propagation and is biologically incorrect as a site of activity.
+    action: REMOVE
+    reason: Creatine kinase catalysis requires cytosolic ATP/ADP and creatine; the
+      enzyme is not known to function in the extracellular region. Detection in
+      secreted vesicles does not make the extracellular region a site of activity,
+      so an &#34;is_active_in extracellular region&#34; assertion is incorrect. Aligned with
+      the parallel CKM review, which REMOVEs the identical IBA annotation; genuine
+      extracellular/exosome detection is retained separately under the
+      extracellular-exosome annotations.
+- term:
+    id: GO:0004111
+    label: creatine kinase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: Creatine kinase activity is the core molecular function of CKB,
+      supported phylogenetically (IBA) and experimentally. Accept.
+    action: ACCEPT
+    reason: This is the defining, experimentally established activity of CKB
+      (EC 2.7.3.2); the IBA inference is consistent with direct assays.
+    supported_by:
+    - reference_id: PMID:8186255
+      supporting_text: The results showed residues Cys-283 and Arg-292 are essential
+        for enzyme catalysis.
+- term:
+    id: GO:0046314
+    label: phosphocreatine biosynthetic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: The biological process corresponding to the forward (ATP -&gt; phosphocreatine)
+      direction of the creatine kinase reaction. Core process for CKB. Accept.
+    action: ACCEPT
+    reason: Directly reflects the physiological left-to-right reaction direction
+      catalyzed by CKB; consistent with the experimentally demonstrated activity.
+- term:
+    id: GO:0003824
+    label: catalytic activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Generic root catalytic-activity term assigned by InterPro2GO. Correct
+      but uninformative; subsumed by the specific creatine kinase activity annotation.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: A high-level ancestor of GO:0004111; adds no information beyond the
+      specific molecular function and should not be retained as a meaningful
+      annotation.
+- term:
+    id: GO:0004111
+    label: creatine kinase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Electronic (IEA) assignment of the core creatine kinase activity,
+      consistent with experimental evidence. Accept (redundant with the experimental
+      annotation but correct).
+    action: ACCEPT
+    reason: Same correct core molecular function; electronic support via RHEA/EC
+      mapping aligns with direct evidence.
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: Electronic mitochondrion localization transferred by similarity from the
+      mouse ortholog (Q04447) in the context of thermogenic-fat / futile-creatine-cycle
+      biology. Human CKB is predominantly cytosolic; a mitochondrial pool is not
+      directly demonstrated for human B-CK.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: B-CK is the cytosolic creatine kinase isoform; mitochondrial creatine
+      kinase is a distinct gene product (uMtCK/CKMT1). The mitochondrial call is a
+      by-similarity transfer specific to adipocyte thermogenesis and is not the core
+      localization of human CKB.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: Electronic cytosol localization from the UniProt subcellular-location
+      mapping. Correct core localization. Accept.
+    action: ACCEPT
+    reason: B-CK is a cytosolic enzyme; consistent with IDA (HPA) and Reactome TAS
+      annotations to cytosol.
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: Electronic plasma-membrane call from UniProt subcellular-location
+      mapping, reflecting peripheral recruitment of B-CK to membrane ATPase
+      microcompartments (e.g. with KCC3). Real but peripheral, not the core compartment.
+    action: KEEP_AS_NON_CORE
+    reason: CKB is not an integral membrane protein; it is recruited to the membrane
+      to supply ATP to transporters such as KCC3 (PMID:18566107). Retain as a
+      non-core peripheral localization.
+- term:
+    id: GO:0016301
+    label: kinase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Generic kinase-activity parent from InterPro2GO; subsumed by the
+      specific creatine kinase activity. Uninformative.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Ancestor of GO:0004111; carries no information beyond the specific
+      molecular function.
+- term:
+    id: GO:0016772
+    label: transferase activity, transferring phosphorus-containing groups
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Generic phosphotransferase parent from InterPro2GO; subsumed by the
+      specific creatine kinase activity. Uninformative.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: High-level ancestor of GO:0004111; redundant generic term.
+- term:
+    id: GO:0016775
+    label: phosphotransferase activity, nitrogenous group as acceptor
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: The immediate parent class of creatine kinase activity (phosphotransfer
+      to a nitrogenous/guanidino acceptor). Correct but redundant with the specific
+      term.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Direct ancestor of GO:0004111; the specific creatine kinase activity term
+      is preferred and makes this generic term redundant.
+- term:
+    id: GO:0046314
+    label: phosphocreatine biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: Electronic assignment of the core phosphocreatine biosynthetic process,
+      consistent with experimental evidence. Accept.
+    action: ACCEPT
+    reason: Correct core process for CKB; redundant with the IDA/IBA annotations but
+      not erroneous.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:16189514
+  qualifier: enables
+  review:
+    summary: Generic &#39;protein binding&#39; from a high-throughput interactome screen.
+      Uninformative as a molecular function; the biologically meaningful interactions
+      are captured by more specific annotations.
+    action: KEEP_AS_NON_CORE
+    reason: Bare protein binding does not describe a function; retained as non-core
+      evidence of interaction only.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:19060904
+  qualifier: enables
+  review:
+    summary: Generic &#39;protein binding&#39; from a high-throughput binary interactome.
+      Uninformative molecular function.
+    action: KEEP_AS_NON_CORE
+    reason: Bare protein binding is not a core function; retained as non-core.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:19264780
+  qualifier: enables
+  review:
+    summary: Interaction with hepatitis C virus NS4A, recruiting CKB to the viral
+      replication complex. A genuine moonlighting interaction but represented only as
+      generic &#39;protein binding&#39;.
+    action: KEEP_AS_NON_CORE
+    reason: Biologically real host-factor interaction (PMID:19264780) but a
+      non-core, condition-specific role; the bare term is uninformative as a core
+      function.
+    supported_by:
+    - reference_id: PMID:19264780
+      supporting_text: CKB interacts with HCV NS4A protein and forms a complex with
+        NS3-4A, which possesses multiple enzyme activities.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:21145461
+  qualifier: enables
+  review:
+    summary: Generic &#39;protein binding&#39; from a cullin-RING ligase network proteomic
+      study (CUL3 association). Uninformative as a function.
+    action: KEEP_AS_NON_CORE
+    reason: Bare protein binding; relates to CKB&#39;s role as a CRL substrate, retained
+      as non-core.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25416956
+  qualifier: enables
+  review:
+    summary: Generic &#39;protein binding&#39; from a high-throughput interactome map.
+      Uninformative molecular function.
+    action: KEEP_AS_NON_CORE
+    reason: Bare protein binding is not a core function; retained as non-core.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:28514442
+  qualifier: enables
+  review:
+    summary: Generic &#39;protein binding&#39; from a BioPlex interactome (includes CKM and
+      ASB9 partners). Uninformative as a standalone function.
+    action: KEEP_AS_NON_CORE
+    reason: Bare protein binding; the meaningful partners (CKM dimerization, ASB9 E3
+      ligase) are better captured specifically. Retained as non-core.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: Generic &#39;protein binding&#39; from the HuRI binary interactome (ASB9).
+      Uninformative molecular function.
+    action: KEEP_AS_NON_CORE
+    reason: Bare protein binding is not a core function; retained as non-core.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:33961781
+  qualifier: enables
+  review:
+    summary: Generic &#39;protein binding&#39; from a dual proteome-scale interactome (CKM,
+      ASB9). Uninformative molecular function.
+    action: KEEP_AS_NON_CORE
+    reason: Bare protein binding is not a core function; retained as non-core.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:35271311
+  qualifier: enables
+  review:
+    summary: Generic &#39;protein binding&#39; from the OpenCell endogenous-tagging map.
+      Uninformative molecular function.
+    action: KEEP_AS_NON_CORE
+    reason: Bare protein binding is not a core function; retained as non-core.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:37207277
+  qualifier: enables
+  review:
+    summary: Generic &#39;protein binding&#39; from a brain cell-type interactome (TCF4,
+      CUL3). Uninformative molecular function.
+    action: KEEP_AS_NON_CORE
+    reason: Bare protein binding is not a core function; retained as non-core.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:40205054
+  qualifier: enables
+  review:
+    summary: Generic &#39;protein binding&#39; from a multimodal cell-map interactome (ASB9).
+      Uninformative molecular function.
+    action: KEEP_AS_NON_CORE
+    reason: Bare protein binding is not a core function; retained as non-core.
+- term:
+    id: GO:0140651
+    label: futile creatine cycle
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: Electronic transfer (from mouse Q04447) of involvement in the futile
+      creatine cycle (adipocyte thermogenesis). This role is characterized for the
+      thermogenic-fat mitochondrial creatine cycle and has not been demonstrated for
+      human B-CK; retain as a non-core, by-similarity possibility.
+    action: KEEP_AS_NON_CORE
+    reason: The futile creatine cycle is a specialized thermogenic-fat process
+      inferred by orthology; it is plausible but not the core energy-buffering
+      function of cytosolic B-CK in humans.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: Direct immunofluorescence (HPA) localization to the cytosol. This is the
+      core, experimentally supported localization of B-CK. Accept.
+    action: ACCEPT
+    reason: B-CK is a cytosolic enzyme; IDA from HPA directly supports the core
+      localization.
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: located_in
+  review:
+    summary: ISS mitochondrion localization transferred from mouse Q04447
+      (thermogenic-fat creatine cycle). Not the core compartment of human cytosolic
+      B-CK.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: By-similarity mitochondrial localization tied to adipocyte thermogenesis;
+      human B-CK is the cytosolic isoform and a mitochondrial pool is not directly
+      established.
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: EXP
+  original_reference_id: PMID:18566107
+  qualifier: located_in
+  review:
+    summary: Experimental co-localization of CK-B with KCC3 at the plasma membrane,
+      consistent with recruitment of B-CK to membrane ATPase microcompartments.
+      Real but peripheral, not the core cytosolic compartment.
+    action: KEEP_AS_NON_CORE
+    reason: CKB associates with the membrane via interaction with the KCC3
+      transporter to supply ATP locally; it is not an integral membrane protein.
+      Retain as a non-core peripheral localization.
+    supported_by:
+    - reference_id: PMID:18566107
+      supporting_text: immunofluorescence labeling showed that CK-B co-localizes with
+        wild-type KCC3
+- term:
+    id: GO:0004111
+    label: creatine kinase activity
+  evidence_type: IDA
+  original_reference_id: PMID:8186255
+  qualifier: enables
+  review:
+    summary: Direct experimental evidence (site-directed mutagenesis of human B-CK)
+      for creatine kinase activity, including identification of essential catalytic
+      residues. The strongest support for the core molecular function. Accept.
+    action: ACCEPT
+    reason: Direct assay of human CKB enzymatic activity; defines the core molecular
+      function (EC 2.7.3.2).
+    supported_by:
+    - reference_id: PMID:8186255
+      supporting_text: The results showed residues Cys-283 and Arg-292 are essential
+        for enzyme catalysis.
+- term:
+    id: GO:0046314
+    label: phosphocreatine biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:8186255
+  qualifier: involved_in
+  review:
+    summary: Direct evidence for the phosphocreatine-forming (forward) direction of
+      the creatine kinase reaction. Core process for CKB. Accept.
+    action: ACCEPT
+    reason: Reflects the physiological left-to-right reaction catalyzed by CKB,
+      directly demonstrated for the human enzyme.
+- term:
+    id: GO:0004111
+    label: creatine kinase activity
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: enables
+  review:
+    summary: ISS support (from ortholog) for the core creatine kinase activity.
+      Consistent with direct evidence. Accept.
+    action: ACCEPT
+    reason: Correct core molecular function; redundant with the experimental
+      annotation but not erroneous.
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: is_active_in
+  review:
+    summary: ISS &#39;is_active_in mitochondrion&#39; transferred from mouse Q04447. Human
+      B-CK is the cytosolic isoform; an active mitochondrial pool is not directly
+      established.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: By-similarity mitochondrial activity tied to thermogenic-fat biology;
+      not the core localization or site of activity of human cytosolic B-CK.
+- term:
+    id: GO:0070062
+    label: extracellular exosome
+  evidence_type: HDA
+  original_reference_id: PMID:11487543
+  qualifier: located_in
+  review:
+    summary: High-throughput proteomic detection of CKB in exosomes. A real
+      observation but reflects passive secretion/vesicle loading rather than a
+      functional compartment.
+    action: KEEP_AS_NON_CORE
+    reason: Exosome detection is common for abundant cytosolic enzymes; retain as a
+      non-core localization, not a site of creatine kinase function.
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: located_in
+  review:
+    summary: ISS extracellular-region localization transferred from an ortholog.
+      B-CK is a cytosolic enzyme; extracellular detection (exosomes/secretome) does
+      not establish a functional extracellular localization.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Over-propagated localization for a cytosolic enzyme; not a site of
+      activity. Exosomal detection is better captured by the exosome annotation.
+- term:
+    id: GO:0031625
+    label: ubiquitin protein ligase binding
+  evidence_type: IPI
+  original_reference_id: PMID:19725078
+  qualifier: enables
+  review:
+    summary: CKB binds an E3 ubiquitin ligase component (Parkin/E3 interactant
+      proteomics), consistent with CKB being a substrate of the ECS(ASB9)
+      Cullin-RING E3 ligase that targets it for degradation. A real binding activity
+      but reflecting CKB&#39;s role as a degradation substrate rather than a core enzyme
+      function.
+    action: KEEP_AS_NON_CORE
+    reason: Informative interaction (E3 ligase/degradation axis) but not part of
+      CKB&#39;s core energy-metabolism function; retain as non-core.
+- term:
+    id: GO:0070062
+    label: extracellular exosome
+  evidence_type: HDA
+  original_reference_id: PMID:23533145
+  qualifier: located_in
+  review:
+    summary: High-throughput proteomic detection of CKB in prostatic-secretion
+      exosomes. Same interpretation as other exosome detections.
+    action: KEEP_AS_NON_CORE
+    reason: Proteomic exosome detection; non-core localization, not a functional
+      compartment for catalysis.
+- term:
+    id: GO:0021762
+    label: substantia nigra development
+  evidence_type: HEP
+  original_reference_id: PMID:22926577
+  qualifier: involved_in
+  review:
+    summary: HEP annotation derived from a disease-state differential-abundance
+      proteomic survey of human substantia nigra. Differential expression in
+      neurodegenerative disease does not establish a role in substantia nigra
+      development.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The supporting study compares protein abundance in disease vs control
+      substantia nigra; it does not provide evidence that CKB is involved in the
+      developmental process. Over-interpretation of an expression observation.
+- term:
+    id: GO:0070062
+    label: extracellular exosome
+  evidence_type: HDA
+  original_reference_id: PMID:19056867
+  qualifier: located_in
+  review:
+    summary: High-throughput proteomic detection of CKB in urinary exosomes. Same
+      interpretation as other exosome detections.
+    action: KEEP_AS_NON_CORE
+    reason: Proteomic exosome detection; non-core localization.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-200318
+  qualifier: located_in
+  review:
+    summary: Traceable author statement (Reactome) placing the creatine kinase
+      reaction in the cytosol. Consistent with the core cytosolic localization.
+      Accept.
+    action: ACCEPT
+    reason: Correct core localization; the creatine kinase reaction catalyzed by CKB
+      occurs in the cytosol.
+- term:
+    id: GO:0004111
+    label: creatine kinase activity
+  evidence_type: TAS
+  original_reference_id: PMID:3034271
+  qualifier: enables
+  review:
+    summary: Traceable author statement (original CKB cDNA cloning paper) for
+      creatine kinase activity. Core molecular function. Accept.
+    action: ACCEPT
+    reason: Correct core molecular function, supported by the foundational
+      cloning/characterization reference.
+core_functions:
+- description: &gt;-
+    B-type cytosolic creatine kinase reversibly transfers the high-energy phosphoryl
+    group between ATP and creatine (creatine + ATP = N-phosphocreatine + ADP + H+),
+    acting in the cytosol to interconvert ATP and the phosphocreatine energy
+    reservoir. The forward direction generates phosphocreatine (phosphocreatine
+    biosynthetic process), buffering cellular ATP in brain and non-muscle tissues.
+  molecular_function:
+    id: GO:0004111
+    label: creatine kinase activity
+  directly_involved_in:
+  - id: GO:0046314
+    label: phosphocreatine biosynthetic process
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: PMID:8186255
+    supporting_text: The results showed residues Cys-283 and Arg-292 are essential
+      for enzyme catalysis.
+suggested_questions:
+- question: Does human cytosolic B-CK have any direct, functionally relevant
+    mitochondrial or futile-creatine-cycle role, or are the mitochondrion/futile-cycle
+    annotations entirely by-similarity from the mouse thermogenic-fat ortholog?
+- question: How general is the role of B-CK as an ATP-supplying partner physically
+    coupled to membrane ATPases/transporters (e.g. KCC2/KCC3) across tissues, and is
+    its kinase activity strictly required for transporter function?
+suggested_experiments:
+- description: Determine the subcellular distribution of endogenous human B-CK
+    (cytosol vs mitochondrion vs membrane microcompartments) across brain, smooth
+    muscle, and adipose tissue using fractionation and quantitative imaging, to test
+    whether any mitochondrial/futile-cycle role exists for the human protein.
+  hypothesis: Human B-CK is overwhelmingly cytosolic, with membrane and mitochondrial
+    pools being minor and context-specific.
+- description: Reconstitute B-CK with KCC2/KCC3 in a controlled system and measure
+    cotransport activity with catalytically active versus catalytically dead B-CK to
+    test whether local ATP regeneration, rather than mere binding, drives transporter
+    activation.
+  hypothesis: B-CK kinase activity is required to sustain KCC transporter activity by
+    locally regenerating ATP at the membrane microcompartment.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

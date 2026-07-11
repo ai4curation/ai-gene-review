@@ -86,3 +86,13 @@ Four IBA (GO_REF:0000033) annotations were propagated to **cdc42 (Q01112)**. Bec
 - **Reviewer**: AI-assisted review
 - **Status**: DRAFT
 - **Based on**: PANTHER metadata/entries, UniProt, S. pombe cdc42 curated review, GOA IBA annotations, PANTHER_IBA_REVIEW propagation table
+
+## Falcon Deep Research Integration (2026-06-28)
+
+**Source:** [PTHR24072-deep-research-falcon.md](PTHR24072-deep-research-falcon.md)
+
+**Falcon verdict:** Falcon treats the current empty parent-family InterPro2GO mapping as appropriate for the broad Rho-family entry, despite conserved GTPase-switch biology, because downstream processes, effector bindings, localization, and atypical members are strongly clade-specific.
+
+**Family-level synthesis:** PTHR24072 covers the Rho-family small GTPases, including CDC42, RAC, RHO, atypical RND/RHOU/RHOV/RHOH/RHOF/RHOG/RHOQ members, fungal RHO clades, and mitochondrial MIRO/GEM1-like proteins. Core GTPase/GTP-binding biology is conserved, while pathway outputs and localization should be reviewed by clade.
+
+**Curation use:** Use this Falcon report as support for conservative parent-family handling: keep broad parent mappings empty or minimal, and place specific GO functions on child entries, PAINT/PTN anchors, or representative members after manual review.

@@ -1,0 +1,3279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PIGG - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PIGG</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q5H8A4" target="_blank" class="term-link">
+                        Q5H8A4
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PIGG";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q5H8A4" data-a="DESCRIPTION: PIGG is the catalytic subunit of the glycosylphosp..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PIGG is the catalytic subunit of the glycosylphosphatidylinositol (GPI) ethanolamine phosphate transferase II complex (GPI-ET-II; also known as GPI7/hGPI7). During GPI-anchor biosynthesis in the endoplasmic reticulum, PIGG transfers an ethanolamine phosphate (EtNP), donated by phosphatidylethanolamine, onto the 6-OH of the second alpha-1,6-linked mannose of the GPI intermediate (the H7-to-H8 conversion). This second-mannose EtNP is a side-branch modification that is normally removed shortly after the anchor is transferred to protein. PIGG acts together with the accessory subunit PIGF, which stabilizes it, and competes with PIGO (which adds EtNP to the third mannose) for the shared PIGF stabilizer. PIGG is a multi-pass endoplasmic reticulum membrane protein with a large lumenal alkaline-phosphatase-like catalytic domain. Biallelic loss-of-function variants cause an inherited GPI-deficiency disorder characterized by intellectual disability/developmental delay, early-onset seizures, hypotonia, and cerebellar atrophy; genetic variation in PIGG also defines the Emm blood group system.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5H8A4" data-a="GO:0005789" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PIGG is a multi-pass endoplasmic reticulum membrane protein and carries out its EtNP-transferase reaction in the ER during GPI-anchor biosynthesis. The phylogenetic (IBA) location call is consistent with direct experimental localization and with the UniProt subcellular location.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct compartment for the site of PIGG action, corroborated by experimental localization (PMID:15632136) and UniProt.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGG/PIGG-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051377" target="_blank" class="term-link">
+                                    GO:0051377
+                                </a>
+                            </span>
+                            <span class="term-label">mannose-ethanolamine phosphotransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5H8A4" data-a="GO:0051377" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the core molecular function of PIGG - transfer of ethanolamine phosphate from phosphatidylethanolamine to the second mannose of the GPI intermediate. The IBA call at this term is well supported by the human experimental data and the conserved yeast ortholog Gpi7p.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Represents the correct, specific catalytic activity of PIGG and is the core function; matches the current GOA term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32156170" target="_blank" class="term-link">
+                                        PMID:32156170
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">PIGG (initially termed GPI7) [67], catalytic subunits of GPI-ETII and GPI-ETIII. Both PIGO and PIGG are stabilized by association with PIGF</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006506" target="_blank" class="term-link">
+                                    GO:0006506
+                                </a>
+                            </span>
+                            <span class="term-label">GPI anchor biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5H8A4" data-a="GO:0006506" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PIGG catalyzes one step (transfer of EtNP to the second mannose) of the glycosylphosphatidylinositol-anchor biosynthetic pathway. The IBA process call is well supported.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core biological process for this GPI-anchor biosynthetic enzyme.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34113002" target="_blank" class="term-link">
+                                        PMID:34113002
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">is an ethanolamine phosphate transferase that catalyzes the modification of the second mannose of glycosylphosphatidylinositol (GPI)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5H8A4" data-a="GO:0005789" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic mapping from the UniProt subcellular location vocabulary (SL-0097, ER membrane), consistent with experimental localization of PIGG.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct location, agrees with experimental evidence and UniProt curation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGG/PIGG-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006506" target="_blank" class="term-link">
+                                    GO:0006506
+                                </a>
+                            </span>
+                            <span class="term-label">GPI anchor biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5H8A4" data-a="GO:0006506" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated inference (InterPro/UniPathway) that PIGG participates in GPI-anchor biosynthesis. This is correct and consistent with experimental data.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct process; the InterPro/UniPathway mapping is sound for this GPI-ET family enzyme.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGG/PIGG-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PATHWAY: Glycolipid biosynthesis; glycosylphosphatidylinositol-anchor</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051377" target="_blank" class="term-link">
+                                    GO:0051377
+                                </a>
+                            </span>
+                            <span class="term-label">mannose-ethanolamine phosphotransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5H8A4" data-a="GO:0051377" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro-based electronic assignment of the specific mannose-ethanolamine phosphotransferase activity, matching the experimentally established function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct specific molecular function; the InterPro2GO mapping is appropriate.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15632136" target="_blank" class="term-link">
+                                        PMID:15632136
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">forms a protein complex with PIG-F and is involved in the H7-to-H8 conversion</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23864651" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23864651
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The identification of novel proteins that interact with the ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q5H8A4" data-a="GO:0005515" data-r="PMID:23864651" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> An IntAct-derived interaction annotation linking PIGG to the GLP-1 receptor (GLP1R, P43220), from a study screening for novel GLP1R interactors. Bare &#34;protein binding&#34; is uninformative and this interaction is not part of PIGG&#39;s characterized catalytic function in GPI-anchor biosynthesis; there is no evidence it reflects a physiological binding activity of PIGG.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Uninformative generic &#34;protein binding&#34; from a high-throughput interactome screen; per curation guidelines this term does not convey PIGG&#39;s actual molecular function and the GLP1R interaction is not an established functional partner.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGG/PIGG-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Q5H8A4; P43220: GLP1R; NbExp=2; IntAct=EBI-11724298, EBI-7466542</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006506" target="_blank" class="term-link">
+                                    GO:0006506
+                                </a>
+                            </span>
+                            <span class="term-label">GPI anchor biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-162710
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5H8A4" data-a="GO:0006506" data-r="Reactome:R-HSA-162710" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable assertion that PIGG participates in synthesis of GPI. Correct and consistent with the experimental and phylogenetic evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core process from an authoritative pathway resource.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32156170" target="_blank" class="term-link">
+                                        PMID:32156170
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">PIGG (initially termed GPI7) [67], catalytic subunits of GPI-ETII and GPI-ETIII. Both PIGO and PIGG are stabilized by association with PIGF</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051377" target="_blank" class="term-link">
+                                    GO:0051377
+                                </a>
+                            </span>
+                            <span class="term-label">mannose-ethanolamine phosphotransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15632136" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15632136
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    GPI7 is the second partner of PIG-F and involved in modifica...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5H8A4" data-a="GO:0051377" data-r="PMID:15632136" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence (Shishioh et al. 2005) that human GPI7/PIGG, in complex with PIG-F, mediates the transfer of ethanolamine phosphate to the second mannose (H7-to-H8 conversion). This is the defining catalytic activity of PIGG.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimentally demonstrated core molecular function; matches the current GOA term (GO:0051377; the older UniProt-DR term GO:0051267 is now obsolete).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15632136" target="_blank" class="term-link">
+                                        PMID:15632136
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">an additional ethanolamine phosphate (EtNP) to the second mannose</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15632136" target="_blank" class="term-link">
+                                        PMID:15632136
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">forms a protein complex with PIG-F and is involved in the H7-to-H8 conversion</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15632136" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15632136
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    GPI7 is the second partner of PIG-F and involved in modifica...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5H8A4" data-a="GO:0005789" data-r="PMID:15632136" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental localization of PIGG/hGPI7 to the endoplasmic reticulum membrane, where GPI-anchor biosynthesis occurs.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimentally supported correct location of action.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGG/PIGG-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32156170" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32156170
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Biosynthesis and biology of mammalian GPI-anchored proteins.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5H8A4" data-a="GO:0005789" data-r="PMID:32156170" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author-statement (review) localization to the ER membrane, consistent with the described role of PIGG as a multi-pass ER-membrane GPI-ET enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct location; consistent with experimental data and the ComplexPortal GPI-ETII complex annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32156170" target="_blank" class="term-link">
+                                        PMID:32156170
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Three GPI-ETs (PIGN, PIGO and PIGG) are also multiple transmembrane proteins bearing catalytic sites within the luminal regions</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016740" target="_blank" class="term-link">
+                                    GO:0016740
+                                </a>
+                            </span>
+                            <span class="term-label">transferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34113002" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34113002
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    PIGG variant pathogenicity assessment reveals characteristic...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q5H8A4" data-a="GO:0016740" data-r="PMID:34113002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The variant-pathogenicity study measured PIGG enzymatic (EtNP-transferase) activity via restoration of GPI-AP expression in PIGO/PIGG double-knockout cells, showing that pathogenic variants abolish or reduce this activity. The generic parent &#34;transferase activity&#34; understates the specific, experimentally assayed function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Too general; the assay specifically measures PIGG&#39;s ethanolamine-phosphate transferase (mannose-ethanolamine phosphotransferase) activity, so it should be replaced by the specific molecular function term.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051377" target="_blank" class="term-link">
+                                    mannose-ethanolamine phosphotransferase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34113002" target="_blank" class="term-link">
+                                        PMID:34113002
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">ten variants had a null enzymatic activity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34113002" target="_blank" class="term-link">
+                                        PMID:34113002
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">is an ethanolamine phosphate transferase that catalyzes the modification of the second mannose of glycosylphosphatidylinositol (GPI)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016780" target="_blank" class="term-link">
+                                    GO:0016780
+                                </a>
+                            </span>
+                            <span class="term-label">phosphotransferase activity, for other substituted phosphate groups</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-162742
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q5H8A4" data-a="GO:0016780" data-r="Reactome:R-HSA-162742" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable assertion capturing PIGG&#39;s phosphotransferase (EtNP-transfer) reaction at a broader level. This is a correct parent of the specific mannose-ethanolamine phosphotransferase activity but is less informative than GO:0051377.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct but non-core generic parent term from Reactome; the specific EtNP-transferase activity (GO:0051377) is the core function captured elsewhere.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15632136" target="_blank" class="term-link">
+                                        PMID:15632136
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">an additional ethanolamine phosphate (EtNP) to the second mannose</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19946888" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19946888
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Defining the membrane proteome of NK cells.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q5H8A4" data-a="GO:0016020" data-r="PMID:19946888" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput mass-spectrometry detection of PIGG in an NK-cell membrane proteome. &#34;Membrane&#34; is an uninformative parent term; the specific and correct location for PIGG is the endoplasmic reticulum membrane.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Uninformative high-level compartment from a bulk membrane-proteome study; the specific ER membrane term is better supported and captured by other annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19946888" target="_blank" class="term-link">
+                                        PMID:19946888
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">approximately 40% of the identified proteins were predicted as plausible membrane proteins</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-162742
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5H8A4" data-a="GO:0005789" data-r="Reactome:R-HSA-162742" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable assertion placing PIGG&#39;s reaction at the ER membrane, consistent with all other localization evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct location from an authoritative pathway resource.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGG/PIGG-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15632136" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15632136
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    GPI7 is the second partner of PIG-F and involved in modifica...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5H8A4" data-a="GO:0005783" data-r="PMID:15632136" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental localization of PIGG/hGPI7 to the endoplasmic reticulum (broader compartment consistent with the ER membrane annotations).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct compartment, experimentally supported; a valid broader parent of endoplasmic reticulum membrane.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGG/PIGG-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006506" target="_blank" class="term-link">
+                                    GO:0006506
+                                </a>
+                            </span>
+                            <span class="term-label">GPI anchor biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15632136" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15632136
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    GPI7 is the second partner of PIG-F and involved in modifica...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5H8A4" data-a="GO:0006506" data-r="PMID:15632136" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence that knockdown of hGPI7/PIGG blocks the H7-to-H8 conversion, placing PIGG within the GPI-anchor biosynthetic process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimentally supported involvement in the core GPI-anchor biosynthetic process.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15632136" target="_blank" class="term-link">
+                                        PMID:15632136
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">forms a protein complex with PIG-F and is involved in the H7-to-H8 conversion</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Catalytic subunit of the GPI ethanolamine phosphate transferase II complex that transfers ethanolamine phosphate (from phosphatidylethanolamine) onto the second mannose of the GPI intermediate during GPI-anchor biosynthesis in the ER, acting together with the stabilizing subunit PIGF.</h3>
+                <span class="vote-buttons" data-g="Q5H8A4" data-a="FUNCTION: Catalytic subunit of the GPI ethanolamine phosphat..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051377" target="_blank" class="term-link">
+                            mannose-ethanolamine phosphotransferase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006506" target="_blank" class="term-link">
+                                GPI anchor biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                endoplasmic reticulum membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15632136" target="_blank" class="term-link">
+                                PMID:15632136
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">forms a protein complex with PIG-F and is involved in the H7-to-H8 conversion</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34113002" target="_blank" class="term-link">
+                                PMID:34113002
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">is an ethanolamine phosphate transferase that catalyzes the modification of the second mannose of glycosylphosphatidylinositol (GPI)</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15632136" target="_blank" class="term-link">
+                            PMID:15632136
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">GPI7 is the second partner of PIG-F and involved in modification of glycosylphosphatidylinositol.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19946888" target="_blank" class="term-link">
+                            PMID:19946888
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Defining the membrane proteome of NK cells.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23864651" target="_blank" class="term-link">
+                            PMID:23864651
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The identification of novel proteins that interact with the GLP-1 receptor and restrain its activity.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32156170" target="_blank" class="term-link">
+                            PMID:32156170
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Biosynthesis and biology of mammalian GPI-anchored proteins.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34113002" target="_blank" class="term-link">
+                            PMID:34113002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">PIGG variant pathogenicity assessment reveals characteristic features within 19 families.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-162710
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Synthesis of glycosylphosphatidylinositol (GPI)</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-162742
+
+                    </span>
+                </div>
+
+                <div class="reference-title">(ethanolamineP) mannose (a1-2) mannose (a1-6) (ethanolamineP) mannose (a1-4) glucosaminyl-acyl-PI -&gt; (ethanolamineP) mannose (a1-2) (ethanolamineP) mannose (a1-6) (ethanolamineP) mannose (a1-4) glucosaminyl-acyl-PI</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PIGG-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q5H8A4" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="pigg-q5h8a4-review-notes">PIGG (Q5H8A4) review notes</h1>
+<p>Human PIGG = GPI ethanolamine phosphate transferase 2, catalytic subunit (aka GPI7 homolog / hGPI7 / PIG-G).<br />
+Falcon deep research OUT OF CREDITS (HTTP 402) at time of review; grounded in UniProt, seeded GOA, and cached publications.</p>
+<h2 id="core-biology">Core biology</h2>
+<ul>
+<li>PIGG is the catalytic subunit of the GPI-ethanolamine-phosphate transferase II (GPI-ETII) complex.<br />
+  It transfers ethanolamine phosphate (EtNP), donated from phosphatidylethanolamine (PE), onto the<br />
+  6-OH of the <strong>second</strong> mannose of the GPI intermediate (H7 -&gt; H8 conversion). This is a side-branch<br />
+  EtNP that is normally shortly removed from the GPI-anchored protein after anchoring.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/15632136" title="By attachment of an additional ethanolamine phosphate (EtNP) to the second mannose">PMID:15632136</a><br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/34113002" title="PIGG is involved in transfer of EtNP to the second mannose before attachment of proteins">PMID:34113002</a></li>
+<li>Works with the accessory/regulatory subunit <strong>PIGF</strong>, which stabilizes it; PIGG competes with PIGO<br />
+  (GPI-ETIII, EtNP on 3rd mannose) for the shared stabilizer PIGF.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/15632136" title="associated with and stabilized by PIG-F">PMID:15632136</a><br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/32156170" title="Both PIGO and PIGG are stabilized by association with PIGF">PMID:32156170</a></li>
+<li>Multi-pass ER membrane protein (12 predicted TM helices; large N-terminal lumenal domain harboring<br />
+  the alkaline-phosphatase-like catalytic core); acts in the ER during GPI-anchor biosynthesis<br />
+  (step 11 of the pathway). [UniProt SUBCELLULAR LOCATION / PATHWAY]</li>
+</ul>
+<h2 id="disease">Disease</h2>
+<ul>
+<li>Biallelic LoF variants cause an inherited GPI-deficiency disorder: neurodevelopmental disorder with/without<br />
+  hypotonia, seizures, and cerebellar atrophy (NEDHSCA; MIM:616917) -&gt; DD/ID, hypotonia, early-onset (mostly<br />
+  febrile) seizures, cerebellar atrophy, ataxia. Unusually for IGDs, alkaline phosphatase and granulocyte<br />
+  GPI-AP surface levels are often normal (fibroblast CD73 is the sensitive readout).<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/34113002">PMID:34113002</a> [PMID:26996948 - not cached; UniProt DISEASE]</li>
+<li>Genetic variation in PIGG also defines the Emm blood group system (Emm-null phenotype). [UniProt POLYMORPHISM; PMID:34535746]</li>
+</ul>
+<h2 id="goa-mf-term">GOA MF term</h2>
+<ul>
+<li>GOA carries <strong>GO:0051377 mannose-ethanolamine phosphotransferase activity</strong> for the IBA/IEA/IDA MF rows.</li>
+<li>The UniProt DR line lists GO:0051267 "CP2 mannose-ethanolamine phosphotransferase activity" for the IDA (MGI),<br />
+  but GO:0051267 is now <strong>OBSOLETE</strong> (QuickGO). The current/valid term to use is GO:0051377.</li>
+</ul>
+<h2 id="annotation-decisions-summary">Annotation decisions summary</h2>
+<ul>
+<li>MF GO:0051377 (IBA, IEA, IDA): ACCEPT - core enzymatic activity.</li>
+<li>BP GO:0006506 GPI anchor biosynthetic process (IBA, IEA, TAS, IDA/acts_upstream): ACCEPT - core process.</li>
+<li>CC GO:0005789 ER membrane (IBA is_active_in, IEA, EXP, NAS, TAS): ACCEPT - correct location of action.</li>
+<li>CC GO:0005783 ER (IDA): ACCEPT (broader parent of ER membrane; consistent).</li>
+<li>CC GO:0016020 membrane (HDA, NK-cell membrane proteome MS): MARK_AS_OVER_ANNOTATED - uninformative parent; ER membrane is the specific/correct term.</li>
+<li>MF GO:0016740 transferase activity (IMP, PMID:34113002): MODIFY -&gt; GO:0051377 (the IMP variant assay measures EtNP-transferase activity; the generic parent should be replaced by the specific MF).</li>
+<li>MF GO:0016780 phosphotransferase activity, for other substituted phosphate groups (TAS Reactome): ACCEPT (correct broader parent, TAS from Reactome; kept as-is, non-core-ish parent but sound).</li>
+<li>MF GO:0005515 protein binding (IPI, PMID:23864651, with GLP1R): MARK_AS_OVER_ANNOTATED - bare protein binding from a high-throughput GLP1R interactome screen; not the informative catalytic function.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q5H8A4
+gene_symbol: PIGG
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: PIGG is the catalytic subunit of the glycosylphosphatidylinositol (GPI)
+  ethanolamine phosphate transferase II complex (GPI-ET-II; also known as GPI7/hGPI7).
+  During GPI-anchor biosynthesis in the endoplasmic reticulum, PIGG transfers an ethanolamine
+  phosphate (EtNP), donated by phosphatidylethanolamine, onto the 6-OH of the second
+  alpha-1,6-linked mannose of the GPI intermediate (the H7-to-H8 conversion). This
+  second-mannose EtNP is a side-branch modification that is normally removed shortly
+  after the anchor is transferred to protein. PIGG acts together with the accessory
+  subunit PIGF, which stabilizes it, and competes with PIGO (which adds EtNP to the
+  third mannose) for the shared PIGF stabilizer. PIGG is a multi-pass endoplasmic reticulum
+  membrane protein with a large lumenal alkaline-phosphatase-like catalytic domain.
+  Biallelic loss-of-function variants cause an inherited GPI-deficiency disorder characterized
+  by intellectual disability/developmental delay, early-onset seizures, hypotonia, and
+  cerebellar atrophy; genetic variation in PIGG also defines the Emm blood group system.
+alternative_products:
+- name: &#39;1&#39;
+  id: Q5H8A4-1
+- name: &#39;2&#39;
+  id: Q5H8A4-2
+  sequence_note: VSP_019832
+- name: &#39;3&#39;
+  id: Q5H8A4-3
+  sequence_note: VSP_019828
+- name: &#39;4&#39;
+  id: Q5H8A4-4
+  sequence_note: VSP_019831, VSP_019833
+- name: &#39;5&#39;
+  id: Q5H8A4-5
+  sequence_note: VSP_019827, VSP_019829, VSP_019830
+- name: &#39;6&#39;
+  id: Q5H8A4-6
+  sequence_note: VSP_054387, VSP_054388, VSP_019833
+existing_annotations:
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: PIGG is a multi-pass endoplasmic reticulum membrane protein and carries
+      out its EtNP-transferase reaction in the ER during GPI-anchor biosynthesis.
+      The phylogenetic (IBA) location call is consistent with direct experimental
+      localization and with the UniProt subcellular location.
+    action: ACCEPT
+    reason: Correct compartment for the site of PIGG action, corroborated by experimental
+      localization (PMID:15632136) and UniProt.
+    supported_by:
+    - reference_id: file:human/PIGG/PIGG-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Endoplasmic reticulum membrane&#39;
+- term:
+    id: GO:0051377
+    label: mannose-ethanolamine phosphotransferase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: This is the core molecular function of PIGG - transfer of ethanolamine
+      phosphate from phosphatidylethanolamine to the second mannose of the GPI intermediate.
+      The IBA call at this term is well supported by the human experimental data and
+      the conserved yeast ortholog Gpi7p.
+    action: ACCEPT
+    reason: Represents the correct, specific catalytic activity of PIGG and is the
+      core function; matches the current GOA term.
+    supported_by:
+    - reference_id: PMID:32156170
+      supporting_text: PIGG (initially termed GPI7) [67], catalytic subunits of GPI-ETII
+        and GPI-ETIII. Both PIGO and PIGG are stabilized by association with PIGF
+- term:
+    id: GO:0006506
+    label: GPI anchor biosynthetic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: PIGG catalyzes one step (transfer of EtNP to the second mannose) of the
+      glycosylphosphatidylinositol-anchor biosynthetic pathway. The IBA process call
+      is well supported.
+    action: ACCEPT
+    reason: Correct core biological process for this GPI-anchor biosynthetic enzyme.
+    supported_by:
+    - reference_id: PMID:34113002
+      supporting_text: is an ethanolamine phosphate transferase that catalyzes the
+        modification of the second mannose of glycosylphosphatidylinositol (GPI)
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: Electronic mapping from the UniProt subcellular location vocabulary (SL-0097,
+      ER membrane), consistent with experimental localization of PIGG.
+    action: ACCEPT
+    reason: Correct location, agrees with experimental evidence and UniProt curation.
+    supported_by:
+    - reference_id: file:human/PIGG/PIGG-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Endoplasmic reticulum membrane&#39;
+- term:
+    id: GO:0006506
+    label: GPI anchor biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Automated inference (InterPro/UniPathway) that PIGG participates in GPI-anchor
+      biosynthesis. This is correct and consistent with experimental data.
+    action: ACCEPT
+    reason: Correct process; the InterPro/UniPathway mapping is sound for this GPI-ET
+      family enzyme.
+    supported_by:
+    - reference_id: file:human/PIGG/PIGG-uniprot.txt
+      supporting_text: &#39;PATHWAY: Glycolipid biosynthesis; glycosylphosphatidylinositol-anchor&#39;
+- term:
+    id: GO:0051377
+    label: mannose-ethanolamine phosphotransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: InterPro-based electronic assignment of the specific mannose-ethanolamine
+      phosphotransferase activity, matching the experimentally established function.
+    action: ACCEPT
+    reason: Correct specific molecular function; the InterPro2GO mapping is appropriate.
+    supported_by:
+    - reference_id: PMID:15632136
+      supporting_text: forms a protein complex with PIG-F and is involved in the H7-to-H8
+        conversion
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:23864651
+  qualifier: enables
+  review:
+    summary: An IntAct-derived interaction annotation linking PIGG to the GLP-1 receptor
+      (GLP1R, P43220), from a study screening for novel GLP1R interactors. Bare &#34;protein
+      binding&#34; is uninformative and this interaction is not part of PIGG&#39;s characterized
+      catalytic function in GPI-anchor biosynthesis; there is no evidence it reflects
+      a physiological binding activity of PIGG.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Uninformative generic &#34;protein binding&#34; from a high-throughput interactome
+      screen; per curation guidelines this term does not convey PIGG&#39;s actual molecular
+      function and the GLP1R interaction is not an established functional partner.
+    supported_by:
+    - reference_id: file:human/PIGG/PIGG-uniprot.txt
+      supporting_text: &#39;Q5H8A4; P43220: GLP1R; NbExp=2; IntAct=EBI-11724298, EBI-7466542&#39;
+- term:
+    id: GO:0006506
+    label: GPI anchor biosynthetic process
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-162710
+  qualifier: involved_in
+  review:
+    summary: Reactome traceable assertion that PIGG participates in synthesis of GPI.
+      Correct and consistent with the experimental and phylogenetic evidence.
+    action: ACCEPT
+    reason: Correct core process from an authoritative pathway resource.
+    supported_by:
+    - reference_id: PMID:32156170
+      supporting_text: PIGG (initially termed GPI7) [67], catalytic subunits of GPI-ETII
+        and GPI-ETIII. Both PIGO and PIGG are stabilized by association with PIGF
+- term:
+    id: GO:0051377
+    label: mannose-ethanolamine phosphotransferase activity
+  evidence_type: IDA
+  original_reference_id: PMID:15632136
+  qualifier: enables
+  review:
+    summary: Direct experimental evidence (Shishioh et al. 2005) that human GPI7/PIGG,
+      in complex with PIG-F, mediates the transfer of ethanolamine phosphate to the
+      second mannose (H7-to-H8 conversion). This is the defining catalytic activity
+      of PIGG.
+    action: ACCEPT
+    reason: Experimentally demonstrated core molecular function; matches the current
+      GOA term (GO:0051377; the older UniProt-DR term GO:0051267 is now obsolete).
+    supported_by:
+    - reference_id: PMID:15632136
+      supporting_text: an additional ethanolamine phosphate (EtNP) to the second mannose
+    - reference_id: PMID:15632136
+      supporting_text: forms a protein complex with PIG-F and is involved in the H7-to-H8
+        conversion
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: EXP
+  original_reference_id: PMID:15632136
+  qualifier: located_in
+  review:
+    summary: Experimental localization of PIGG/hGPI7 to the endoplasmic reticulum
+      membrane, where GPI-anchor biosynthesis occurs.
+    action: ACCEPT
+    reason: Experimentally supported correct location of action.
+    supported_by:
+    - reference_id: file:human/PIGG/PIGG-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Endoplasmic reticulum membrane&#39;
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: NAS
+  original_reference_id: PMID:32156170
+  qualifier: located_in
+  review:
+    summary: Author-statement (review) localization to the ER membrane, consistent
+      with the described role of PIGG as a multi-pass ER-membrane GPI-ET enzyme.
+    action: ACCEPT
+    reason: Correct location; consistent with experimental data and the ComplexPortal
+      GPI-ETII complex annotation.
+    supported_by:
+    - reference_id: PMID:32156170
+      supporting_text: Three GPI-ETs (PIGN, PIGO and PIGG) are also multiple transmembrane
+        proteins bearing catalytic sites within the luminal regions
+- term:
+    id: GO:0016740
+    label: transferase activity
+  evidence_type: IMP
+  original_reference_id: PMID:34113002
+  qualifier: enables
+  review:
+    summary: The variant-pathogenicity study measured PIGG enzymatic (EtNP-transferase)
+      activity via restoration of GPI-AP expression in PIGO/PIGG double-knockout cells,
+      showing that pathogenic variants abolish or reduce this activity. The generic
+      parent &#34;transferase activity&#34; understates the specific, experimentally assayed
+      function.
+    action: MODIFY
+    reason: Too general; the assay specifically measures PIGG&#39;s ethanolamine-phosphate
+      transferase (mannose-ethanolamine phosphotransferase) activity, so it should
+      be replaced by the specific molecular function term.
+    proposed_replacement_terms:
+    - id: GO:0051377
+      label: mannose-ethanolamine phosphotransferase activity
+    supported_by:
+    - reference_id: PMID:34113002
+      supporting_text: ten variants had a null enzymatic activity
+    - reference_id: PMID:34113002
+      supporting_text: is an ethanolamine phosphate transferase that catalyzes the
+        modification of the second mannose of glycosylphosphatidylinositol (GPI)
+- term:
+    id: GO:0016780
+    label: phosphotransferase activity, for other substituted phosphate groups
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-162742
+  qualifier: enables
+  review:
+    summary: Reactome traceable assertion capturing PIGG&#39;s phosphotransferase (EtNP-transfer)
+      reaction at a broader level. This is a correct parent of the specific mannose-ethanolamine
+      phosphotransferase activity but is less informative than GO:0051377.
+    action: KEEP_AS_NON_CORE
+    reason: Correct but non-core generic parent term from Reactome; the specific EtNP-transferase
+      activity (GO:0051377) is the core function captured elsewhere.
+    supported_by:
+    - reference_id: PMID:15632136
+      supporting_text: an additional ethanolamine phosphate (EtNP) to the second mannose
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: HDA
+  original_reference_id: PMID:19946888
+  qualifier: located_in
+  review:
+    summary: High-throughput mass-spectrometry detection of PIGG in an NK-cell membrane
+      proteome. &#34;Membrane&#34; is an uninformative parent term; the specific and correct
+      location for PIGG is the endoplasmic reticulum membrane.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Uninformative high-level compartment from a bulk membrane-proteome study;
+      the specific ER membrane term is better supported and captured by other annotations.
+    supported_by:
+    - reference_id: PMID:19946888
+      supporting_text: approximately 40% of the identified proteins were predicted
+        as plausible membrane proteins
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-162742
+  qualifier: located_in
+  review:
+    summary: Reactome traceable assertion placing PIGG&#39;s reaction at the ER membrane,
+      consistent with all other localization evidence.
+    action: ACCEPT
+    reason: Correct location from an authoritative pathway resource.
+    supported_by:
+    - reference_id: file:human/PIGG/PIGG-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Endoplasmic reticulum membrane&#39;
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: IDA
+  original_reference_id: PMID:15632136
+  qualifier: located_in
+  review:
+    summary: Direct experimental localization of PIGG/hGPI7 to the endoplasmic reticulum
+      (broader compartment consistent with the ER membrane annotations).
+    action: ACCEPT
+    reason: Correct compartment, experimentally supported; a valid broader parent
+      of endoplasmic reticulum membrane.
+    supported_by:
+    - reference_id: file:human/PIGG/PIGG-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Endoplasmic reticulum membrane&#39;
+- term:
+    id: GO:0006506
+    label: GPI anchor biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:15632136
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: Direct experimental evidence that knockdown of hGPI7/PIGG blocks the
+      H7-to-H8 conversion, placing PIGG within the GPI-anchor biosynthetic process.
+    action: ACCEPT
+    reason: Experimentally supported involvement in the core GPI-anchor biosynthetic
+      process.
+    supported_by:
+    - reference_id: PMID:15632136
+      supporting_text: forms a protein complex with PIG-F and is involved in the H7-to-H8
+        conversion
+core_functions:
+- description: Catalytic subunit of the GPI ethanolamine phosphate transferase II
+    complex that transfers ethanolamine phosphate (from phosphatidylethanolamine)
+    onto the second mannose of the GPI intermediate during GPI-anchor biosynthesis
+    in the ER, acting together with the stabilizing subunit PIGF.
+  molecular_function:
+    id: GO:0051377
+    label: mannose-ethanolamine phosphotransferase activity
+  directly_involved_in:
+  - id: GO:0006506
+    label: GPI anchor biosynthetic process
+  locations:
+  - id: GO:0005789
+    label: endoplasmic reticulum membrane
+  supported_by:
+  - reference_id: PMID:15632136
+    supporting_text: forms a protein complex with PIG-F and is involved in the H7-to-H8
+      conversion
+  - reference_id: PMID:34113002
+    supporting_text: is an ethanolamine phosphate transferase that catalyzes the modification
+      of the second mannose of glycosylphosphatidylinositol (GPI)
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:15632136
+  title: GPI7 is the second partner of PIG-F and involved in modification of glycosylphosphatidylinositol.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Primary paper establishing that human GPI7/PIGG forms a complex with
+      PIG-F and mediates EtNP transfer to the second mannose (H7-to-H8 conversion);
+      abstract cached (full text not available). Supports the core MF, BP, and ER
+      location.
+- id: PMID:19946888
+  title: Defining the membrane proteome of NK cells.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: High-throughput NK-cell membrane proteome MS study; only supports
+      a generic &#34;membrane&#34; localization for PIGG, not an informative function.
+- id: PMID:23864651
+  title: The identification of novel proteins that interact with the GLP-1 receptor
+    and restrain its activity.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: Source of the IntAct PIGG-GLP1R interaction (bare protein binding).
+      The paper is a GLP1R interactome screen and does not establish a physiological
+      binding function for PIGG; annotation marked as over-annotated.
+- id: PMID:32156170
+  title: Biosynthesis and biology of mammalian GPI-anchored proteins.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Authoritative review placing PIGG (GPI7) as the catalytic subunit
+      of GPI-ETII adding EtNP to the second mannose, stabilized by PIGF; supports
+      function, complex, ER localization, and disease (IGD).
+- id: PMID:34113002
+  title: PIGG variant pathogenicity assessment reveals characteristic features within
+    19 families.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Full-text (PMC9900493) study of 19 families with biallelic PIGG
+      variants; functional assay of EtNP-transferase activity in PIGO/PIGG DKO cells
+      and detailed neurodevelopmental phenotype (DD/ID, seizures, hypotonia, cerebellar
+      atrophy). Supports the IMP MF, BP, and disease.
+- id: Reactome:R-HSA-162710
+  title: Synthesis of glycosylphosphatidylinositol (GPI)
+  findings: []
+- id: Reactome:R-HSA-162742
+  title: (ethanolamineP) mannose (a1-2) mannose (a1-6) (ethanolamineP) mannose (a1-4)
+    glucosaminyl-acyl-PI -&gt; (ethanolamineP) mannose (a1-2) (ethanolamineP) mannose
+    (a1-6) (ethanolamineP) mannose (a1-4) glucosaminyl-acyl-PI
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

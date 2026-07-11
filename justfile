@@ -70,6 +70,48 @@ validate-mappings:
 	uv run python projects/ANTIMICROBIAL_RESISTANCE/sssom_to_terms.py projects/ANTIMICROBIAL_RESISTANCE/aro2go.sssom.yaml -o projects/ANTIMICROBIAL_RESISTANCE/aro2go.terms.yaml
 	uv run linkml-term-validator validate-data projects/ANTIMICROBIAL_RESISTANCE/aro2go.terms.yaml -s src/ai_gene_review/schema/aro_go_mapping.yaml -t AROGOMappingSet --labels -c conf/oak_config.yaml
 
+# Validate the curated RHEA->GO gap-fill mapping set (projects/RHEA/rhea2go.sssom.yaml):
+# (1) SSSOM structural validation, then (2) GO term/label validation on the regenerated nested file.
+validate-rhea-mappings:
+	uv run linkml-validate -s "$(uv run python -c 'import sssom_schema,os;print(os.path.join(os.path.dirname(sssom_schema.__file__),"schema","sssom_schema.yaml"))')" -C "mapping set" projects/RHEA/*.sssom.yaml
+	uv run python projects/RHEA/sssom_to_terms.py projects/RHEA/rhea2go.sssom.yaml -o projects/RHEA/rhea2go.terms.yaml
+	uv run linkml-term-validator validate-data projects/RHEA/rhea2go.terms.yaml -s src/ai_gene_review/schema/rhea_go_mapping.yaml -t RHEAGOMappingSet --labels -c conf/oak_config.yaml
+
+# Validate the CAZy->GO mapping sets (projects/GLYCOBIOLOGY/cazy2go*.sssom.yaml):
+# (1) SSSOM structural validation of all three sets, then (2) GO term/label validation on the
+# regenerated nested files (seed, safe propagation set, and full generated derivation).
+validate-cazy-mappings:
+	uv run linkml-validate -s "$(uv run python -c 'import sssom_schema,os;print(os.path.join(os.path.dirname(sssom_schema.__file__),"schema","sssom_schema.yaml"))')" -C "mapping set" projects/GLYCOBIOLOGY/cazy2go.sssom.yaml projects/GLYCOBIOLOGY/cazy2go.safe.sssom.yaml projects/GLYCOBIOLOGY/cazy2go.generated.sssom.yaml
+	for base in cazy2go cazy2go.safe cazy2go.generated; do \
+	  uv run python projects/GLYCOBIOLOGY/sssom_to_terms.py projects/GLYCOBIOLOGY/$base.sssom.yaml -o projects/GLYCOBIOLOGY/$base.terms.yaml; \
+	  uv run linkml-term-validator validate-data projects/GLYCOBIOLOGY/$base.terms.yaml -s src/ai_gene_review/schema/cazy_go_mapping.yaml -t CAZYGOMappingSet --labels -c conf/oak_config.yaml; \
+	done
+
+# Validate the hand-curated Pfam entry reviews (interpro/pfam/<PFAM>/<PFAM>-review.yaml):
+# (1) structural + premise checks (Pfam membership, member list, GO non-obsolete/aspect, parent
+# entry carries no equivalent term, gene_review paths exist, REJECTED backed by a same-family
+# counter-example) and index refresh via validate_pfam_reviews.py, then (2) LinkML structural
+# validation and (3) GO term/label validation of each review.
+validate-pfam-reviews:
+	uv run python projects/PFAM/validate_pfam_reviews.py
+	for f in interpro/pfam/*/*-review.yaml; do \
+	  uv run linkml-validate -s src/ai_gene_review/schema/pfam_entry_review.yaml -C PfamEntryReview "$f"; \
+	  uv run linkml-term-validator validate-data "$f" -s src/ai_gene_review/schema/pfam_entry_review.yaml -t PfamEntryReview --labels -c conf/oak_config.yaml; \
+	done
+
+# Validate the curated NCBIFAM->GO seed mapping set (projects/NCBIFam/ncbifam2go.sssom.yaml):
+# (1) SSSOM structural validation, then (2) GO term/label validation on the regenerated nested file.
+validate-ncbifam-mappings:
+	uv run linkml-validate -s "$(uv run python -c 'import sssom_schema,os;print(os.path.join(os.path.dirname(sssom_schema.__file__),"schema","sssom_schema.yaml"))')" -C "mapping set" projects/NCBIFam/*.sssom.yaml
+	uv run python projects/NCBIFam/sssom_to_terms.py projects/NCBIFam/ncbifam2go.sssom.yaml -o projects/NCBIFam/ncbifam2go.terms.yaml
+	uv run linkml-term-validator validate-data projects/NCBIFam/ncbifam2go.terms.yaml -s src/ai_gene_review/schema/ncbifam_go_mapping.yaml -t NCBIFAMGOMappingSet --labels -c conf/oak_config.yaml
+# Validate the curated InterPro2GO mapping review (projects/INTERPRO/interpro2go.sssom.yaml):
+# (1) SSSOM structural validation, then (2) GO term/label validation on the regenerated nested file.
+validate-interpro-mappings:
+	uv run linkml-validate -s "$(uv run python -c 'import sssom_schema,os;print(os.path.join(os.path.dirname(sssom_schema.__file__),"schema","sssom_schema.yaml"))')" -C "mapping set" projects/INTERPRO/*.sssom.yaml
+	uv run python projects/INTERPRO/sssom_to_terms.py projects/INTERPRO/interpro2go.sssom.yaml -o projects/INTERPRO/interpro2go.terms.yaml
+	uv run linkml-term-validator validate-data projects/INTERPRO/interpro2go.terms.yaml -s src/ai_gene_review/schema/interpro_go_mapping.yaml -t InterProGOMappingSet --labels -c conf/oak_config.yaml
+
 # Apply the ARO->GO mapping: chain UniProt -> ARO (via DR CARD lines) -> GO across all genes.
 aro2go-pipeline: validate-mappings
 	uv run python projects/ANTIMICROBIAL_RESISTANCE/uniprot2aro2go.py --sssom projects/ANTIMICROBIAL_RESISTANCE/aro2go.sssom.yaml 'genes/**/*-uniprot.txt'

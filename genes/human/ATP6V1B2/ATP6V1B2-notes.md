@@ -64,3 +64,31 @@ ATP6V1B2 interacts with WFS1 (Wolfram syndrome protein), as shown in UniProt INT
 - Regulation of macroautophagy (NAS, PMID:22982048) is an indirect downstream consequence of lysosomal acidification; the lipofuscin paper does not study ATP6V1B2 directly.
 - Multiple Reactome TAS annotations for cytosol reflect V1-V0 disassembly; valid but non-core.
 - Exosome HDA annotations are from high-throughput proteomics and likely reflect contamination.
+
+## Falcon deep research synthesis (2026-06-21)
+
+Falcon deep research has now completed (`file:human/ATP6V1B2/ATP6V1B2-deep-research-falcon.md`,
+22 citations). It corroborates the B2 (brain/ubiquitous, non-catalytic V1 subunit)
+core above and adds disease-mechanism and interaction detail.
+
+- **Core confirmed.** B2 is the non-catalytic partner in the AB catalytic
+  heterodimers of the V1 hexamer (catalysis on subunit A); essential for V1
+  assembly/integrity, not an independent ATPase. No change to calls.
+- **TBC1D24 interaction (Pepe 2025).** TBC1D24 (mutated in DOORS syndrome/epilepsy)
+  binds ATP6V1B2 and ATP6V1A to support V-ATPase assembly and organellar pH in
+  neurons; its loss causes V1 mislocalization, impaired lysosomal acidification,
+  defective autophagy and altered synaptic-vesicle recycling. Regulatory/assembly
+  context (non-core).
+- **Disease via gain-of-function over-acidification (notable).** Dominant
+  ATP6V1B2 variants (recurrent truncating **p.Arg506***; missense) cause
+  **DDOD**, **DOORS**, and **Zimmermann-Laband** syndromes. Mechanism is
+  **gain-of-function → lysosomal over-acidification** (lower lysosomal pH,
+  substrate accumulation, blocked autophagic flux, abnormal lysosome morphology;
+  Carpentieri 2024), with spiral-ganglion-neuron apoptosis driving progressive
+  hearing loss and partial ATP6V1B1 compensation in hair cells (Qiu 2021). This is
+  the opposite polarity to the ATP6V1B1/ATP6V0A4 loss-of-function dRTA, and worth
+  noting when interpreting variant effects — but it does not change the normal B2
+  function calls.
+
+Net: no change to calls — B2 is the ubiquitous/brain non-catalytic V1 subunit
+supporting V-ATPase assembly and organellar acidification.

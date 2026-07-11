@@ -1,0 +1,2815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MNT4 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>MNT4</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P53745" target="_blank" class="term-link">
+                        P53745
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Saccharomyces cerevisiae</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "MNT4";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P53745" data-a="DESCRIPTION: MNT4 (systematic name YNR059W) is a putative alpha..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>MNT4 (systematic name YNR059W) is a putative alpha-1,3-mannosyltransferase of the Mnn1p (MNN1/MNT) family in the budding yeast Saccharomyces cerevisiae. It is a 580-residue single-pass type II membrane protein: a short N-terminal cytoplasmic tail, a signal-anchor transmembrane helix (residues ~11-29), and a large lumenal C-terminal domain that adopts the nucleotide-diphospho-sugar (GT-A-like) glycosyltransferase fold characteristic of the family (Pfam Mannosyl_trans3; CAZy family GT71). This topology and fold are shared with the biochemically characterized family members Mnn1p, Mnt2p and Mnt3p, which are Golgi enzymes that add terminal alpha-1,3-linked mannose residues to N- and O-linked oligosaccharides. The candidate catalytic two-aspartate (DxD) motif that is essential for Mnn1p activity appears to be conserved in MNT4, consistent with a probable mannosyltransferase activity. However, no enzyme assay, acceptor substrate, reaction product, subcellular-localization determination, or deletion phenotype has been reported for MNT4 itself, and genetic analysis of the family showed that MNT4 is not required for O-linked glycan synthesis. Its specific molecular activity, acceptor substrate, site of action, and in-vivo biological role therefore remain undetermined.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000033" target="_blank" class="term-link">
+                                    GO:0000033
+                                </a>
+                            </span>
+                            <span class="term-label">alpha-1,3-mannosyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P53745" data-a="GO:0000033" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Family-level phylogenetic (IBA) transfer from the characterized Mnn1p-family mannosyltransferases (PANTHER PTHR31392; MNN1/MNT2/MNT3). MNT4 is a bona fide member of this type II membrane glycosyltransferase family and retains the candidate catalytic DxD motif (D300-S-D302), so a family-level alpha-1,3-mannosyltransferase activity is domain-defensible as a probable/putative activity. However there is no enzyme assay or acceptor substrate for MNT4, and it is not required for O-glycan synthesis, so this should be read as a probable activity with an undetermined acceptor rather than an established function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Homology-supported probable activity (intact family DxD motif) but no direct biochemical evidence for MNT4 and no known acceptor substrate; retain as the best family-level MF hypothesis, not as an established core function.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005794" target="_blank" class="term-link">
+                                    GO:0005794
+                                </a>
+                            </span>
+                            <span class="term-label">Golgi apparatus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P53745" data-a="GO:0005794" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference that MNT4 acts in the Golgi, by analogy to Mnn1p/Mnt2p/ Mnt3p which are Golgi mannosyltransferases. Consistent with the predicted type II Golgi-type membrane topology, but the actual compartment of MNT4 is not experimentally established; high-throughput fluorescent-tag screens report MNT4 in the ER and vacuole rather than a clean Golgi signal, so the site of action is uncertain.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Family-level localization inference plausible from topology but not verified for MNT4; retain as non-core given conflicting high-throughput localization and no MNT4-specific confirmation.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006493" target="_blank" class="term-link">
+                                    GO:0006493
+                                </a>
+                            </span>
+                            <span class="term-label">protein O-linked glycosylation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P53745" data-a="GO:0006493" data-r="GO_REF:0000033" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) transfer of the family&#39;s O-mannosylation process. For MNT4 specifically this process is not supported: the only genetic test of MNT4 (Romero et al. 1999) found MNT4 is not required for O-glycan synthesis, in contrast to its paralogs MNT2/MNT3. This is a family-default over-annotation for MNT4.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The specific O-linked glycosylation role is a family transfer that is contradicted by the one MNT4-specific genetic result (MNT4 not required for O-glycan synthesis; PMID:10521541); do not present it as an established MNT4 process.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">PROPAGATION BAD</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">FUNCTIONAL DIVERGENCE</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTN001264810</span>
+
+                                    &middot; MNN1-related node (PTHR31392)
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                    <div class="propagation-comment">The O-mannosylation role is established for the MNN1/MNT2/MNT3 members but Romero et al. 1999 genetically showed MNT4 is not required for O-glycan synthesis, so the process term should not transfer to MNT4.</div>
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">SGD:S000000803</span>
+
+                                    &middot; MNN1
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                    <div class="propagation-comment">Characterized Golgi O/N-mannosyltransferase; sound source, unsafe transfer to MNT4.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000030" target="_blank" class="term-link">
+                                    GO:0000030
+                                </a>
+                            </span>
+                            <span class="term-label">mannosyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P53745" data-a="GO:0000030" data-r="GO_REF:0000117" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (ARBA) generic mannosyltransferase activity, the parent of GO:0000033. True at the family level and consistent with the fold/DxD motif, but less informative than the alpha-1,3 child term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct but generic parent term; domain-defensible as a probable activity, not core.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005794" target="_blank" class="term-link">
+                                    GO:0005794
+                                </a>
+                            </span>
+                            <span class="term-label">Golgi apparatus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P53745" data-a="GO:0005794" data-r="GO_REF:0000117" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (ARBA) Golgi localization, duplicating the IBA Golgi assignment. Same caveat: family-level inference, not experimentally verified for MNT4, and in tension with ER/vacuole high-throughput localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Redundant electronic family-level localization; retain as non-core pending MNT4-specific evidence.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009101" target="_blank" class="term-link">
+                                    GO:0009101
+                                </a>
+                            </span>
+                            <span class="term-label">glycoprotein biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P53745" data-a="GO:0009101" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (ARBA/InterPro) generic glycoprotein-biosynthesis process, consistent with a glycosyltransferase of the secretory pathway. Broad and not experimentally grounded for MNT4; less problematic than the specific O-linked glycosylation term because it does not commit MNT4 to the O-mannosylation pathway that genetics exclude.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Generic, homology-level process term; acceptable as non-core context but not an established MNT4 function.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53745" data-a="GO:0016020" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic subcellular-location mapping to membrane, matching the UniProt prediction of a single-pass type II membrane protein (signal-anchor TM 11-29). This is the most defensible localization statement for MNT4 (it rests on its own predicted topology rather than a family transfer).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly supported by the protein&#39;s own predicted transmembrane topology; correct, though generic.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016757" target="_blank" class="term-link">
+                                    GO:0016757
+                                </a>
+                            </span>
+                            <span class="term-label">glycosyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P53745" data-a="GO:0016757" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (InterPro IPR022751) generic glycosyltransferase activity, the top-level parent of the mannosyltransferase terms. Correct given the fold but uninformative.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct but very general parent term; subsumed by the mannosyltransferase MF.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000033" target="_blank" class="term-link">
+                                    GO:0000033
+                                </a>
+                            </span>
+                            <span class="term-label">alpha-1,3-mannosyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10521541" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10521541
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mnt2p and Mnt3p of Saccharomyces cerevisiae are members of t...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P53745" data-a="GO:0000033" data-r="PMID:10521541" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sequence-similarity (ISS) transfer of alpha-1,3-mannosyltransferase activity to MNT4 from the characterized paralogs MNN1/MNT2/MNT3 (with-from SGD:S000000803/001276/003226), based on the family paper. Same substance as the IBA MF row: domain-defensible as a probable activity (intact DxD) but with no MNT4 enzyme assay and an unknown acceptor. Note the ISS is drawn from the very paper whose genetics show MNT4 is not required for O-glycan synthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Homology (ISS) inference of the family activity; retain as a probable non-core MF, not an experimentally established function.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006493" target="_blank" class="term-link">
+                                    GO:0006493
+                                </a>
+                            </span>
+                            <span class="term-label">protein O-linked glycosylation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IC</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10521541" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10521541
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mnt2p and Mnt3p of Saccharomyces cerevisiae are members of t...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P53745" data-a="GO:0006493" data-r="PMID:10521541" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Curator inference (IC) of the O-linked glycosylation process from the MF annotation (GO:0000033), not from independent MNT4 experimental data. Because it is derived from the family MF and the same paper&#39;s genetics show MNT4 is not required for O-glycan synthesis, the O-glycosylation process assignment is not supported for MNT4.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> IC process derived from a homology-based MF; contradicted for MNT4 by the paper&#39;s own genetic result that MNT4 is not required for O-glycan synthesis (PMID:10521541).
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005575" target="_blank" class="term-link">
+                                    GO:0005575
+                                </a>
+                            </span>
+                            <span class="term-label">cellular_component</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P53745" data-a="GO:0005575" data-r="GO_REF:0000015" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root cellular_component with ND (no data) evidence - a placeholder indicating no curated localization at the time. Superseded by the membrane (IEA) annotation and by the acknowledged localization uncertainty for MNT4.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ND root placeholder; carries no functional information.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Probable Golgi/secretory-pathway alpha-1,3-mannosyltransferase of the Mnn1p (MNN1/MNT) family. MNT4 is a single-pass type II membrane protein whose lumenal C-terminal domain has the nucleotide-diphospho-sugar (GT-A-like) glycosyltransferase fold and retains the candidate catalytic DxD motif essential for Mnn1p-family activity, supporting a probable mannosyltransferase activity. The acceptor substrate and the specific reaction MNT4 catalyzes in vivo are undetermined; unlike its paralogs Mnt2p/Mnt3p, MNT4 is not required for O-linked glycan synthesis, so this activity is stated at the family level with an open substrate rather than as an established O-mannosyltransferase function.</h3>
+                <span class="vote-buttons" data-g="P53745" data-a="FUNCTION: Probable Golgi/secretory-pathway alpha-1,3-mannosy..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000033" target="_blank" class="term-link">
+                            alpha-1,3-mannosyltransferase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10521541" target="_blank" class="term-link">
+                                PMID:10521541
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">The genome of Saccharomyces cerevisiae contains five genes that encode type II transmembrane proteins with significant amino acid similarity to the alpha-1,3-mannosyltransferase Mnn1p.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9653120" target="_blank" class="term-link">
+                                PMID:9653120
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">altering either of these aspartates eliminates all enzymatic activity</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000015.md" target="_blank" class="term-link">
+                            GO_REF:0000015
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Use of the ND evidence code for Gene Ontology (GO) terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10521541" target="_blank" class="term-link">
+                            PMID:10521541
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Mnt2p and Mnt3p of Saccharomyces cerevisiae are members of the Mnn1p family of alpha-1,3-mannosyltransferases responsible for adding the terminal mannose residues of O-linked oligosaccharides.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The S. cerevisiae genome encodes five type II transmembrane proteins similar to the alpha-1,3-mannosyltransferase Mnn1p, establishing the MNN1/MNT family that contains MNT4.</div>
+
+                        <div class="finding-text">"The genome of Saccharomyces cerevisiae contains five genes that encode type II transmembrane proteins with significant amino acid similarity to the alpha-1,3-mannosyltransferase Mnn1p."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">MNT2 and MNT3 (with MNN1) add the fourth and fifth alpha-1,3-mannose residues of O-linked oligosaccharides, whereas MNT4 is not required for O-glycan synthesis - the one MNT4-specific functional (negative) result.</div>
+
+                        <div class="finding-text">"the MNT2 (YGL257c) and MNT3 (YIL014w) genes in combination with MNN1 have overlapping roles in the addition of the fourth and fifth alpha-1,3-linked mannose residues to form Man4 and Man5 oligosaccharides whereas MNT4 (YNR059w) does not appear to be required for O-glycan synthesis."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9653120" target="_blank" class="term-link">
+                            PMID:9653120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Activity of the yeast MNN1 alpha-1,3-mannosyltransferase requires a motif conserved in many other families of glycosyltransferases.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">A conserved two-aspartate (DxD) motif is essential for Mnn1p alpha-1,3-mannosyltransferase catalytic activity; this motif appears intact in MNT4.</div>
+
+                        <div class="finding-text">"altering either of these aspartates eliminates all enzymatic activity"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does purified MNT4 have any mannosyltransferase activity in vitro, and if so, what is its nucleotide-sugar donor and acceptor?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P53745" data-a="Q: Does purified MNT4 have any mannosyltransferase ac..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is the candidate catalytic DxD motif (D300-S-D302) required for any MNT4 activity, or is MNT4 a catalytically inactive (pseudo-enzyme) family member?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P53745" data-a="Q: Is the candidate catalytic DxD motif (D300-S-D302)..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Where does MNT4 localize when tagged in a topology-preserving way - Golgi (like its paralogs) or ER/vacuole (as some high-throughput screens suggest)?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P53745" data-a="Q: Where does MNT4 localize when tagged in a topology..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does MNT4 act redundantly with MNN1/MNT2/MNT3 on any glycan, such that a phenotype only appears in higher-order mutants?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P53745" data-a="Q: Does MNT4 act redundantly with MNN1/MNT2/MNT3 on a..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Express and purify the MNT4 lumenal domain and assay mannosyltransferase activity against a panel of acceptors (mannooligosaccharides, glycoproteins, glycolipids) with GDP-mannose and dolichol-phosphate-mannose donors; include DxD (D300A/D302A) catalytic-dead controls.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: MNT4 is a catalytically active alpha-1,3-mannosyltransferase whose acceptor differs from the O-linked mannan elaborated by Mnt2p/Mnt3p.</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="P53745" data-a="EXPERIMENT: Express and purify the MNT4 lumenal domain and ass..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Build mnt4 single and higher-order deletions (with mnn1, mnt2, mnt3) and analyze O- and N-linked mannan by mass spectrometry / beta-elimination, plus cell-wall and drug-sensitivity phenotyping.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: MNT4 contributes to mannan biosynthesis redundantly with other MNN1/MNT family members.</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="P53745" data-a="EXPERIMENT: Build mnt4 single and higher-order deletions (with..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Determine endogenous MNT4 localization by co-imaging a topology-preserving tagged allele with Golgi (Sec7/Mnn1), ER (Sec63), and vacuole markers.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: MNT4 functions in the Golgi like its paralogs (or, alternatively, in the ER/vacuole).</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="P53745" data-a="EXPERIMENT: Determine endogenous MNT4 localization by co-imagi..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(MNT4-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P53745" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="mnt4-ynr059w-curation-notes">MNT4 (YNR059W) — curation notes</h1>
+<p>Gene: <strong>MNT4</strong> / systematic <strong>YNR059W</strong> / UniProt <strong>P53745</strong> (MNT4_YEAST)<br />
+Organism: <em>Saccharomyces cerevisiae</em> S288C (NCBITaxon:559292)<br />
+SGD: S000005342. CAZy: <strong>GT71</strong> (Glycosyltransferase Family 71). PANTHER: <strong>PTHR31392:SF1</strong> (ALPHA-1,3-MANNOSYLTRANSFERASE MNN1-RELATED).</p>
+<p>This is an <strong>understudied ("dark") gene</strong>. The deliverable is an honest boundary between what is<br />
+domain/orthology-defensible and what is genuinely unknown. Attribute all MNT4-specific evidence<br />
+carefully versus the broader MNN1/MNT family.</p>
+<h2 id="summary-judgment-up-front">Summary judgment (up front)</h2>
+<ul>
+<li>MNT4 is a <strong>putative</strong> (probable) alpha-1,3-mannosyltransferase of the <strong>Mnn1p (MNN1/MNT) family</strong>.<br />
+  No enzyme assay, no acceptor substrate, no in-vivo product, and no informative deletion phenotype<br />
+  have ever been reported <em>for MNT4 itself</em>. UniProt evidence level is <strong>PE 3: Inferred from homology</strong>.</li>
+<li>The one primary paper that touches MNT4 experimentally (Romero et al. 1999, PMID:10521541) tested<br />
+  it genetically and found MNT4 is <strong>NOT required</strong> for O-glycan synthesis, in contrast to its<br />
+  paralogs MNT2 and MNT3.</li>
+<li>Therefore: a <strong>generic family-level mannosyltransferase molecular function</strong> and a <strong>Golgi/secretory<br />
+  type-II membrane localization</strong> are domain-defensible; a <strong>specific acceptor substrate / in-vivo<br />
+  activity / biological role</strong> is a genuine knowledge gap, and the specific "protein O-linked<br />
+  glycosylation" process assignment is not supported (and is arguably contradicted) for MNT4.</li>
+</ul>
+<h2 id="sequence-domain-analysis-done-inline-uniprot-p53745">Sequence / domain analysis (done inline; UniProt P53745)</h2>
+<p>Source: <code>genes/yeast/MNT4/MNT4-uniprot.txt</code> (580 aa, MW 68082).</p>
+<p>Topology (UniProt, ECO:0000255 predicted):<br />
+- TOPO_DOM 1–10 cytoplasmic; <strong>TRANSMEM 11–29 "Signal-anchor for type II membrane protein"</strong>;<br />
+  TOPO_DOM 30–580 lumenal. → single-pass <strong>type II membrane protein</strong>, N-terminus in cytosol,<br />
+  large C-terminal catalytic domain in the lumen — the canonical topology of Golgi<br />
+  glycosyltransferases of the MNN1 family.<br />
+- 4 predicted N-glycosylation sites (N132, N167, N223, N349) — consistent with a lumenal domain.</p>
+<p>Family / fold:<br />
+- Pfam <strong>PF11051 (Mannosyl_trans3)</strong>; InterPro <strong>IPR022751 (Alpha_mannosyltransferase)</strong> +<br />
+<strong>IPR029044 (Nucleotide-diphospho-sugar transferases)</strong>; SUPFAM SSF53448 (nucleotide-diphospho-sugar<br />
+  transferases). This is the GT-A-like nucleotide-sugar transferase superfamily used by the MNN1 family.</p>
+<p><strong>Catalytic DXD motif — the load-bearing domain check.</strong><br />
+Wiggins &amp; Munro (1998, PMID:9653120) identified a conserved <strong>two-aspartate (DxD) motif</strong> as essential<br />
+for Mnn1p alpha-1,3-mannosyltransferase activity: <em>"altering either of these aspartates eliminates all<br />
+enzymatic activity"</em> [PMID:9653120 abstract], and they note the DxD is <em>"flanked by four hydrophobic<br />
+residues on the N-terminal side, with the third of these often being an aromatic residue"</em> (per the<br />
+PNAS paper as summarized; the abstract itself states the motif is essential and conserved across GT<br />
+families).</p>
+<p>I scanned P53745 for DxD-type motifs (script run inline, <code>/tmp/mnt4_seq.py</code>):<br />
+- Candidate DxD motifs at D114-Q-D116 ("EIRA<strong>DQD</strong>ISLL") and <strong>D300-S-D302 ("PIFL</strong>DSD<strong>TVPF")</strong>.<br />
+- The <strong>D300-S-D302</strong> site matches the Wiggins–Munro consensus strikingly well: it is preceded by<br />
+  four hydrophobic residues <strong>P-I-F-L</strong> whose <strong>third residue is the aromatic F</strong>, exactly the<br />
+  described flanking pattern, and DxD sits at the expected mid-lumenal-domain position.<br />
+- Interpretation: the <strong>candidate catalytic DxD motif of the MNN1 family appears intact in MNT4</strong><br />
+  (no obvious pseudogene-style loss of both catalytic aspartates). This supports keeping a<br />
+<em>generic</em> mannosyltransferase MF as domain-defensible. It does <strong>not</strong> prove the enzyme is active<br />
+  in vivo, and does <strong>not</strong> identify the acceptor substrate.</p>
+<h2 id="family-context-separate-mnt4-from-its-paralogs">Family context — separate MNT4 from its paralogs</h2>
+<p>PANTHER PTHR31392:SF1 members in S. cerevisiae + C. albicans<br />
+(<code>interpro/panther/PTHR31392/PTHR31392-entries.csv</code>): S. cerevisiae <strong>MNN1 (P39106)</strong>,<br />
+<strong>MNT3 (P40549)</strong>, <strong>MNT2 (P53059)</strong>, <strong>MNT4 (P53745)</strong>; plus C. albicans MNT4/MNN12/13/14/15 and MNN1.</p>
+<p>Family biology (established for the <em>characterized</em> members, NOT MNT4):<br />
+- The <em>S. cerevisiae</em> genome has five type II membrane proteins similar to the<br />
+  alpha-1,3-mannosyltransferase Mnn1p [PMID:10521541 abstract: <em>"The genome of Saccharomyces cerevisiae<br />
+  contains five genes that encode type II transmembrane proteins with significant amino acid similarity<br />
+  to the alpha-1,3-mannosyltransferase Mnn1p."</em>].<br />
+- <strong>MNN1</strong> adds terminal alpha-1,3-mannose to N- and O-linked glycans in the Golgi.<br />
+- <strong>MNT2 and MNT3</strong> (with MNN1) add the 4th and 5th alpha-1,3-linked mannoses of O-linked glycans<br />
+  [PMID:10521541 abstract: <em>"the MNT2 (YGL257c) and MNT3 (YIL014w) genes in combination with MNN1 have<br />
+  overlapping roles in the addition of the fourth and fifth alpha-1,3-linked mannose residues to form<br />
+  Man4 and Man5 oligosaccharides"</em>].</p>
+<h2 id="mnt4-specific-evidence-all-of-it">MNT4-specific evidence (all of it)</h2>
+<ol>
+<li><strong>Not required for O-glycan synthesis.</strong> [PMID:10521541 abstract: <em>"whereas MNT4 (YNR059w) does not<br />
+   appear to be required for O-glycan synthesis."</em>] This is the <em>only</em> functional experimental datum<br />
+   for MNT4, and it is a <strong>negative</strong> result for the O-glycosylation role.</li>
+<li><strong>No enzyme assay / no acceptor substrate reported.</strong> UniProt lists the name as <em>"Probable<br />
+   alpha-1,3-mannosyltransferase MNT4"</em> and EC <strong>2.4.1.-</strong> (incomplete), PE <strong>3 (inferred from<br />
+   homology)</strong>; SIMILARITY: <em>"Belongs to the MNN1/MNT family."</em> The GO MF/BP annotations are all<br />
+   IBA/IEA/ISS/IC — none experimental for MNT4.</li>
+<li><strong>Localization is uncertain.</strong> UniProt gives only a predicted "Membrane; Single-pass type II<br />
+   membrane protein" (ECO:0000305). The IBA/IEA "Golgi apparatus" is a family inference. High-throughput<br />
+   fluorescent-tag screens (as summarized on SGD) reported MNT4 fusions to the ER and vacuole rather<br />
+   than a clean Golgi signal — i.e. even the compartment is not firmly established for MNT4. (I do not<br />
+   have a cached primary publication with a verbatim localization quote, so I record localization<br />
+   uncertainty as a knowledge gap rather than citing a specific quote.)</li>
+</ol>
+<h2 id="provenance-for-the-goa-annotations-what-they-actually-trace-to">Provenance for the GOA annotations (what they actually trace to)</h2>
+<p>From <code>MNT4-goa.tsv</code>:<br />
+- GO:0000033 alpha-1,3-mannosyltransferase activity — <strong>IBA</strong> (GO_REF:0000033; PANTHER PTN001264810,<br />
+  with SGD:S000000803/…001276/…003226 = MNN1/MNT2/MNT3). Family phylogenetic inference.<br />
+- GO:0000033 — <strong>ISS</strong> ×3 (PMID:10521541; with SGD:S000000803/001276/003226 = MNN1/MNT2/MNT3). Sequence<br />
+  similarity to the characterized paralogs, from the very paper whose genetics say MNT4 is not needed<br />
+  for O-glycan synthesis.<br />
+- GO:0006493 protein O-linked glycosylation — <strong>IBA</strong> (GO_REF:0000033) and <strong>IC</strong> (PMID:10521541, from<br />
+  GO:0000033). The IC is a curator inference <em>from the MF</em>, not independent evidence that MNT4 acts in<br />
+  O-glycosylation; the same paper's data argue against an O-glycan role for MNT4 specifically.<br />
+- GO:0005794 Golgi apparatus — <strong>IBA</strong> + <strong>IEA</strong> (ARBA). Family inference.<br />
+- GO:0000030 mannosyltransferase activity — <strong>IEA</strong> (ARBA). Generic parent of GO:0000033.<br />
+- GO:0009101 glycoprotein biosynthetic process — <strong>IEA</strong> (ARBA/InterPro).<br />
+- GO:0016757 glycosyltransferase activity — <strong>IEA</strong> (InterPro IPR022751). Generic parent.<br />
+- GO:0016020 membrane — <strong>IEA</strong> (UniProt SubCell). Matches the predicted TM.<br />
+- GO:0005575 cellular_component — <strong>ND</strong> (GO_REF:0000015). Root, placeholder.</p>
+<h2 id="curation-decisions-rationale">Curation decisions (rationale)</h2>
+<ul>
+<li>Keep <strong>generic mannosyltransferase / alpha-1,3-mannosyltransferase MF</strong> as domain-defensible (intact<br />
+  DxD, clear family membership) but treat the <em>specific acceptor substrate</em> as unknown. Per project<br />
+  rules I do not REMOVE the family-level MF: the domain evidence supports a probable mannosyltransferase<br />
+  activity, and REMOVE is not warranted for a plausible, homology-supported family activity. I mark the<br />
+  MF annotations KEEP_AS_NON_CORE / ACCEPT-with-caveat where appropriate and record the substrate gap.</li>
+<li><strong>Golgi apparatus (IBA/IEA):</strong> family-level inference; retain as non-core, flag CC uncertainty<br />
+  (ER/vacuole in HT screens). Membrane (IEA) matches the predicted type-II TM → ACCEPT (non-core).</li>
+<li><strong>protein O-linked glycosylation (IBA and IC):</strong> the specific process assignment is <strong>not supported<br />
+  for MNT4</strong> and is contradicted by the only genetic test (PMID:10521541). Mark these as<br />
+  MARK_AS_OVER_ANNOTATED (family-transferred; the negative genetic result is the key MNT4-specific datum).</li>
+<li>Generic parents (GO:0000030, GO:0016757, GO:0009101): KEEP_AS_NON_CORE (true-but-uninformative IEA<br />
+  parents; not core).</li>
+<li>ND root (GO:0005575): ND placeholder, KEEP_AS_NON_CORE.</li>
+</ul>
+<h2 id="knowledge-gaps-the-deliverable">Knowledge gaps (the deliverable)</h2>
+<ol>
+<li><strong>Acceptor substrate + demonstrated catalytic activity of MNT4 is unknown.</strong> No enzyme assay, no<br />
+   product, no donor/acceptor pair. Boundary: family membership + intact candidate DxD motif make a<br />
+   mannosyltransferase activity <em>probable</em>, but the reaction MNT4 catalyzes (if any) in vivo is<br />
+   undetermined; EC is 2.4.1.- and PE is 3.</li>
+<li><strong>In-vivo biological role + phenotype is unknown, and the family default (O-glycosylation) is<br />
+   specifically excluded.</strong> MNT4 is not required for O-glycan synthesis (PMID:10521541); no other<br />
+   process, no deletion phenotype, and no genetic partner have been assigned. Possible functional<br />
+   redundancy within the MNN1/MNT family is untested for MNT4.</li>
+<li><strong>Subcellular compartment of action is uncertain.</strong> Predicted type-II membrane topology is clear,<br />
+   but IBA/IEA place MNT4 in the Golgi (family default) while HT fluorescence screens report ER/vacuole<br />
+   — the actual site of MNT4 function is unresolved (CC-dark).</li>
+</ol>
+<h2 id="deep-research-status">Deep-research status</h2>
+<p>Automated falcon deep research (<code>just deep-research-falcon yeast MNT4 --fallback perplexity-lite</code>)<br />
+was attempted multiple times during this review; the Edison/falcon endpoint hung and the runs<br />
+exited without producing a <code>MNT4-deep-research-falcon.md</code> file (a background retry is left running so<br />
+a genuine file can land later). No deep-research file was fabricated. This review is therefore grounded<br />
+directly in the UniProt record (P53745), the GOA table, two cached primary abstracts (PMID:10521541,<br />
+PMID:9653120), the PANTHER PTHR31392 family membership table, and inline sequence/domain analysis<br />
+documented above. Web searches (PubMed/SGD/PNAS listings) were used only to locate and confirm these<br />
+primary sources; no web-only claim is used as a supporting_text quote.</p>
+<h2 id="provenance-log-verbatim-quotes-used">Provenance log (verbatim quotes used)</h2>
+<ul>
+<li>PMID:10521541 (abstract, cached, full_text_available: false):</li>
+<li><em>"The genome of Saccharomyces cerevisiae contains five genes that encode type II transmembrane<br />
+    proteins with significant amino acid similarity to the alpha-1,3-mannosyltransferase Mnn1p."</em></li>
+<li><em>"the MNT2 (YGL257c) and MNT3 (YIL014w) genes in combination with MNN1 have overlapping roles in<br />
+    the addition of the fourth and fifth alpha-1,3-linked mannose residues to form Man4 and Man5<br />
+    oligosaccharides whereas MNT4 (YNR059w) does not appear to be required for O-glycan synthesis."</em></li>
+<li>PMID:9653120 (Wiggins &amp; Munro 1998, abstract, cached, full_text_available: false):</li>
+<li><em>"altering either of these aspartates eliminates all enzymatic activity"</em></li>
+<li><em>"a short motif containing two aspartate residues was observed that was conserved in both groups<br />
+    of proteins"</em></li>
+<li>UniProt P53745: RecName <em>"Probable alpha-1,3-mannosyltransferase MNT4"</em>; EC 2.4.1.-; PE 3;<br />
+  SIMILARITY <em>"Belongs to the MNN1/MNT family."</em>; TRANSMEM 11–29 <em>"Signal-anchor for type II membrane<br />
+  protein"</em>.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P53745
+gene_symbol: MNT4
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:559292
+  label: Saccharomyces cerevisiae
+description: &gt;-
+  MNT4 (systematic name YNR059W) is a putative alpha-1,3-mannosyltransferase of the
+  Mnn1p (MNN1/MNT) family in the budding yeast Saccharomyces cerevisiae. It is a
+  580-residue single-pass type II membrane protein: a short N-terminal cytoplasmic
+  tail, a signal-anchor transmembrane helix (residues ~11-29), and a large lumenal
+  C-terminal domain that adopts the nucleotide-diphospho-sugar (GT-A-like)
+  glycosyltransferase fold characteristic of the family (Pfam Mannosyl_trans3;
+  CAZy family GT71). This topology and fold are shared with the biochemically
+  characterized family members Mnn1p, Mnt2p and Mnt3p, which are Golgi enzymes that
+  add terminal alpha-1,3-linked mannose residues to N- and O-linked oligosaccharides.
+  The candidate catalytic two-aspartate (DxD) motif that is essential for Mnn1p
+  activity appears to be conserved in MNT4, consistent with a probable
+  mannosyltransferase activity. However, no enzyme assay, acceptor substrate, reaction
+  product, subcellular-localization determination, or deletion phenotype has been
+  reported for MNT4 itself, and genetic analysis of the family showed that MNT4 is not
+  required for O-linked glycan synthesis. Its specific molecular activity, acceptor
+  substrate, site of action, and in-vivo biological role therefore remain undetermined.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000015
+  title: Use of the ND evidence code for Gene Ontology (GO) terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:10521541
+  title: Mnt2p and Mnt3p of Saccharomyces cerevisiae are members of the Mnn1p family
+    of alpha-1,3-mannosyltransferases responsible for adding the terminal mannose
+    residues of O-linked oligosaccharides.
+  findings:
+  - statement: &gt;-
+      The S. cerevisiae genome encodes five type II transmembrane proteins similar to
+      the alpha-1,3-mannosyltransferase Mnn1p, establishing the MNN1/MNT family that
+      contains MNT4.
+    supporting_text: &gt;-
+      The genome of Saccharomyces cerevisiae contains five genes that encode type II
+      transmembrane proteins with significant amino acid similarity to the
+      alpha-1,3-mannosyltransferase Mnn1p.
+  - statement: &gt;-
+      MNT2 and MNT3 (with MNN1) add the fourth and fifth alpha-1,3-mannose residues of
+      O-linked oligosaccharides, whereas MNT4 is not required for O-glycan synthesis -
+      the one MNT4-specific functional (negative) result.
+    supporting_text: &gt;-
+      the MNT2 (YGL257c) and MNT3 (YIL014w) genes in combination with MNN1 have
+      overlapping roles in the addition of the fourth and fifth alpha-1,3-linked
+      mannose residues to form Man4 and Man5 oligosaccharides whereas MNT4 (YNR059w)
+      does not appear to be required for O-glycan synthesis.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified (Glycobiology 1999, Romero et al.). Cached record is abstract-only
+      (full_text_available is false). This is the source of the ISS alpha-1,3-MT and IC
+      O-glycosylation annotations for MNT4; note its abstract&#39;s own genetic conclusion is
+      that MNT4 does NOT appear to be required for O-glycan synthesis, so the O-glycosylation
+      process assignment for MNT4 is not supported by (and is arguably contradicted by) this
+      paper. The ISS transfers rest on sequence similarity to the characterized paralogs
+      MNN1/MNT2/MNT3.
+- id: PMID:9653120
+  title: Activity of the yeast MNN1 alpha-1,3-mannosyltransferase requires a motif conserved
+    in many other families of glycosyltransferases.
+  findings:
+  - statement: &gt;-
+      A conserved two-aspartate (DxD) motif is essential for Mnn1p
+      alpha-1,3-mannosyltransferase catalytic activity; this motif appears intact in MNT4.
+    supporting_text: &gt;-
+      altering either of these aspartates eliminates all enzymatic activity
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified (PNAS 1998, Wiggins and Munro; PMC20909). Cached record is abstract-only.
+      Defines the MNN1-family catalytic DxD motif. Used here as the domain basis for judging
+      that MNT4 retains a plausible catalytic motif (D300-S-D302, flanked by hydrophobic
+      P-I-F-L with an aromatic F in the described position); it concerns Mnn1p, not MNT4
+      directly, hence MEDIUM relevance.
+existing_annotations:
+- term:
+    id: GO:0000033
+    label: alpha-1,3-mannosyltransferase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Family-level phylogenetic (IBA) transfer from the characterized Mnn1p-family
+      mannosyltransferases (PANTHER PTHR31392; MNN1/MNT2/MNT3). MNT4 is a bona fide member
+      of this type II membrane glycosyltransferase family and retains the candidate
+      catalytic DxD motif (D300-S-D302), so a family-level alpha-1,3-mannosyltransferase
+      activity is domain-defensible as a probable/putative activity. However there is no
+      enzyme assay or acceptor substrate for MNT4, and it is not required for O-glycan
+      synthesis, so this should be read as a probable activity with an undetermined
+      acceptor rather than an established function.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Homology-supported probable activity (intact family DxD motif) but no direct
+      biochemical evidence for MNT4 and no known acceptor substrate; retain as the best
+      family-level MF hypothesis, not as an established core function.
+- term:
+    id: GO:0005794
+    label: Golgi apparatus
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) inference that MNT4 acts in the Golgi, by analogy to Mnn1p/Mnt2p/
+      Mnt3p which are Golgi mannosyltransferases. Consistent with the predicted type II
+      Golgi-type membrane topology, but the actual compartment of MNT4 is not experimentally
+      established; high-throughput fluorescent-tag screens report MNT4 in the ER and vacuole
+      rather than a clean Golgi signal, so the site of action is uncertain.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Family-level localization inference plausible from topology but not verified for MNT4;
+      retain as non-core given conflicting high-throughput localization and no MNT4-specific
+      confirmation.
+- term:
+    id: GO:0006493
+    label: protein O-linked glycosylation
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) transfer of the family&#39;s O-mannosylation process. For MNT4
+      specifically this process is not supported: the only genetic test of MNT4 (Romero et
+      al. 1999) found MNT4 is not required for O-glycan synthesis, in contrast to its
+      paralogs MNT2/MNT3. This is a family-default over-annotation for MNT4.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The specific O-linked glycosylation role is a family transfer that is contradicted by
+      the one MNT4-specific genetic result (MNT4 not required for O-glycan synthesis;
+      PMID:10521541); do not present it as an established MNT4 process.
+    propagation_review:
+      root_cause: PROPAGATION_BAD
+      failure_modes:
+      - FUNCTIONAL_DIVERGENCE
+      source_entities:
+      - source_id: PANTHER:PTN001264810
+        source_label: MNN1-related node (PTHR31392)
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+        comment: &gt;-
+          The O-mannosylation role is established for the MNN1/MNT2/MNT3 members but
+          Romero et al. 1999 genetically showed MNT4 is not required for O-glycan
+          synthesis, so the process term should not transfer to MNT4.
+      - source_id: SGD:S000000803
+        source_label: MNN1
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+        comment: Characterized Golgi O/N-mannosyltransferase; sound source, unsafe transfer to MNT4.
+- term:
+    id: GO:0000030
+    label: mannosyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic (ARBA) generic mannosyltransferase activity, the parent of GO:0000033.
+      True at the family level and consistent with the fold/DxD motif, but less informative
+      than the alpha-1,3 child term.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct but generic parent term; domain-defensible as a probable activity, not core.
+- term:
+    id: GO:0005794
+    label: Golgi apparatus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic (ARBA) Golgi localization, duplicating the IBA Golgi assignment. Same
+      caveat: family-level inference, not experimentally verified for MNT4, and in tension
+      with ER/vacuole high-throughput localization.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Redundant electronic family-level localization; retain as non-core pending
+      MNT4-specific evidence.
+- term:
+    id: GO:0009101
+    label: glycoprotein biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic (ARBA/InterPro) generic glycoprotein-biosynthesis process, consistent with
+      a glycosyltransferase of the secretory pathway. Broad and not experimentally grounded
+      for MNT4; less problematic than the specific O-linked glycosylation term because it does
+      not commit MNT4 to the O-mannosylation pathway that genetics exclude.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Generic, homology-level process term; acceptable as non-core context but not an
+      established MNT4 function.
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic subcellular-location mapping to membrane, matching the UniProt prediction of
+      a single-pass type II membrane protein (signal-anchor TM 11-29). This is the most
+      defensible localization statement for MNT4 (it rests on its own predicted topology
+      rather than a family transfer).
+    action: ACCEPT
+    reason: &gt;-
+      Directly supported by the protein&#39;s own predicted transmembrane topology; correct,
+      though generic.
+- term:
+    id: GO:0016757
+    label: glycosyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic (InterPro IPR022751) generic glycosyltransferase activity, the top-level
+      parent of the mannosyltransferase terms. Correct given the fold but uninformative.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct but very general parent term; subsumed by the mannosyltransferase MF.
+- term:
+    id: GO:0000033
+    label: alpha-1,3-mannosyltransferase activity
+  evidence_type: ISS
+  original_reference_id: PMID:10521541
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Sequence-similarity (ISS) transfer of alpha-1,3-mannosyltransferase activity to MNT4
+      from the characterized paralogs MNN1/MNT2/MNT3 (with-from SGD:S000000803/001276/003226),
+      based on the family paper. Same substance as the IBA MF row: domain-defensible as a
+      probable activity (intact DxD) but with no MNT4 enzyme assay and an unknown acceptor.
+      Note the ISS is drawn from the very paper whose genetics show MNT4 is not required for
+      O-glycan synthesis.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Homology (ISS) inference of the family activity; retain as a probable non-core MF, not
+      an experimentally established function.
+- term:
+    id: GO:0006493
+    label: protein O-linked glycosylation
+  evidence_type: IC
+  original_reference_id: PMID:10521541
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Curator inference (IC) of the O-linked glycosylation process from the MF annotation
+      (GO:0000033), not from independent MNT4 experimental data. Because it is derived from
+      the family MF and the same paper&#39;s genetics show MNT4 is not required for O-glycan
+      synthesis, the O-glycosylation process assignment is not supported for MNT4.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      IC process derived from a homology-based MF; contradicted for MNT4 by the paper&#39;s own
+      genetic result that MNT4 is not required for O-glycan synthesis (PMID:10521541).
+- term:
+    id: GO:0005575
+    label: cellular_component
+  evidence_type: ND
+  original_reference_id: GO_REF:0000015
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Root cellular_component with ND (no data) evidence - a placeholder indicating no
+      curated localization at the time. Superseded by the membrane (IEA) annotation and by
+      the acknowledged localization uncertainty for MNT4.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      ND root placeholder; carries no functional information.
+core_functions:
+- description: &gt;-
+    Probable Golgi/secretory-pathway alpha-1,3-mannosyltransferase of the Mnn1p (MNN1/MNT)
+    family. MNT4 is a single-pass type II membrane protein whose lumenal C-terminal domain
+    has the nucleotide-diphospho-sugar (GT-A-like) glycosyltransferase fold and retains the
+    candidate catalytic DxD motif essential for Mnn1p-family activity, supporting a probable
+    mannosyltransferase activity. The acceptor substrate and the specific reaction MNT4
+    catalyzes in vivo are undetermined; unlike its paralogs Mnt2p/Mnt3p, MNT4 is not required
+    for O-linked glycan synthesis, so this activity is stated at the family level with an open
+    substrate rather than as an established O-mannosyltransferase function.
+  molecular_function:
+    id: GO:0000033
+    label: alpha-1,3-mannosyltransferase activity
+  locations:
+  - id: GO:0016020
+    label: membrane
+  supported_by:
+  - reference_id: PMID:10521541
+    supporting_text: &gt;-
+      The genome of Saccharomyces cerevisiae contains five genes that encode type II
+      transmembrane proteins with significant amino acid similarity to the
+      alpha-1,3-mannosyltransferase Mnn1p.
+  - reference_id: PMID:9653120
+    supporting_text: &gt;-
+      altering either of these aspartates eliminates all enzymatic activity
+  knowledge_gaps:
+  - gap_statement: &gt;-
+      The acceptor substrate and demonstrated catalytic activity of MNT4 are unknown: no
+      enzyme assay, donor/acceptor pair, or reaction product has been reported for the
+      protein.
+    boundary: &gt;-
+      MNT4 is a confirmed member of the Mnn1p/MNT (CAZy GT71) family with a predicted type II
+      membrane topology, the nucleotide-diphospho-sugar glycosyltransferase fold, and an
+      apparently intact candidate catalytic DxD motif (D300-S-D302). These make a
+      mannosyltransferase activity probable, but the specific reaction MNT4 catalyzes in vivo
+      is undetermined (UniProt EC 2.4.1.-, evidence level PE 3, inferred from homology).
+    gap_kind:
+    - BIOLOGY
+    dark_aspect: MF_DARK
+    status: OPEN
+    significance: &gt;-
+      Assigning a demonstrated activity and acceptor would convert a family-transferred
+      &#34;probable&#34; enzyme into a curated one and clarify whether MNT4 is an active
+      glycosyltransferase or a divergent/pseudo-enzymatic family member.
+    resolution: &gt;-
+      In vitro mannosyltransferase assays on purified lumenal domain with candidate
+      nucleotide-sugar donors and acceptor glycans; DxD (D300A/D302A) catalytic-dead controls.
+    provenance:
+    - reference_id: PMID:9653120
+      supporting_text: &gt;-
+        altering either of these aspartates eliminates all enzymatic activity
+  - gap_statement: &gt;-
+      The in-vivo biological role and deletion phenotype of MNT4 are unknown, and the family
+      default role (protein O-linked glycosylation) is specifically excluded for MNT4.
+    boundary: &gt;-
+      Paralogs Mnt2p/Mnt3p (with Mnn1p) elaborate O-linked mannan; MNT4 is not required for
+      O-glycan synthesis. No other process, deletion phenotype, or genetic interactor has been
+      assigned to MNT4, and any functional redundancy within the MNN1/MNT family is untested
+      for it.
+    gap_kind:
+    - BIOLOGY
+    dark_aspect: BP_DARK
+    status: OPEN
+    significance: &gt;-
+      Without a biological process or phenotype, MNT4 remains a family member of unknown
+      purpose; resolving it would place (or exclude) MNT4 in the yeast glycosylation network.
+    resolution: &gt;-
+      Glycan-structure phenotyping of mnt4-delta (and higher-order mnt4 mnn1/mnt2/mnt3
+      combinations) for O- and N-linked mannan changes; synthetic-genetic-array and
+      condition-dependent phenotyping.
+    provenance:
+    - reference_id: PMID:10521541
+      supporting_text: &gt;-
+        whereas MNT4 (YNR059w)
+        does not appear to be required for O-glycan synthesis.
+  - gap_statement: &gt;-
+      The subcellular compartment in which MNT4 acts is uncertain.
+    boundary: &gt;-
+      The type II single-pass membrane topology is clearly predicted (signal-anchor TM
+      residues ~11-29). Phylogenetic and electronic annotations place MNT4 in the Golgi by
+      family analogy, but this is not experimentally established for MNT4 and high-throughput
+      fluorescence screens report ER/vacuole rather than a clean Golgi localization.
+    gap_kind:
+    - BIOLOGY
+    - CURATION
+    dark_aspect: CC_DARK
+    status: OPEN
+    significance: &gt;-
+      The site of action constrains which glycan pool (if any) MNT4 could modify; a Golgi
+      vs ER/vacuole assignment changes the functional hypothesis.
+    resolution: &gt;-
+      Endogenous-tag co-localization with Golgi/ER markers for MNT4 specifically, ideally with
+      a C-terminal tag that preserves the type II topology.
+    provenance:
+    - reference_id: PMID:10521541
+      supporting_text: &gt;-
+        The genome of Saccharomyces cerevisiae contains five genes that encode type II
+        transmembrane proteins with significant amino acid similarity to the
+        alpha-1,3-mannosyltransferase Mnn1p.
+suggested_questions:
+- question: &gt;-
+    Does purified MNT4 have any mannosyltransferase activity in vitro, and if so, what is its
+    nucleotide-sugar donor and acceptor?
+- question: &gt;-
+    Is the candidate catalytic DxD motif (D300-S-D302) required for any MNT4 activity, or is
+    MNT4 a catalytically inactive (pseudo-enzyme) family member?
+- question: &gt;-
+    Where does MNT4 localize when tagged in a topology-preserving way - Golgi (like its
+    paralogs) or ER/vacuole (as some high-throughput screens suggest)?
+- question: &gt;-
+    Does MNT4 act redundantly with MNN1/MNT2/MNT3 on any glycan, such that a phenotype only
+    appears in higher-order mutants?
+suggested_experiments:
+- hypothesis: &gt;-
+    MNT4 is a catalytically active alpha-1,3-mannosyltransferase whose acceptor differs from
+    the O-linked mannan elaborated by Mnt2p/Mnt3p.
+  description: &gt;-
+    Express and purify the MNT4 lumenal domain and assay mannosyltransferase activity against a
+    panel of acceptors (mannooligosaccharides, glycoproteins, glycolipids) with GDP-mannose and
+    dolichol-phosphate-mannose donors; include DxD (D300A/D302A) catalytic-dead controls.
+- hypothesis: &gt;-
+    MNT4 contributes to mannan biosynthesis redundantly with other MNN1/MNT family members.
+  description: &gt;-
+    Build mnt4 single and higher-order deletions (with mnn1, mnt2, mnt3) and analyze O- and
+    N-linked mannan by mass spectrometry / beta-elimination, plus cell-wall and drug-sensitivity
+    phenotyping.
+- hypothesis: &gt;-
+    MNT4 functions in the Golgi like its paralogs (or, alternatively, in the ER/vacuole).
+  description: &gt;-
+    Determine endogenous MNT4 localization by co-imaging a topology-preserving tagged allele with
+    Golgi (Sec7/Mnn1), ER (Sec63), and vacuole markers.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

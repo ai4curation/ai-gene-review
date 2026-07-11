@@ -1,0 +1,4123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dyf-2 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>dyf-2</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/G5ECZ4" target="_blank" class="term-link">
+                        G5ECZ4
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Caenorhabditis elegans</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "dyf-2";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="G5ECZ4" data-a="DESCRIPTION: DYF-2 is the Caenorhabditis elegans ortholog of hu..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>DYF-2 is the Caenorhabditis elegans ortholog of human WDR19 (IFT144 in Chlamydomonas), a core subunit of the intraflagellar transport complex A (IFT-A). It is a large (1364 aa) WD40 β-propeller plus tetratricopeptide-repeat (TPR) solenoid scaffold protein with no catalytic domain, expressed selectively in ciliated sensory neurons and localizing along the axoneme of the non-motile sensory cilium. As part of IFT-A, DYF-2 is required for retrograde (tip-to-base) intraflagellar transport and for the assembly and structural integrity of the IFT particle as a whole. Its conserved WD40 domain is the key factor that reassembles the IFT-B subcomplex into the IFT-A–dynein machinery for retrograde transport at the ciliary tip, and it couples the BBSome to moving IFT particles (WDR19 interacts directly with BBS1). Loss of DYF-2 produces severely truncated cilia with disrupted IFT and mislocalized IFT-A and IFT-B components; a hypomorphic WD40-domain allele selectively abolishes retrograde IFT and causes IFT-B accumulation at the ciliary tip. Because sensory cilia are the sites of chemo- and osmosensation in the worm, dyf-2 mutants are dye-filling defective and show impaired chemotaxis and osmotic avoidance. WDR19 mutations cause human ciliopathies (e.g. cranioectodermal dysplasia/Sensenbrenner and nephronophthisis), underscoring a conserved role in cilium biogenesis.</p>
+    </div>
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Proposed New Ontology Terms</h2>
+
+        <div class="proposed-term">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>structural constituent of intraflagellar transport particle</h3>
+                <span class="vote-buttons" data-g="G5ECZ4" data-a="structural constituent of intraflagellar transport particle" data-r="" data-act="NEW">
+                    <button class="vote-btn" data-v="up" title="Agree this term should be created">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with creating this term">👎</button>
+                </span>
+            </div>
+
+
+            <p><strong>Definition:</strong> The action of a protein that contributes to the structural integrity of an intraflagellar transport (IFT) particle (IFT-A or IFT-B subcomplex), for example by acting as a WD40/TPR scaffold that holds core IFT subunits together and enables their bidirectional transport along the ciliary axoneme, without itself catalyzing a biochemical reaction.</p>
+
+
+
+
+
+            <p><strong>Parent term:</strong>
+                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005198" target="_blank" class="term-link">
+                    structural molecule activity
+                </a>
+            </p>
+
+
+
+
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005929" target="_blank" class="term-link">
+                                    GO:0005929
+                                </a>
+                            </span>
+                            <span class="term-label">cilium</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5ECZ4" data-a="GO:0005929" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DYF-2/WDR19 is an IFT-A subunit that acts within the cilium; ciliary localization is directly demonstrated in the worm and conserved (the mouse ortholog WDR19 also localizes to cilia).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core localization. Phylogenetic inference agrees with direct experimental evidence in C. elegans (see the IDA non-motile cilium annotation) and with conservation of WDR19 ciliary localization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16957054" target="_blank" class="term-link">
+                                        PMID:16957054
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the mouse orthologue of DYF-2, WDR19, also localizes to cilia</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035721" target="_blank" class="term-link">
+                                    GO:0035721
+                                </a>
+                            </span>
+                            <span class="term-label">intraciliary retrograde transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5ECZ4" data-a="GO:0035721" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> As a core IFT-A subunit, DYF-2 is required for retrograde (tip-to-base) intraflagellar transport, the defining function of the IFT-A complex.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Represents the core biological process of the gene. Phylogenetic inference is corroborated by direct experimental evidence that a dyf-2 WD40 allele selectively abolishes retrograde IFT.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22922713" target="_blank" class="term-link">
+                                        PMID:22922713
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">in dyf-2(jhu616), IFT-B component OSM-6 showed characteristic anterograde IFT movement, but lost almost all retrograde IFT movements</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060271" target="_blank" class="term-link">
+                                    GO:0060271
+                                </a>
+                            </span>
+                            <span class="term-label">cilium assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5ECZ4" data-a="GO:0060271" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Retrograde IFT by IFT-A is required to build and maintain the ciliary axoneme; loss of DYF-2 gives severely truncated cilia.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Well-supported by phylogeny and by the null-allele phenotype (truncated cilia, disrupted IFT). A core process, though downstream of the direct IFT transport activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22922713" target="_blank" class="term-link">
+                                        PMID:22922713
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the latter show severely truncated cilia and completely disrupted IFT transport</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030991" target="_blank" class="term-link">
+                                    GO:0030991
+                                </a>
+                            </span>
+                            <span class="term-label">intraciliary transport particle A</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5ECZ4" data-a="GO:0030991" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DYF-2 is a core subunit of the IFT-A complex, established by orthology to WDR19/IFT144 and by direct mass-spec identification in the worm IFT-A complex.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core complex membership. Phylogenetic inference agrees with the experimental (NAS/mass-spec) IFT-A assignment.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22922713" target="_blank" class="term-link">
+                                        PMID:22922713
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In Chlamydomonas, IFT144 (the homolog of DYF-2) is an IFT-A component</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005929" target="_blank" class="term-link">
+                                    GO:0005929
+                                </a>
+                            </span>
+                            <span class="term-label">cilium</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5ECZ4" data-a="GO:0005929" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (SubCell/ARBA) assertion of ciliary localization, redundant with the experimental IDA and IBA cilium annotations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct location; consistent with direct experimental evidence, albeit redundant with the higher-evidence cilium annotations.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008104" target="_blank" class="term-link">
+                                    GO:0008104
+                                </a>
+                            </span>
+                            <span class="term-label">intracellular protein localization</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="G5ECZ4" data-a="GO:0008104" data-r="GO_REF:0000117" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic ARBA electronic term. DYF-2&#39;s actual role is transporting/localizing IFT and cargo proteins within the cilium; a cilium-specific term is more accurate and informative.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> &#34;intracellular protein localization&#34; is uninformatively broad. The experimental basis (loss of DYF-2 mislocalizes ciliary IFT-A/IFT-B proteins) and DYF-2&#39;s IFT-A function are better captured by &#34;protein localization to cilium&#34;.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061512" target="_blank" class="term-link">
+                                    protein localization to cilium
+                                </a>
+                            </span>
+
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030990" target="_blank" class="term-link">
+                                    GO:0030990
+                                </a>
+                            </span>
+                            <span class="term-label">intraciliary transport particle</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="G5ECZ4" data-a="GO:0030990" data-r="GO_REF:0000117" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARBA electronic assertion of membership in the (generic) intraflagellar transport particle. This is the parent of the specific, experimentally supported IFT-A membership.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Not wrong, but subsumed by and less informative than the IFT particle A (GO:0030991) annotation, which is the correct specific complex. Retained as a correct but non-core generalization.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035721" target="_blank" class="term-link">
+                                    GO:0035721
+                                </a>
+                            </span>
+                            <span class="term-label">intraciliary retrograde transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5ECZ4" data-a="GO:0035721" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO electronic annotation of the IFT-A retrograde-transport role, redundant with the IBA/NAS/IMP annotations to the same term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core process; consistent with, though redundant with, the experimental and phylogenetic annotations to this term.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044782" target="_blank" class="term-link">
+                                    GO:0044782
+                                </a>
+                            </span>
+                            <span class="term-label">cilium organization</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="G5ECZ4" data-a="GO:0044782" data-r="GO_REF:0000117" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARBA electronic annotation to the parent term of cilium assembly.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct but general; the more specific &#34;cilium assembly&#34; / &#34;non-motile cilium assembly&#34; annotations capture the role more precisely.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005929" target="_blank" class="term-link">
+                                    GO:0005929
+                                </a>
+                            </span>
+                            <span class="term-label">cilium</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28479320" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28479320
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dynein-Driven Retrograde Intraflagellar Transport Is Triphas...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5ECZ4" data-a="GO:0005929" data-r="PMID:28479320" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ComplexPortal (CPX-1289) NAS assertion of ciliary localization for the IFT-A complex, based on the mass-spec study of worm retrograde IFT.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core localization, consistent with experimental IDA evidence.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030991" target="_blank" class="term-link">
+                                    GO:0030991
+                                </a>
+                            </span>
+                            <span class="term-label">intraciliary transport particle A</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28479320" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28479320
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dynein-Driven Retrograde Intraflagellar Transport Is Triphas...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5ECZ4" data-a="GO:0030991" data-r="PMID:28479320" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ComplexPortal NAS annotation placing DYF-2 in the IFT-A complex, based on affinity purification / mass spectrometry of the worm IFT-A complex.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core complex membership, experimentally grounded (mass-spec identification of DYF-2 in IFT-A).
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035721" target="_blank" class="term-link">
+                                    GO:0035721
+                                </a>
+                            </span>
+                            <span class="term-label">intraciliary retrograde transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28479320" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28479320
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dynein-Driven Retrograde Intraflagellar Transport Is Triphas...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5ECZ4" data-a="GO:0035721" data-r="PMID:28479320" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ComplexPortal NAS annotation of the IFT-A retrograde-transport role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core process, consistent with the experimental and phylogenetic evidence.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060271" target="_blank" class="term-link">
+                                    GO:0060271
+                                </a>
+                            </span>
+                            <span class="term-label">cilium assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28479320" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28479320
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dynein-Driven Retrograde Intraflagellar Transport Is Triphas...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5ECZ4" data-a="GO:0060271" data-r="PMID:28479320" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ComplexPortal NAS annotation of the cilium-assembly role of IFT-A.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct; downstream outcome of the IFT-A transport function. Consistent with the null-allele phenotype.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060271" target="_blank" class="term-link">
+                                    GO:0060271
+                                </a>
+                            </span>
+                            <span class="term-label">cilium assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22922713" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22922713
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The BBSome controls IFT assembly and turnaround in cilia.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5ECZ4" data-a="GO:0060271" data-r="PMID:22922713" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mutant analysis: dyf-2(m160) null shows severely truncated cilia, demonstrating a requirement for DYF-2 in ciliary assembly/maintenance.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly supported by the mutant phenotype; a core process (downstream of the direct retrograde-IFT activity).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22922713" target="_blank" class="term-link">
+                                        PMID:22922713
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the latter show severely truncated cilia and completely disrupted IFT transport</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035721" target="_blank" class="term-link">
+                                    GO:0035721
+                                </a>
+                            </span>
+                            <span class="term-label">intraciliary retrograde transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22922713" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22922713
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The BBSome controls IFT assembly and turnaround in cilia.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5ECZ4" data-a="GO:0035721" data-r="PMID:22922713" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The hypomorphic dyf-2(jhu616) WD40-domain allele selectively abolishes retrograde IFT while leaving anterograde IFT intact, directly implicating DYF-2 in retrograde intraflagellar transport.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Strong, direct experimental evidence for the core molecular process of the gene.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22922713" target="_blank" class="term-link">
+                                        PMID:22922713
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">our observations reveal a role for the WD40 domain of DYF-2 as the key factor in reassembling IFT-B subcomplex into IFT-A-dynein retrograde machinery</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006935" target="_blank" class="term-link">
+                                    GO:0006935
+                                </a>
+                            </span>
+                            <span class="term-label">chemotaxis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16957054" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16957054
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Caenorhabditis elegans DYF-2, an orthologue of human WDR19, ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="G5ECZ4" data-a="GO:0006935" data-r="PMID:16957054" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> dyf-2 mutants have defective sensory cilia and are impaired in chemotaxis to volatile odorants. This is a whole-organism sensory phenotype downstream of the ciliary/IFT defect, not a direct molecular function of DYF-2.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Valid IMP phenotype but a pleiotropic downstream consequence of ciliary dysfunction shared by essentially all cilium/IFT genes; not part of the core molecular/cellular function of DYF-2.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16957054" target="_blank" class="term-link">
+                                        PMID:16957054
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">leads to defects in cilia structure and chemosensation in the nematode</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007635" target="_blank" class="term-link">
+                                    GO:0007635
+                                </a>
+                            </span>
+                            <span class="term-label">chemosensory behavior</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16957054" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16957054
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Caenorhabditis elegans DYF-2, an orthologue of human WDR19, ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="G5ECZ4" data-a="GO:0007635" data-r="PMID:16957054" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Chemosensory-behavior defect in dyf-2 mutants, a downstream consequence of defective sensory cilia.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Legitimate mutant phenotype but downstream of the ciliary/IFT defect; not a core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16957054" target="_blank" class="term-link">
+                                        PMID:16957054
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">leads to defects in cilia structure and chemosensation in the nematode</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008104" target="_blank" class="term-link">
+                                    GO:0008104
+                                </a>
+                            </span>
+                            <span class="term-label">intracellular protein localization</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16957054" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16957054
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Caenorhabditis elegans DYF-2, an orthologue of human WDR19, ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="G5ECZ4" data-a="GO:0008104" data-r="PMID:16957054" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Loss of DYF-2 alters the assembly and motility of IFT components and mislocalizes ciliary IFT-A/IFT-B proteins. The generic &#34;intracellular protein localization&#34; term understates that this is protein localization within the cilium.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The experimental readout is mislocalization of ciliary IFT proteins; &#34;protein localization to cilium&#34; is the accurate, informative term. Same replacement proposed for the redundant ARBA IEA annotation.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061512" target="_blank" class="term-link">
+                                    protein localization to cilium
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16957054" target="_blank" class="term-link">
+                                        PMID:16957054
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Loss of DYF-2 function selectively affects the assembly and motility of different IFT components</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030992" target="_blank" class="term-link">
+                                    GO:0030992
+                                </a>
+                            </span>
+                            <span class="term-label">intraciliary transport particle B</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16957054" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16957054
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Caenorhabditis elegans DYF-2, an orthologue of human WDR19, ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="G5ECZ4" data-a="GO:0030992" data-r="PMID:16957054" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The 2006 founding paper concluded that DYF-2 &#34;can associate with IFT particle complex B&#34; (based on DYF-2 co-migration behavior in a BBS mutant with partially disrupted IFT particles), while also noting that dyf-2 mutations interfere with IFT-A components. Subsequent work firmly places WDR19/IFT144/DYF-2 as a core IFT-A subunit (direct mass-spec identification in the worm IFT-A complex; Chlamydomonas IFT144 = IFT-A).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> DYF-2&#39;s stable complex membership is IFT-A, not IFT-B. The IFT-B &#34;association&#34; reflects DYF-2 acting at the IFT-A/IFT-B interface (its WD40 domain reassembles IFT-B into the IFT-A–dynein retrograde machinery at the tip), a functional interplay rather than IFT-B core membership. The experimental observation is genuine but its complex-membership interpretation has been superseded; flagged as over-annotation rather than removed, in deference to the original experimental call.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16957054" target="_blank" class="term-link">
+                                        PMID:16957054
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">we conclude that DYF-2 can associate with IFT particle complex B</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22922713" target="_blank" class="term-link">
+                                        PMID:22922713
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In Chlamydomonas, IFT144 (the homolog of DYF-2) is an IFT-A component</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042048" target="_blank" class="term-link">
+                                    GO:0042048
+                                </a>
+                            </span>
+                            <span class="term-label">olfactory behavior</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16957054" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16957054
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Caenorhabditis elegans DYF-2, an orthologue of human WDR19, ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="G5ECZ4" data-a="GO:0042048" data-r="PMID:16957054" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> dyf-2 mutants are impaired in responses to volatile (olfactory) odorants such as pyrazine and iso-amyl alcohol, a downstream consequence of the sensory-cilia defect.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Valid mutant phenotype (odorant response requires functional AWA/AWC sensory cilia) but a pleiotropic downstream consequence of the ciliary/IFT defect, not a core function of DYF-2.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042073" target="_blank" class="term-link">
+                                    GO:0042073
+                                </a>
+                            </span>
+                            <span class="term-label">intraciliary transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16957054" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16957054
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Caenorhabditis elegans DYF-2, an orthologue of human WDR19, ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5ECZ4" data-a="GO:0042073" data-r="PMID:16957054" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DYF-2 is a component of the intraflagellar transport machinery that moves along the sensory-cilium axoneme; direct experimental evidence in the worm.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core process. This general IFT term is the parent of the more specific retrograde-IFT annotation; both are appropriate for a bidirectionally transported IFT-A subunit.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16957054" target="_blank" class="term-link">
+                                        PMID:16957054
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">component of the intraflagellar transport machinery in sensory cilia</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097730" target="_blank" class="term-link">
+                                    GO:0097730
+                                </a>
+                            </span>
+                            <span class="term-label">non-motile cilium</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16957054" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16957054
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Caenorhabditis elegans DYF-2, an orthologue of human WDR19, ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5ECZ4" data-a="GO:0097730" data-r="PMID:16957054" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DYF-2 localizes to the non-motile sensory cilia of C. elegans neurons (direct experimental evidence).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core localization, accurately specific to the worm&#39;s non-motile sensory cilia.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16957054" target="_blank" class="term-link">
+                                        PMID:16957054
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">component of the intraflagellar transport machinery in sensory cilia</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1905515" target="_blank" class="term-link">
+                                    GO:1905515
+                                </a>
+                            </span>
+                            <span class="term-label">non-motile cilium assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16957054" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16957054
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Caenorhabditis elegans DYF-2, an orthologue of human WDR19, ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5ECZ4" data-a="GO:1905515" data-r="PMID:16957054" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DYF-2 is required to build the non-motile sensory cilium; loss of function gives defects in cilium structure.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct and accurately specific for the worm&#39;s non-motile sensory cilia; a core process (downstream of the direct retrograde-IFT activity).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16957054" target="_blank" class="term-link">
+                                        PMID:16957054
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">leads to defects in cilia structure and chemosensation in the nematode</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Structural constituent of the intraflagellar transport complex A (IFT-A) that drives retrograde (tip-to-base) intraflagellar transport along the sensory cilium. As the WDR19/IFT144 ortholog, DYF-2 has no catalytic activity; it acts as a WD40/TPR scaffold within IFT-A, and its WD40 domain reassembles the IFT-B subcomplex into the IFT-A–dynein machinery for retrograde transport at the ciliary tip.</h3>
+                <span class="vote-buttons" data-g="G5ECZ4" data-a="FUNCTION: Structural constituent of the intraflagellar trans..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005198" target="_blank" class="term-link">
+                            structural molecule activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035721" target="_blank" class="term-link">
+                                intraciliary retrograde transport
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042073" target="_blank" class="term-link">
+                                intraciliary transport
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097730" target="_blank" class="term-link">
+                                non-motile cilium
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030991" target="_blank" class="term-link">
+                            intraciliary transport particle A
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22922713" target="_blank" class="term-link">
+                                PMID:22922713
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">the major role of DYF-2 as an IFT structural protein</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22922713" target="_blank" class="term-link">
+                                PMID:22922713
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">our observations reveal a role for the WD40 domain of DYF-2 as the key factor in reassembling IFT-B subcomplex into IFT-A-dynein retrograde machinery</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Required for assembly and structural integrity of the sensory cilium: IFT-A function via DYF-2 is needed to build and maintain the non-motile ciliary axoneme and to keep IFT-A/IFT-B components correctly localized. DYF-2 also couples the BBSome to moving IFT particles (WDR19 binds BBS1), integrating cargo adaptor function with the IFT cycle.</h3>
+                <span class="vote-buttons" data-g="G5ECZ4" data-a="FUNCTION: Required for assembly and structural integrity of ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060271" target="_blank" class="term-link">
+                                cilium assembly
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1905515" target="_blank" class="term-link">
+                                non-motile cilium assembly
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097730" target="_blank" class="term-link">
+                                non-motile cilium
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16957054" target="_blank" class="term-link">
+                                PMID:16957054
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">DYF-2, that plays a critical role in maintaining the structural and functional integrity of the IFT machinery</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22922713" target="_blank" class="term-link">
+                                PMID:22922713
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">the WD40 domain of DYF-2 protein is critical for the association between the BBSome and IFT particles</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16957054" target="_blank" class="term-link">
+                            PMID:16957054
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Caenorhabditis elegans DYF-2, an orthologue of human WDR19, is a component of the intraflagellar transport machinery in sensory cilia.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22922713" target="_blank" class="term-link">
+                            PMID:22922713
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The BBSome controls IFT assembly and turnaround in cilia.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28479320" target="_blank" class="term-link">
+                            PMID:28479320
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Dynein-Driven Retrograde Intraflagellar Transport Is Triphasic in C. elegans Sensory Cilia.</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the subunit-resolved architecture of the C. elegans IFT-A complex, and which IFT-A subunits does DYF-2/WDR19 directly contact?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Ou G</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="G5ECZ4" data-a="Q: What is the subunit-resolved architecture of the C..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the structural basis of the DYF-2/WDR19 WD40-domain interface that docks the BBSome onto moving IFT particles?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Hu J</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="G5ECZ4" data-a="Q: What is the structural basis of the DYF-2/WDR19 WD..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Generate structure-guided separation-of-function alleles across the DYF-2 WD40 surface and score, in vivo, retrograde IFT (kymography of IFT-B markers), BBSome co-migration/docking (BiFC or dual-color imaging), and cilium length, to map the BBSome-docking interface independently of IFT-A assembly.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The DYF-2 WD40 domain provides a dedicated docking surface for the BBSome on IFT particles, separable from its role in IFT-A integrity.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: structure-function mutagenesis</p>
+
+                </div>
+                <span class="vote-buttons" data-g="G5ECZ4" data-a="EXPERIMENT: Generate structure-guided separation-of-function a..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Reconstitute or affinity-purify the worm IFT-A complex and determine its architecture by cryo-EM, assigning DYF-2/WDR19 and its direct neighbors and testing whether ciliopathy-mimicking substitutions perturb specific interfaces.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: DYF-2 occupies a defined position within an IFT-A scaffold that can be resolved structurally.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: structural biology</p>
+
+                </div>
+                <span class="vote-buttons" data-g="G5ECZ4" data-a="EXPERIMENT: Reconstitute or affinity-purify the worm IFT-A com..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> DYF-2 has no assigned molecular function and no term to express one. Its role is to be a structural constituent of the IFT-A particle, but GO has no &#34;structural constituent of the intraflagellar transport particle&#34; molecular function term, so the gene reads as MF-dark despite a well-understood cellular and process-level role.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">ONTOLOGY</span><span class="badge">CURATION</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> It is firmly established that DYF-2 = WDR19/IFT144 is a WD40+TPR scaffolding subunit of IFT-A with no catalytic domain, required for retrograde IFT and cilium assembly. What is missing is a molecular-function representation: the worm GOA record carries only cellular-component and biological-process terms and no molecular_function annotation at all.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> This is the canonical &#34;structural subunit&#34; ontology gap: a mechanistically well-understood protein that cannot be annotated with an informative MF term, contributing to apparent molecular-function darkness across the IFT/ciliopathy gene set.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Develop/adopt a molecular-function term for a structural constituent of the IFT particle (analogous to &#34;structural constituent of ribosome&#34;), then annotate DYF-2 (and other IFT-A/IFT-B core subunits) to it.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"the major role of DYF-2 as an IFT structural protein"</em> — PMID:22922713</li>
+
+            </ul>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Proposed term (ontology gap):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><strong>structural constituent of intraflagellar transport particle</strong></li>
+
+            </ul>
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The molecular interface by which the DYF-2/WDR19 WD40 domain docks the BBSome onto moving IFT particles, and the direct IFT-A subunit contacts of DYF-2 in the worm, are inferred (from point mutants, BiFC and cross-species proteomics), not resolved structurally. How the WD40 domain physically &#34;reassembles&#34; IFT-B into the IFT-A–dynein machinery at the ciliary tip is a model, not a solved mechanism.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">RESIDUAL_SUBGAP</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Genetics and imaging establish that the conserved WD40 residue (worm G361 / mouse WDR19 G341) is required for BBSome association and retrograde IFT, and that WDR19 interacts with BBS1; the worm IFT-A composition (che-11, daf-10, dyf-2, ift-139, ift-43, ifta-1) is known from mass spectrometry. The subunit-resolved architecture and the DYF-2–BBSome binding interface are not determined.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> The tip-reassembly/BBSome-docking step is the load-bearing, incompletely understood mechanism of IFT turnaround; resolving it would explain how retrograde transport is licensed and how ciliopathy-causing WDR19 mutations disrupt it.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Cryo-EM of the worm IFT-A complex and of an IFT-A–BBSome assembly; structure- guided separation-of-function mutagenesis of the DYF-2 WD40 surface with retrograde-IFT and BBSome-docking readouts.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"probably mediate the interaction between the BBSome and the IFT machinery"</em> — PMID:22922713</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Tags</h2>
+        <div class="aliases">
+
+            <span class="badge">caeel-ciliopathy</span>
+
+        </div>
+    </div>
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(dyf-2-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="G5ECZ4" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="dyf-2-c-elegans-research-notes">dyf-2 (C. elegans) — research notes</h1>
+<p>UniProt: G5ECZ4 (DYF2_CAEEL). Gene: dyf-2 / ift-144 / ZK520.3 (WBGene00001118). 1364 aa.<br />
+Human ortholog: <strong>WDR19</strong> (= IFT144 in <em>Chlamydomonas</em>). Part of the <strong>IFT-A</strong> (intraflagellar<br />
+transport complex A) machinery. Flagship project: <code>projects/CAEEL_CILIOPATHY.md</code>.</p>
+<p>Domain architecture (UniProt/InterPro): N-terminal WD40 β-propeller repeats (WD 1–5) followed by<br />
+a long C-terminal TPR (tetratricopeptide) α-solenoid (TPR 1–7). This WD40-propeller + TPR-solenoid<br />
+architecture is the signature of the large IFT-A/IFT-B "core" subunits (IFT144/140/122/172/80).<br />
+There is <strong>no catalytic domain</strong> — DYF-2 is a scaffolding/structural subunit.</p>
+<h2 id="what-is-known-with-provenance">What is KNOWN (with provenance)</h2>
+<h3 id="identity-dyf-2-is-the-wdr19ift144-ortholog-an-ift-a-component">Identity: DYF-2 is the WDR19/IFT144 ortholog, an IFT-A component</h3>
+<ul>
+<li>[PMID:16957054 title: "Caenorhabditis elegans DYF-2, an orthologue of human WDR19, is a component<br />
+  of the intraflagellar transport machinery in sensory cilia."]</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/22922713" title="DYF-2 protein (Fig. 1a, b), a known IFT component that is the ortholog of human   WDR19 (also known as IFT144 in Chlamydomonas)">PMID:22922713</a></li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/22922713" title="In Chlamydomonas, IFT144 (the homolog of DYF-2) is an IFT-A component">PMID:22922713</a></li>
+<li>UniProt SUBUNIT: "Component of the IFT complex A (IFT-A) composed of at least che-11, daf-10,<br />
+  dyf-2, ift-139, ift-43 and ifta-1." ComplexPortal CPX-1289 = Intraflagellar transport complex A.</li>
+<li>Mass-spec identification of DYF-2 in IFT complex A: PMID:28479320 (Yi et al. 2017; UniProt RN[4]:<br />
+  "IDENTIFICATION IN IFT COMPLEX A, AND IDENTIFICATION BY MASS SPECTROMETRY").</li>
+</ul>
+<h3 id="localization-ciliary-expressed-in-ciliated-sensory-neurons">Localization: ciliary; expressed in ciliated sensory neurons</h3>
+<ul>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/16957054" title="the mouse orthologue of DYF-2, WDR19, also localizes to cilia, pointing to an   important evolutionarily conserved role for this WDR protein in cilia development and function">PMID:16957054</a></li>
+<li>UniProt SUBCELLULAR LOCATION: Cell projection, cilium. TISSUE SPECIFICITY: ciliated sensory<br />
+  neurons. <em>C. elegans</em> sensory cilia are <strong>non-motile</strong> (GO:0097730).</li>
+</ul>
+<h3 id="function-retrograde-ift-ift-turnaround-cilium-assembly-integrity">Function: retrograde IFT / IFT turnaround; cilium assembly &amp; integrity</h3>
+<ul>
+<li>Structural role in the IFT particle: <a href="https://pubmed.ncbi.nlm.nih.gov/22922713" title="indicating that G361R mutation is a   hypomorphic allele that does not affect the major role of DYF-2 as an IFT structural protein">PMID:22922713</a>.</li>
+<li>Null allele = loss of cilia + loss of IFT: <a href="https://pubmed.ncbi.nlm.nih.gov/22922713" title="the latter show severely truncated   cilia and completely disrupted IFT transport">PMID:22922713</a> (re dyf-2(m160) null).</li>
+<li>Retrograde transport: the hypomorphic WD40 allele dyf-2(jhu616) selectively loses retrograde IFT:<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/22922713" title="in dyf-2(jhu616), IFT-B component OSM-6 showed characteristic anterograde IFT   movement, but lost almost all retrograde IFT movements">PMID:22922713</a>.</li>
+<li>Mechanistic role at the tip: <a href="https://pubmed.ncbi.nlm.nih.gov/22922713" title="our observations reveal a role for the WD40 domain   of DYF-2 as the key factor in reassembling IFT-B subcomplex into IFT-A-dynein retrograde   machinery">PMID:22922713</a>.</li>
+<li>General IFT-integrity role: <a href="https://pubmed.ncbi.nlm.nih.gov/16957054" title="DYF-2, that plays a critical role in maintaining the   structural and functional integrity of the IFT machinery">PMID:16957054</a> and <a href="https://pubmed.ncbi.nlm.nih.gov/16957054" title="Loss of DYF-2   function selectively affects the assembly and motility of different IFT components and leads to   defects in cilia structure and chemosensation in the nematode">PMID:16957054</a>.</li>
+</ul>
+<h3 id="bbsome-coupling">BBSome coupling</h3>
+<ul>
+<li>DYF-2/WD40 is required for BBSome docking onto moving IFT particles: <a href="https://pubmed.ncbi.nlm.nih.gov/22922713" title="Our data   also suggest the WD40 domain of DYF-2 protein is critical for the association between the BBSome   and IFT particles">PMID:22922713</a>.</li>
+<li>Direct WDR19–BBS1 interaction (mammalian): <a href="https://pubmed.ncbi.nlm.nih.gov/22922713" title="mouse WDR19 (the homolog of DYF-2) and   BBS1 (the homolog of BBS-1) show strong interaction">PMID:22922713</a>; BiFC places DYF-2 near BBS-1/7/9:<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/22922713" title="Results from BiFC analyses suggest that DYF-2 locates near BBS-1, BBS-7 and BBS-9   in the native IFT particles">PMID:22922713</a>.</li>
+</ul>
+<h3 id="disruption-phenotype-uniprot-from-pmid16957054">Disruption phenotype (UniProt, from PMID:16957054)</h3>
+<p>Shorter phasmid cilia; mislocalization of IFT-A proteins (che-11) and IFT-B (osm-5); impaired<br />
+transport/accumulation of IFT-B che-13; strong osmotic-avoidance (Osm) phenotype; impaired<br />
+chemotaxis to volatile odorants (pyrazine, iso-amyl alcohol); dye-filling defective (Dyf).</p>
+<h2 id="curation-nuance-ift-a-vs-ift-b-complex-membership">Curation nuance: IFT-A vs IFT-B complex membership</h2>
+<p>The 2006 primary paper concluded DYF-2 "can associate with IFT particle complex B"<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/16957054" title="we conclude that DYF-2 can associate with IFT particle complex B">PMID:16957054</a> while also noting<br />
+"mutations in dyf-2 can interfere with the function of complex A components." This dual/early model<br />
+generated the experimental IDA annotation to <strong>GO:0030992 intraciliary transport particle B</strong>.<br />
+The modern consensus firmly places WDR19/IFT144/DYF-2 as a <strong>core IFT-A</strong> subunit: direct mass-spec<br />
+identification in IFT-A (PMID:28479320 / ComplexPortal CPX-1289), the Chlamydomonas IFT144 = IFT-A<br />
+assignment <a href="https://pubmed.ncbi.nlm.nih.gov/22922713" title="In Chlamydomonas, IFT144 (the homolog of DYF-2) is an IFT-A component">PMID:22922713</a>,<br />
+and the IFT-A subunit list in UniProt. The 2006 IFT-B "association" reflects DYF-2 functioning at<br />
+the IFT-A/IFT-B interface (it reassembles IFT-B into the IFT-A–dynein machinery at the tip), not<br />
+stable IFT-B core membership. =&gt; GO:0030992 (IFT-B) is best marked as over-annotation/superseded;<br />
+GO:0030991 (IFT-A) is the correct, well-supported complex membership.</p>
+<h2 id="what-is-not-known-knowledge-gaps">What is NOT known (knowledge gaps)</h2>
+<ul>
+<li><strong>No assigned molecular function / no specific biochemical activity.</strong> DYF-2 has WD40 + TPR<br />
+  protein-interaction folds and no catalytic domain; its "function" is to be a structural<br />
+  constituent of IFT-A. GO has no "structural constituent of the IFT particle" MF term — an<br />
+  ontology gap (structural-subunit pattern), so the gene reads MF-dark despite a well-understood<br />
+  cellular role.</li>
+<li><strong>The IFT-A subunit-level interaction map is undefined in the worm.</strong> Which IFT-A neighbours<br />
+  DYF-2 directly contacts (che-11/IFT140, daf-10/IFT122, ift-139, ift-43, ifta-1) and the<br />
+  stoichiometry/architecture of worm IFT-A are not experimentally resolved; interactions are<br />
+  inferred from cross-species proteomics/structures.</li>
+<li><strong>Mechanism of tip reassembly.</strong> How the DYF-2 WD40 domain physically "reassembles IFT-B into the<br />
+  IFT-A–dynein retrograde machinery" at the ciliary tip is a model, not a solved structure/mechanism.</li>
+<li><strong>BBSome-docking interface.</strong> The DYF-2/WDR19 surface that docks the BBSome onto moving IFT<br />
+  particles is inferred from point mutants (G361R worm / G341R mouse) and BiFC/co-IP, not from a<br />
+  structure of the DYF-2–BBSome interface.</li>
+</ul>
+<h2 id="provisional-annotation-review-plan-23-goa-annotations">Provisional annotation-review plan (23 GOA annotations)</h2>
+<ul>
+<li>Core CC: GO:0030991 (IFT particle A) ACCEPT ×2 (IBA, NAS); GO:0005929 (cilium) ACCEPT ×3;<br />
+  GO:0097730 (non-motile cilium, IDA) ACCEPT. GO:0030990 (IFT particle, IEA) = generic parent, keep.</li>
+<li>Core BP: GO:0035721 (retrograde IFT) ACCEPT ×4 (IBA, IEA, NAS, IMP); GO:0042073 (IFT, IDA) ACCEPT;<br />
+  GO:0060271 (cilium assembly) ACCEPT ×3; GO:1905515 (non-motile cilium assembly, IMP) ACCEPT;<br />
+  GO:0044782 (cilium organization, IEA) = generic parent, keep as non-core.</li>
+<li>GO:0030992 (IFT particle B, IDA PMID:16957054): MARK_AS_OVER_ANNOTATED (superseded; see nuance).</li>
+<li>GO:0008104 (intracellular protein localization) IEA + IMP: MODIFY -&gt; GO:0061512 protein<br />
+  localization to cilium (more specific/accurate; DYF-2 loss mislocalizes ciliary IFT proteins).</li>
+<li>Sensory-behaviour phenotypes (downstream of ciliary dysfunction, KEEP_AS_NON_CORE): GO:0006935<br />
+  chemotaxis, GO:0007635 chemosensory behavior, GO:0042048 olfactory behavior.</li>
+</ul>
+<h2 id="deep-research-provenance">Deep research provenance</h2>
+<p>Automated deep research was <strong>unavailable</strong> for this gene: the falcon deep-research run <strong>timed out</strong><br />
+and produced no output file, so there is no <code>dyf-2-deep-research-falcon.md</code> (none was fabricated). This<br />
+review is instead grounded directly in the UniProt record (G5ECZ4 / DYF2_CAEEL), the QuickGO GOA export<br />
+(<code>dyf-2-goa.tsv</code>), the PANTHER family data (PTHR14920), and the primary literature — chiefly the founding<br />
+ortholog/IFT-component paper <a href="https://pubmed.ncbi.nlm.nih.gov/16957054">PMID:16957054</a> and the mechanistic IFT-turnaround/BBSome study<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/22922713">PMID:22922713</a> (full text available), with the IFT-A mass-spec composition from <a href="https://pubmed.ncbi.nlm.nih.gov/28479320">PMID:28479320</a>.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: G5ECZ4
+gene_symbol: dyf-2
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:6239
+  label: Caenorhabditis elegans
+description: &gt;-
+  DYF-2 is the Caenorhabditis elegans ortholog of human WDR19 (IFT144 in
+  Chlamydomonas), a core subunit of the intraflagellar transport complex A
+  (IFT-A). It is a large (1364 aa) WD40 β-propeller plus tetratricopeptide-repeat
+  (TPR) solenoid scaffold protein with no catalytic domain, expressed selectively
+  in ciliated sensory neurons and localizing along the axoneme of the non-motile
+  sensory cilium. As part of IFT-A, DYF-2 is required for retrograde
+  (tip-to-base) intraflagellar transport and for the assembly and structural
+  integrity of the IFT particle as a whole. Its conserved WD40 domain is the key
+  factor that reassembles the IFT-B subcomplex into the IFT-A–dynein machinery for
+  retrograde transport at the ciliary tip, and it couples the BBSome to moving IFT
+  particles (WDR19 interacts directly with BBS1). Loss of DYF-2 produces severely
+  truncated cilia with disrupted IFT and mislocalized IFT-A and IFT-B components; a
+  hypomorphic WD40-domain allele selectively abolishes retrograde IFT and causes
+  IFT-B accumulation at the ciliary tip. Because sensory cilia are the sites of
+  chemo- and osmosensation in the worm, dyf-2 mutants are dye-filling defective and
+  show impaired chemotaxis and osmotic avoidance. WDR19 mutations cause human
+  ciliopathies (e.g. cranioectodermal dysplasia/Sensenbrenner and nephronophthisis),
+  underscoring a conserved role in cilium biogenesis.
+references:
+  - id: GO_REF:0000002
+    title: Gene Ontology annotation through association of InterPro records with GO
+      terms
+    findings: []
+  - id: GO_REF:0000033
+    title: Annotation inferences using phylogenetic trees
+    findings: []
+  - id: GO_REF:0000117
+    title: Electronic Gene Ontology annotations created by ARBA machine learning models
+    findings: []
+  - id: GO_REF:0000120
+    title: Combined Automated Annotation using Multiple IEA Methods
+    findings: []
+  - id: PMID:16957054
+    title: Caenorhabditis elegans DYF-2, an orthologue of human WDR19, is a component
+      of the intraflagellar transport machinery in sensory cilia.
+    findings: []
+    reference_review:
+      relevance: HIGH
+      correctness: VERIFIED
+      review_notes: &gt;-
+        Founding paper that identified dyf-2 as the WDR19 ortholog and an IFT
+        component in C. elegans sensory cilia (transgenic rescue + allele
+        sequencing). Cached record is abstract-only (full_text_available: false),
+        so experimental IDA/IMP annotations from this paper rest on the full text
+        the WormBase curator read; the abstract independently confirms the
+        IFT-machinery-integrity role and cilia/chemosensation phenotypes.
+  - id: PMID:22922713
+    title: The BBSome controls IFT assembly and turnaround in cilia.
+    findings: []
+    reference_review:
+      relevance: HIGH
+      correctness: VERIFIED
+      review_notes: &gt;-
+        Full text available and read. Establishes DYF-2 = WDR19/IFT144 as an IFT
+        structural protein whose WD40 domain is required for IFT turnaround and
+        retrograde IFT, and for BBSome docking onto IFT particles (WDR19–BBS1
+        interaction). Directly supports the retrograde-transport and
+        cilium-assembly IMP annotations.
+  - id: PMID:28479320
+    title: Dynein-Driven Retrograde Intraflagellar Transport Is Triphasic in C. elegans
+      Sensory Cilia.
+    findings: []
+    reference_review:
+      relevance: HIGH
+      correctness: VERIFIED
+      review_notes: &gt;-
+        Affinity purification / mass spectrometry defined the worm IFT-A complex
+        (che-11, daf-10, dyf-2, ift-139, ift-43, ifta-1); basis for the
+        ComplexPortal (CPX-1289) NAS annotations placing DYF-2 in IFT-A and in the
+        retrograde-transport process. Cached record is abstract-only.
+existing_annotations:
+  - term:
+      id: GO:0005929
+      label: cilium
+    evidence_type: IBA
+    original_reference_id: GO_REF:0000033
+    qualifier: is_active_in
+    review:
+      summary: &gt;-
+        DYF-2/WDR19 is an IFT-A subunit that acts within the cilium; ciliary
+        localization is directly demonstrated in the worm and conserved (the mouse
+        ortholog WDR19 also localizes to cilia).
+      action: ACCEPT
+      reason: &gt;-
+        Core localization. Phylogenetic inference agrees with direct experimental
+        evidence in C. elegans (see the IDA non-motile cilium annotation) and with
+        conservation of WDR19 ciliary localization.
+      supported_by:
+        - reference_id: PMID:16957054
+          supporting_text: the mouse orthologue of DYF-2, WDR19, also localizes to cilia
+  - term:
+      id: GO:0035721
+      label: intraciliary retrograde transport
+    evidence_type: IBA
+    original_reference_id: GO_REF:0000033
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        As a core IFT-A subunit, DYF-2 is required for retrograde (tip-to-base)
+        intraflagellar transport, the defining function of the IFT-A complex.
+      action: ACCEPT
+      reason: &gt;-
+        Represents the core biological process of the gene. Phylogenetic inference
+        is corroborated by direct experimental evidence that a dyf-2 WD40 allele
+        selectively abolishes retrograde IFT.
+      supported_by:
+        - reference_id: PMID:22922713
+          supporting_text: in dyf-2(jhu616), IFT-B component OSM-6 showed characteristic
+            anterograde IFT movement, but lost almost all retrograde IFT movements
+  - term:
+      id: GO:0060271
+      label: cilium assembly
+    evidence_type: IBA
+    original_reference_id: GO_REF:0000033
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        Retrograde IFT by IFT-A is required to build and maintain the ciliary
+        axoneme; loss of DYF-2 gives severely truncated cilia.
+      action: ACCEPT
+      reason: &gt;-
+        Well-supported by phylogeny and by the null-allele phenotype (truncated
+        cilia, disrupted IFT). A core process, though downstream of the direct IFT
+        transport activity.
+      supported_by:
+        - reference_id: PMID:22922713
+          supporting_text: the latter show severely truncated cilia and completely
+            disrupted IFT transport
+  - term:
+      id: GO:0030991
+      label: intraciliary transport particle A
+    evidence_type: IBA
+    original_reference_id: GO_REF:0000033
+    qualifier: part_of
+    review:
+      summary: &gt;-
+        DYF-2 is a core subunit of the IFT-A complex, established by orthology to
+        WDR19/IFT144 and by direct mass-spec identification in the worm IFT-A
+        complex.
+      action: ACCEPT
+      reason: &gt;-
+        Core complex membership. Phylogenetic inference agrees with the
+        experimental (NAS/mass-spec) IFT-A assignment.
+      supported_by:
+        - reference_id: PMID:22922713
+          supporting_text: In Chlamydomonas, IFT144 (the homolog of DYF-2) is an
+            IFT-A component
+  - term:
+      id: GO:0005929
+      label: cilium
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: located_in
+    review:
+      summary: &gt;-
+        Electronic (SubCell/ARBA) assertion of ciliary localization, redundant with
+        the experimental IDA and IBA cilium annotations.
+      action: ACCEPT
+      reason: &gt;-
+        Correct location; consistent with direct experimental evidence, albeit
+        redundant with the higher-evidence cilium annotations.
+  - term:
+      id: GO:0008104
+      label: intracellular protein localization
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000117
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        Generic ARBA electronic term. DYF-2&#39;s actual role is transporting/localizing
+        IFT and cargo proteins within the cilium; a cilium-specific term is more
+        accurate and informative.
+      action: MODIFY
+      reason: &gt;-
+        &#34;intracellular protein localization&#34; is uninformatively broad. The
+        experimental basis (loss of DYF-2 mislocalizes ciliary IFT-A/IFT-B
+        proteins) and DYF-2&#39;s IFT-A function are better captured by
+        &#34;protein localization to cilium&#34;.
+      proposed_replacement_terms:
+        - id: GO:0061512
+          label: protein localization to cilium
+  - term:
+      id: GO:0030990
+      label: intraciliary transport particle
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000117
+    qualifier: part_of
+    review:
+      summary: &gt;-
+        ARBA electronic assertion of membership in the (generic) intraflagellar
+        transport particle. This is the parent of the specific, experimentally
+        supported IFT-A membership.
+      action: KEEP_AS_NON_CORE
+      reason: &gt;-
+        Not wrong, but subsumed by and less informative than the IFT particle A
+        (GO:0030991) annotation, which is the correct specific complex. Retained as
+        a correct but non-core generalization.
+  - term:
+      id: GO:0035721
+      label: intraciliary retrograde transport
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        InterPro2GO electronic annotation of the IFT-A retrograde-transport role,
+        redundant with the IBA/NAS/IMP annotations to the same term.
+      action: ACCEPT
+      reason: &gt;-
+        Correct core process; consistent with, though redundant with, the
+        experimental and phylogenetic annotations to this term.
+  - term:
+      id: GO:0044782
+      label: cilium organization
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000117
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        ARBA electronic annotation to the parent term of cilium assembly.
+      action: KEEP_AS_NON_CORE
+      reason: &gt;-
+        Correct but general; the more specific &#34;cilium assembly&#34; / &#34;non-motile
+        cilium assembly&#34; annotations capture the role more precisely.
+  - term:
+      id: GO:0005929
+      label: cilium
+    evidence_type: NAS
+    original_reference_id: PMID:28479320
+    qualifier: located_in
+    review:
+      summary: &gt;-
+        ComplexPortal (CPX-1289) NAS assertion of ciliary localization for the
+        IFT-A complex, based on the mass-spec study of worm retrograde IFT.
+      action: ACCEPT
+      reason: &gt;-
+        Correct core localization, consistent with experimental IDA evidence.
+  - term:
+      id: GO:0030991
+      label: intraciliary transport particle A
+    evidence_type: NAS
+    original_reference_id: PMID:28479320
+    qualifier: part_of
+    review:
+      summary: &gt;-
+        ComplexPortal NAS annotation placing DYF-2 in the IFT-A complex, based on
+        affinity purification / mass spectrometry of the worm IFT-A complex.
+      action: ACCEPT
+      reason: &gt;-
+        Core complex membership, experimentally grounded (mass-spec identification
+        of DYF-2 in IFT-A).
+  - term:
+      id: GO:0035721
+      label: intraciliary retrograde transport
+    evidence_type: NAS
+    original_reference_id: PMID:28479320
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        ComplexPortal NAS annotation of the IFT-A retrograde-transport role.
+      action: ACCEPT
+      reason: &gt;-
+        Core process, consistent with the experimental and phylogenetic evidence.
+  - term:
+      id: GO:0060271
+      label: cilium assembly
+    evidence_type: NAS
+    original_reference_id: PMID:28479320
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        ComplexPortal NAS annotation of the cilium-assembly role of IFT-A.
+      action: ACCEPT
+      reason: &gt;-
+        Correct; downstream outcome of the IFT-A transport function. Consistent
+        with the null-allele phenotype.
+  - term:
+      id: GO:0060271
+      label: cilium assembly
+    evidence_type: IMP
+    original_reference_id: PMID:22922713
+    qualifier: acts_upstream_of_or_within
+    review:
+      summary: &gt;-
+        Mutant analysis: dyf-2(m160) null shows severely truncated cilia,
+        demonstrating a requirement for DYF-2 in ciliary assembly/maintenance.
+      action: ACCEPT
+      reason: &gt;-
+        Directly supported by the mutant phenotype; a core process (downstream of
+        the direct retrograde-IFT activity).
+      supported_by:
+        - reference_id: PMID:22922713
+          supporting_text: the latter show severely truncated cilia and completely
+            disrupted IFT transport
+  - term:
+      id: GO:0035721
+      label: intraciliary retrograde transport
+    evidence_type: IMP
+    original_reference_id: PMID:22922713
+    qualifier: acts_upstream_of_or_within
+    review:
+      summary: &gt;-
+        The hypomorphic dyf-2(jhu616) WD40-domain allele selectively abolishes
+        retrograde IFT while leaving anterograde IFT intact, directly implicating
+        DYF-2 in retrograde intraflagellar transport.
+      action: ACCEPT
+      reason: &gt;-
+        Strong, direct experimental evidence for the core molecular process of the
+        gene.
+      supported_by:
+        - reference_id: PMID:22922713
+          supporting_text: our observations reveal a role for the WD40 domain of
+            DYF-2 as the key factor in reassembling IFT-B subcomplex into
+            IFT-A-dynein retrograde machinery
+  - term:
+      id: GO:0006935
+      label: chemotaxis
+    evidence_type: IMP
+    original_reference_id: PMID:16957054
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        dyf-2 mutants have defective sensory cilia and are impaired in chemotaxis
+        to volatile odorants. This is a whole-organism sensory phenotype downstream
+        of the ciliary/IFT defect, not a direct molecular function of DYF-2.
+      action: KEEP_AS_NON_CORE
+      reason: &gt;-
+        Valid IMP phenotype but a pleiotropic downstream consequence of ciliary
+        dysfunction shared by essentially all cilium/IFT genes; not part of the core
+        molecular/cellular function of DYF-2.
+      supported_by:
+        - reference_id: PMID:16957054
+          supporting_text: leads to defects in cilia structure and chemosensation
+            in the nematode
+  - term:
+      id: GO:0007635
+      label: chemosensory behavior
+    evidence_type: IMP
+    original_reference_id: PMID:16957054
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        Chemosensory-behavior defect in dyf-2 mutants, a downstream consequence of
+        defective sensory cilia.
+      action: KEEP_AS_NON_CORE
+      reason: &gt;-
+        Legitimate mutant phenotype but downstream of the ciliary/IFT defect; not a
+        core function.
+      supported_by:
+        - reference_id: PMID:16957054
+          supporting_text: leads to defects in cilia structure and chemosensation
+            in the nematode
+  - term:
+      id: GO:0008104
+      label: intracellular protein localization
+    evidence_type: IMP
+    original_reference_id: PMID:16957054
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        Loss of DYF-2 alters the assembly and motility of IFT components and
+        mislocalizes ciliary IFT-A/IFT-B proteins. The generic &#34;intracellular
+        protein localization&#34; term understates that this is protein localization
+        within the cilium.
+      action: MODIFY
+      reason: &gt;-
+        The experimental readout is mislocalization of ciliary IFT proteins;
+        &#34;protein localization to cilium&#34; is the accurate, informative term. Same
+        replacement proposed for the redundant ARBA IEA annotation.
+      proposed_replacement_terms:
+        - id: GO:0061512
+          label: protein localization to cilium
+      supported_by:
+        - reference_id: PMID:16957054
+          supporting_text: Loss of DYF-2 function selectively affects the assembly
+            and motility of different IFT components
+  - term:
+      id: GO:0030992
+      label: intraciliary transport particle B
+    evidence_type: IDA
+    original_reference_id: PMID:16957054
+    qualifier: part_of
+    review:
+      summary: &gt;-
+        The 2006 founding paper concluded that DYF-2 &#34;can associate with IFT
+        particle complex B&#34; (based on DYF-2 co-migration behavior in a BBS mutant
+        with partially disrupted IFT particles), while also noting that dyf-2
+        mutations interfere with IFT-A components. Subsequent work firmly places
+        WDR19/IFT144/DYF-2 as a core IFT-A subunit (direct mass-spec identification
+        in the worm IFT-A complex; Chlamydomonas IFT144 = IFT-A).
+      action: MARK_AS_OVER_ANNOTATED
+      reason: &gt;-
+        DYF-2&#39;s stable complex membership is IFT-A, not IFT-B. The IFT-B
+        &#34;association&#34; reflects DYF-2 acting at the IFT-A/IFT-B interface (its WD40
+        domain reassembles IFT-B into the IFT-A–dynein retrograde machinery at the
+        tip), a functional interplay rather than IFT-B core membership. The
+        experimental observation is genuine but its complex-membership
+        interpretation has been superseded; flagged as over-annotation rather than
+        removed, in deference to the original experimental call.
+      supported_by:
+        - reference_id: PMID:16957054
+          supporting_text: we conclude that DYF-2 can associate with IFT particle
+            complex B
+        - reference_id: PMID:22922713
+          supporting_text: In Chlamydomonas, IFT144 (the homolog of DYF-2) is an
+            IFT-A component
+  - term:
+      id: GO:0042048
+      label: olfactory behavior
+    evidence_type: IMP
+    original_reference_id: PMID:16957054
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        dyf-2 mutants are impaired in responses to volatile (olfactory) odorants
+        such as pyrazine and iso-amyl alcohol, a downstream consequence of the
+        sensory-cilia defect.
+      action: KEEP_AS_NON_CORE
+      reason: &gt;-
+        Valid mutant phenotype (odorant response requires functional AWA/AWC
+        sensory cilia) but a pleiotropic downstream consequence of the ciliary/IFT
+        defect, not a core function of DYF-2.
+  - term:
+      id: GO:0042073
+      label: intraciliary transport
+    evidence_type: IDA
+    original_reference_id: PMID:16957054
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        DYF-2 is a component of the intraflagellar transport machinery that moves
+        along the sensory-cilium axoneme; direct experimental evidence in the worm.
+      action: ACCEPT
+      reason: &gt;-
+        Core process. This general IFT term is the parent of the more specific
+        retrograde-IFT annotation; both are appropriate for a bidirectionally
+        transported IFT-A subunit.
+      supported_by:
+        - reference_id: PMID:16957054
+          supporting_text: component of the intraflagellar transport machinery in
+            sensory cilia
+  - term:
+      id: GO:0097730
+      label: non-motile cilium
+    evidence_type: IDA
+    original_reference_id: PMID:16957054
+    qualifier: located_in
+    review:
+      summary: &gt;-
+        DYF-2 localizes to the non-motile sensory cilia of C. elegans neurons
+        (direct experimental evidence).
+      action: ACCEPT
+      reason: &gt;-
+        Core localization, accurately specific to the worm&#39;s non-motile sensory
+        cilia.
+      supported_by:
+        - reference_id: PMID:16957054
+          supporting_text: component of the intraflagellar transport machinery in
+            sensory cilia
+  - term:
+      id: GO:1905515
+      label: non-motile cilium assembly
+    evidence_type: IMP
+    original_reference_id: PMID:16957054
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        DYF-2 is required to build the non-motile sensory cilium; loss of function
+        gives defects in cilium structure.
+      action: ACCEPT
+      reason: &gt;-
+        Correct and accurately specific for the worm&#39;s non-motile sensory cilia; a
+        core process (downstream of the direct retrograde-IFT activity).
+      supported_by:
+        - reference_id: PMID:16957054
+          supporting_text: leads to defects in cilia structure and chemosensation
+            in the nematode
+core_functions:
+  - description: &gt;-
+      Structural constituent of the intraflagellar transport complex A (IFT-A) that
+      drives retrograde (tip-to-base) intraflagellar transport along the sensory
+      cilium. As the WDR19/IFT144 ortholog, DYF-2 has no catalytic activity; it acts
+      as a WD40/TPR scaffold within IFT-A, and its WD40 domain reassembles the IFT-B
+      subcomplex into the IFT-A–dynein machinery for retrograde transport at the
+      ciliary tip.
+    molecular_function:
+      id: GO:0005198
+      label: structural molecule activity
+    directly_involved_in:
+      - id: GO:0035721
+        label: intraciliary retrograde transport
+      - id: GO:0042073
+        label: intraciliary transport
+    locations:
+      - id: GO:0097730
+        label: non-motile cilium
+    in_complex:
+      id: GO:0030991
+      label: intraciliary transport particle A
+    supported_by:
+      - reference_id: PMID:22922713
+        supporting_text: the major role of DYF-2 as an IFT structural protein
+      - reference_id: PMID:22922713
+        supporting_text: our observations reveal a role for the WD40 domain of
+          DYF-2 as the key factor in reassembling IFT-B subcomplex into
+          IFT-A-dynein retrograde machinery
+  - description: &gt;-
+      Required for assembly and structural integrity of the sensory cilium: IFT-A
+      function via DYF-2 is needed to build and maintain the non-motile ciliary
+      axoneme and to keep IFT-A/IFT-B components correctly localized. DYF-2 also
+      couples the BBSome to moving IFT particles (WDR19 binds BBS1), integrating
+      cargo adaptor function with the IFT cycle.
+    directly_involved_in:
+      - id: GO:0060271
+        label: cilium assembly
+      - id: GO:1905515
+        label: non-motile cilium assembly
+    locations:
+      - id: GO:0097730
+        label: non-motile cilium
+    supported_by:
+      - reference_id: PMID:16957054
+        supporting_text: DYF-2, that plays a critical role in maintaining the
+          structural and functional integrity of the IFT machinery
+      - reference_id: PMID:22922713
+        supporting_text: the WD40 domain of DYF-2 protein is critical for the
+          association between the BBSome and IFT particles
+knowledge_gaps:
+  - gap_statement: &gt;-
+      DYF-2 has no assigned molecular function and no term to express one. Its role
+      is to be a structural constituent of the IFT-A particle, but GO has no
+      &#34;structural constituent of the intraflagellar transport particle&#34; molecular
+      function term, so the gene reads as MF-dark despite a well-understood cellular
+      and process-level role.
+    boundary: &gt;-
+      It is firmly established that DYF-2 = WDR19/IFT144 is a WD40+TPR scaffolding
+      subunit of IFT-A with no catalytic domain, required for retrograde IFT and
+      cilium assembly. What is missing is a molecular-function representation: the
+      worm GOA record carries only cellular-component and biological-process terms
+      and no molecular_function annotation at all.
+    gap_kind:
+      - ONTOLOGY
+      - CURATION
+    dark_aspect: MF_DARK
+    status: OPEN
+    significance: &gt;-
+      This is the canonical &#34;structural subunit&#34; ontology gap: a mechanistically
+      well-understood protein that cannot be annotated with an informative MF term,
+      contributing to apparent molecular-function darkness across the IFT/ciliopathy
+      gene set.
+    resolution: &gt;-
+      Develop/adopt a molecular-function term for a structural constituent of the
+      IFT particle (analogous to &#34;structural constituent of ribosome&#34;), then
+      annotate DYF-2 (and other IFT-A/IFT-B core subunits) to it.
+    provenance:
+      - reference_id: PMID:22922713
+        supporting_text: the major role of DYF-2 as an IFT structural protein
+        reference_section_type: RESULTS
+    proposed_terms:
+      - proposed_name: structural constituent of intraflagellar transport particle
+        proposed_definition: &gt;-
+          The action of a protein that contributes to the structural integrity of an
+          intraflagellar transport (IFT) particle (IFT-A or IFT-B subcomplex), for
+          example by acting as a WD40/TPR scaffold that holds core IFT subunits
+          together and enables their bidirectional transport along the ciliary
+          axoneme, without itself catalyzing a biochemical reaction.
+        proposed_parent:
+          id: GO:0005198
+          label: structural molecule activity
+  - gap_statement: &gt;-
+      The molecular interface by which the DYF-2/WDR19 WD40 domain docks the BBSome
+      onto moving IFT particles, and the direct IFT-A subunit contacts of DYF-2 in
+      the worm, are inferred (from point mutants, BiFC and cross-species proteomics),
+      not resolved structurally. How the WD40 domain physically &#34;reassembles&#34; IFT-B
+      into the IFT-A–dynein machinery at the ciliary tip is a model, not a solved
+      mechanism.
+    boundary: &gt;-
+      Genetics and imaging establish that the conserved WD40 residue (worm G361 /
+      mouse WDR19 G341) is required for BBSome association and retrograde IFT, and
+      that WDR19 interacts with BBS1; the worm IFT-A composition (che-11, daf-10,
+      dyf-2, ift-139, ift-43, ifta-1) is known from mass spectrometry. The
+      subunit-resolved architecture and the DYF-2–BBSome binding interface are not
+      determined.
+    gap_kind:
+      - BIOLOGY
+    dark_aspect: RESIDUAL_SUBGAP
+    status: OPEN
+    significance: &gt;-
+      The tip-reassembly/BBSome-docking step is the load-bearing, incompletely
+      understood mechanism of IFT turnaround; resolving it would explain how
+      retrograde transport is licensed and how ciliopathy-causing WDR19 mutations
+      disrupt it.
+    resolution: &gt;-
+      Cryo-EM of the worm IFT-A complex and of an IFT-A–BBSome assembly; structure-
+      guided separation-of-function mutagenesis of the DYF-2 WD40 surface with
+      retrograde-IFT and BBSome-docking readouts.
+    provenance:
+      - reference_id: PMID:22922713
+        supporting_text: probably mediate the interaction between the BBSome and the
+          IFT machinery
+        reference_section_type: RESULTS
+proposed_new_terms:
+  - proposed_name: structural constituent of intraflagellar transport particle
+    proposed_definition: &gt;-
+      The action of a protein that contributes to the structural integrity of an
+      intraflagellar transport (IFT) particle (IFT-A or IFT-B subcomplex), for
+      example by acting as a WD40/TPR scaffold that holds core IFT subunits together
+      and enables their bidirectional transport along the ciliary axoneme, without
+      itself catalyzing a biochemical reaction.
+    proposed_parent:
+      id: GO:0005198
+      label: structural molecule activity
+suggested_questions:
+  - question: What is the subunit-resolved architecture of the C. elegans IFT-A
+      complex, and which IFT-A subunits does DYF-2/WDR19 directly contact?
+    experts:
+      - Ou G
+  - question: What is the structural basis of the DYF-2/WDR19 WD40-domain interface
+      that docks the BBSome onto moving IFT particles?
+    experts:
+      - Hu J
+suggested_experiments:
+  - hypothesis: The DYF-2 WD40 domain provides a dedicated docking surface for the
+      BBSome on IFT particles, separable from its role in IFT-A integrity.
+    description: &gt;-
+      Generate structure-guided separation-of-function alleles across the DYF-2 WD40
+      surface and score, in vivo, retrograde IFT (kymography of IFT-B markers),
+      BBSome co-migration/docking (BiFC or dual-color imaging), and cilium length,
+      to map the BBSome-docking interface independently of IFT-A assembly.
+    experiment_type: structure-function mutagenesis
+  - hypothesis: DYF-2 occupies a defined position within an IFT-A scaffold that can
+      be resolved structurally.
+    description: &gt;-
+      Reconstitute or affinity-purify the worm IFT-A complex and determine its
+      architecture by cryo-EM, assigning DYF-2/WDR19 and its direct neighbors and
+      testing whether ciliopathy-mimicking substitutions perturb specific interfaces.
+    experiment_type: structural biology
+tags:
+  - caeel-ciliopathy
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,0 +1,4596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UMPS - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>UMPS</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P11172" target="_blank" class="term-link">
+                        P11172
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "UMPS";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P11172" data-a="DESCRIPTION: UMPS is the bifunctional uridine 5&#39;-monophosphate ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>UMPS is the bifunctional uridine 5&#39;-monophosphate synthase (UMP synthase) that catalyzes the final two steps of the de novo pyrimidine biosynthesis pathway on a single polypeptide. Its N-terminal orotate phosphoribosyltransferase (OPRT; EC 2.4.2.10) activity condenses orotate with 5-phospho-alpha-D-ribose 1-diphosphate (PRPP) to form orotidine-5&#39;-monophosphate (OMP), and its C-terminal orotidine-5&#39;-phosphate decarboxylase (ODC / OMP decarboxylase; EC 4.1.1.23) activity decarboxylates OMP to uridine monophosphate (UMP), the parent pyrimidine ribonucleotide from which all other pyrimidine nucleotides are subsequently derived. The enzyme is cytosolic and functions as a homodimer. Loss of either catalytic activity causes hereditary orotic aciduria (orotic aciduria 1), an autosomal recessive disorder presenting with megaloblastic anemia, failure to thrive, and massive urinary orotic acid excretion that responds to uridine supplementation.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004588" target="_blank" class="term-link">
+                                    GO:0004588
+                                </a>
+                            </span>
+                            <span class="term-label">orotate phosphoribosyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P11172" data-a="GO:0004588" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Orotate phosphoribosyltransferase (OPRT, EC 2.4.2.10) is one of the two defining catalytic activities of UMPS, residing in its N-terminal domain and condensing orotate with PRPP to form OMP. This IBA phylogenetic annotation is well supported across the family and corroborated by direct human experimental evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is a core molecular function of UMPS, supported experimentally in human and consistent with the phylogenetic inference.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9042911" target="_blank" class="term-link">
+                                        PMID:9042911
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Uridine monophosphate (UMP) synthase is a bifunctional enzyme catalyzing the last two steps of de novo pyrimidine biosynthesis, orotate phosphoribosyltransferase (OPRT) and orotidine-5&#39;-monophosphate decarboxylase (ODC)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004590" target="_blank" class="term-link">
+                                    GO:0004590
+                                </a>
+                            </span>
+                            <span class="term-label">orotidine-5&#39;-phosphate decarboxylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P11172" data-a="GO:0004590" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Orotidine-5&#39;-phosphate decarboxylase (ODC / OMPdecase, EC 4.1.1.23) is the second defining catalytic activity of UMPS, in its C-terminal domain, decarboxylating OMP to UMP. This IBA annotation is well supported and corroborated by direct human structural and enzymatic evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core molecular function of UMPS, supported experimentally in human and consistent with the phylogenetic inference.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18184586" target="_blank" class="term-link">
+                                        PMID:18184586
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The C-terminal domain of UMPS is orotidine-5&#39;-monophosphate decarboxylase (OMPD), a cofactor-less yet extremely efficient enzyme</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006222" target="_blank" class="term-link">
+                                    GO:0006222
+                                </a>
+                            </span>
+                            <span class="term-label">UMP biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P11172" data-a="GO:0006222" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UMPS produces UMP as the end product of the two reactions it catalyzes, so involvement in UMP biosynthetic process is a core biological-process annotation. The IBA inference is consistent with the experimental human data.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UMP is the direct product of the ODC step catalyzed by UMPS; this BP directly captures the pathway role.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/6893554" target="_blank" class="term-link">
+                                        PMID:6893554
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the last two enzyme activities of de novo UMP biosynthesis occur on a single polypeptide chain of approximately 51500 daltons</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019856" target="_blank" class="term-link">
+                                    GO:0019856
+                                </a>
+                            </span>
+                            <span class="term-label">pyrimidine nucleobase biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P11172" data-a="GO:0019856" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A broad grouping term covering pyrimidine nucleobase biosynthesis. It is not incorrect for UMPS (OPRT consumes the pyrimidine nucleobase orotate), but it is less specific than the UMP / de novo UMP biosynthetic-process terms that capture the actual pathway role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct but general; the more specific &#39;de novo&#39; UMP biosynthetic process (GO:0044205) and UMP biosynthetic process (GO:0006222) better represent the core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9042911" target="_blank" class="term-link">
+                                        PMID:9042911
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Uridine monophosphate (UMP) synthase is a bifunctional enzyme catalyzing the last two steps of de novo pyrimidine biosynthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004588" target="_blank" class="term-link">
+                                    GO:0004588
+                                </a>
+                            </span>
+                            <span class="term-label">orotate phosphoribosyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P11172" data-a="GO:0004588" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA support (ARBA/RHEA/EC 2.4.2.10) for the OPRT activity, matching the experimentally and phylogenetically supported core function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct MF mapping to the OPRT activity, redundant with the IDA/IBA annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9042911" target="_blank" class="term-link">
+                                        PMID:9042911
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">orotate phosphoribosyltransferase (OPRT) and orotidine-5&#39;-monophosphate decarboxylase (ODC)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004590" target="_blank" class="term-link">
+                                    GO:0004590
+                                </a>
+                            </span>
+                            <span class="term-label">orotidine-5&#39;-phosphate decarboxylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P11172" data-a="GO:0004590" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA support (ARBA/RHEA/EC 4.1.1.23) for the ODC activity, matching the experimentally and phylogenetically supported core function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct MF mapping to the ODC activity, redundant with the IDA/IBA annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18184586" target="_blank" class="term-link">
+                                        PMID:18184586
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The C-terminal domain of UMPS is orotidine-5&#39;-monophosphate decarboxylase (OMPD)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006207" target="_blank" class="term-link">
+                                    GO:0006207
+                                </a>
+                            </span>
+                            <span class="term-label">&#39;de novo&#39; pyrimidine nucleobase biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P11172" data-a="GO:0006207" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UMPS catalyzes the last two steps of de novo pyrimidine biosynthesis, so this de novo pyrimidine biosynthesis term is correct, if slightly broader than the UMP-specific terms.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Accurate representation of the de novo pyrimidine pathway role; a legitimate parent of the UMP-specific process terms.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18184586" target="_blank" class="term-link">
+                                        PMID:18184586
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">UMP synthase (UMPS) catalyzes the last two steps of de novo pyrimidine nucleotide synthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006221" target="_blank" class="term-link">
+                                    GO:0006221
+                                </a>
+                            </span>
+                            <span class="term-label">pyrimidine nucleotide biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P11172" data-a="GO:0006221" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A broad grouping term for pyrimidine nucleotide biosynthesis. Correct in that UMPS produces the pyrimidine nucleotide UMP, but less specific than the UMP / de novo UMP terms.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct but general; retained as non-core in favor of the more specific UMP biosynthetic process terms.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18184586" target="_blank" class="term-link">
+                                        PMID:18184586
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">UMP synthase (UMPS) catalyzes the last two steps of de novo pyrimidine nucleotide synthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006222" target="_blank" class="term-link">
+                                    GO:0006222
+                                </a>
+                            </span>
+                            <span class="term-label">UMP biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P11172" data-a="GO:0006222" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA (ARBA) support for UMP biosynthetic process, matching the core biological-process role of producing UMP.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct BP mapping, redundant with the IBA/IDA UMP-biosynthesis annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/6893554" target="_blank" class="term-link">
+                                        PMID:6893554
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the last two enzyme activities of de novo UMP biosynthesis occur on a single polypeptide chain</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044205" target="_blank" class="term-link">
+                                    GO:0044205
+                                </a>
+                            </span>
+                            <span class="term-label">&#39;de novo&#39; UMP biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P11172" data-a="GO:0044205" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The most specific and accurate biological-process term for UMPS: it carries out the final two steps of the de novo UMP biosynthetic pathway (orotate -&gt; OMP -&gt; UMP). Supported by UniPathway UPA00070 and experimental data.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Best-fitting, most specific BP term for the core function; captures both the pathway (de novo UMP biosynthesis) and the terminal product (UMP).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9042911" target="_blank" class="term-link">
+                                        PMID:9042911
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Uridine monophosphate (UMP) synthase is a bifunctional enzyme catalyzing the last two steps of de novo pyrimidine biosynthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28514442
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Architecture of the human interactome defines protein commun...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P11172" data-a="GO:0005515" data-r="PMID:28514442" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A high-throughput affinity-purification/mass-spectrometry interaction (BioPlex 2.0) reporting a binding partner (UniProtKB:P54764, EPHA4). The bare &#39;protein binding&#39; term is uninformative about UMPS function and reflects a proteome-scale screen rather than a characterized functional interaction of the enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Uninformative &#39;protein binding&#39; term from a proteome-scale interactome screen; retained but flagged as over-annotation per curation policy (bare protein binding not removed).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link">
+                                        PMID:28514442
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">BioPlex 2.0 (Biophysical Interactions of ORFeome-derived complexes), which uses robust affinity purification-mass spectrometry methodology</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33961781
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dual proteome-scale networks reveal cell-specific remodeling...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P11172" data-a="GO:0005515" data-r="PMID:33961781" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A second high-throughput AP-MS interactome dataset (BioPlex 3.0) again reporting binding to UniProtKB:P54764 (EPHA4). As above, the bare &#39;protein binding&#39; term is uninformative about the molecular function of UMPS.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Uninformative &#39;protein binding&#39; term from a proteome-scale interactome screen; retained but flagged as over-annotation per curation policy.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                                        PMID:33961781
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">we have created two proteome-scale, cell-line-specific interaction networks</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006225" target="_blank" class="term-link">
+                                    GO:0006225
+                                </a>
+                            </span>
+                            <span class="term-label">UDP biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="P11172" data-a="GO:0006225" data-r="GO_REF:0000107" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UDP biosynthesis is downstream of UMPS. UMPS produces UMP; conversion of UMP to UDP is carried out by a separate enzyme (UMP-CMP kinase). This annotation is an electronic ortholog transfer (Ensembl Compara, GO_REF:0000107) that mis-states the enzymatic product.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Over-propagated IEA inference. The direct catalytic product of UMPS is UMP, not UDP; UDP is made by downstream kinases. This mapping is refutable on biochemical grounds. Per policy, REMOVE is appropriate for a demonstrably wrong electronic (IEA) inference.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9042911" target="_blank" class="term-link">
+                                        PMID:9042911
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Uridine monophosphate (UMP) synthase is a bifunctional enzyme catalyzing the last two steps of de novo pyrimidine biosynthesis, orotate phosphoribosyltransferase (OPRT) and orotidine-5&#39;-monophosphate decarboxylase (ODC)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044210" target="_blank" class="term-link">
+                                    GO:0044210
+                                </a>
+                            </span>
+                            <span class="term-label">&#39;de novo&#39; CTP biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="P11172" data-a="GO:0044210" data-r="GO_REF:0000107" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CTP biosynthesis is several enzymatic steps downstream of UMPS (UMP -&gt; UDP -&gt; UTP -&gt; CTP). UMPS itself produces only UMP. This is an Ensembl Compara ortholog-transfer IEA that mis-states the pathway product.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Over-propagated IEA inference. UMPS does not catalyze any step of CTP synthesis; its product is UMP. Refutable on biochemical grounds, so REMOVE is appropriate for this wrong electronic inference.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/6893554" target="_blank" class="term-link">
+                                        PMID:6893554
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the last two enzyme activities of de novo UMP biosynthesis occur on a single polypeptide chain of approximately 51500 daltons</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004588" target="_blank" class="term-link">
+                                    GO:0004588
+                                </a>
+                            </span>
+                            <span class="term-label">orotate phosphoribosyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9042911" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9042911
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular cloning of the human UMP synthase gene and charact...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P11172" data-a="GO:0004588" data-r="PMID:9042911" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence (cloning and characterization of the human UMP synthase gene; ORAC1 variants shown to reduce OPRT activity) supports the OPRT molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct human experimental evidence for the OPRT activity; a core molecular function. ORAC1 variants reduce this activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9042911" target="_blank" class="term-link">
+                                        PMID:9042911
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">orotate phosphoribosyltransferase (OPRT) and orotidine-5&#39;-monophosphate decarboxylase (ODC)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004590" target="_blank" class="term-link">
+                                    GO:0004590
+                                </a>
+                            </span>
+                            <span class="term-label">orotidine-5&#39;-phosphate decarboxylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18184586" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18184586
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structures of the human orotidine-5&#39;-monophosphate decarboxy...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P11172" data-a="GO:0004590" data-r="PMID:18184586" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Nine crystal structures of the human OMP decarboxylase domain with substrate/product/inhibitors, kinetics (KM for OMP), and the D312N loss-of-activity mutant directly establish the ODC activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct human structural and enzymatic evidence for the ODC activity; a core molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18184586" target="_blank" class="term-link">
+                                        PMID:18184586
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The C-terminal domain of UMPS is orotidine-5&#39;-monophosphate decarboxylase (OMPD), a cofactor-less yet extremely efficient enzyme</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004590" target="_blank" class="term-link">
+                                    GO:0004590
+                                </a>
+                            </span>
+                            <span class="term-label">orotidine-5&#39;-phosphate decarboxylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9042911" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9042911
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular cloning of the human UMP synthase gene and charact...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P11172" data-a="GO:0004590" data-r="PMID:9042911" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence from characterization of the human UMP synthase gene, including ORAC1 variants that reduce ODC activity, supports the ODC molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct human experimental evidence for the ODC activity; a core molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9042911" target="_blank" class="term-link">
+                                        PMID:9042911
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">orotate phosphoribosyltransferase (OPRT) and orotidine-5&#39;-monophosphate decarboxylase (ODC)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006222" target="_blank" class="term-link">
+                                    GO:0006222
+                                </a>
+                            </span>
+                            <span class="term-label">UMP biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18184586" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18184586
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structures of the human orotidine-5&#39;-monophosphate decarboxy...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P11172" data-a="GO:0006222" data-r="PMID:18184586" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The decarboxylation of OMP by UMPS yields UMP, the terminal product of the de novo pyrimidine pathway; structural/enzymatic characterization directly supports involvement in UMP biosynthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct experimental support for the core UMP-biosynthesis process role.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18184586" target="_blank" class="term-link">
+                                        PMID:18184586
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">UMP synthase (UMPS) catalyzes the last two steps of de novo pyrimidine nucleotide synthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006222" target="_blank" class="term-link">
+                                    GO:0006222
+                                </a>
+                            </span>
+                            <span class="term-label">UMP biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9042911" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9042911
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular cloning of the human UMP synthase gene and charact...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P11172" data-a="GO:0006222" data-r="PMID:9042911" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Characterization of the human enzyme and disease variants demonstrates its role in producing UMP via the last two de novo pyrimidine biosynthesis steps.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct human experimental support for the core UMP-biosynthesis process role.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9042911" target="_blank" class="term-link">
+                                        PMID:9042911
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Uridine monophosphate (UMP) synthase is a bifunctional enzyme catalyzing the last two steps of de novo pyrimidine biosynthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-73564
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P11172" data-a="GO:0005829" data-r="Reactome:R-HSA-73564" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UMPS acts in the cytosol; the Reactome-traceable decarboxylation reaction (OMP -&gt; UMP) is annotated to the cytosol. This is the primary subcellular location of the enzyme&#39;s catalysis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core cellular-component annotation; UMPS is a cytosolic enzyme.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15890648" target="_blank" class="term-link">
+                                        PMID:15890648
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">UMP synthase, the bifunctional protein that catalyzes the last two steps in the pathway, was also found in both the cytoplasm and nucleus</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-73567
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P11172" data-a="GO:0005829" data-r="Reactome:R-HSA-73567" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome-traceable OPRT reaction (orotate + PRPP -&gt; OMP) is annotated to the cytosol, consistent with UMPS being a cytosolic enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core cellular-component annotation; UMPS acts in the cytosol.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15890648" target="_blank" class="term-link">
+                                        PMID:15890648
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">UMP synthase, the bifunctional protein that catalyzes the last two steps in the pathway, was also found in both the cytoplasm and nucleus</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004588" target="_blank" class="term-link">
+                                    GO:0004588
+                                </a>
+                            </span>
+                            <span class="term-label">orotate phosphoribosyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11730338" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11730338
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A nonradioactive high-performance liquid chromatographic mic...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P11172" data-a="GO:0004588" data-r="PMID:11730338" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> An HPLC microassay directly measured the OPRT activity of UMP synthase, confirming the OPRT molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct experimental measurement of the OPRT activity; a core molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11730338" target="_blank" class="term-link">
+                                        PMID:11730338
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the two enzymatic activities of orotate phosphoribosyltransferase (OPRTase) and orotidine 5&#39;-monophosphate decarboxylase (ODCase), either as a bifunctional protein (uridine 5&#39;-monophosphate synthase, UMPS)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004588" target="_blank" class="term-link">
+                                    GO:0004588
+                                </a>
+                            </span>
+                            <span class="term-label">orotate phosphoribosyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/6893554" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:6893554
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Isolation and initial characterization of the single polypep...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P11172" data-a="GO:0004588" data-r="PMID:6893554" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Purification to homogeneity of the single UMP synthase polypeptide demonstrated it carries both OPRT and ODC active centers, directly supporting the OPRT activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct biochemical evidence for the OPRT activity on the purified enzyme; a core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/6893554" target="_blank" class="term-link">
+                                        PMID:6893554
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">UMP synthase, or multienzyme pyr-5,6 (orotate phosphoribosyltransferase:orotidine monophosphate decarboxylase), has been purified from Ehrlich ascites carcinoma to apparent homogeneity</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004590" target="_blank" class="term-link">
+                                    GO:0004590
+                                </a>
+                            </span>
+                            <span class="term-label">orotidine-5&#39;-phosphate decarboxylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11730338" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11730338
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A nonradioactive high-performance liquid chromatographic mic...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P11172" data-a="GO:0004590" data-r="PMID:11730338" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The same HPLC microassay directly measured the ODC (ODCase) activity of UMP synthase, confirming the ODC molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct experimental measurement of the ODC activity; a core molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11730338" target="_blank" class="term-link">
+                                        PMID:11730338
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the two enzymatic activities of orotate phosphoribosyltransferase (OPRTase) and orotidine 5&#39;-monophosphate decarboxylase (ODCase), either as a bifunctional protein (uridine 5&#39;-monophosphate synthase, UMPS)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004590" target="_blank" class="term-link">
+                                    GO:0004590
+                                </a>
+                            </span>
+                            <span class="term-label">orotidine-5&#39;-phosphate decarboxylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/6893554" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:6893554
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Isolation and initial characterization of the single polypep...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P11172" data-a="GO:0004590" data-r="PMID:6893554" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The purified single polypeptide of UMP synthase was shown to contain both active centers, directly supporting the ODC activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct biochemical evidence for the ODC activity on the purified enzyme; a core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/6893554" target="_blank" class="term-link">
+                                        PMID:6893554
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Both forms have the same molecular weight of 51500 and contain both active centers</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15890648" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15890648
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Nuclear localization and mitogen-activated protein kinase ph...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P11172" data-a="GO:0005634" data-r="PMID:15890648" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A minor nuclear pool of UMP synthase was observed alongside the multifunctional CAD protein. However, the enzyme is predominantly cytosolic and the de novo pyrimidine reactions it catalyzes occur in the cytosol; the nuclear pool is a secondary/non-core localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimentally observed but minor localization; not the primary site of UMPS catalysis. Retained as a non-core cellular-component annotation rather than removed.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15890648" target="_blank" class="term-link">
+                                        PMID:15890648
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">UMP synthase, the bifunctional protein that catalyzes the last two steps in the pathway, was also found in both the cytoplasm and nucleus</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15890648" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15890648
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Nuclear localization and mitogen-activated protein kinase ph...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P11172" data-a="GO:0005737" data-r="PMID:15890648" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UMP synthase was found in the cytoplasm, consistent with its established cytosolic role in de novo pyrimidine biosynthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct cellular-component annotation; the cytoplasm/cytosol is the primary site of UMPS function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15890648" target="_blank" class="term-link">
+                                        PMID:15890648
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">UMP synthase, the bifunctional protein that catalyzes the last two steps in the pathway, was also found in both the cytoplasm and nucleus</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006222" target="_blank" class="term-link">
+                                    GO:0006222
+                                </a>
+                            </span>
+                            <span class="term-label">UMP biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11730338" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11730338
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A nonradioactive high-performance liquid chromatographic mic...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P11172" data-a="GO:0006222" data-r="PMID:11730338" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The assay quantifies UMP as the product of the coupled OPRT + ODC reactions of UMP synthase, directly supporting involvement in UMP biosynthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct experimental support for the core UMP-biosynthesis process role.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11730338" target="_blank" class="term-link">
+                                        PMID:11730338
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Substrates (orotate for OPRTase or orotidine 5&#39;-monophosphate for ODCase) and a product (UMP) of the enzymatic assay</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006222" target="_blank" class="term-link">
+                                    GO:0006222
+                                </a>
+                            </span>
+                            <span class="term-label">UMP biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/6893554" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:6893554
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Isolation and initial characterization of the single polypep...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P11172" data-a="GO:0006222" data-r="PMID:6893554" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Purification of the single polypeptide that synthesizes UMP from orotate directly demonstrates involvement in UMP biosynthesis (the last two steps of de novo UMP biosynthesis).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct biochemical support for the core UMP-biosynthesis process role.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/6893554" target="_blank" class="term-link">
+                                        PMID:6893554
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the last two enzyme activities of de novo UMP biosynthesis occur on a single polypeptide chain of approximately 51500 daltons</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Orotate phosphoribosyltransferase (OPRT): converts orotate + PRPP to orotidine-5&#39;-monophosphate (OMP), the first of the two terminal steps of de novo UMP biosynthesis.</h3>
+                <span class="vote-buttons" data-g="P11172" data-a="FUNCTION: Orotate phosphoribosyltransferase (OPRT): converts..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004588" target="_blank" class="term-link">
+                            orotate phosphoribosyltransferase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044205" target="_blank" class="term-link">
+                                &#39;de novo&#39; UMP biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9042911" target="_blank" class="term-link">
+                                PMID:9042911
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">orotate phosphoribosyltransferase (OPRT) and orotidine-5&#39;-monophosphate decarboxylase (ODC)</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Orotidine-5&#39;-phosphate decarboxylase (ODC / OMP decarboxylase): decarboxylates OMP to uridine monophosphate (UMP), the terminal step of de novo UMP biosynthesis.</h3>
+                <span class="vote-buttons" data-g="P11172" data-a="FUNCTION: Orotidine-5&#39;-phosphate decarboxylase (ODC / OMP de..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004590" target="_blank" class="term-link">
+                            orotidine-5&#39;-phosphate decarboxylase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044205" target="_blank" class="term-link">
+                                &#39;de novo&#39; UMP biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18184586" target="_blank" class="term-link">
+                                PMID:18184586
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">The C-terminal domain of UMPS is orotidine-5&#39;-monophosphate decarboxylase (OMPD), a cofactor-less yet extremely efficient enzyme</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11730338" target="_blank" class="term-link">
+                            PMID:11730338
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A nonradioactive high-performance liquid chromatographic microassay for uridine 5&#39;-monophosphate synthase, orotate phosphoribosyltransferase, and orotidine 5&#39;-monophosphate decarboxylase.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15890648" target="_blank" class="term-link">
+                            PMID:15890648
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Nuclear localization and mitogen-activated protein kinase phosphorylation of the multifunctional protein CAD.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18184586" target="_blank" class="term-link">
+                            PMID:18184586
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Structures of the human orotidine-5&#39;-monophosphate decarboxylase support a covalent mechanism and provide a framework for drug design.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link">
+                            PMID:28514442
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Architecture of the human interactome defines protein communities and disease networks.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                            PMID:33961781
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Dual proteome-scale networks reveal cell-specific remodeling of the human interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/6893554" target="_blank" class="term-link">
+                            PMID:6893554
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Isolation and initial characterization of the single polypeptide that synthesizes uridine 5&#39;-monophosphate from orotate in Ehrlich ascites carcinoma. Purification by tandem affinity chromatography of uridine-5&#39;-monophosphate synthase.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9042911" target="_blank" class="term-link">
+                            PMID:9042911
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Molecular cloning of the human UMP synthase gene and characterization of point mutations in two hereditary orotic aciduria families.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-73564
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UMPS dimer decarboxylates OMP to UMP</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-73567
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UMPS dimer transfers phosphoribosyl group to ORO to form OMP</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/UMPS/UMPS-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB P11172 (UMPS_HUMAN) record</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(UMPS-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P11172" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="umps-human-review-notes">UMPS (human) — review notes</h1>
+<p>UniProtKB:P11172, HGNC:12563. Bifunctional <strong>uridine 5'-monophosphate synthase</strong> (UMP synthase).<br />
+Deep research: falcon provider is out of credits (HTTP 402); no <code>-deep-research-falcon.md</code>. Review grounded in<br />
+<code>UMPS-uniprot.txt</code>, seeded GOA, and cached <code>publications/PMID_*.md</code>.</p>
+<h2 id="core-biology">Core biology</h2>
+<p>UMP synthase catalyzes the <strong>final two steps of de novo pyrimidine biosynthesis</strong> on a single<br />
+polypeptide (bifunctional / multifunctional enzyme):</p>
+<ol>
+<li><strong>Orotate phosphoribosyltransferase (OPRT; EC 2.4.2.10)</strong> — N-terminal domain (residues ~2–214):<br />
+   condenses orotate + PRPP -&gt; orotidine-5'-monophosphate (OMP) + PPi.</li>
+<li><strong>Orotidine-5'-phosphate decarboxylase (ODC / OMPdecase; EC 4.1.1.23)</strong> — C-terminal domain<br />
+   (residues ~221–480): decarboxylates OMP -&gt; uridine monophosphate (<strong>UMP</strong>) + CO2.</li>
+</ol>
+<p>UMP is the parent pyrimidine ribonucleotide; all other pyrimidine nucleotides (UDP, UTP, CTP, dCTP,<br />
+dTTP) derive from UMP via downstream kinases/synthases, <strong>not</strong> by UMPS itself.</p>
+<ul>
+<li>Bifunctional / single polypeptide: <a href="https://pubmed.ncbi.nlm.nih.gov/9042911" title="Uridine monophosphate (UMP) synthase is a bifunctional enzyme catalyzing the last two steps of de novo pyrimidine biosynthesis, orotate phosphoribosyltransferase (OPRT) and orotidine-5'-monophosphate decarboxylase (ODC)">PMID:9042911</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/6893554" title="the last two enzyme activities of de novo UMP biosynthesis occur on a single polypeptide chain of approximately 51500 daltons">PMID:6893554</a>.</li>
+<li>Structural / mechanistic (C-terminal OMPD, active site D312/K314/D317, covalent mechanism, homodimer): <a href="https://pubmed.ncbi.nlm.nih.gov/18184586" title="The C-terminal domain of UMPS is orotidine-5'-monophosphate decarboxylase (OMPD), a cofactor-less yet extremely efficient enzyme">PMID:18184586</a>. UniProt: "Homodimer; dimerization is required for enzymatic activity."</li>
+<li>Assay of both activities as a bifunctional protein: <a href="https://pubmed.ncbi.nlm.nih.gov/11730338" title="the two enzymatic activities of orotate phosphoribosyltransferase (OPRTase) and orotidine 5'-monophosphate decarboxylase (ODCase), either as a bifunctional protein (uridine 5'-monophosphate synthase, UMPS)">PMID:11730338</a>.</li>
+</ul>
+<h2 id="localization">Localization</h2>
+<p>Cytosolic enzyme (Reactome R-HSA-73564, R-HSA-73567; UniProt cytoplasm). A minor nuclear pool is<br />
+reported alongside CAD: <a href="https://pubmed.ncbi.nlm.nih.gov/15890648" title="UMP synthase, the bifunctional protein that catalyzes the last two steps in the pathway, was also found in both the cytoplasm and nucleus">PMID:15890648</a>. Catalysis is cytosolic; nucleus kept as non-core.</p>
+<h2 id="disease">Disease</h2>
+<p>Orotic aciduria 1 (ORAC1, MIM:258900): autosomal recessive; megaloblastic anemia, failure to thrive,<br />
+massive urinary orotic acid excretion; uridine-responsive. ORAC1 missense variants (R96G, V109G, G429R)<br />
+reduce OPRT and/or ODC activity: <a href="https://pubmed.ncbi.nlm.nih.gov/9042911" title="Loss of either enzymatic activity results in hereditary orotic aciduria, a rare autosomal recessive disorder characterized by retarded growth, anemia, and excessive urinary excretion of orotic acid">PMID:9042911</a>.</p>
+<h2 id="annotation-decisions-summary">Annotation decisions (summary)</h2>
+<ul>
+<li>OPRT (GO:0004588) + ODC (GO:0004590) MF, all evidence codes -&gt; ACCEPT (core; both are the defining activities).</li>
+<li>UMP biosynthetic process (GO:0006222) and 'de novo' UMP biosynthetic process (GO:0044205) -&gt; ACCEPT (core BP).</li>
+<li>'de novo' pyrimidine nucleobase biosynthetic (GO:0006207) -&gt; ACCEPT (correct, slightly broader parent).</li>
+<li>pyrimidine nucleotide biosynthetic (GO:0006221) and pyrimidine nucleobase biosynthetic (GO:0019856) -&gt; KEEP_AS_NON_CORE (correct but broad grouping terms).</li>
+<li><strong>UDP biosynthetic process (GO:0006225)</strong> and <strong>'de novo' CTP biosynthetic process (GO:0044210)</strong> -&gt; <strong>REMOVE</strong>. Both are IEA Ensembl-Compara ortholog transfers (GO_REF:0000107) that mis-state the product: UMPS makes UMP, not UDP or CTP. These are over-propagated electronic inferences arguable on biochemical grounds.</li>
+<li>cytosol (GO:0005829) TAS x2, cytoplasm (GO:0005737) IDA -&gt; ACCEPT.</li>
+<li>nucleus (GO:0005634) IDA -&gt; KEEP_AS_NON_CORE (minor pool; not the site of the de novo pyrimidine reactions).</li>
+<li>protein binding (GO:0005515) IPI x2 (both with EPHA4/P54764, from BioPlex AP-MS) -&gt; MARK_AS_OVER_ANNOTATED (bare <code>protein binding</code>; uninformative; not removed per policy).</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P11172
+gene_symbol: UMPS
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  UMPS is the bifunctional uridine 5&#39;-monophosphate synthase (UMP synthase) that catalyzes the final
+  two steps of the de novo pyrimidine biosynthesis pathway on a single polypeptide. Its N-terminal
+  orotate phosphoribosyltransferase (OPRT; EC 2.4.2.10) activity condenses orotate with
+  5-phospho-alpha-D-ribose 1-diphosphate (PRPP) to form orotidine-5&#39;-monophosphate (OMP), and its
+  C-terminal orotidine-5&#39;-phosphate decarboxylase (ODC / OMP decarboxylase; EC 4.1.1.23) activity
+  decarboxylates OMP to uridine monophosphate (UMP), the parent pyrimidine ribonucleotide from which
+  all other pyrimidine nucleotides are subsequently derived. The enzyme is cytosolic and functions as
+  a homodimer. Loss of either catalytic activity causes hereditary orotic aciduria (orotic aciduria 1),
+  an autosomal recessive disorder presenting with megaloblastic anemia, failure to thrive, and massive
+  urinary orotic acid excretion that responds to uridine supplementation.
+alternative_products:
+- name: &#39;1&#39;
+  id: P11172-1
+- name: &#39;2&#39;
+  id: P11172-2
+  sequence_note: VSP_009273
+- name: &#39;3&#39;
+  id: P11172-3
+  sequence_note: VSP_047611
+- name: &#39;4&#39;
+  id: P11172-4
+  sequence_note: VSP_009273, VSP_047612
+existing_annotations:
+- term:
+    id: GO:0004588
+    label: orotate phosphoribosyltransferase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Orotate phosphoribosyltransferase (OPRT, EC 2.4.2.10) is one of the two defining catalytic
+      activities of UMPS, residing in its N-terminal domain and condensing orotate with PRPP to form
+      OMP. This IBA phylogenetic annotation is well supported across the family and corroborated by
+      direct human experimental evidence.
+    action: ACCEPT
+    reason: &gt;-
+      This is a core molecular function of UMPS, supported experimentally in human and consistent with
+      the phylogenetic inference.
+    supported_by:
+    - reference_id: PMID:9042911
+      supporting_text: &gt;-
+        Uridine monophosphate (UMP) synthase is a bifunctional enzyme catalyzing the last two steps
+        of de novo pyrimidine biosynthesis, orotate phosphoribosyltransferase (OPRT) and
+        orotidine-5&#39;-monophosphate decarboxylase (ODC)
+- term:
+    id: GO:0004590
+    label: orotidine-5&#39;-phosphate decarboxylase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Orotidine-5&#39;-phosphate decarboxylase (ODC / OMPdecase, EC 4.1.1.23) is the second defining
+      catalytic activity of UMPS, in its C-terminal domain, decarboxylating OMP to UMP. This IBA
+      annotation is well supported and corroborated by direct human structural and enzymatic evidence.
+    action: ACCEPT
+    reason: &gt;-
+      Core molecular function of UMPS, supported experimentally in human and consistent with the
+      phylogenetic inference.
+    supported_by:
+    - reference_id: PMID:18184586
+      supporting_text: &gt;-
+        The C-terminal domain of UMPS is orotidine-5&#39;-monophosphate decarboxylase (OMPD), a
+        cofactor-less yet extremely efficient enzyme
+- term:
+    id: GO:0006222
+    label: UMP biosynthetic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      UMPS produces UMP as the end product of the two reactions it catalyzes, so involvement in UMP
+      biosynthetic process is a core biological-process annotation. The IBA inference is consistent
+      with the experimental human data.
+    action: ACCEPT
+    reason: &gt;-
+      UMP is the direct product of the ODC step catalyzed by UMPS; this BP directly captures the
+      pathway role.
+    supported_by:
+    - reference_id: PMID:6893554
+      supporting_text: &gt;-
+        the last two enzyme activities of de novo UMP biosynthesis occur on a single polypeptide
+        chain of approximately 51500 daltons
+- term:
+    id: GO:0019856
+    label: pyrimidine nucleobase biosynthetic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      A broad grouping term covering pyrimidine nucleobase biosynthesis. It is not incorrect for
+      UMPS (OPRT consumes the pyrimidine nucleobase orotate), but it is less specific than the UMP /
+      de novo UMP biosynthetic-process terms that capture the actual pathway role.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct but general; the more specific &#39;de novo&#39; UMP biosynthetic process (GO:0044205) and UMP
+      biosynthetic process (GO:0006222) better represent the core function.
+    supported_by:
+    - reference_id: PMID:9042911
+      supporting_text: &gt;-
+        Uridine monophosphate (UMP) synthase is a bifunctional enzyme catalyzing the last two steps
+        of de novo pyrimidine biosynthesis
+- term:
+    id: GO:0004588
+    label: orotate phosphoribosyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IEA support (ARBA/RHEA/EC 2.4.2.10) for the OPRT activity, matching the experimentally and
+      phylogenetically supported core function.
+    action: ACCEPT
+    reason: Correct MF mapping to the OPRT activity, redundant with the IDA/IBA annotations.
+    supported_by:
+    - reference_id: PMID:9042911
+      supporting_text: &gt;-
+        orotate phosphoribosyltransferase (OPRT) and orotidine-5&#39;-monophosphate decarboxylase (ODC)
+- term:
+    id: GO:0004590
+    label: orotidine-5&#39;-phosphate decarboxylase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IEA support (ARBA/RHEA/EC 4.1.1.23) for the ODC activity, matching the experimentally and
+      phylogenetically supported core function.
+    action: ACCEPT
+    reason: Correct MF mapping to the ODC activity, redundant with the IDA/IBA annotations.
+    supported_by:
+    - reference_id: PMID:18184586
+      supporting_text: &gt;-
+        The C-terminal domain of UMPS is orotidine-5&#39;-monophosphate decarboxylase (OMPD)
+- term:
+    id: GO:0006207
+    label: &#39;&#39;&#39;de novo&#39;&#39; pyrimidine nucleobase biosynthetic process&#39;
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      UMPS catalyzes the last two steps of de novo pyrimidine biosynthesis, so this de novo
+      pyrimidine biosynthesis term is correct, if slightly broader than the UMP-specific terms.
+    action: ACCEPT
+    reason: &gt;-
+      Accurate representation of the de novo pyrimidine pathway role; a legitimate parent of the
+      UMP-specific process terms.
+    supported_by:
+    - reference_id: PMID:18184586
+      supporting_text: &gt;-
+        UMP synthase (UMPS) catalyzes the last two steps of de novo pyrimidine nucleotide synthesis
+- term:
+    id: GO:0006221
+    label: pyrimidine nucleotide biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      A broad grouping term for pyrimidine nucleotide biosynthesis. Correct in that UMPS produces the
+      pyrimidine nucleotide UMP, but less specific than the UMP / de novo UMP terms.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct but general; retained as non-core in favor of the more specific UMP biosynthetic
+      process terms.
+    supported_by:
+    - reference_id: PMID:18184586
+      supporting_text: &gt;-
+        UMP synthase (UMPS) catalyzes the last two steps of de novo pyrimidine nucleotide synthesis
+- term:
+    id: GO:0006222
+    label: UMP biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      IEA (ARBA) support for UMP biosynthetic process, matching the core biological-process role of
+      producing UMP.
+    action: ACCEPT
+    reason: Correct BP mapping, redundant with the IBA/IDA UMP-biosynthesis annotations.
+    supported_by:
+    - reference_id: PMID:6893554
+      supporting_text: &gt;-
+        the last two enzyme activities of de novo UMP biosynthesis occur on a single polypeptide chain
+- term:
+    id: GO:0044205
+    label: &#39;&#39;&#39;de novo&#39;&#39; UMP biosynthetic process&#39;
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      The most specific and accurate biological-process term for UMPS: it carries out the final two
+      steps of the de novo UMP biosynthetic pathway (orotate -&gt; OMP -&gt; UMP). Supported by UniPathway
+      UPA00070 and experimental data.
+    action: ACCEPT
+    reason: &gt;-
+      Best-fitting, most specific BP term for the core function; captures both the pathway (de novo
+      UMP biosynthesis) and the terminal product (UMP).
+    supported_by:
+    - reference_id: PMID:9042911
+      supporting_text: &gt;-
+        Uridine monophosphate (UMP) synthase is a bifunctional enzyme catalyzing the last two steps
+        of de novo pyrimidine biosynthesis
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:28514442
+  qualifier: enables
+  review:
+    summary: &gt;-
+      A high-throughput affinity-purification/mass-spectrometry interaction (BioPlex 2.0) reporting a
+      binding partner (UniProtKB:P54764, EPHA4). The bare &#39;protein binding&#39; term is uninformative
+      about UMPS function and reflects a proteome-scale screen rather than a characterized functional
+      interaction of the enzyme.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Uninformative &#39;protein binding&#39; term from a proteome-scale interactome screen; retained but
+      flagged as over-annotation per curation policy (bare protein binding not removed).
+    supported_by:
+    - reference_id: PMID:28514442
+      supporting_text: &gt;-
+        BioPlex 2.0 (Biophysical Interactions of ORFeome-derived complexes), which uses robust
+        affinity purification-mass spectrometry methodology
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:33961781
+  qualifier: enables
+  review:
+    summary: &gt;-
+      A second high-throughput AP-MS interactome dataset (BioPlex 3.0) again reporting binding to
+      UniProtKB:P54764 (EPHA4). As above, the bare &#39;protein binding&#39; term is uninformative about the
+      molecular function of UMPS.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Uninformative &#39;protein binding&#39; term from a proteome-scale interactome screen; retained but
+      flagged as over-annotation per curation policy.
+    supported_by:
+    - reference_id: PMID:33961781
+      supporting_text: &gt;-
+        we have created two proteome-scale, cell-line-specific interaction networks
+- term:
+    id: GO:0006225
+    label: UDP biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      UDP biosynthesis is downstream of UMPS. UMPS produces UMP; conversion of UMP to UDP is carried
+      out by a separate enzyme (UMP-CMP kinase). This annotation is an electronic ortholog transfer
+      (Ensembl Compara, GO_REF:0000107) that mis-states the enzymatic product.
+    action: REMOVE
+    reason: &gt;-
+      Over-propagated IEA inference. The direct catalytic product of UMPS is UMP, not UDP; UDP is made
+      by downstream kinases. This mapping is refutable on biochemical grounds. Per policy, REMOVE is
+      appropriate for a demonstrably wrong electronic (IEA) inference.
+    supported_by:
+    - reference_id: PMID:9042911
+      supporting_text: &gt;-
+        Uridine monophosphate (UMP) synthase is a bifunctional enzyme catalyzing the last two steps
+        of de novo pyrimidine biosynthesis, orotate phosphoribosyltransferase (OPRT) and
+        orotidine-5&#39;-monophosphate decarboxylase (ODC)
+- term:
+    id: GO:0044210
+    label: &#39;&#39;&#39;de novo&#39;&#39; CTP biosynthetic process&#39;
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      CTP biosynthesis is several enzymatic steps downstream of UMPS (UMP -&gt; UDP -&gt; UTP -&gt; CTP). UMPS
+      itself produces only UMP. This is an Ensembl Compara ortholog-transfer IEA that mis-states the
+      pathway product.
+    action: REMOVE
+    reason: &gt;-
+      Over-propagated IEA inference. UMPS does not catalyze any step of CTP synthesis; its product is
+      UMP. Refutable on biochemical grounds, so REMOVE is appropriate for this wrong electronic
+      inference.
+    supported_by:
+    - reference_id: PMID:6893554
+      supporting_text: &gt;-
+        the last two enzyme activities of de novo UMP biosynthesis occur on a single polypeptide chain
+        of approximately 51500 daltons
+- term:
+    id: GO:0004588
+    label: orotate phosphoribosyltransferase activity
+  evidence_type: IDA
+  original_reference_id: PMID:9042911
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct experimental evidence (cloning and characterization of the human UMP synthase gene;
+      ORAC1 variants shown to reduce OPRT activity) supports the OPRT molecular function.
+    action: ACCEPT
+    reason: &gt;-
+      Direct human experimental evidence for the OPRT activity; a core molecular function. ORAC1
+      variants reduce this activity.
+    supported_by:
+    - reference_id: PMID:9042911
+      supporting_text: &gt;-
+        orotate phosphoribosyltransferase (OPRT) and orotidine-5&#39;-monophosphate decarboxylase (ODC)
+- term:
+    id: GO:0004590
+    label: orotidine-5&#39;-phosphate decarboxylase activity
+  evidence_type: IDA
+  original_reference_id: PMID:18184586
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Nine crystal structures of the human OMP decarboxylase domain with substrate/product/inhibitors,
+      kinetics (KM for OMP), and the D312N loss-of-activity mutant directly establish the ODC activity.
+    action: ACCEPT
+    reason: &gt;-
+      Direct human structural and enzymatic evidence for the ODC activity; a core molecular function.
+    supported_by:
+    - reference_id: PMID:18184586
+      supporting_text: &gt;-
+        The C-terminal domain of UMPS is orotidine-5&#39;-monophosphate decarboxylase (OMPD), a
+        cofactor-less yet extremely efficient enzyme
+- term:
+    id: GO:0004590
+    label: orotidine-5&#39;-phosphate decarboxylase activity
+  evidence_type: IDA
+  original_reference_id: PMID:9042911
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct experimental evidence from characterization of the human UMP synthase gene, including
+      ORAC1 variants that reduce ODC activity, supports the ODC molecular function.
+    action: ACCEPT
+    reason: Direct human experimental evidence for the ODC activity; a core molecular function.
+    supported_by:
+    - reference_id: PMID:9042911
+      supporting_text: &gt;-
+        orotate phosphoribosyltransferase (OPRT) and orotidine-5&#39;-monophosphate decarboxylase (ODC)
+- term:
+    id: GO:0006222
+    label: UMP biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:18184586
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      The decarboxylation of OMP by UMPS yields UMP, the terminal product of the de novo pyrimidine
+      pathway; structural/enzymatic characterization directly supports involvement in UMP biosynthesis.
+    action: ACCEPT
+    reason: Direct experimental support for the core UMP-biosynthesis process role.
+    supported_by:
+    - reference_id: PMID:18184586
+      supporting_text: &gt;-
+        UMP synthase (UMPS) catalyzes the last two steps of de novo pyrimidine nucleotide synthesis
+- term:
+    id: GO:0006222
+    label: UMP biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:9042911
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Characterization of the human enzyme and disease variants demonstrates its role in producing UMP
+      via the last two de novo pyrimidine biosynthesis steps.
+    action: ACCEPT
+    reason: Direct human experimental support for the core UMP-biosynthesis process role.
+    supported_by:
+    - reference_id: PMID:9042911
+      supporting_text: &gt;-
+        Uridine monophosphate (UMP) synthase is a bifunctional enzyme catalyzing the last two steps
+        of de novo pyrimidine biosynthesis
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-73564
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      UMPS acts in the cytosol; the Reactome-traceable decarboxylation reaction (OMP -&gt; UMP) is
+      annotated to the cytosol. This is the primary subcellular location of the enzyme&#39;s catalysis.
+    action: ACCEPT
+    reason: Correct core cellular-component annotation; UMPS is a cytosolic enzyme.
+    supported_by:
+    - reference_id: PMID:15890648
+      supporting_text: &gt;-
+        UMP synthase, the bifunctional protein that catalyzes the last two steps in the pathway, was
+        also found in both the cytoplasm and nucleus
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-73567
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome-traceable OPRT reaction (orotate + PRPP -&gt; OMP) is annotated to the cytosol,
+      consistent with UMPS being a cytosolic enzyme.
+    action: ACCEPT
+    reason: Correct core cellular-component annotation; UMPS acts in the cytosol.
+    supported_by:
+    - reference_id: PMID:15890648
+      supporting_text: &gt;-
+        UMP synthase, the bifunctional protein that catalyzes the last two steps in the pathway, was
+        also found in both the cytoplasm and nucleus
+- term:
+    id: GO:0004588
+    label: orotate phosphoribosyltransferase activity
+  evidence_type: IDA
+  original_reference_id: PMID:11730338
+  qualifier: enables
+  review:
+    summary: &gt;-
+      An HPLC microassay directly measured the OPRT activity of UMP synthase, confirming the OPRT
+      molecular function.
+    action: ACCEPT
+    reason: Direct experimental measurement of the OPRT activity; a core molecular function.
+    supported_by:
+    - reference_id: PMID:11730338
+      supporting_text: &gt;-
+        the two enzymatic activities of orotate phosphoribosyltransferase (OPRTase) and orotidine
+        5&#39;-monophosphate decarboxylase (ODCase), either as a bifunctional protein (uridine
+        5&#39;-monophosphate synthase, UMPS)
+- term:
+    id: GO:0004588
+    label: orotate phosphoribosyltransferase activity
+  evidence_type: IDA
+  original_reference_id: PMID:6893554
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Purification to homogeneity of the single UMP synthase polypeptide demonstrated it carries both
+      OPRT and ODC active centers, directly supporting the OPRT activity.
+    action: ACCEPT
+    reason: Direct biochemical evidence for the OPRT activity on the purified enzyme; a core function.
+    supported_by:
+    - reference_id: PMID:6893554
+      supporting_text: &gt;-
+        UMP synthase, or multienzyme pyr-5,6 (orotate phosphoribosyltransferase:orotidine
+        monophosphate decarboxylase), has been purified from Ehrlich ascites carcinoma to apparent
+        homogeneity
+- term:
+    id: GO:0004590
+    label: orotidine-5&#39;-phosphate decarboxylase activity
+  evidence_type: IDA
+  original_reference_id: PMID:11730338
+  qualifier: enables
+  review:
+    summary: &gt;-
+      The same HPLC microassay directly measured the ODC (ODCase) activity of UMP synthase,
+      confirming the ODC molecular function.
+    action: ACCEPT
+    reason: Direct experimental measurement of the ODC activity; a core molecular function.
+    supported_by:
+    - reference_id: PMID:11730338
+      supporting_text: &gt;-
+        the two enzymatic activities of orotate phosphoribosyltransferase (OPRTase) and orotidine
+        5&#39;-monophosphate decarboxylase (ODCase), either as a bifunctional protein (uridine
+        5&#39;-monophosphate synthase, UMPS)
+- term:
+    id: GO:0004590
+    label: orotidine-5&#39;-phosphate decarboxylase activity
+  evidence_type: IDA
+  original_reference_id: PMID:6893554
+  qualifier: enables
+  review:
+    summary: &gt;-
+      The purified single polypeptide of UMP synthase was shown to contain both active centers,
+      directly supporting the ODC activity.
+    action: ACCEPT
+    reason: Direct biochemical evidence for the ODC activity on the purified enzyme; a core function.
+    supported_by:
+    - reference_id: PMID:6893554
+      supporting_text: &gt;-
+        Both forms have the same molecular weight of 51500 and contain both active centers
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IDA
+  original_reference_id: PMID:15890648
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      A minor nuclear pool of UMP synthase was observed alongside the multifunctional CAD protein.
+      However, the enzyme is predominantly cytosolic and the de novo pyrimidine reactions it catalyzes
+      occur in the cytosol; the nuclear pool is a secondary/non-core localization.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Experimentally observed but minor localization; not the primary site of UMPS catalysis. Retained
+      as a non-core cellular-component annotation rather than removed.
+    supported_by:
+    - reference_id: PMID:15890648
+      supporting_text: &gt;-
+        UMP synthase, the bifunctional protein that catalyzes the last two steps in the pathway, was
+        also found in both the cytoplasm and nucleus
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IDA
+  original_reference_id: PMID:15890648
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      UMP synthase was found in the cytoplasm, consistent with its established cytosolic role in de
+      novo pyrimidine biosynthesis.
+    action: ACCEPT
+    reason: &gt;-
+      Correct cellular-component annotation; the cytoplasm/cytosol is the primary site of UMPS
+      function.
+    supported_by:
+    - reference_id: PMID:15890648
+      supporting_text: &gt;-
+        UMP synthase, the bifunctional protein that catalyzes the last two steps in the pathway, was
+        also found in both the cytoplasm and nucleus
+- term:
+    id: GO:0006222
+    label: UMP biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:11730338
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      The assay quantifies UMP as the product of the coupled OPRT + ODC reactions of UMP synthase,
+      directly supporting involvement in UMP biosynthesis.
+    action: ACCEPT
+    reason: Direct experimental support for the core UMP-biosynthesis process role.
+    supported_by:
+    - reference_id: PMID:11730338
+      supporting_text: &gt;-
+        Substrates (orotate for OPRTase or orotidine 5&#39;-monophosphate for ODCase) and a product (UMP)
+        of the enzymatic assay
+- term:
+    id: GO:0006222
+    label: UMP biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:6893554
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Purification of the single polypeptide that synthesizes UMP from orotate directly demonstrates
+      involvement in UMP biosynthesis (the last two steps of de novo UMP biosynthesis).
+    action: ACCEPT
+    reason: Direct biochemical support for the core UMP-biosynthesis process role.
+    supported_by:
+    - reference_id: PMID:6893554
+      supporting_text: &gt;-
+        the last two enzyme activities of de novo UMP biosynthesis occur on a single polypeptide chain
+        of approximately 51500 daltons
+core_functions:
+- description: &gt;-
+    Orotate phosphoribosyltransferase (OPRT): converts orotate + PRPP to orotidine-5&#39;-monophosphate
+    (OMP), the first of the two terminal steps of de novo UMP biosynthesis.
+  molecular_function:
+    id: GO:0004588
+    label: orotate phosphoribosyltransferase activity
+  directly_involved_in:
+  - id: GO:0044205
+    label: &#39;&#39;&#39;de novo&#39;&#39; UMP biosynthetic process&#39;
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: PMID:9042911
+    supporting_text: &gt;-
+      orotate phosphoribosyltransferase (OPRT) and orotidine-5&#39;-monophosphate decarboxylase (ODC)
+- description: &gt;-
+    Orotidine-5&#39;-phosphate decarboxylase (ODC / OMP decarboxylase): decarboxylates OMP to uridine
+    monophosphate (UMP), the terminal step of de novo UMP biosynthesis.
+  molecular_function:
+    id: GO:0004590
+    label: orotidine-5&#39;-phosphate decarboxylase activity
+  directly_involved_in:
+  - id: GO:0044205
+    label: &#39;&#39;&#39;de novo&#39;&#39; UMP biosynthetic process&#39;
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: PMID:18184586
+    supporting_text: &gt;-
+      The C-terminal domain of UMPS is orotidine-5&#39;-monophosphate decarboxylase (OMPD), a
+      cofactor-less yet extremely efficient enzyme
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:11730338
+  title: A nonradioactive high-performance liquid chromatographic microassay for uridine
+    5&#39;-monophosphate synthase, orotate phosphoribosyltransferase, and orotidine 5&#39;-monophosphate
+    decarboxylase.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      HPLC microassay that measures both OPRT and ODC activities of UMPS; supports the two MF
+      annotations. PubMed-verified.
+- id: PMID:15890648
+  title: Nuclear localization and mitogen-activated protein kinase phosphorylation
+    of the multifunctional protein CAD.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Primarily about CAD, but the abstract explicitly reports UMP synthase in both the cytoplasm and
+      nucleus; source of the cytoplasm/nucleus IDA localization annotations.
+- id: PMID:18184586
+  title: Structures of the human orotidine-5&#39;-monophosphate decarboxylase support
+    a covalent mechanism and provide a framework for drug design.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Human OMP decarboxylase crystal structures, kinetics, and mutagenesis (D312N); directly
+      establishes the ODC activity. PubMed-verified.
+- id: PMID:28514442
+  title: Architecture of the human interactome defines protein communities and disease
+    networks.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      BioPlex 2.0 proteome-scale AP-MS screen; source of a bare &#39;protein binding&#39; IPI (partner EPHA4).
+      Correctly cited but uninformative about UMPS function.
+- id: PMID:33961781
+  title: Dual proteome-scale networks reveal cell-specific remodeling of the human
+    interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      BioPlex 3.0 proteome-scale AP-MS screen; source of a second bare &#39;protein binding&#39; IPI (partner
+      EPHA4). Correctly cited but uninformative about UMPS function.
+- id: PMID:6893554
+  title: Isolation and initial characterization of the single polypeptide that synthesizes
+    uridine 5&#39;-monophosphate from orotate in Ehrlich ascites carcinoma. Purification
+    by tandem affinity chromatography of uridine-5&#39;-monophosphate synthase.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Classic purification showing a single polypeptide carries both OPRT and ODC active centers and
+      catalyzes the last two steps of de novo UMP biosynthesis. PubMed-verified.
+- id: PMID:9042911
+  title: Molecular cloning of the human UMP synthase gene and characterization of
+    point mutations in two hereditary orotic aciduria families.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Human UMPS gene cloning, catalytic-activity characterization, and ORAC1 disease variants
+      affecting OPRT/ODC activity. PubMed-verified; anchors the bifunctional-enzyme and disease framing.
+- id: Reactome:R-HSA-73564
+  title: UMPS dimer decarboxylates OMP to UMP
+  findings: []
+- id: Reactome:R-HSA-73567
+  title: UMPS dimer transfers phosphoribosyl group to ORO to form OMP
+  findings: []
+- id: file:human/UMPS/UMPS-uniprot.txt
+  title: UniProtKB P11172 (UMPS_HUMAN) record
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Curated UniProt record documenting the bifunctional OPRT (EC 2.4.2.10) and ODC (EC 4.1.1.23)
+      activities, OPRTase/OMPdecase domains, homodimer requirement, cytosolic PATHWAY, and ORAC1
+      disease association.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,0 +1,4385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ENO3 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ENO3</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P13929" target="_blank" class="term-link">
+                        P13929
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "ENO3";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P13929" data-a="DESCRIPTION: ENO3 encodes beta-enolase (muscle-specific enolase..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>ENO3 encodes beta-enolase (muscle-specific enolase, MSE), the beta subunit of the glycolytic metalloenzyme enolase. It catalyses the penultimate step of glycolysis: the Mg2+-dependent, reversible dehydration of 2-phospho-D-glycerate (2-PG) to phosphoenolpyruvate (PEP) plus water (EC 4.2.1.11); the reverse hydration reaction operates in gluconeogenesis. Mammalian enolase functions as a dimer assembled from three tissue-specific subunits - alpha (ENO1, ubiquitous), beta (ENO3, muscle) and gamma (ENO2, neuronal) - which form homodimers and heterodimers; in striated muscle ENO3 forms alpha/beta heterodimers and beta/beta homodimers. The enzyme acts in the cytosol, with an additional sarcomeric pool localized to the Z line and, by similarity, the M band. Loss-of-function ENO3 variants cause glycogen storage disease type XIII (GSD13, beta-enolase deficiency), a metabolic myopathy of distal glycolysis characterized by exercise-induced myalgia, muscle weakness and fatigability, raised serum creatine kinase, and focal sarcoplasmic glycogen accumulation.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004634" target="_blank" class="term-link">
+                                    GO:0004634
+                                </a>
+                            </span>
+                            <span class="term-label">phosphopyruvate hydratase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P13929" data-a="GO:0004634" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically-inferred (IBA) assignment of phosphopyruvate hydratase (enolase, EC 4.2.1.11) activity, the defining molecular function of the enolase family and the core catalytic function of ENO3. Beta-enolase converts 2-phosphoglycerate to phosphoenolpyruvate in glycolysis and the reverse in gluconeogenesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the core molecular function of ENO3, at the correct level of specificity, supported by UniProt, EC/RHEA mapping, ISS from mouse ortholog, and multiple TAS Reactome annotations. The IBA is well supported across the enolase orthology group.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ENO3/ENO3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Enolase that catalyzes the conversion of 2-phosphoglycerate</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ENO3/ENO3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=(2R)-2-phosphoglycerate = phosphoenolpyruvate + H2O</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006096" target="_blank" class="term-link">
+                                    GO:0006096
+                                </a>
+                            </span>
+                            <span class="term-label">glycolytic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P13929" data-a="GO:0006096" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically-inferred involvement in glycolysis. Enolase catalyses the ninth step of glycolysis (2-PG to PEP), a core biological process for ENO3.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct and core. ENO3 is a canonical glycolytic enzyme; the muscle beta-enolase supplies the high glycolytic flux of striated muscle. Supported by UniProt PATHWAY.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ENO3/ENO3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">glyceraldehyde 3-phosphate: step 4/5</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000015" target="_blank" class="term-link">
+                                    GO:0000015
+                                </a>
+                            </span>
+                            <span class="term-label">phosphopyruvate hydratase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P13929" data-a="GO:0000015" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically-inferred assignment to the phosphopyruvate hydratase (enolase) complex - the catalytically active enolase dimer. ENO3 acts as a beta/beta homodimer or an alpha/beta heterodimer with ENO1.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Enolase is obligately dimeric and Mg2+ stabilizes the dimer; the complex term accurately captures ENO3&#39;s quaternary organization. This is where the informative content of the bare protein-binding IPIs (ENO1-ENO3) is properly represented.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ENO3/ENO3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBUNIT: Mammalian enolase is composed of 3 isozyme subunits, alpha,</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000015" target="_blank" class="term-link">
+                                    GO:0000015
+                                </a>
+                            </span>
+                            <span class="term-label">phosphopyruvate hydratase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P13929" data-a="GO:0000015" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO (IPR000941 Enolase) electronic assignment to the enolase dimer complex. Duplicates the IBA complex annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct InterPro-based mapping; consistent with the IBA part_of annotation and with the obligately dimeric nature of enolase.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ENO3/ENO3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBUNIT: Mammalian enolase is composed of 3 isozyme subunits, alpha,</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000287" target="_blank" class="term-link">
+                                    GO:0000287
+                                </a>
+                            </span>
+                            <span class="term-label">magnesium ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P13929" data-a="GO:0000287" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO (IPR000941 Enolase) electronic assignment of magnesium ion binding. Mg2+ is the essential catalytic cofactor of enolase; the structure of P13929 has annotated Mg2+-binding residues (Ser-245, Asp-293, Asp-318).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Well supported. Mg2+ is required for catalysis and for stabilizing the enolase dimer, and UniProt lists explicit Mg2+ BINDING sites in ENO3. A genuine cofactor function; retained as core because catalysis is Mg2+-dependent.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ENO3/ENO3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Note=Mg(2+) is required for catalysis and for stabilizing the dimer</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004634" target="_blank" class="term-link">
+                                    GO:0004634
+                                </a>
+                            </span>
+                            <span class="term-label">phosphopyruvate hydratase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P13929" data-a="GO:0004634" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic assignment of phosphopyruvate hydratase activity via combined IEA methods (EC 4.2.1.11, RHEA:10164, InterPro, mouse ortholog). Duplicates the core enolase molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct EC/RHEA/InterPro mapping to the core catalytic function of ENO3.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ENO3/ENO3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=(2R)-2-phosphoglycerate = phosphoenolpyruvate + H2O</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P13929" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic assignment of cytoplasmic localization from the UniProt subcellular location vocabulary. Enolase is a soluble cytoplasmic/cytosolic enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct but general; the more specific GO:0005829 cytosol (IDA, HPA) is the preferred core location. Kept as an accurate parent-level localization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ENO3/ENO3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm. Note=Localized to the Z line</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006094" target="_blank" class="term-link">
+                                    GO:0006094
+                                </a>
+                            </span>
+                            <span class="term-label">gluconeogenesis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P13929" data-a="GO:0006094" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARBA electronic assignment of involvement in gluconeogenesis. Enolase catalyses the reversible 2-PG/PEP interconversion; running in the hydration (PEP to 2-PG) direction, it participates in the gluconeogenic pathway.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Biologically correct - the enolase reaction is reversible and operates in both glycolysis and gluconeogenesis, as stated explicitly in the UniProt FUNCTION line. Note that muscle is not a major gluconeogenic tissue, so this is a shared enzymatic capability rather than the dominant physiological role of ENO3, but the annotation is not wrong.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ENO3/ENO3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">to phosphoenolpyruvate in glycolysis and the reverse reaction in</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006096" target="_blank" class="term-link">
+                                    GO:0006096
+                                </a>
+                            </span>
+                            <span class="term-label">glycolytic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P13929" data-a="GO:0006096" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic assignment (InterPro + UniPathway UPA00109) of involvement in glycolysis. Duplicates the IBA glycolytic process annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core biological process; consistent with the IBA and Reactome annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ENO3/ENO3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">glyceraldehyde 3-phosphate: step 4/5</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33961781
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dual proteome-scale networks reveal cell-specific remodeling...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P13929" data-a="GO:0005515" data-r="PMID:33961781" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IntAct-curated physical interaction (BioPlex AP-MS interactome) of ENO3 with ENO1 (UniProtKB:P06733), i.e. the alpha/beta enolase heterodimer. Annotated with the uninformative generic term protein binding.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Bare &#34;protein binding&#34; (GO:0005515) is uninformative and per curation guidelines should not be treated as a core function. The biologically meaningful content - the ENO1-ENO3 (alpha/beta) association - is properly represented by GO:0000015 phosphopyruvate hydratase complex. The interaction itself is a real, high-throughput AP-MS observation, so it is not removed, only flagged as over-annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                                        PMID:33961781
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">affinity purification of 10,128 human proteins-half the proteome-in 293T cells and includes 118,162 interactions among 14,586 proteins</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/35271311" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:35271311
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    OpenCell: Endogenous tagging for the cartography of human ce...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P13929" data-a="GO:0005515" data-r="PMID:35271311" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IntAct-curated physical interaction (OpenCell endogenous-tagging IP-MS) of ENO3 with ENO1 (UniProtKB:P06733), again the alpha/beta enolase heterodimer, annotated with the generic term protein binding.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> As for the BioPlex IPI, bare &#34;protein binding&#34; is uninformative; the ENO1-ENO3 interaction is captured more specifically by GO:0000015 phosphopyruvate hydratase complex. The interaction is a genuine large-scale IP-MS observation, so it is flagged as over-annotation rather than removed.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/35271311" target="_blank" class="term-link">
+                                        PMID:35271311
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">systematically map the localization and interactions of human proteins</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P13929" data-a="GO:0005829" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ensembl-Compara electronic transfer (from mouse ortholog) of active localization in the cytosol - the compartment where glycolysis, and thus the enolase reaction, occurs.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct and core; the cytosol is where ENO3 performs its glycolytic function. The is_active_in qualifier is appropriate for a soluble metabolic enzyme. Corroborated by the HPA IDA cytosol annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ENO3/ENO3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm. Note=Localized to the Z line</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061621" target="_blank" class="term-link">
+                                    GO:0061621
+                                </a>
+                            </span>
+                            <span class="term-label">canonical glycolysis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P13929" data-a="GO:0061621" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic assignment (ARBA + mouse ortholog) of involvement in canonical glycolysis, the ATP-generating glucose-to-pyruvate route. This is a more specific child of glycolytic process describing exactly the pathway ENO3 participates in.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct and appropriately specific; ENO3 catalyses the penultimate step of canonical glycolysis. Consistent with the Reactome TAS canonical glycolysis annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ENO3/ENO3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">glyceraldehyde 3-phosphate: step 4/5</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006094" target="_blank" class="term-link">
+                                    GO:0006094
+                                </a>
+                            </span>
+                            <span class="term-label">gluconeogenesis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-70263
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P13929" data-a="GO:0006094" data-r="Reactome:R-HSA-70263" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author-statement placing ENO3 (as part of the enolase dimers) in the Gluconeogenesis pathway, catalysing the hydration of PEP to 2-PG.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Biologically correct; the reversible enolase reaction operates in gluconeogenesis. Consistent with the ARBA IEA gluconeogenesis annotation and with UniProt FUNCTION. Shared enzymatic capability rather than the dominant muscle role, but not incorrect.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ENO3/ENO3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">to phosphoenolpyruvate in glycolysis and the reverse reaction in</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061621" target="_blank" class="term-link">
+                                    GO:0061621
+                                </a>
+                            </span>
+                            <span class="term-label">canonical glycolysis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-70171
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P13929" data-a="GO:0061621" data-r="Reactome:R-HSA-70171" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author-statement placing ENO3 in the Glycolysis pathway (canonical glycolysis).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct and core; duplicates the IEA canonical glycolysis annotation with expert Reactome pathway curation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ENO3/ENO3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">glyceraldehyde 3-phosphate: step 4/5</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004634" target="_blank" class="term-link">
+                                    GO:0004634
+                                </a>
+                            </span>
+                            <span class="term-label">phosphopyruvate hydratase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-70494
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P13929" data-a="GO:0004634" data-r="Reactome:R-HSA-70494" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author-statement for the enolase reaction (&#34;Enolase dimers (ENO1,2,3) convert PEP to 2PG&#34;), assigning phosphopyruvate hydratase activity to ENO3.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Expert-curated statement of the core catalytic function of ENO3; duplicates the IBA/IEA/ISS enolase MF annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ENO3/ENO3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=(2R)-2-phosphoglycerate = phosphoenolpyruvate + H2O</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004634" target="_blank" class="term-link">
+                                    GO:0004634
+                                </a>
+                            </span>
+                            <span class="term-label">phosphopyruvate hydratase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-71660
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P13929" data-a="GO:0004634" data-r="Reactome:R-HSA-71660" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author-statement (&#34;Enolase dimers dehydrates 2PG&#34;) for the phosphopyruvate hydratase activity of ENO3.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Expert-curated statement of the core enolase catalytic function; duplicates the other enolase MF annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ENO3/ENO3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=(2R)-2-phosphoglycerate = phosphoenolpyruvate + H2O</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000052
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P13929" data-a="GO:0005829" data-r="GO_REF:0000052" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay (Human Protein Atlas immunofluorescence) localizing ENO3 to the cytosol, the primary site of the glycolytic enolase reaction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimental, specific, and core. This is the preferred cellular-component annotation for ENO3 and is consistent with UniProt (Cytoplasm) and the Ensembl is_active_in cytosol annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ENO3/ENO3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm. Note=Localized to the Z line</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000052
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P13929" data-a="GO:0005886" data-r="GO_REF:0000052" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay (Human Protein Atlas immunofluorescence) reporting a plasma-membrane signal for ENO3. Cell-surface enolase pools have been reported for enolases generally, but this is not the core cytosolic catalytic localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Enolase is a well-known moonlighting cell-surface protein in several isozymes, so a plasma-membrane pool is plausible and the experimental HPA signal is retained; however it does not represent the core glycolytic function of ENO3 and is marked non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ENO3/ENO3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm. Note=Localized to the Z line</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004634" target="_blank" class="term-link">
+                                    GO:0004634
+                                </a>
+                            </span>
+                            <span class="term-label">phosphopyruvate hydratase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P13929" data-a="GO:0004634" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sequence-similarity-based transfer (from the rat/mouse ortholog UniProtKB:P15429) of phosphopyruvate hydratase activity to ENO3. Duplicates the core enolase MF.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct ortholog-based transfer of the core catalytic function; the human ENO3 EC 4.2.1.11 assignment itself is ISS-inferred from P15429 in UniProt.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ENO3/ENO3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=(2R)-2-phosphoglycerate = phosphoenolpyruvate + H2O</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19433310" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19433310
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cathepsin X cleaves the C-terminal dipeptide of alpha- and g...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P13929" data-a="GO:0016020" data-r="PMID:19433310" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CAFA-sourced direct-assay annotation to the generic term membrane, from a study of cathepsin X cleavage of enolase. The cited paper concerns alpha- and gamma-enolase neuronal biology, not muscle beta-enolase.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> &#34;Membrane&#34; (GO:0016020) is a very general cellular-component term and does not represent the core cytosolic localization of ENO3. The supporting paper studies alpha/gamma-enolase (neurotrophic, cell-surface enolase), so its relevance to muscle beta-enolase is peripheral. Flagged as over-annotation rather than removed, since a moonlighting cell-surface/membrane enolase pool is documented for the family.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19433310" target="_blank" class="term-link">
+                                        PMID:19433310
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">we identify isozymes alpha- and gamma-enolases as targets for cathepsin X</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070062" target="_blank" class="term-link">
+                                    GO:0070062
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular exosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23533145
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    In-depth proteomic analyses of exosomes isolated from expres...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P13929" data-a="GO:0070062" data-r="PMID:23533145" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput proteomic detection of ENO3 in exosomes isolated from expressed prostatic secretions in urine. A bulk secretome/exosome proteomics survey.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Glycolytic enzymes, including enolases, are ubiquitously detected in exosome/secretome proteomes, and such detections rarely reflect a dedicated biological function. This is not a core localization for muscle beta-enolase and is flagged as over-annotation. Kept (not removed) as it is a valid mass-spectrometry observation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link">
+                                        PMID:23533145
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">exosome preparations were characterized by a shotgun proteomics procedure</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22664934" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22664934
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Comparison of tear protein levels in breast cancer patients ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P13929" data-a="GO:0005576" data-r="PMID:22664934" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput proteomic detection of ENO3 in tear fluid (a comparative breast-cancer tear-proteome study). A bulk body-fluid proteomics survey.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Detection of an abundant cytosolic glycolytic enzyme in a body fluid does not establish a dedicated extracellular function; such findings are common contaminant/secretome observations. Not a core localization for ENO3, so flagged as over-annotation while retaining the experimental record.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22664934" target="_blank" class="term-link">
+                                        PMID:22664934
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">semi-quantitative comparison of tear protein levels in cancer (CA) and control</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-70494
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P13929" data-a="GO:0005829" data-r="Reactome:R-HSA-70494" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author-statement localizing the ENO3-containing enolase reaction to the cytosol.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct and core; the enolase reaction occurs in the cytosol. Duplicates the HPA IDA cytosol annotation with expert pathway curation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ENO3/ENO3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm. Note=Localized to the Z line</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-71660
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P13929" data-a="GO:0005829" data-r="Reactome:R-HSA-71660" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author-statement localizing the ENO3 enolase reaction to the cytosol.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct and core; consistent with the other cytosol/cytoplasm annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ENO3/ENO3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm. Note=Localized to the Z line</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004634" target="_blank" class="term-link">
+                                    GO:0004634
+                                </a>
+                            </span>
+                            <span class="term-label">phosphopyruvate hydratase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8513787" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8513787
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structural features of the human gene for muscle-specific en...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P13929" data-a="GO:0004634" data-r="PMID:8513787" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Traceable-author-statement (PINC) assigning phosphopyruvate hydratase activity to ENO3. The cited paper characterizes the human muscle-specific (beta) enolase gene and identifies it as the beta isoform of the glycolytic enzyme enolase.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core catalytic function; the paper explicitly identifies ENO3 as the beta/muscle-specific isoform of the glycolytic enzyme enolase. Duplicates the other enolase MF annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8513787" target="_blank" class="term-link">
+                                        PMID:8513787
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the human gene for the beta or muscle-specific isoform of the glycolytic enzyme enolase</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Catalyses the penultimate step of glycolysis, the Mg2+-dependent reversible dehydration of 2-phospho-D-glycerate to phosphoenolpyruvate plus water (EC 4.2.1.11), as the muscle-specific beta subunit of the enolase dimer; the reverse reaction contributes to gluconeogenesis.</h3>
+                <span class="vote-buttons" data-g="P13929" data-a="FUNCTION: Catalyses the penultimate step of glycolysis, the ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004634" target="_blank" class="term-link">
+                            phosphopyruvate hydratase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006096" target="_blank" class="term-link">
+                                glycolytic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/ENO3/ENO3-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Enolase that catalyzes the conversion of 2-phosphoglycerate</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/ENO3/ENO3-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Reaction=(2R)-2-phosphoglycerate = phosphoenolpyruvate + H2O</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>The same enolase catalytic activity operating in the hydration (PEP to 2-PG) direction contributes to gluconeogenesis.</h3>
+                <span class="vote-buttons" data-g="P13929" data-a="FUNCTION: The same enolase catalytic activity operating in t..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004634" target="_blank" class="term-link">
+                            phosphopyruvate hydratase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006094" target="_blank" class="term-link">
+                                gluconeogenesis
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/ENO3/ENO3-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">to phosphoenolpyruvate in glycolysis and the reverse reaction in</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Binds magnesium ion, the essential catalytic cofactor required for the enolase reaction and for stabilizing the enolase dimer.</h3>
+                <span class="vote-buttons" data-g="P13929" data-a="FUNCTION: Binds magnesium ion, the essential catalytic cofac..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000287" target="_blank" class="term-link">
+                            magnesium ion binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/ENO3/ENO3-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Note=Mg(2+) is required for catalysis and for stabilizing the dimer</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/ENO3/ENO3-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry P13929 (ENOB_HUMAN), Beta-enolase</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19433310" target="_blank" class="term-link">
+                            PMID:19433310
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Cathepsin X cleaves the C-terminal dipeptide of alpha- and gamma-enolase and impairs survival and neuritogenesis of neuronal cells.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22664934" target="_blank" class="term-link">
+                            PMID:22664934
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Comparison of tear protein levels in breast cancer patients and healthy controls using a de novo proteomic approach.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link">
+                            PMID:23533145
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">In-depth proteomic analyses of exosomes isolated from expressed prostatic secretions in urine.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                            PMID:33961781
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Dual proteome-scale networks reveal cell-specific remodeling of the human interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/35271311" target="_blank" class="term-link">
+                            PMID:35271311
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenCell: Endogenous tagging for the cartography of human cellular organization.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8513787" target="_blank" class="term-link">
+                            PMID:8513787
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Structural features of the human gene for muscle-specific enolase. Differential splicing in the 5&#39;-untranslated sequence generates two forms of mRNA.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-70171
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Glycolysis</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-70263
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gluconeogenesis</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-70494
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Enolase dimers (ENO1,2,3) convert PEP to 2PG</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-71660
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Enolase dimers dehydrates 2PG</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ENO3-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P13929" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="eno3-beta-enolase-muscle-specific-enolase-review-notes">ENO3 (Beta-enolase / muscle-specific enolase) review notes</h1>
+<p>UniProtKB: P13929 (ENOB_HUMAN), 434 aa, HGNC:3354, gene on chr17.</p>
+<h2 id="core-biology">Core biology</h2>
+<p>ENO3 is the beta (muscle-specific) isozyme of enolase, a cytosolic metalloenzyme<br />
+of the enolase superfamily. It catalyses the penultimate step of glycolysis:<br />
+the Mg2+-dependent, reversible dehydration of 2-phospho-D-glycerate (2-PG) to<br />
+phosphoenolpyruvate (PEP) + H2O; the reverse hydration reaction operates in<br />
+gluconeogenesis.</p>
+<ul>
+<li>EC 4.2.1.11; Rhea:RHEA:10164 (2R)-2-phosphoglycerate = phosphoenolpyruvate + H2O<br />
+  [file:human/ENO3/ENO3-uniprot.txt "Reaction=(2R)-2-phosphoglycerate = phosphoenolpyruvate + H2O"]</li>
+<li>FUNCTION: "Enolase that catalyzes the conversion of 2-phosphoglycerate to<br />
+  phosphoenolpyruvate in glycolysis and the reverse reaction in gluconeogenesis.<br />
+  Appears to have a function in striated muscle development and regeneration."<br />
+  [file:human/ENO3/ENO3-uniprot.txt]</li>
+<li>COFACTOR: "Mg(2+) is required for catalysis and for stabilizing the dimer."<br />
+  [file:human/ENO3/ENO3-uniprot.txt]</li>
+<li>PATHWAY: "Carbohydrate degradation; glycolysis; pyruvate from D-glyceraldehyde<br />
+  3-phosphate: step 4/5." [file:human/ENO3/ENO3-uniprot.txt]</li>
+</ul>
+<h2 id="isozymes-quaternary-structure">Isozymes / quaternary structure</h2>
+<p>Mammalian enolase is a dimer built from three tissue subunits: alpha (ENO1, ubiquitous),<br />
+beta (ENO3, muscle) and gamma (ENO2, neuronal). ENO3 forms alpha/beta heterodimers and<br />
+beta/beta homodimers in striated muscle.<br />
+[file:human/ENO3/ENO3-uniprot.txt "Mammalian enolase is composed of 3 isozyme subunits, alpha, beta and gamma"]<br />
+IntAct records the ENO1(P06733)-ENO3 interaction (the alpha/beta heterodimer).</p>
+<h2 id="localization">Localization</h2>
+<ul>
+<li>SUBCELLULAR LOCATION: Cytoplasm; "Localized to the Z line. Some colocalization with<br />
+  CKM at M-band (By similarity)." [file:human/ENO3/ENO3-uniprot.txt] So a sarcomeric<br />
+  (Z-line / M-band) pool exists in addition to the bulk cytosol.</li>
+<li>HPA IDA: cytosol (GO:0005829) and plasma membrane (GO:0005886).</li>
+<li>Various HDA/IDA extracellular/membrane detections (exosome, tear fluid, membrane)<br />
+  are proteomic surveys, not indicators of the enzyme's core catalytic role — glycolytic<br />
+  enzymes are commonly detected in secretomes/exosomes. Treated as over-annotations.</li>
+</ul>
+<h2 id="disease">Disease</h2>
+<p>Glycogen storage disease type XIII (GSD13, MIM:612932), beta-enolase deficiency: a<br />
+metabolic myopathy of distal glycolysis; exercise-induced myalgias, generalized muscle<br />
+weakness/fatigability, increased serum creatine kinase, decreased ENO3 activity, focal<br />
+sarcoplasmic glycogen-beta accumulation. Caused by ENO3 variants (Asp-156, Glu-374 in<br />
+the seminal report). [file:human/ENO3/ENO3-uniprot.txt; PMID:11506403 (abstract not cached)]</p>
+<h2 id="annotation-review-summary-actions">Annotation review summary (actions)</h2>
+<ul>
+<li>MF GO:0004634 phosphopyruvate hydratase activity — CORE. Multiple lines (IBA, IEA,<br />
+  ISS, TAS x3). ACCEPT the IBA (phylogenetic, right level) as core; ACCEPT the others.</li>
+<li>MF GO:0000287 magnesium ion binding (IEA, InterPro) — ACCEPT; Mg2+ cofactor is<br />
+  experimentally documented as required for catalysis/dimer stability.</li>
+<li>BP GO:0006096 glycolytic process / GO:0061621 canonical glycolysis — CORE. ACCEPT.</li>
+<li>BP GO:0006094 gluconeogenesis — ACCEPT (reverse reaction; UniProt FUNCTION supports).</li>
+<li>CC GO:0000015 phosphopyruvate hydratase complex (IBA, IEA) — ACCEPT; the enolase dimer.</li>
+<li>CC GO:0005829 cytosol / GO:0005737 cytoplasm — ACCEPT (bulk localization).</li>
+<li>CC GO:0005886 plasma membrane (HPA IDA) — KEEP_AS_NON_CORE; enolase surface pool is<br />
+  reported but is not the core catalytic role.</li>
+<li>CC GO:0016020 membrane (CAFA IDA, PMID:19433310) — MARK_AS_OVER_ANNOTATED; the paper<br />
+  concerns alpha/gamma-enolase neuronal biology, membrane localization is not ENO3-core.</li>
+<li>CC GO:0070062 extracellular exosome (HDA) / GO:0005576 extracellular region (HDA) —<br />
+  MARK_AS_OVER_ANNOTATED; proteomic secretome/exosome detections, not core function.</li>
+<li>MF GO:0005515 protein binding (IPI x2, both with ENO1/P06733) — MARK_AS_OVER_ANNOTATED;<br />
+  bare "protein binding" is uninformative. The real content (alpha/beta heterodimer) is<br />
+  captured by GO:0000015 phosphopyruvate hydratase complex.</li>
+</ul>
+<h2 id="references-cited">References cited</h2>
+<p>See ENO3-uniprot.txt DR/CC blocks and publications/PMID_*.md. PMID:11506403 (GSD13) and<br />
+PMID:15188056 (PNKD interaction) are cited in UniProt but not cached here; not used for<br />
+supporting_text quotes.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P13929
+gene_symbol: ENO3
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  ENO3 encodes beta-enolase (muscle-specific enolase, MSE), the beta subunit of the
+  glycolytic metalloenzyme enolase. It catalyses the penultimate step of glycolysis:
+  the Mg2+-dependent, reversible dehydration of 2-phospho-D-glycerate (2-PG) to
+  phosphoenolpyruvate (PEP) plus water (EC 4.2.1.11); the reverse hydration reaction
+  operates in gluconeogenesis. Mammalian enolase functions as a dimer assembled from
+  three tissue-specific subunits - alpha (ENO1, ubiquitous), beta (ENO3, muscle) and
+  gamma (ENO2, neuronal) - which form homodimers and heterodimers; in striated muscle
+  ENO3 forms alpha/beta heterodimers and beta/beta homodimers. The enzyme acts in the
+  cytosol, with an additional sarcomeric pool localized to the Z line and, by
+  similarity, the M band. Loss-of-function ENO3 variants cause glycogen storage disease
+  type XIII (GSD13, beta-enolase deficiency), a metabolic myopathy of distal glycolysis
+  characterized by exercise-induced myalgia, muscle weakness and fatigability, raised
+  serum creatine kinase, and focal sarcoplasmic glycogen accumulation.
+alternative_products:
+- name: &#39;1&#39;
+  id: P13929-1
+- name: &#39;2&#39;
+  id: P13929-2
+  sequence_note: VSP_037753
+- name: &#39;3&#39;
+  id: P13929-3
+  sequence_note: VSP_037752
+existing_annotations:
+- term:
+    id: GO:0004634
+    label: phosphopyruvate hydratase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetically-inferred (IBA) assignment of phosphopyruvate hydratase (enolase,
+      EC 4.2.1.11) activity, the defining molecular function of the enolase family and
+      the core catalytic function of ENO3. Beta-enolase converts 2-phosphoglycerate to
+      phosphoenolpyruvate in glycolysis and the reverse in gluconeogenesis.
+    action: ACCEPT
+    reason: &gt;-
+      This is the core molecular function of ENO3, at the correct level of specificity,
+      supported by UniProt, EC/RHEA mapping, ISS from mouse ortholog, and multiple TAS
+      Reactome annotations. The IBA is well supported across the enolase orthology group.
+    supported_by:
+    - reference_id: file:human/ENO3/ENO3-uniprot.txt
+      supporting_text: Enolase that catalyzes the conversion of 2-phosphoglycerate
+    - reference_id: file:human/ENO3/ENO3-uniprot.txt
+      supporting_text: Reaction=(2R)-2-phosphoglycerate = phosphoenolpyruvate + H2O
+- term:
+    id: GO:0006096
+    label: glycolytic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetically-inferred involvement in glycolysis. Enolase catalyses the ninth
+      step of glycolysis (2-PG to PEP), a core biological process for ENO3.
+    action: ACCEPT
+    reason: &gt;-
+      Correct and core. ENO3 is a canonical glycolytic enzyme; the muscle beta-enolase
+      supplies the high glycolytic flux of striated muscle. Supported by UniProt PATHWAY.
+    supported_by:
+    - reference_id: file:human/ENO3/ENO3-uniprot.txt
+      supporting_text: &#34;glyceraldehyde 3-phosphate: step 4/5&#34;
+- term:
+    id: GO:0000015
+    label: phosphopyruvate hydratase complex
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      Phylogenetically-inferred assignment to the phosphopyruvate hydratase (enolase)
+      complex - the catalytically active enolase dimer. ENO3 acts as a beta/beta
+      homodimer or an alpha/beta heterodimer with ENO1.
+    action: ACCEPT
+    reason: &gt;-
+      Enolase is obligately dimeric and Mg2+ stabilizes the dimer; the complex term
+      accurately captures ENO3&#39;s quaternary organization. This is where the informative
+      content of the bare protein-binding IPIs (ENO1-ENO3) is properly represented.
+    supported_by:
+    - reference_id: file:human/ENO3/ENO3-uniprot.txt
+      supporting_text: &#34;SUBUNIT: Mammalian enolase is composed of 3 isozyme subunits, alpha,&#34;
+- term:
+    id: GO:0000015
+    label: phosphopyruvate hydratase complex
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      InterPro2GO (IPR000941 Enolase) electronic assignment to the enolase dimer complex.
+      Duplicates the IBA complex annotation.
+    action: ACCEPT
+    reason: &gt;-
+      Correct InterPro-based mapping; consistent with the IBA part_of annotation and with
+      the obligately dimeric nature of enolase.
+    supported_by:
+    - reference_id: file:human/ENO3/ENO3-uniprot.txt
+      supporting_text: &#34;SUBUNIT: Mammalian enolase is composed of 3 isozyme subunits, alpha,&#34;
+- term:
+    id: GO:0000287
+    label: magnesium ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      InterPro2GO (IPR000941 Enolase) electronic assignment of magnesium ion binding.
+      Mg2+ is the essential catalytic cofactor of enolase; the structure of P13929 has
+      annotated Mg2+-binding residues (Ser-245, Asp-293, Asp-318).
+    action: ACCEPT
+    reason: &gt;-
+      Well supported. Mg2+ is required for catalysis and for stabilizing the enolase
+      dimer, and UniProt lists explicit Mg2+ BINDING sites in ENO3. A genuine cofactor
+      function; retained as core because catalysis is Mg2+-dependent.
+    supported_by:
+    - reference_id: file:human/ENO3/ENO3-uniprot.txt
+      supporting_text: Note=Mg(2+) is required for catalysis and for stabilizing the dimer
+- term:
+    id: GO:0004634
+    label: phosphopyruvate hydratase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic assignment of phosphopyruvate hydratase activity via combined IEA
+      methods (EC 4.2.1.11, RHEA:10164, InterPro, mouse ortholog). Duplicates the core
+      enolase molecular function.
+    action: ACCEPT
+    reason: &gt;-
+      Correct EC/RHEA/InterPro mapping to the core catalytic function of ENO3.
+    supported_by:
+    - reference_id: file:human/ENO3/ENO3-uniprot.txt
+      supporting_text: Reaction=(2R)-2-phosphoglycerate = phosphoenolpyruvate + H2O
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic assignment of cytoplasmic localization from the UniProt subcellular
+      location vocabulary. Enolase is a soluble cytoplasmic/cytosolic enzyme.
+    action: ACCEPT
+    reason: &gt;-
+      Correct but general; the more specific GO:0005829 cytosol (IDA, HPA) is the
+      preferred core location. Kept as an accurate parent-level localization.
+    supported_by:
+    - reference_id: file:human/ENO3/ENO3-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm. Note=Localized to the Z line&#34;
+- term:
+    id: GO:0006094
+    label: gluconeogenesis
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      ARBA electronic assignment of involvement in gluconeogenesis. Enolase catalyses the
+      reversible 2-PG/PEP interconversion; running in the hydration (PEP to 2-PG)
+      direction, it participates in the gluconeogenic pathway.
+    action: ACCEPT
+    reason: &gt;-
+      Biologically correct - the enolase reaction is reversible and operates in both
+      glycolysis and gluconeogenesis, as stated explicitly in the UniProt FUNCTION line.
+      Note that muscle is not a major gluconeogenic tissue, so this is a shared enzymatic
+      capability rather than the dominant physiological role of ENO3, but the annotation
+      is not wrong.
+    supported_by:
+    - reference_id: file:human/ENO3/ENO3-uniprot.txt
+      supporting_text: to phosphoenolpyruvate in glycolysis and the reverse reaction in
+- term:
+    id: GO:0006096
+    label: glycolytic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic assignment (InterPro + UniPathway UPA00109) of involvement in glycolysis.
+      Duplicates the IBA glycolytic process annotation.
+    action: ACCEPT
+    reason: &gt;-
+      Correct core biological process; consistent with the IBA and Reactome annotations.
+    supported_by:
+    - reference_id: file:human/ENO3/ENO3-uniprot.txt
+      supporting_text: &#34;glyceraldehyde 3-phosphate: step 4/5&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:33961781
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IntAct-curated physical interaction (BioPlex AP-MS interactome) of ENO3 with ENO1
+      (UniProtKB:P06733), i.e. the alpha/beta enolase heterodimer. Annotated with the
+      uninformative generic term protein binding.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Bare &#34;protein binding&#34; (GO:0005515) is uninformative and per curation guidelines
+      should not be treated as a core function. The biologically meaningful content - the
+      ENO1-ENO3 (alpha/beta) association - is properly represented by GO:0000015
+      phosphopyruvate hydratase complex. The interaction itself is a real, high-throughput
+      AP-MS observation, so it is not removed, only flagged as over-annotation.
+    supported_by:
+    - reference_id: PMID:33961781
+      supporting_text: &gt;-
+        affinity purification of 10,128 human proteins-half the proteome-in 293T cells
+        and includes 118,162 interactions among 14,586 proteins
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:35271311
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IntAct-curated physical interaction (OpenCell endogenous-tagging IP-MS) of ENO3 with
+      ENO1 (UniProtKB:P06733), again the alpha/beta enolase heterodimer, annotated with the
+      generic term protein binding.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      As for the BioPlex IPI, bare &#34;protein binding&#34; is uninformative; the ENO1-ENO3
+      interaction is captured more specifically by GO:0000015 phosphopyruvate hydratase
+      complex. The interaction is a genuine large-scale IP-MS observation, so it is flagged
+      as over-annotation rather than removed.
+    supported_by:
+    - reference_id: PMID:35271311
+      supporting_text: &gt;-
+        systematically map the localization and interactions of human proteins
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Ensembl-Compara electronic transfer (from mouse ortholog) of active localization in
+      the cytosol - the compartment where glycolysis, and thus the enolase reaction, occurs.
+    action: ACCEPT
+    reason: &gt;-
+      Correct and core; the cytosol is where ENO3 performs its glycolytic function. The
+      is_active_in qualifier is appropriate for a soluble metabolic enzyme. Corroborated by
+      the HPA IDA cytosol annotation.
+    supported_by:
+    - reference_id: file:human/ENO3/ENO3-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm. Note=Localized to the Z line&#34;
+- term:
+    id: GO:0061621
+    label: canonical glycolysis
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic assignment (ARBA + mouse ortholog) of involvement in canonical glycolysis,
+      the ATP-generating glucose-to-pyruvate route. This is a more specific child of
+      glycolytic process describing exactly the pathway ENO3 participates in.
+    action: ACCEPT
+    reason: &gt;-
+      Correct and appropriately specific; ENO3 catalyses the penultimate step of canonical
+      glycolysis. Consistent with the Reactome TAS canonical glycolysis annotation.
+    supported_by:
+    - reference_id: file:human/ENO3/ENO3-uniprot.txt
+      supporting_text: &#34;glyceraldehyde 3-phosphate: step 4/5&#34;
+- term:
+    id: GO:0006094
+    label: gluconeogenesis
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-70263
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Reactome traceable-author-statement placing ENO3 (as part of the enolase dimers) in
+      the Gluconeogenesis pathway, catalysing the hydration of PEP to 2-PG.
+    action: ACCEPT
+    reason: &gt;-
+      Biologically correct; the reversible enolase reaction operates in gluconeogenesis.
+      Consistent with the ARBA IEA gluconeogenesis annotation and with UniProt FUNCTION.
+      Shared enzymatic capability rather than the dominant muscle role, but not incorrect.
+    supported_by:
+    - reference_id: file:human/ENO3/ENO3-uniprot.txt
+      supporting_text: to phosphoenolpyruvate in glycolysis and the reverse reaction in
+- term:
+    id: GO:0061621
+    label: canonical glycolysis
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-70171
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Reactome traceable-author-statement placing ENO3 in the Glycolysis pathway
+      (canonical glycolysis).
+    action: ACCEPT
+    reason: &gt;-
+      Correct and core; duplicates the IEA canonical glycolysis annotation with expert
+      Reactome pathway curation.
+    supported_by:
+    - reference_id: file:human/ENO3/ENO3-uniprot.txt
+      supporting_text: &#34;glyceraldehyde 3-phosphate: step 4/5&#34;
+- term:
+    id: GO:0004634
+    label: phosphopyruvate hydratase activity
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-70494
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Reactome traceable-author-statement for the enolase reaction (&#34;Enolase dimers
+      (ENO1,2,3) convert PEP to 2PG&#34;), assigning phosphopyruvate hydratase activity to ENO3.
+    action: ACCEPT
+    reason: &gt;-
+      Expert-curated statement of the core catalytic function of ENO3; duplicates the
+      IBA/IEA/ISS enolase MF annotations.
+    supported_by:
+    - reference_id: file:human/ENO3/ENO3-uniprot.txt
+      supporting_text: Reaction=(2R)-2-phosphoglycerate = phosphoenolpyruvate + H2O
+- term:
+    id: GO:0004634
+    label: phosphopyruvate hydratase activity
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-71660
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Reactome traceable-author-statement (&#34;Enolase dimers dehydrates 2PG&#34;) for the
+      phosphopyruvate hydratase activity of ENO3.
+    action: ACCEPT
+    reason: &gt;-
+      Expert-curated statement of the core enolase catalytic function; duplicates the other
+      enolase MF annotations.
+    supported_by:
+    - reference_id: file:human/ENO3/ENO3-uniprot.txt
+      supporting_text: Reaction=(2R)-2-phosphoglycerate = phosphoenolpyruvate + H2O
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct assay (Human Protein Atlas immunofluorescence) localizing ENO3 to the cytosol,
+      the primary site of the glycolytic enolase reaction.
+    action: ACCEPT
+    reason: &gt;-
+      Experimental, specific, and core. This is the preferred cellular-component annotation
+      for ENO3 and is consistent with UniProt (Cytoplasm) and the Ensembl is_active_in
+      cytosol annotation.
+    supported_by:
+    - reference_id: file:human/ENO3/ENO3-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm. Note=Localized to the Z line&#34;
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct assay (Human Protein Atlas immunofluorescence) reporting a plasma-membrane
+      signal for ENO3. Cell-surface enolase pools have been reported for enolases generally,
+      but this is not the core cytosolic catalytic localization.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Enolase is a well-known moonlighting cell-surface protein in several isozymes, so a
+      plasma-membrane pool is plausible and the experimental HPA signal is retained; however
+      it does not represent the core glycolytic function of ENO3 and is marked non-core.
+    supported_by:
+    - reference_id: file:human/ENO3/ENO3-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm. Note=Localized to the Z line&#34;
+- term:
+    id: GO:0004634
+    label: phosphopyruvate hydratase activity
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Sequence-similarity-based transfer (from the rat/mouse ortholog UniProtKB:P15429) of
+      phosphopyruvate hydratase activity to ENO3. Duplicates the core enolase MF.
+    action: ACCEPT
+    reason: &gt;-
+      Correct ortholog-based transfer of the core catalytic function; the human ENO3 EC
+      4.2.1.11 assignment itself is ISS-inferred from P15429 in UniProt.
+    supported_by:
+    - reference_id: file:human/ENO3/ENO3-uniprot.txt
+      supporting_text: Reaction=(2R)-2-phosphoglycerate = phosphoenolpyruvate + H2O
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IDA
+  original_reference_id: PMID:19433310
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      CAFA-sourced direct-assay annotation to the generic term membrane, from a study of
+      cathepsin X cleavage of enolase. The cited paper concerns alpha- and gamma-enolase
+      neuronal biology, not muscle beta-enolase.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      &#34;Membrane&#34; (GO:0016020) is a very general cellular-component term and does not
+      represent the core cytosolic localization of ENO3. The supporting paper studies
+      alpha/gamma-enolase (neurotrophic, cell-surface enolase), so its relevance to muscle
+      beta-enolase is peripheral. Flagged as over-annotation rather than removed, since a
+      moonlighting cell-surface/membrane enolase pool is documented for the family.
+    supported_by:
+    - reference_id: PMID:19433310
+      supporting_text: &gt;-
+        we identify isozymes alpha- and gamma-enolases as targets for cathepsin X
+- term:
+    id: GO:0070062
+    label: extracellular exosome
+  evidence_type: HDA
+  original_reference_id: PMID:23533145
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput proteomic detection of ENO3 in exosomes isolated from expressed
+      prostatic secretions in urine. A bulk secretome/exosome proteomics survey.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Glycolytic enzymes, including enolases, are ubiquitously detected in exosome/secretome
+      proteomes, and such detections rarely reflect a dedicated biological function. This is
+      not a core localization for muscle beta-enolase and is flagged as over-annotation. Kept
+      (not removed) as it is a valid mass-spectrometry observation.
+    supported_by:
+    - reference_id: PMID:23533145
+      supporting_text: &gt;-
+        exosome preparations were characterized by a shotgun proteomics procedure
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: HDA
+  original_reference_id: PMID:22664934
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput proteomic detection of ENO3 in tear fluid (a comparative breast-cancer
+      tear-proteome study). A bulk body-fluid proteomics survey.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Detection of an abundant cytosolic glycolytic enzyme in a body fluid does not establish
+      a dedicated extracellular function; such findings are common contaminant/secretome
+      observations. Not a core localization for ENO3, so flagged as over-annotation while
+      retaining the experimental record.
+    supported_by:
+    - reference_id: PMID:22664934
+      supporting_text: &gt;-
+        semi-quantitative comparison of tear protein levels in cancer (CA) and control
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-70494
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome traceable-author-statement localizing the ENO3-containing enolase reaction to
+      the cytosol.
+    action: ACCEPT
+    reason: &gt;-
+      Correct and core; the enolase reaction occurs in the cytosol. Duplicates the HPA IDA
+      cytosol annotation with expert pathway curation.
+    supported_by:
+    - reference_id: file:human/ENO3/ENO3-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm. Note=Localized to the Z line&#34;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-71660
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome traceable-author-statement localizing the ENO3 enolase reaction to the cytosol.
+    action: ACCEPT
+    reason: &gt;-
+      Correct and core; consistent with the other cytosol/cytoplasm annotations.
+    supported_by:
+    - reference_id: file:human/ENO3/ENO3-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm. Note=Localized to the Z line&#34;
+- term:
+    id: GO:0004634
+    label: phosphopyruvate hydratase activity
+  evidence_type: TAS
+  original_reference_id: PMID:8513787
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Traceable-author-statement (PINC) assigning phosphopyruvate hydratase activity to ENO3.
+      The cited paper characterizes the human muscle-specific (beta) enolase gene and
+      identifies it as the beta isoform of the glycolytic enzyme enolase.
+    action: ACCEPT
+    reason: &gt;-
+      Core catalytic function; the paper explicitly identifies ENO3 as the beta/muscle-specific
+      isoform of the glycolytic enzyme enolase. Duplicates the other enolase MF annotations.
+    supported_by:
+    - reference_id: PMID:8513787
+      supporting_text: &gt;-
+        the human gene for the beta or muscle-specific isoform of the glycolytic enzyme enolase
+core_functions:
+- description: &gt;-
+    Catalyses the penultimate step of glycolysis, the Mg2+-dependent reversible dehydration
+    of 2-phospho-D-glycerate to phosphoenolpyruvate plus water (EC 4.2.1.11), as the
+    muscle-specific beta subunit of the enolase dimer; the reverse reaction contributes to
+    gluconeogenesis.
+  molecular_function:
+    id: GO:0004634
+    label: phosphopyruvate hydratase activity
+  directly_involved_in:
+  - id: GO:0006096
+    label: glycolytic process
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: file:human/ENO3/ENO3-uniprot.txt
+    supporting_text: Enolase that catalyzes the conversion of 2-phosphoglycerate
+  - reference_id: file:human/ENO3/ENO3-uniprot.txt
+    supporting_text: Reaction=(2R)-2-phosphoglycerate = phosphoenolpyruvate + H2O
+- description: &gt;-
+    The same enolase catalytic activity operating in the hydration (PEP to 2-PG) direction
+    contributes to gluconeogenesis.
+  molecular_function:
+    id: GO:0004634
+    label: phosphopyruvate hydratase activity
+  directly_involved_in:
+  - id: GO:0006094
+    label: gluconeogenesis
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: file:human/ENO3/ENO3-uniprot.txt
+    supporting_text: to phosphoenolpyruvate in glycolysis and the reverse reaction in
+- description: &gt;-
+    Binds magnesium ion, the essential catalytic cofactor required for the enolase reaction
+    and for stabilizing the enolase dimer.
+  molecular_function:
+    id: GO:0000287
+    label: magnesium ion binding
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: file:human/ENO3/ENO3-uniprot.txt
+    supporting_text: Note=Mg(2+) is required for catalysis and for stabilizing the dimer
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:human/ENO3/ENO3-uniprot.txt
+  title: UniProtKB entry P13929 (ENOB_HUMAN), Beta-enolase
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Canonical UniProt record for human ENO3/beta-enolase; primary source for the catalytic
+      reaction, Mg2+ cofactor, glycolysis/gluconeogenesis pathway, cytoplasmic/Z-line
+      localization, isozyme/dimer composition, and GSD13 disease association.
+- id: PMID:19433310
+  title: Cathepsin X cleaves the C-terminal dipeptide of alpha- and gamma-enolase
+    and impairs survival and neuritogenesis of neuronal cells.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified; study concerns alpha- and gamma-enolase (neuronal), not muscle
+      beta-enolase. Underpins the CAFA membrane IDA annotation, which is peripheral to ENO3.
+- id: PMID:22664934
+  title: Comparison of tear protein levels in breast cancer patients and healthy controls
+    using a de novo proteomic approach.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified body-fluid (tear) proteomics survey; ENO3 detection reflects abundance
+      in a body fluid rather than a dedicated extracellular function.
+- id: PMID:23533145
+  title: In-depth proteomic analyses of exosomes isolated from expressed prostatic
+    secretions in urine.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified exosome proteomics survey; supports the extracellular exosome HDA
+      annotation but does not indicate a core ENO3 function.
+- id: PMID:33961781
+  title: Dual proteome-scale networks reveal cell-specific remodeling of the human
+    interactome.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified BioPlex AP-MS interactome; documents the ENO1-ENO3 (alpha/beta)
+      interaction, captured more informatively by the phosphopyruvate hydratase complex term.
+- id: PMID:35271311
+  title: &#39;OpenCell: Endogenous tagging for the cartography of human cellular organization.&#39;
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified OpenCell IP-MS/imaging resource; documents the ENO1-ENO3 interaction,
+      better represented by the enolase complex term than by bare protein binding.
+- id: PMID:8513787
+  title: Structural features of the human gene for muscle-specific enolase. Differential
+    splicing in the 5&#39;-untranslated sequence generates two forms of mRNA.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified; characterizes the human ENO3 (beta/muscle-specific) enolase gene and
+      identifies it as the beta isoform of the glycolytic enzyme enolase, supporting the
+      TAS phosphopyruvate hydratase activity annotation.
+- id: Reactome:R-HSA-70171
+  title: Glycolysis
+  findings: []
+- id: Reactome:R-HSA-70263
+  title: Gluconeogenesis
+  findings: []
+- id: Reactome:R-HSA-70494
+  title: Enolase dimers (ENO1,2,3) convert PEP to 2PG
+  findings: []
+- id: Reactome:R-HSA-71660
+  title: Enolase dimers dehydrates 2PG
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -11,6 +11,7 @@ the proposed curation decision.
 - **Taxon:** {taxon_label} ({taxon_id})
 - **Gene directory:** {gene}
 - **Gene symbol:** {gene_symbol}
+- **UniProt accession:** {uniprot_accession}
 
 ## Focus
 
@@ -65,10 +66,12 @@ clearly labeled as review-level or database-level support.
 Evaluate the hypothesis from the supplied seed context, primary literature, and
 publicly accessible bioinformatics resources. Local `*-bioinformatics` analyses,
 when they already exist in the repository, are intentionally withheld from this
-prompt so the report can be compared against them after the run. Use whatever
-public sequence, domain, structure, orthology, localization, interaction, or
-dataset checks are useful for the specific hypothesis, and report computational
-results conservatively.
+prompt so the report can be compared against them after the run. Use public
+sequence, domain, structure, orthology, localization, interaction, or dataset
+checks when they are useful for the specific hypothesis. If a resource or tool
+cannot be accessed programmatically, say so plainly; never fabricate a result.
+Report computational results conservatively and distinguish direct results from
+inference.
 
 ## Required Output
 
@@ -131,6 +134,10 @@ curator verification. Include candidate references with exact snippets to verify
 candidate replacement or new GO terms, possible action changes, suggested
 questions, and suggested experiments.
 
-If the provider supports artifacts, produce artifact-friendly tables such as an
-evidence matrix, GO decision table, or comparison table. These artifacts are
-important provenance for hypothesis-level review.
+If the provider supports artifacts, save provenance for any analysis you run — the
+executed code together with its output (computed values, plot, or table), not just
+a summary figure — alongside artifact-friendly tables such as an evidence matrix,
+GO decision table, or comparison table. Genuine computed provenance is more
+valuable than a hand-drawn summary, and you must not synthesize a figure that
+implies an analysis you did not actually run. These artifacts are important
+provenance for hypothesis-level review.

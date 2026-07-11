@@ -1,0 +1,2805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIM33 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>AIM33</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q04516" target="_blank" class="term-link">
+                        Q04516
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Saccharomyces cerevisiae</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "AIM33";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q04516" data-a="DESCRIPTION: AIM33 (YML087C) is a poorly characterized Saccharo..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>AIM33 (YML087C) is a poorly characterized Saccharomyces cerevisiae protein of the flavoprotein pyridine nucleotide cytochrome reductase (cytochrome-b5 reductase, CYB5R) superfamily. It carries the diagnostic two-domain flavin/pyridine-nucleotide reductase module — an FAD-binding FR-type domain (residues ~70-173) followed by an NAD(P)H-binding domain — and is predicted to bind FAD, so it is expected to act as an NAD(P)H-dependent flavin oxidoreductase. Unlike most family members, which are soluble or single-pass tail-anchored, AIM33 is predicted to be a polytopic (multi-pass) membrane protein. Its specific catalytic activity, physiological electron acceptor, and site of action have not been experimentally established. Deletion of AIM33 alters the frequency of spontaneous mitochondrial genome loss (petite frequency) and impairs growth on non-fermentable carbon sources, linking the protein to mitochondrial genome maintenance and respiratory competence, and giving it the &#34;Altered Inheritance of Mitochondria&#34; (AIM) name. AIM33 has a whole-genome-duplication paralog, PGA3 (a plasma-membrane NADH:coenzyme-Q6 reductase), and is related at the reductase-domain level to the mitochondrial/ER cytochrome-b5 reductases MCR1 and CBR1 and to human CYB5R-family enzymes.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q04516" data-a="GO:0005886" data-r="GO_REF:0000033" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically-propagated (IBA) plasma-membrane location. AIM33 is a membrane protein, but the &#34;plasma membrane&#34; specificity is not supported for AIM33 itself.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The IBA is transferred across the cytochrome-b5-reductase family (PANTHER PTHR19370), whose members occupy several membranes: the paralog PGA3 is plasma-membrane-associated, but MCR1 is at the mitochondrial outer membrane / intermembrane space and CBR1 is in the ER. AIM33&#39;s own experimental data point away from the plasma membrane: its deletion perturbs mitochondrial genome maintenance and respiratory growth, and its predicted polytopic topology is consistent with an internal (likely mitochondrial) membrane. The protein is genuinely membrane-associated, but the specific &#34;plasma membrane&#34; assignment is an over-specific propagation. Generalize to GO:0016020 (membrane) until the true membrane is determined experimentally.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">TERM SCOPING PROBLEM</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">COMPARTMENT OR COMPLEX MISMATCH</span>
+
+                                <span class="badge">WRONG ORTHOLOG OR PARALOG</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">SGD:S000004594</span>
+
+                                    &middot; PGA3
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                    <div class="propagation-comment">PGA3 (AIM33&#39;s WGD paralog) is plasma-membrane-associated; AIM33 phenotype and topology suggest an internal/mitochondrial membrane instead.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    membrane
+                                </a>
+                            </span>
+
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004128" target="_blank" class="term-link">
+                                    GO:0004128
+                                </a>
+                            </span>
+                            <span class="term-label">cytochrome-b5 reductase activity, acting on NAD(P)H</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q04516" data-a="GO:0004128" data-r="GO_REF:0000033" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically-propagated cytochrome-b5 reductase activity. Domain-plausible but not demonstrated for AIM33, and the specific cytochrome-b5 electron acceptor is unproven for this paralog.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> AIM33 has the FAD-binding FR-type + NAD(P)H-binding module diagnostic of the cytochrome-b5 reductase superfamily, so an NAD(P)H:acceptor flavin-oxidoreductase activity is reasonable in principle. However, no enzyme assay has demonstrated cytochrome-b5 reductase activity for AIM33, and the physiological electron acceptor (cytochrome b5 vs coenzyme Q vs a P450 vs an unknown partner) is not established. The activity is transferred from characterized paralogs (MCR1, CBR1, PGA3) whose acceptors differ (MCR1/CBR1 reduce cytochrome b5; PGA3 reduces coenzyme Q6). Asserting the specific &#34;cytochrome-b5&#34; acceptor for AIM33 is an over-annotation; the defensible MF is the more general oxidoreductase activity (see GO:0016491, retained). Keep the reductase idea on record but flagged, pending direct biochemistry.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">TERM SCOPING PROBLEM</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">WRONG ORTHOLOG OR PARALOG</span>
+
+                                <span class="badge">FUNCTIONAL DIVERGENCE</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">SGD:S000001633</span>
+
+                                    &middot; MCR1
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                    <div class="propagation-comment">MCR1 is an experimentally validated NADH-cytochrome b5 reductase; AIM33 shares the reductase fold but its acceptor is unverified.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006696" target="_blank" class="term-link">
+                                    GO:0006696
+                                </a>
+                            </span>
+                            <span class="term-label">ergosterol biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q04516" data-a="GO:0006696" data-r="GO_REF:0000033" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically-propagated ergosterol-biosynthesis role. No AIM33-specific evidence; transferred from paralogs and contradicted by AIM33&#39;s mitochondrial-genome phenotype.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> An ergosterol-biosynthesis role is well established for the related cytochrome-b5 reductases that donate electrons to sterol-biosynthetic cytochrome P450s (e.g. MCR1 to Erg11/Erg5/Erg1), and this is the basis for the IBA transfer. AIM33 itself has no experimental link to sterol biosynthesis; instead its characterized phenotype is altered mitochondrial genome maintenance and loss of respiratory growth. Treating AIM33 as an ergosterol-biosynthesis enzyme on the strength of paralog function is an over-annotation.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">PROPAGATION BAD</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">WRONG ORTHOLOG OR PARALOG</span>
+
+                                <span class="badge">FUNCTIONAL DIVERGENCE</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">SGD:S000001633</span>
+
+                                    &middot; MCR1
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                    <div class="propagation-comment">Ergosterol-pathway electron donation is documented for MCR1, not for AIM33.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004128" target="_blank" class="term-link">
+                                    GO:0004128
+                                </a>
+                            </span>
+                            <span class="term-label">cytochrome-b5 reductase activity, acting on NAD(P)H</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q04516" data-a="GO:0004128" data-r="GO_REF:0000117" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARBA machine-learning electronic annotation asserting the same specific cytochrome-b5 reductase activity; same over-specificity concern as the IBA above.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This ARBA rule fires on family/domain features shared across the CYB5R superfamily and assigns the specific cytochrome-b5 acceptor. As with the IBA, the reductase fold is present but the cytochrome-b5 acceptor is not verified for AIM33; the defensible electronic MF is the general oxidoreductase activity (GO:0016491), which is separately annotated and retained.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">TERM SCOPING PROBLEM</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">GRANULARITY MISMATCH</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">ARBA:ARBA00027922</span>
+
+                                    &middot; ARBA rule (cytochrome-b5 reductase)
+
+
+                                    <span class="badge">SOURCE WEAK OR INFERRED</span>
+
+
+                                    <div class="propagation-comment">Rule assigns a specific acceptor not established for this protein.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q04516" data-a="GO:0016020" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic membrane localization from the UniProt SubCell mapping; well supported by predicted transmembrane helices and the global membrane-proteome dataset.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> AIM33 has multiple predicted transmembrane helices (UniProt TRANSMEM 15-35, 42-62, 180-200) and is included in the experimentally-constrained membrane-proteome topology map (PMID:16847258). &#34;Membrane&#34; is the correct, appropriately general cellular-component term; the specific membrane is not yet determined.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16847258" target="_blank" class="term-link">
+                                        PMID:16847258
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">we report the cloning and expression of 617 S. cerevisiae membrane proteins as fusions to a C-terminal topology reporter and present experimentally constrained topology models for 546 proteins.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016491" target="_blank" class="term-link">
+                                    GO:0016491
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q04516" data-a="GO:0016491" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO electronic annotation of general oxidoreductase activity — the best-supported, appropriately general molecular-function call for AIM33.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> AIM33 carries the FAD-binding FR-type domain and the NAD_binding_1 domain characteristic of flavin/pyridine-nucleotide oxidoreductases, and is predicted to bind FAD. Oxidoreductase activity (GO:0016491) is strongly supported by the domain architecture while remaining agnostic about the specific electron acceptor, which is unknown. This is the honest core molecular-function term for this protein.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003674" target="_blank" class="term-link">
+                                    GO:0003674
+                                </a>
+                            </span>
+                            <span class="term-label">molecular_function</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q04516" data-a="GO:0003674" data-r="GO_REF:0000015" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root-term ND placeholder recording that a specific molecular function was not determined.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Standard ND root annotation (GO_REF:0000015). Appropriate as a historical placeholder; the InterPro-based oxidoreductase MF now provides more specific (if still general) information.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005575" target="_blank" class="term-link">
+                                    GO:0005575
+                                </a>
+                            </span>
+                            <span class="term-label">cellular_component</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q04516" data-a="GO:0005575" data-r="GO_REF:0000015" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root-term ND placeholder for undetermined cellular component.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Standard ND root annotation. The membrane annotations now supersede this with more specific (if still general) localization information.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008150" target="_blank" class="term-link">
+                                    GO:0008150
+                                </a>
+                            </span>
+                            <span class="term-label">biological_process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q04516" data-a="GO:0008150" data-r="GO_REF:0000015" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root-term ND placeholder for undetermined biological process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Standard ND root annotation. The disruption phenotype implicates AIM33 in mitochondrial genome maintenance / respiratory competence, but no specific BP term has been experimentally validated for AIM33 (see knowledge_gaps and core_functions).
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>NAD(P)H-dependent flavin (FAD) oxidoreductase activity inferred from the conserved FAD-binding FR-type + NAD(P)H-binding module of the cytochrome-b5 reductase superfamily. The specific electron acceptor is undetermined, so the function is stated at the general oxidoreductase level rather than as a specific cytochrome-b5 reductase.</h3>
+                <span class="vote-buttons" data-g="Q04516" data-a="FUNCTION: NAD(P)H-dependent flavin (FAD) oxidoreductase acti..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016491" target="_blank" class="term-link">
+                            oxidoreductase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16847258" target="_blank" class="term-link">
+                                PMID:16847258
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">we report the cloning and expression of 617 S. cerevisiae membrane proteins as fusions to a C-terminal topology reporter and present experimentally constrained topology models for 546 proteins.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000015.md" target="_blank" class="term-link">
+                            GO_REF:0000015
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Use of the ND evidence code for Gene Ontology (GO) terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19300474" target="_blank" class="term-link">
+                            PMID:19300474
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Computationally driven, quantitative experiments discover genes required for mitochondrial biogenesis.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Genome-wide petite-frequency screen that assigned mitochondrial-biogenesis / transmission phenotypes to &gt;100 genes (the &#34;AIM&#34; class); the source of the curated AIM33 disruption phenotype (altered frequency of mitochondrial genome loss).</div>
+
+                        <div class="finding-text">"Using computational predictions combined with traditional quantitative experiments, we have identified 100 proteins whose deficiency alters mitochondrial biogenesis and inheritance in Saccharomyces cerevisiae."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16847258" target="_blank" class="term-link">
+                            PMID:16847258
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A global topology map of the Saccharomyces cerevisiae membrane proteome.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Experimentally constrained membrane-topology dataset covering AIM33/YML087C, supporting its assignment as an integral (multi-pass) membrane protein.</div>
+
+                        <div class="finding-text">"we report the cloning and expression of 617 S. cerevisiae membrane proteins as fusions to a C-terminal topology reporter and present experimentally constrained topology models for 546 proteins."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9169872" target="_blank" class="term-link">
+                            PMID:9169872
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The nucleotide sequence of Saccharomyces cerevisiae chromosome XIII.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24374639" target="_blank" class="term-link">
+                            PMID:24374639
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The reference genome sequence of Saccharomyces cerevisiae: Then and now.</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the physiological electron acceptor of AIM33 (cytochrome b5, coenzyme Q6, a cytochrome P450, or another partner), and is NADH or NADPH the electron donor?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q04516" data-a="Q: What is the physiological electron acceptor of AIM..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> In which membrane does AIM33 reside endogenously — mitochondrial, ER, or plasma membrane — and does its polytopic topology differ from the mostly tail-anchored/soluble family members?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q04516" data-a="Q: In which membrane does AIM33 reside endogenously —..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does AIM33 promote or antagonize petite formation, and does it act on mitochondrial genome maintenance directly (e.g. via redox homeostasis or membrane potential) or indirectly?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q04516" data-a="Q: Does AIM33 promote or antagonize petite formation,..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Express and purify recombinant AIM33 (full-length in detergent/nanodiscs and the isolated soluble reductase domain), confirm bound FAD spectroscopically, and measure steady-state NADH- and NADPH-dependent reduction of candidate acceptors (cytochrome b5, coenzyme Q6/CoQ analogs, ferricyanide, cytochrome c, methemoglobin).</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: AIM33 is an NAD(P)H-dependent flavin oxidoreductase whose physiological acceptor is one of cytochrome b5, coenzyme Q6, or a P450.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: enzyme kinetics / spectroscopy</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q04516" data-a="EXPERIMENT: Express and purify recombinant AIM33 (full-length ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Determine endogenous localization of a functional C-terminally tagged AIM33 by live-cell fluorescence colocalization with mitochondrial, ER, and plasma-membrane markers, and by subcellular and submitochondrial fractionation; verify functionality of the tagged allele by complementation of the petite phenotype.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: AIM33 localizes to a mitochondrial membrane consistent with its mitochondrial-genome maintenance phenotype rather than to the plasma membrane.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: localization / cell biology</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q04516" data-a="EXPERIMENT: Determine endogenous localization of a functional ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> In a clean aim33-delta strain, quantify petite frequency against isogenic wild type, measure mtDNA copy number and integrity, mitochondrial membrane potential, and respiratory-complex assembly; perform targeted genetic-interaction tests with genes for mtDNA maintenance and with the paralog PGA3 and relatives MCR1/CBR1.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Loss of AIM33 alters mitochondrial genome stability through a defined mechanism.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: yeast genetics / functional genomics</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q04516" data-a="EXPERIMENT: In a clean aim33-delta strain, quantify petite fre..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(AIM33-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q04516" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="aim33-yml087c-curation-notes">AIM33 (YML087C) — curation notes</h1>
+<p>UniProt: Q04516 | SGD: S000004552 | GeneID: 854887 | 312 aa | Chromosome XIII</p>
+<h2 id="summary-of-the-problem">Summary of the problem</h2>
+<p>AIM33 ("Altered Inheritance of Mitochondria 33") is a <strong>poorly characterized</strong> <em>S. cerevisiae</em><br />
+protein. UniProt names it "Uncharacterized oxidoreductase AIM33" (EC=1.-.-.-). SGD calls it a<br />
+"Protein of unknown function". It is a member (by sequence/domain) of the flavoprotein pyridine<br />
+nucleotide cytochrome reductase family (the cytochrome-b5 reductase, CYB5R, superfamily), but<br />
+its own catalytic activity, physiological electron acceptor, and cellular role are <strong>not<br />
+experimentally established</strong>. This is a "dark gene": the deliverable is an honest knowledge_gaps<br />
+section plus domain/orthology-grounded (not invented) reasoning.</p>
+<h2 id="known-evidence-supported">KNOWN (evidence-supported)</h2>
+<h3 id="domain-architecture-family-from-uniprot-q04516">Domain architecture / family (from UniProt Q04516)</h3>
+<ul>
+<li>Belongs to the <strong>flavoprotein pyridine nucleotide cytochrome reductase family</strong><br />
+  (<code>SIMILARITY {ECO:0000305}</code>).</li>
+<li><strong>FAD-binding FR-type domain</strong> at residues 70–173 (<code>FT DOMAIN ... /evidence=ECO:0000255|PROSITE-ProRule:PRU00716</code>).</li>
+<li>Pfam: <strong>PF00970 FAD_binding_6</strong> + <strong>PF00175 NAD_binding_1</strong> — the classic two-domain<br />
+  FAD/NAD(P)H reductase module of cytochrome-b5 reductases.</li>
+<li>InterPro: IPR001834 (CBR-like), IPR008333 (Cbr1-like FAD-bd dom), IPR017927 (FAD-bd FR-type),<br />
+  IPR001709 (Flavoprotein pyridine nucleotide cytochrome reductase), IPR001433 (OxRdtase FAD/NAD-bd).</li>
+<li>CDD cd06183 "cyt_b5_reduct_like".</li>
+<li><strong>PANTHER PTHR19370</strong> "NADH-CYTOCHROME B5 REDUCTASE"; subfamily <strong>PTHR19370:SF143</strong><br />
+  "PLASMA MEMBRANE-ASSOCIATED COENZYME Q6 REDUCTASE PGA3".</li>
+<li>KW: FAD, Flavoprotein, NAD, Oxidoreductase, Membrane, Transmembrane.</li>
+<li>COFACTOR: FAD (<code>{ECO:0000250}</code> — by similarity only, not measured for AIM33).</li>
+<li><strong>Reasoning</strong>: The FAD-binding + NAD-binding module is diagnostic of a flavin-dependent<br />
+  pyridine-nucleotide:acceptor oxidoreductase. An oxidoreductase MF (GO:0016491) and even a<br />
+  cytochrome-b5-reductase-type activity are therefore <em>domain-defensible</em>. What the domain does<br />
+  NOT tell us is the physiological electron acceptor — cytochrome b5, coenzyme Q, a P450, or<br />
+  something else — which is exactly the open question.</li>
+</ul>
+<h3 id="membrane-topology-multi-pass-pmid16847258-global-topology-map">Membrane topology (multi-pass) — PMID:16847258 (global topology map)</h3>
+<ul>
+<li>UniProt SUBCELLULAR LOCATION: <strong>Membrane; Multi-pass membrane protein</strong> (<code>{ECO:0000305}</code>).</li>
+<li>Predicted TM helices at 15–35, 42–62, 180–200 (ECO:0000255) with an N-in/loop-out topology;<br />
+  the FAD-binding domain (70–173) sits in the large loop.</li>
+<li>AIM33/YML087C is one of the 546 membrane proteins with an experimentally-constrained topology<br />
+  model in <a href="https://pubmed.ncbi.nlm.nih.gov/16847258" title="we report the cloning and expression of 617 S. cerevisiae membrane   proteins as fusions to a C-terminal topology reporter and present experimentally constrained   topology models for 546 proteins.">PMID:16847258</a>. (AIM33 is in the dataset; the paper text is genome-wide<br />
+  and does not discuss AIM33 individually.)</li>
+<li><strong>Note</strong>: This makes AIM33 structurally DISTINCT from most soluble CYB5R enzymes. Human<br />
+  CYB5R4 (the SGD-stated homolog) is a <strong>soluble</strong> flavohemoprotein; MCR1 is anchored at the<br />
+  mitochondrial outer membrane. AIM33 being a genuine <em>polytopic</em> membrane reductase is unusual<br />
+  in this family and is itself a notable, under-explored feature.</li>
+</ul>
+<h3 id="disruption-phenotype-pmid19300474-hess-et-al-mitochondrial-biogenesis-screen">Disruption phenotype — PMID:19300474 (Hess et al., mitochondrial biogenesis screen)</h3>
+<ul>
+<li>UniProt DISRUPTION PHENOTYPE: "<strong>Increases frequency of mitochondrial genome loss.</strong>"<br />
+  (<code>{ECO:0000269|PubMed:19300474}</code>).</li>
+<li>This study systematically measured the <strong>petite frequency</strong> (rate of generation of cells<br />
+  lacking respiratory-competent mitochondria) of ~193 deletion strains and confirmed 109 genes<br />
+  (including the AIM-named genes) with altered mitochondrial transmission phenotypes. AIM33 is<br />
+  one of these; the specific value is in the paper's supplementary tables (S2/S6), not the main<br />
+  text, so no gene-specific verbatim quote is available from the cached full text.</li>
+<li>WT S288C baseline: <a href="https://pubmed.ncbi.nlm.nih.gov/19300474" title="genetic background produce petite daughter cells at a   baseline frequency of ~20%">PMID:19300474</a> and "mutation of genes involved in mitochondrial biogenesis can<br />
+  significantly alter this rate."</li>
+<li>The "AIM" name (Altered Inheritance of Mitochondria) was assigned to genes discovered/confirmed<br />
+  in this class of screens for altered mitochondrial genome transmission.</li>
+</ul>
+<h3 id="discrepancy-on-phenotype-direction-record-in-knowledge_gaps">DISCREPANCY on phenotype direction (record in knowledge_gaps)</h3>
+<ul>
+<li>UniProt curation of PMID:19300474: deletion <strong>INCREASES</strong> frequency of mitochondrial genome loss.</li>
+<li>SGD gene description: "null mutant displays <strong>REDUCED</strong> frequency of mitochondrial genome loss."</li>
+<li>Both cannot be literally true; the direction of the petite-frequency shift for AIM33 is<br />
+  ambiguous between the two curated sources. Either way, AIM33 loss perturbs mitochondrial genome<br />
+  maintenance/petite frequency. (Note: PMID:19300474 discusses that <em>decreased</em> petite frequency<br />
+  can indicate a "petite-negative" synthetic-lethality phenotype, so a decrease is also<br />
+  mechanistically meaningful.)</li>
+</ul>
+<h3 id="other-large-scale-phenotypes-sgd-from-high-throughput-surveys">Other large-scale phenotypes (SGD, from high-throughput surveys)</h3>
+<ul>
+<li>Null mutant: cannot grow on non-fermentable carbon sources (respiratory phenotype); decreased<br />
+  calcium and sodium ion accumulation; reduced starvation and ethanol resistance; abnormal<br />
+  mitochondrial genome maintenance. (These are HTP/large-scale phenotypes, not deep mechanism.)</li>
+</ul>
+<h3 id="family-paralog-ortholog-context">Family / paralog / ortholog context</h3>
+<ul>
+<li><strong>Paralog</strong>: PGA3 (arose from the whole-genome duplication). PGA3 = plasma-membrane-associated<br />
+  NADH:coenzyme-Q6 reductase (the PANTHER SF143 exemplar). [WebSearch: SGD/Wikidata]</li>
+<li>Related family members in yeast: <strong>MCR1</strong> (YKL150W; mitochondrial OMM/IMS NADH-cytochrome b5<br />
+  reductase; electron donor to sterol-biosynthetic cytochrome P450s Erg11/Erg5/Erg1 and to<br />
+  fatty-acid/sterol desaturation; oxidative-stress response), <strong>CBR1</strong> (ER NADH-cytochrome b5<br />
+  reductase). AIM33 is a fourth, distinct member.</li>
+<li><strong>Human homolog/ortholog</strong>: SGD states <strong>CYB5R4</strong>; NCBI Gene lists <strong>CYB5R1/CYB5R3</strong> as<br />
+  orthologs. The mapping is family-level, not an unambiguous 1:1 ortholog. Human CYB5R4 is a<br />
+  soluble flavohemoprotein (extra cytochrome-b5 and p23 domains) important for beta-cell/oxidative-<br />
+  stress protection — a different domain architecture from the polytopic yeast AIM33.</li>
+</ul>
+<h2 id="not-known-the-real-knowledge-gaps">NOT known (the real knowledge gaps)</h2>
+<ol>
+<li><strong>Catalytic activity of AIM33 itself.</strong> No enzyme assay demonstrates cytochrome-b5 reductase<br />
+   (or any) activity for AIM33. EC is 1.-.-.- (class assigned, sub-subclass unknown). The<br />
+   GO:0004128 (cytochrome-b5 reductase acting on NAD(P)H) and GO:0016491 annotations are IBA/IEA<br />
+   propagations from the family, not measurements on AIM33.</li>
+<li><strong>Physiological electron donor/acceptor.</strong> NAD(P)H as donor is likely (NAD_binding_1 domain);<br />
+   the acceptor (cytochrome b5? coenzyme Q? a P450? a desaturase? an as-yet-unknown mitochondrial<br />
+   redox partner?) is unknown for AIM33.</li>
+<li><strong>Cellular localization.</strong> UniProt/GO say "Membrane / plasma membrane (IBA)". But the AIM<br />
+   phenotype and the CYB5R4 orthology imply a possible <strong>mitochondrial</strong> role. The IBA<br />
+   plasma-membrane call is propagated (partly via the PGA3 branch) and is not experimentally<br />
+   confirmed for AIM33; its true membrane (mitochondrial vs plasma vs ER) is unresolved.</li>
+<li><strong>Ergosterol-pathway involvement (GO:0006696, IBA).</strong> Established for the paralog MCR1 (electron<br />
+   donor to sterol P450s), NOT demonstrated for AIM33. This is a candidate over-annotation.</li>
+<li><strong>Mechanism behind the AIM (mitochondrial genome maintenance) phenotype</strong>, and even its<br />
+   direction (increase vs decrease in petite frequency; see discrepancy above).</li>
+</ol>
+<h2 id="annotation-by-annotation-reasoning-see-aim33-ai-reviewyaml">Annotation-by-annotation reasoning (see AIM33-ai-review.yaml)</h2>
+<ul>
+<li>GO:0005886 plasma membrane (IBA) — IBA-propagated location; contradicted by predicted polytopic<br />
+  topology consistent with an internal membrane and by the mitochondrial phenotype. MODIFY toward<br />
+  the more general/defensible GO:0016020 membrane (the location is real; "plasma membrane"<br />
+  specificity is unsupported for AIM33).</li>
+<li>GO:0004128 cytochrome-b5 reductase activity, acting on NAD(P)H (IBA and IEA) — domain-plausible<br />
+  activity but not measured for AIM33 and possibly over-specific (electron acceptor unproven).<br />
+  Keep as non-core / mark as over-annotated: retain the reductase idea but flag that the specific<br />
+  cytochrome-b5 acceptor is not established for this paralog.</li>
+<li>GO:0006696 ergosterol biosynthetic process (IBA) — propagated from MCR1/PGA3; no AIM33-specific<br />
+  evidence; AIM33's phenotype points elsewhere (mitochondrial genome maintenance). Candidate<br />
+  over-annotation → MARK_AS_OVER_ANNOTATED.</li>
+<li>GO:0016020 membrane (IEA, UniProt SubCell) — defensible; membrane protein is well supported. ACCEPT.</li>
+<li>GO:0016491 oxidoreductase activity (IEA, InterPro) — the safest, best-supported MF given the<br />
+  FAD/NAD reductase module. ACCEPT (keep as the honest, general MF).</li>
+<li>GO:0003674 / GO:0005575 / GO:0008150 ND root annotations — placeholder root annotations<br />
+  (GO_REF:0000015). ACCEPT (standard; represent "not yet determined").</li>
+</ul>
+<h2 id="provenance-index">Provenance index</h2>
+<ul>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/19300474">PMID:19300474</a> Hess et al. 2009 PLoS Genet — mitochondrial biogenesis / petite frequency screen; source of DISRUPTION PHENOTYPE. Full text cached (abstract + body; AIM33 in supp tables only).</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/16847258">PMID:16847258</a> Kim et al. 2006 PNAS — global membrane topology map; AIM33 topology model. Cache has abstract plus a partial full-text (Results intro) section only, not the complete article; the quoted supporting_text is a verbatim substring of that cached text.</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/9169872">PMID:9169872</a> Bowman et al. 1997 Nature — chromosome XIII sequence (genome). Abstract only.</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/24374639">PMID:24374639</a> Engel et al. 2014 G3 — reference genome reannotation. Full text cached.</li>
+<li>SGD S000004552 (WebFetch), NCBI Gene 854887 (WebFetch), WebSearch — family/paralog/ortholog and additional phenotypes.</li>
+<li>UniProt Q04516 (AIM33-uniprot.txt) — domains, cofactor, topology, family, disruption phenotype.</li>
+</ul>
+<h2 id="deep-research-provenance">Deep research provenance</h2>
+<ul>
+<li>Falcon deep research was attempted (first run timed out at 600s; perplexity-lite fallback failed<br />
+  with a 401 quota error). A single retry of falcon was run. This review is grounded directly in<br />
+  UniProt (Q04516), GOA, cached primary literature (PMID:19300474, PMID:16847258), and<br />
+  PubMed-verified secondary sources (SGD S000004552, NCBI Gene 854887); it does not depend on the<br />
+  deep-research file. If the falcon retry produced <code>AIM33-deep-research-falcon.md</code>, it is included<br />
+  for the record but was not the basis for any specific claim.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q04516
+gene_symbol: AIM33
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:559292
+  label: Saccharomyces cerevisiae
+description: &gt;-
+  AIM33 (YML087C) is a poorly characterized Saccharomyces cerevisiae protein of the
+  flavoprotein pyridine nucleotide cytochrome reductase (cytochrome-b5 reductase, CYB5R)
+  superfamily. It carries the diagnostic two-domain flavin/pyridine-nucleotide reductase
+  module — an FAD-binding FR-type domain (residues ~70-173) followed by an NAD(P)H-binding
+  domain — and is predicted to bind FAD, so it is expected to act as an NAD(P)H-dependent
+  flavin oxidoreductase. Unlike most family members, which are soluble or single-pass
+  tail-anchored, AIM33 is predicted to be a polytopic (multi-pass) membrane protein. Its
+  specific catalytic activity, physiological electron acceptor, and site of action have not
+  been experimentally established. Deletion of AIM33 alters the frequency of spontaneous
+  mitochondrial genome loss (petite frequency) and impairs growth on non-fermentable carbon
+  sources, linking the protein to mitochondrial genome maintenance and respiratory
+  competence, and giving it the &#34;Altered Inheritance of Mitochondria&#34; (AIM) name. AIM33 has
+  a whole-genome-duplication paralog, PGA3 (a plasma-membrane NADH:coenzyme-Q6 reductase),
+  and is related at the reductase-domain level to the mitochondrial/ER cytochrome-b5
+  reductases MCR1 and CBR1 and to human CYB5R-family enzymes.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000015
+  title: Use of the ND evidence code for Gene Ontology (GO) terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: PMID:19300474
+  title: &#34;Computationally driven, quantitative experiments discover genes required for mitochondrial biogenesis.&#34;
+  findings:
+  - statement: &gt;-
+      Genome-wide petite-frequency screen that assigned mitochondrial-biogenesis /
+      transmission phenotypes to &gt;100 genes (the &#34;AIM&#34; class); the source of the curated
+      AIM33 disruption phenotype (altered frequency of mitochondrial genome loss).
+    supporting_text: &gt;-
+      Using computational predictions combined with traditional quantitative experiments,
+      we have identified 100 proteins whose deficiency alters mitochondrial biogenesis and
+      inheritance in Saccharomyces cerevisiae.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PMC-verified full text. AIM33/YML087C is one of the deletion strains assayed; the
+      gene-specific petite-frequency value is reported in the supplementary tables (S2/S6),
+      not the main text, so no AIM33-specific verbatim quote is available from the cached
+      copy. This is the reference behind UniProt&#39;s DISRUPTION PHENOTYPE. Note a
+      curated-source discrepancy on direction: UniProt states deletion &#34;increases&#34; while
+      SGD states &#34;reduced&#34; frequency of mitochondrial genome loss (see knowledge_gaps).
+- id: PMID:16847258
+  title: &#34;A global topology map of the Saccharomyces cerevisiae membrane proteome.&#34;
+  findings:
+  - statement: &gt;-
+      Experimentally constrained membrane-topology dataset covering AIM33/YML087C, supporting
+      its assignment as an integral (multi-pass) membrane protein.
+    supporting_text: &gt;-
+      we report the cloning and expression of 617 S. cerevisiae membrane proteins as fusions
+      to a C-terminal topology reporter and present experimentally constrained topology models
+      for 546 proteins.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PMC-verified. Genome-scale topology study; AIM33 is one of the 546 modeled proteins
+      (the paper text does not discuss AIM33 individually). Supports the &#34;Membrane; multi-pass&#34;
+      call in UniProt but does not localize AIM33 to a specific membrane.
+- id: PMID:9169872
+  title: &#34;The nucleotide sequence of Saccharomyces cerevisiae chromosome XIII.&#34;
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Chromosome XIII genome-sequencing paper; establishes the YML087C ORF. Background only;
+      no functional information on AIM33. Abstract-only in cache.
+- id: PMID:24374639
+  title: &#34;The reference genome sequence of Saccharomyces cerevisiae: Then and now.&#34;
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reference-genome reannotation; background provenance for the YML087C locus. No
+      AIM33-specific functional information.
+existing_annotations:
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetically-propagated (IBA) plasma-membrane location. AIM33 is a membrane protein,
+      but the &#34;plasma membrane&#34; specificity is not supported for AIM33 itself.
+    action: MODIFY
+    reason: &gt;-
+      The IBA is transferred across the cytochrome-b5-reductase family (PANTHER PTHR19370),
+      whose members occupy several membranes: the paralog PGA3 is plasma-membrane-associated,
+      but MCR1 is at the mitochondrial outer membrane / intermembrane space and CBR1 is in the
+      ER. AIM33&#39;s own experimental data point away from the plasma membrane: its deletion
+      perturbs mitochondrial genome maintenance and respiratory growth, and its predicted
+      polytopic topology is consistent with an internal (likely mitochondrial) membrane. The
+      protein is genuinely membrane-associated, but the specific &#34;plasma membrane&#34; assignment
+      is an over-specific propagation. Generalize to GO:0016020 (membrane) until the true
+      membrane is determined experimentally.
+    proposed_replacement_terms:
+    - id: GO:0016020
+      label: membrane
+    propagation_review:
+      root_cause: TERM_SCOPING_PROBLEM
+      failure_modes:
+      - COMPARTMENT_OR_COMPLEX_MISMATCH
+      - WRONG_ORTHOLOG_OR_PARALOG
+      source_entities:
+      - source_id: SGD:S000004594
+        source_label: PGA3
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+        comment: &gt;-
+          PGA3 (AIM33&#39;s WGD paralog) is plasma-membrane-associated; AIM33 phenotype and
+          topology suggest an internal/mitochondrial membrane instead.
+- term:
+    id: GO:0004128
+    label: cytochrome-b5 reductase activity, acting on NAD(P)H
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetically-propagated cytochrome-b5 reductase activity. Domain-plausible but not
+      demonstrated for AIM33, and the specific cytochrome-b5 electron acceptor is unproven for
+      this paralog.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      AIM33 has the FAD-binding FR-type + NAD(P)H-binding module diagnostic of the
+      cytochrome-b5 reductase superfamily, so an NAD(P)H:acceptor flavin-oxidoreductase
+      activity is reasonable in principle. However, no enzyme assay has demonstrated
+      cytochrome-b5 reductase activity for AIM33, and the physiological electron acceptor
+      (cytochrome b5 vs coenzyme Q vs a P450 vs an unknown partner) is not established. The
+      activity is transferred from characterized paralogs (MCR1, CBR1, PGA3) whose acceptors
+      differ (MCR1/CBR1 reduce cytochrome b5; PGA3 reduces coenzyme Q6). Asserting the
+      specific &#34;cytochrome-b5&#34; acceptor for AIM33 is an over-annotation; the defensible MF is
+      the more general oxidoreductase activity (see GO:0016491, retained). Keep the reductase
+      idea on record but flagged, pending direct biochemistry.
+    propagation_review:
+      root_cause: TERM_SCOPING_PROBLEM
+      failure_modes:
+      - WRONG_ORTHOLOG_OR_PARALOG
+      - FUNCTIONAL_DIVERGENCE
+      source_entities:
+      - source_id: SGD:S000001633
+        source_label: MCR1
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+        comment: &gt;-
+          MCR1 is an experimentally validated NADH-cytochrome b5 reductase; AIM33 shares the
+          reductase fold but its acceptor is unverified.
+- term:
+    id: GO:0006696
+    label: ergosterol biosynthetic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetically-propagated ergosterol-biosynthesis role. No AIM33-specific evidence;
+      transferred from paralogs and contradicted by AIM33&#39;s mitochondrial-genome phenotype.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      An ergosterol-biosynthesis role is well established for the related cytochrome-b5
+      reductases that donate electrons to sterol-biosynthetic cytochrome P450s (e.g. MCR1 to
+      Erg11/Erg5/Erg1), and this is the basis for the IBA transfer. AIM33 itself has no
+      experimental link to sterol biosynthesis; instead its characterized phenotype is altered
+      mitochondrial genome maintenance and loss of respiratory growth. Treating AIM33 as an
+      ergosterol-biosynthesis enzyme on the strength of paralog function is an over-annotation.
+    propagation_review:
+      root_cause: PROPAGATION_BAD
+      failure_modes:
+      - WRONG_ORTHOLOG_OR_PARALOG
+      - FUNCTIONAL_DIVERGENCE
+      source_entities:
+      - source_id: SGD:S000001633
+        source_label: MCR1
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+        comment: &gt;-
+          Ergosterol-pathway electron donation is documented for MCR1, not for AIM33.
+- term:
+    id: GO:0004128
+    label: cytochrome-b5 reductase activity, acting on NAD(P)H
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: enables
+  review:
+    summary: &gt;-
+      ARBA machine-learning electronic annotation asserting the same specific cytochrome-b5
+      reductase activity; same over-specificity concern as the IBA above.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      This ARBA rule fires on family/domain features shared across the CYB5R superfamily and
+      assigns the specific cytochrome-b5 acceptor. As with the IBA, the reductase fold is
+      present but the cytochrome-b5 acceptor is not verified for AIM33; the defensible
+      electronic MF is the general oxidoreductase activity (GO:0016491), which is separately
+      annotated and retained.
+    propagation_review:
+      root_cause: TERM_SCOPING_PROBLEM
+      failure_modes:
+      - GRANULARITY_MISMATCH
+      source_entities:
+      - source_id: ARBA:ARBA00027922
+        source_label: ARBA rule (cytochrome-b5 reductase)
+        source_status: SOURCE_WEAK_OR_INFERRED
+        comment: Rule assigns a specific acceptor not established for this protein.
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic membrane localization from the UniProt SubCell mapping; well supported by
+      predicted transmembrane helices and the global membrane-proteome dataset.
+    action: ACCEPT
+    reason: &gt;-
+      AIM33 has multiple predicted transmembrane helices (UniProt TRANSMEM 15-35, 42-62,
+      180-200) and is included in the experimentally-constrained membrane-proteome topology
+      map (PMID:16847258). &#34;Membrane&#34; is the correct, appropriately general cellular-component
+      term; the specific membrane is not yet determined.
+    supported_by:
+    - reference_id: PMID:16847258
+      supporting_text: &gt;-
+        we report the cloning and expression of 617 S. cerevisiae membrane proteins as fusions
+        to a C-terminal topology reporter and present experimentally constrained topology models
+        for 546 proteins.
+- term:
+    id: GO:0016491
+    label: oxidoreductase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      InterPro2GO electronic annotation of general oxidoreductase activity — the
+      best-supported, appropriately general molecular-function call for AIM33.
+    action: ACCEPT
+    reason: &gt;-
+      AIM33 carries the FAD-binding FR-type domain and the NAD_binding_1 domain characteristic
+      of flavin/pyridine-nucleotide oxidoreductases, and is predicted to bind FAD. Oxidoreductase
+      activity (GO:0016491) is strongly supported by the domain architecture while remaining
+      agnostic about the specific electron acceptor, which is unknown. This is the honest core
+      molecular-function term for this protein.
+- term:
+    id: GO:0003674
+    label: molecular_function
+  evidence_type: ND
+  original_reference_id: GO_REF:0000015
+  qualifier: enables
+  review:
+    summary: Root-term ND placeholder recording that a specific molecular function was not determined.
+    action: ACCEPT
+    reason: &gt;-
+      Standard ND root annotation (GO_REF:0000015). Appropriate as a historical placeholder;
+      the InterPro-based oxidoreductase MF now provides more specific (if still general)
+      information.
+- term:
+    id: GO:0005575
+    label: cellular_component
+  evidence_type: ND
+  original_reference_id: GO_REF:0000015
+  qualifier: is_active_in
+  review:
+    summary: Root-term ND placeholder for undetermined cellular component.
+    action: ACCEPT
+    reason: &gt;-
+      Standard ND root annotation. The membrane annotations now supersede this with more
+      specific (if still general) localization information.
+- term:
+    id: GO:0008150
+    label: biological_process
+  evidence_type: ND
+  original_reference_id: GO_REF:0000015
+  qualifier: involved_in
+  review:
+    summary: Root-term ND placeholder for undetermined biological process.
+    action: ACCEPT
+    reason: &gt;-
+      Standard ND root annotation. The disruption phenotype implicates AIM33 in mitochondrial
+      genome maintenance / respiratory competence, but no specific BP term has been
+      experimentally validated for AIM33 (see knowledge_gaps and core_functions).
+core_functions:
+- description: &gt;-
+    NAD(P)H-dependent flavin (FAD) oxidoreductase activity inferred from the conserved
+    FAD-binding FR-type + NAD(P)H-binding module of the cytochrome-b5 reductase superfamily.
+    The specific electron acceptor is undetermined, so the function is stated at the general
+    oxidoreductase level rather than as a specific cytochrome-b5 reductase.
+  molecular_function:
+    id: GO:0016491
+    label: oxidoreductase activity
+  locations:
+  - id: GO:0016020
+    label: membrane
+  supported_by:
+  - reference_id: PMID:16847258
+    supporting_text: &gt;-
+      we report the cloning and expression of 617 S. cerevisiae membrane proteins as fusions
+      to a C-terminal topology reporter and present experimentally constrained topology models
+      for 546 proteins.
+  knowledge_gaps:
+  - gap_statement: &gt;-
+      The specific catalytic activity of AIM33 and its physiological electron acceptor are
+      undetermined. It is not known whether AIM33 reduces cytochrome b5, coenzyme Q, a
+      cytochrome P450, or another (possibly mitochondrial) redox partner, nor whether NADH,
+      NADPH, or both serve as the electron donor.
+    boundary: &gt;-
+      AIM33 carries the diagnostic FAD-binding FR-type domain (UniProt residues 70-173) and
+      an NAD_binding_1 domain, is predicted to bind FAD, and belongs to the flavoprotein
+      pyridine nucleotide cytochrome reductase family, so an NAD(P)H-dependent flavin
+      oxidoreductase activity is well supported at the fold level. What is missing is any
+      direct enzymatic measurement identifying the acceptor.
+    gap_kind:
+    - BIOLOGY
+    dark_aspect: MF_DARK
+    status: OPEN
+    significance: &gt;-
+      Without the acceptor, AIM33 cannot be placed in a specific redox pathway; the current
+      GO:0004128 (cytochrome-b5 reductase) annotations are propagations from paralogs with
+      different acceptors and may misassign the pathway.
+    resolution: &gt;-
+      Purify recombinant AIM33 (or the soluble reductase domain) and assay NAD(P)H-dependent
+      reduction of candidate acceptors (cytochrome b5, coenzyme Q6, ferricyanide,
+      cytochrome c, methemoglobin); determine donor specificity (NADH vs NADPH) and confirm
+      FAD content.
+  - gap_statement: &gt;-
+      The subcellular membrane in which AIM33 acts is unresolved: it is annotated to the
+      plasma membrane (IBA) yet its loss-of-function phenotype implicates mitochondria.
+    boundary: &gt;-
+      AIM33 is firmly an integral membrane protein with multiple predicted transmembrane
+      helices and is included in an experimentally-constrained membrane-proteome topology map
+      (PMID:16847258). The paralog PGA3 is plasma-membrane-associated and the relative MCR1 is
+      at the mitochondrial outer membrane.
+    gap_kind:
+    - BIOLOGY
+    - CURATION
+    dark_aspect: CC_DARK
+    status: OPEN
+    significance: &gt;-
+      The membrane of action determines which redox process AIM33 participates in and reconciles
+      (or refutes) the propagated plasma-membrane annotation against the mitochondrial phenotype.
+    resolution: &gt;-
+      Determine endogenous localization by fluorescence microscopy of a functional tagged AIM33
+      and by subcellular/submitochondrial fractionation; if mitochondrial, define the
+      submitochondrial membrane and topology.
+  - gap_statement: &gt;-
+      The molecular mechanism by which AIM33 loss alters mitochondrial genome maintenance is
+      unknown, and even the direction of the petite-frequency change is reported inconsistently
+      across curated sources.
+    boundary: &gt;-
+      Deletion of AIM33 produces a mitochondrial-transmission phenotype (the basis of its AIM
+      designation) and impairs growth on non-fermentable carbon sources; UniProt curates the
+      effect as an increase in mitochondrial genome loss whereas SGD describes a reduced
+      frequency.
+    gap_kind:
+    - BIOLOGY
+    dark_aspect: BP_DARK
+    status: OPEN
+    significance: &gt;-
+      Resolving whether AIM33 promotes or antagonizes petite formation, and by what mechanism
+      (e.g. maintaining a redox environment or membrane potential required for mtDNA retention),
+      would convert a screen-level phenotype into an assignable biological process.
+    resolution: &gt;-
+      Re-measure petite frequency of a clean aim33-delta strain with wild-type controls; test
+      mtDNA copy number/integrity, membrane potential, and respiratory-complex assembly; look
+      for genetic interactions with mitochondrial genome-maintenance genes.
+    provenance:
+    - reference_id: PMID:19300474
+      supporting_text: &gt;-
+        Using computational predictions combined with traditional quantitative experiments,
+        we have identified 100 proteins whose deficiency alters mitochondrial biogenesis and
+        inheritance in Saccharomyces cerevisiae.
+suggested_questions:
+- question: &gt;-
+    What is the physiological electron acceptor of AIM33 (cytochrome b5, coenzyme Q6, a
+    cytochrome P450, or another partner), and is NADH or NADPH the electron donor?
+- question: &gt;-
+    In which membrane does AIM33 reside endogenously — mitochondrial, ER, or plasma membrane —
+    and does its polytopic topology differ from the mostly tail-anchored/soluble family members?
+- question: &gt;-
+    Does AIM33 promote or antagonize petite formation, and does it act on mitochondrial genome
+    maintenance directly (e.g. via redox homeostasis or membrane potential) or indirectly?
+suggested_experiments:
+- hypothesis: &gt;-
+    AIM33 is an NAD(P)H-dependent flavin oxidoreductase whose physiological acceptor is one of
+    cytochrome b5, coenzyme Q6, or a P450.
+  description: &gt;-
+    Express and purify recombinant AIM33 (full-length in detergent/nanodiscs and the isolated
+    soluble reductase domain), confirm bound FAD spectroscopically, and measure steady-state
+    NADH- and NADPH-dependent reduction of candidate acceptors (cytochrome b5, coenzyme Q6/CoQ
+    analogs, ferricyanide, cytochrome c, methemoglobin).
+  experiment_type: enzyme kinetics / spectroscopy
+- hypothesis: &gt;-
+    AIM33 localizes to a mitochondrial membrane consistent with its mitochondrial-genome
+    maintenance phenotype rather than to the plasma membrane.
+  description: &gt;-
+    Determine endogenous localization of a functional C-terminally tagged AIM33 by live-cell
+    fluorescence colocalization with mitochondrial, ER, and plasma-membrane markers, and by
+    subcellular and submitochondrial fractionation; verify functionality of the tagged allele
+    by complementation of the petite phenotype.
+  experiment_type: localization / cell biology
+- hypothesis: &gt;-
+    Loss of AIM33 alters mitochondrial genome stability through a defined mechanism.
+  description: &gt;-
+    In a clean aim33-delta strain, quantify petite frequency against isogenic wild type,
+    measure mtDNA copy number and integrity, mitochondrial membrane potential, and
+    respiratory-complex assembly; perform targeted genetic-interaction tests with genes for
+    mtDNA maintenance and with the paralog PGA3 and relatives MCR1/CBR1.
+  experiment_type: yeast genetics / functional genomics
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

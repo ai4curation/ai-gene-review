@@ -1,0 +1,3986 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PHKA2 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PHKA2</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P46019" target="_blank" class="term-link">
+                        P46019
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PHKA2";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P46019" data-a="DESCRIPTION: PHKA2 encodes the liver isoform of the alpha regul..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PHKA2 encodes the liver isoform of the alpha regulatory subunit of phosphorylase kinase (PhK). PhK is a large hexadecameric (alpha-beta-gamma-delta)4 holoenzyme in which the gamma subunit (PHKG1 in muscle, PHKG2 in liver) is the catalytic serine/threonine kinase and the large alpha (PHKA1/PHKA2) and beta (PHKB) subunits are regulatory; the delta subunit is calmodulin, conferring Ca2+ sensitivity. PHKA2 is itself non-catalytic: as a regulatory subunit it is a target of cAMP-dependent (PKA) phosphorylation which, together with Ca2+/calmodulin, relieves inhibition and activates the catalytic gamma subunit. The activated holoenzyme phosphorylates glycogen phosphorylase (b to a), triggering glycogenolysis; PhK thereby couples hormonal and neural signals to hepatic glycogen breakdown. PHKA2 binds calmodulin and acts in the cytosol. Loss-of-function variants in PHKA2 cause X-linked liver phosphorylase kinase deficiency (glycogen storage disease type IXa, GSD9A), the most common form of PhK deficiency, characterized by hepatomegaly and growth retardation that are usually mild and improve with age.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005964" target="_blank" class="term-link">
+                                    GO:0005964
+                                </a>
+                            </span>
+                            <span class="term-label">phosphorylase kinase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P46019" data-a="GO:0005964" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically inferred membership in the phosphorylase kinase complex. This is the defining, core cellular-component assignment for PHKA2 as the liver alpha regulatory subunit of the (alpha-beta-gamma-delta)4 holoenzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Strongly supported: PHKA2 is one of the alpha subunits of the phosphorylase kinase holoenzyme. UniProt SUBUNIT describes the complex composition and assigns alpha/beta as regulatory subunits, consistent with this IBA assignment.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PHKA2/PHKA2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">beta, gamma, and delta subunits. Alpha (PHKA1 or PHKA2) and beta (PHKB)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004689" target="_blank" class="term-link">
+                                    GO:0004689
+                                </a>
+                            </span>
+                            <span class="term-label">phosphorylase kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P46019" data-a="GO:0004689" data-r="GO_REF:0000117" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARBA electronic assertion that PHKA2 enables phosphorylase kinase activity. This is the activity of the holoenzyme, catalyzed by the gamma subunit (PHKG1/PHKG2); the alpha subunit is regulatory and non-catalytic.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The catalytic phosphorylase kinase activity resides in the gamma subunit, not the alpha regulatory subunit. UniProt states that alpha and beta are regulatory subunits while gamma is the catalytic subunit, so an &#39;enables&#39; assertion of the holoenzyme kinase activity on PHKA2 over-attributes catalysis to a regulatory chain. PHKA2 contributes to this holoenzyme activity as a complex member (captured in core_functions via contributes_to_molecular_function) but does not independently enable it.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PHKA2/PHKA2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">are regulatory subunits, gamma (PHKG1 or PHKG2) is the catalytic</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005516" target="_blank" class="term-link">
+                                    GO:0005516
+                                </a>
+                            </span>
+                            <span class="term-label">calmodulin binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P46019" data-a="GO:0005516" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro-based assertion of calmodulin binding. This is a genuine molecular function of the alpha subunit: UniProt notes the alpha chain may bind calmodulin and annotates two calmodulin-binding regions (807-837, 1059-1099).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Well supported and biologically informative for the alpha subunit. Consistent with the Calmodulin-binding keyword and two annotated calmodulin-binding regions. Calmodulin is the delta subunit of the complex, so alpha-CaM binding is functionally central to Ca2+ regulation of the holoenzyme.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PHKA2/PHKA2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">The alpha chain may</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PHKA2/PHKA2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">bind calmodulin.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P46019" data-a="GO:0005737" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARBA electronic assertion of cytoplasmic localization. Correct but non-specific; the more precise, curatorially supported location is the cytosol (GO:0005829).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Cytoplasm is a correct broad parent of the cytosol, where the phosphorylase kinase complex acts on cytosolic glycogen phosphorylase. Retained as a valid, if less specific, location; the cytosol annotation is the more informative one.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P46019" data-a="GO:0005886" data-r="GO_REF:0000044" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Subcellular-location keyword mapping (SL-0039) derived from UniProt&#39;s Cell membrane assignment, which is itself an ECO:0000305 (inference from prenylation) annotation, not an experimental localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The UniProt Cell membrane / Lipid-anchor location is an ECO:0000305 inference resting on a possible C-terminal farnesyl-cysteine (itself by-similarity, ECO:0000250), with the PTM note stating the terminal tripeptide is &#39;probably not removed&#39;. The functionally relevant and better-supported compartment is the cytosol, where the complex phosphorylates cytosolic glycogen phosphorylase. Retained but flagged as a weakly supported, likely over-annotated location.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PHKA2/PHKA2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cell membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005975" target="_blank" class="term-link">
+                                    GO:0005975
+                                </a>
+                            </span>
+                            <span class="term-label">carbohydrate metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P46019" data-a="GO:0005975" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro-based involvement in carbohydrate metabolism. Correct but broad; PHKA2 participates specifically in glycogen catabolism as part of the phosphorylase kinase complex.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Accurate high-level biological-process assignment. The more specific glycogen metabolic / glycogen catabolic terms better capture the function and are reflected in core_functions, but this broad parent is not incorrect.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005977" target="_blank" class="term-link">
+                                    GO:0005977
+                                </a>
+                            </span>
+                            <span class="term-label">glycogen metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P46019" data-a="GO:0005977" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Combined-IEA/UniPathway involvement in glycogen metabolism. Accurate: the phosphorylase kinase complex regulates hepatic glycogenolysis, and PHKA2 deficiency causes a glycogen storage disease.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Well aligned with the gene&#39;s biology. UniProt PATHWAY records glycogen metabolism, and PHKA2 loss-of-function causes glycogen storage disease type IXa. The catabolic direction is captured more specifically in core_functions.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PHKA2/PHKA2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PATHWAY: Glycan biosynthesis; glycogen metabolism.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23455922" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23455922
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Interlaboratory reproducibility of large-scale human protein...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P46019" data-a="GO:0005515" data-r="PMID:23455922" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare protein-binding annotation from a large-scale AP-MS protein-complex interlaboratory reproducibility study. Uninformative term with no specific, functionally interpreted partner recorded.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> &#39;Protein binding&#39; (GO:0005515) is an uninformative molecular-function term. The supporting reference is a high-throughput interactome dataset that does not characterize a specific PHKA2 function; the biologically meaningful partners (PHKG2, PHKB) are already captured by the phosphorylase kinase complex annotation. Per curation policy this experimental IPI is marked as over-annotated rather than removed.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26496610" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26496610
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A human interactome in three quantitative dimensions organiz...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P46019" data-a="GO:0005515" data-r="PMID:26496610" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare protein-binding annotation from a quantitative human-interactome study. Uninformative term with no specific functional partner recorded.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Uninformative &#39;protein binding&#39; term derived from a large-scale interactome dataset. No specific PHKA2 function is established. Marked as over-annotated per curation policy rather than removed.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28514442
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Architecture of the human interactome defines protein commun...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P46019" data-a="GO:0005515" data-r="PMID:28514442" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare protein-binding annotation from a large-scale interactome/protein-community study. Uninformative term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Uninformative &#39;protein binding&#39; term from a high-throughput interactome dataset; no specific PHKA2 molecular function is established. Marked over-annotated per policy rather than removed.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P46019" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare protein-binding annotation from a binary (Y2H) reference-interactome map. Uninformative term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Uninformative &#39;protein binding&#39; term from a large-scale binary interactome screen. No specific, functionally interpreted PHKA2 partner is captured beyond complex membership already annotated elsewhere. Marked over-annotated per policy.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32707033" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32707033
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Kinase Interaction Network Expands Functional and Disease Ro...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P46019" data-a="GO:0005515" data-r="PMID:32707033" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare protein-binding annotation from a kinase-interaction-network study. The relevant kinase partner (PHKG2, the catalytic gamma subunit) reflects complex membership, but the bare term itself is uninformative.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Uninformative &#39;protein binding&#39; term. The functionally meaningful interaction (with the catalytic gamma subunit PHKG2) is captured by the phosphorylase kinase complex annotation; the bare MF term adds nothing. Marked over-annotated per policy rather than removed.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32814053" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32814053
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Interactome Mapping Provides a Network of Neurodegenerative ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P46019" data-a="GO:0005515" data-r="PMID:32814053" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare protein-binding annotation from a neurodegenerative-disease interactome mapping study (partner SPRED1). Uninformative term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Uninformative &#39;protein binding&#39; term from a high-throughput interactome dataset; the SPRED1 interaction is not functionally interpreted for PHKA2. Marked over-annotated per policy rather than removed.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33961781
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dual proteome-scale networks reveal cell-specific remodeling...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P46019" data-a="GO:0005515" data-r="PMID:33961781" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare protein-binding annotation from a proteome-scale, cell-specific interactome study. Uninformative term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Uninformative &#39;protein binding&#39; term from a large-scale interactome dataset; no specific PHKA2 function is established. Marked over-annotated per policy.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/35271311" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:35271311
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    OpenCell: Endogenous tagging for the cartography of human ce...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P46019" data-a="GO:0005515" data-r="PMID:35271311" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare protein-binding annotation from the OpenCell endogenous-tagging cellular cartography study. Uninformative term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Uninformative &#39;protein binding&#39; term from a high-throughput cellular-organization dataset; no specific PHKA2 molecular function is established. Marked over-annotated per policy rather than removed.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/40205054" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:40205054
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Multimodal cell maps as a foundation for structural and func...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P46019" data-a="GO:0005515" data-r="PMID:40205054" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare protein-binding annotation from a multimodal cell-maps structural/functional genomics study. Uninformative term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Uninformative &#39;protein binding&#39; term from a large-scale cell-mapping dataset; no specific PHKA2 function is established. Marked over-annotated per policy rather than removed.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005964" target="_blank" class="term-link">
+                                    GO:0005964
+                                </a>
+                            </span>
+                            <span class="term-label">phosphorylase kinase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P46019" data-a="GO:0005964" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ensembl-Compara orthology transfer of experimentally verified phosphorylase kinase complex membership. Consistent with the core complex assignment.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct and well supported; the same defining complex membership as the IBA and TAS annotations. PHKA2 is the liver alpha regulatory subunit of the holoenzyme.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PHKA2/PHKA2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Hexadecamer of 4 heterotetramers, each composed of alpha,</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-71588
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P46019" data-a="GO:0005829" data-r="Reactome:R-HSA-71588" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome-curated cytosolic localization. The cytosolic phosphorylase kinase complex phosphorylates cytosolic glycogen phosphorylase (PYGL) in liver. This is the core, functionally relevant location for PHKA2.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Well supported by Reactome curation of the hepatic glycogenolysis reaction; the complex containing PHKA2 acts in the cytosol. This is the preferred location over the by-similarity plasma-membrane assignment.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004689" target="_blank" class="term-link">
+                                    GO:0004689
+                                </a>
+                            </span>
+                            <span class="term-label">phosphorylase kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7549948" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7549948
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Isolation of cDNA encoding the human liver phosphorylase kin...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P46019" data-a="GO:0004689" data-r="PMID:7549948" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author-statement (TAS) assignment of phosphorylase kinase activity from the paper cloning the human liver PHKA2 alpha subunit. The described activity is that of the PhK holoenzyme, catalyzed by the gamma subunit; the alpha subunit is regulatory.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The cited paper isolates and characterizes the liver alpha subunit and discusses liver phosphorylase kinase (the holoenzyme), but the catalytic activity resides in the gamma subunit. Assigning &#39;enables phosphorylase kinase activity&#39; to the regulatory alpha subunit over-attributes catalysis. PHKA2 contributes to this holoenzyme activity as a complex member (contributes_to_molecular_function in core_functions) but does not independently enable it.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7549948" target="_blank" class="term-link">
+                                        PMID:7549948
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We isolated and determined the structure of human liver alpha subunit of PHK (PHKA2) cDNA.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005964" target="_blank" class="term-link">
+                                    GO:0005964
+                                </a>
+                            </span>
+                            <span class="term-label">phosphorylase kinase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7549948" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7549948
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Isolation of cDNA encoding the human liver phosphorylase kin...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P46019" data-a="GO:0005964" data-r="PMID:7549948" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author-statement (TAS) assignment of phosphorylase kinase complex membership from the paper cloning the human liver PHKA2 alpha subunit. Core complex membership.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly supported: the reference characterizes PHKA2 as the human liver alpha subunit of phosphorylase kinase, establishing its membership in the holoenzyme complex.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7549948" target="_blank" class="term-link">
+                                        PMID:7549948
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We isolated and determined the structure of human liver alpha subunit of PHK (PHKA2) cDNA.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005975" target="_blank" class="term-link">
+                                    GO:0005975
+                                </a>
+                            </span>
+                            <span class="term-label">carbohydrate metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7549948" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7549948
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Isolation of cDNA encoding the human liver phosphorylase kin...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P46019" data-a="GO:0005975" data-r="PMID:7549948" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author-statement involvement in carbohydrate metabolism. Correct but broad; the specific process is glycogen catabolism via the phosphorylase kinase complex.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Accurate high-level assignment supported by the paper&#39;s framing of PHKA2 in liver glycogenosis. More specific glycogen catabolic terms are captured in core_functions, but this broad parent is not incorrect.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7549948" target="_blank" class="term-link">
+                                        PMID:7549948
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">deficiency is the most frequent liver glycogen storage disease.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006091" target="_blank" class="term-link">
+                                    GO:0006091
+                                </a>
+                            </span>
+                            <span class="term-label">generation of precursor metabolites and energy</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7549948" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7549948
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Isolation of cDNA encoding the human liver phosphorylase kin...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P46019" data-a="GO:0006091" data-r="PMID:7549948" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author-statement involvement in generation of precursor metabolites and energy. This reflects the downstream role of hepatic glycogenolysis in supplying glucose for energy, an indirect/downstream consequence rather than PHKA2&#39;s core function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Glycogenolysis driven by the phosphorylase kinase complex ultimately supplies glucose for energy metabolism, so this term is defensible but represents a downstream physiological role rather than the core molecular/complex function of the regulatory alpha subunit. Retained as non-core.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0036211" target="_blank" class="term-link">
+                                    GO:0036211
+                                </a>
+                            </span>
+                            <span class="term-label">protein modification process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7549948" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7549948
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Isolation of cDNA encoding the human liver phosphorylase kin...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P46019" data-a="GO:0036211" data-r="PMID:7549948" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author-statement involvement in protein modification process, referring to PhK&#39;s phosphorylation of its substrate (glycogen phosphorylase). This is a property of the catalytic gamma subunit and is an over-broad, over-attributed term for the regulatory alpha subunit.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Protein modification is what the holoenzyme&#39;s catalytic gamma subunit does (phosphorylating glycogen phosphorylase); assigning it to the non-catalytic alpha regulatory subunit both over-attributes the activity and is uninformatively broad. Marked as over-annotated.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PHKA2/PHKA2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Phosphorylase b kinase catalyzes the phosphorylation of</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005980" target="_blank" class="term-link">
+                                    GO:0005980
+                                </a>
+                            </span>
+                            <span class="term-label">glycogen catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-71588
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P46019" data-a="GO:0005980" data-r="Reactome:R-HSA-71588" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed specific biological-process annotation: as a subunit of the cytosolic phosphorylase kinase complex, PHKA2 participates in glycogen catabolism (the complex phosphorylates glycogen phosphorylase to trigger glycogenolysis).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Captures the specific catabolic direction of PHKA2&#39;s glycogen-metabolic role, more precise than the existing carbohydrate/glycogen metabolic process annotations. Supported by Reactome curation of the hepatic glycogenolysis reaction catalyzed by the PhK complex containing PHKA2, and by the gene&#39;s loss-of-function disease (GSD IXa, a liver glycogenosis).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7549948" target="_blank" class="term-link">
+                                        PMID:7549948
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">deficiency is the most frequent liver glycogen storage disease.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>As the liver alpha regulatory subunit, PHKA2 binds calmodulin (the delta subunit) and is a component of the phosphorylase kinase holoenzyme, contributing to its Ca2+- and phosphorylation-regulated phosphorylase kinase activity while being itself non-catalytic. Through the complex it drives cytosolic glycogen catabolism.</h3>
+                <span class="vote-buttons" data-g="P46019" data-a="FUNCTION: As the liver alpha regulatory subunit, PHKA2 binds..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005516" target="_blank" class="term-link">
+                            calmodulin binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005980" target="_blank" class="term-link">
+                                glycogen catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005964" target="_blank" class="term-link">
+                            phosphorylase kinase complex
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/PHKA2/PHKA2-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">are regulatory subunits, gamma (PHKG1 or PHKG2) is the catalytic</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/PHKA2/PHKA2-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">The alpha chain may</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7549948" target="_blank" class="term-link">
+                                PMID:7549948
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">deficiency is the most frequent liver glycogen storage disease.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/PHKA2/PHKA2-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry P46019 (KPB2_HUMAN), Phosphorylase b kinase regulatory subunit alpha, liver isoform</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23455922" target="_blank" class="term-link">
+                            PMID:23455922
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Interlaboratory reproducibility of large-scale human protein-complex analysis by standardized AP-MS.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26496610" target="_blank" class="term-link">
+                            PMID:26496610
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A human interactome in three quantitative dimensions organized by stoichiometries and abundances.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link">
+                            PMID:28514442
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Architecture of the human interactome defines protein communities and disease networks.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32707033" target="_blank" class="term-link">
+                            PMID:32707033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Kinase Interaction Network Expands Functional and Disease Roles of Human Kinases.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32814053" target="_blank" class="term-link">
+                            PMID:32814053
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Interactome Mapping Provides a Network of Neurodegenerative Disease Proteins and Uncovers Widespread Protein Aggregation in Affected Brains.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                            PMID:33961781
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Dual proteome-scale networks reveal cell-specific remodeling of the human interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/35271311" target="_blank" class="term-link">
+                            PMID:35271311
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenCell: Endogenous tagging for the cartography of human cellular organization.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/40205054" target="_blank" class="term-link">
+                            PMID:40205054
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Multimodal cell maps as a foundation for structural and functional genomics.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/7549948" target="_blank" class="term-link">
+                            PMID:7549948
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Isolation of cDNA encoding the human liver phosphorylase kinase alpha subunit (PHKA2) and identification of a missense mutation of the PHKA2 gene in a family with liver phosphorylase kinase deficiency.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-71588
+
+                    </span>
+                </div>
+
+                <div class="reference-title">glycogen phosphorylase (PYGL) dimer b + 2 ATP =&gt; glycogen phosphorylase (PYGL) dimer a + 2 ADP</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does the C-terminal cysteine of PHKA2 undergo farnesylation in vivo, and if so, does it target a fraction of the complex to membranes, or is the functionally dominant pool cytosolic?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P46019" data-a="Q: Does the C-terminal cysteine of PHKA2 undergo farn..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which specific PKA (and autocatalytic) phosphorylation sites on the PHKA2 alpha subunit mediate activation of the holoenzyme, and how do GSD9A missense variants perturb this regulation versus simply destabilizing the complex?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P46019" data-a="Q: Which specific PKA (and autocatalytic) phosphoryla..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Reconstitute the liver holoenzyme with wild-type versus GSD9A-variant PHKA2 and measure Ca2+/calmodulin- and PKA-phosphorylation-dependent activation of glycogen phosphorylase to distinguish assembly defects from regulatory defects.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="P46019" data-a="EXPERIMENT: Reconstitute the liver holoenzyme with wild-type v..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Determine the subcellular distribution of endogenous PHKA2 in hepatocytes (cytosol versus membrane) and test whether inhibiting prenylation redistributes the complex.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="P46019" data-a="EXPERIMENT: Determine the subcellular distribution of endogeno..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PHKA2-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P46019" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="phka2-review-notes">PHKA2 review notes</h1>
+<p>UniProtKB: P46019 (KPB2_HUMAN). Gene: PHKA2 (synonyms PHKLA, PYK). X chromosome. 1235 aa.</p>
+<h2 id="verified-biology">Verified biology</h2>
+<p>PHKA2 encodes the <strong>liver isoform of the alpha regulatory subunit</strong> of phosphorylase kinase (PhK).</p>
+<p>PhK is a large (alpha-beta-gamma-delta)4 hexadecameric holoenzyme:<br />
+- <strong>gamma (PHKG1 muscle / PHKG2 liver)</strong> is the <strong>catalytic</strong> subunit (a Ser/Thr protein kinase).<br />
+- <strong>alpha (PHKA1 muscle / PHKA2 liver)</strong> and <strong>beta (PHKB)</strong> are the large <strong>regulatory</strong> subunits.<br />
+- <strong>delta = calmodulin</strong> confers Ca2+ sensitivity.</p>
+<p>UniProt SUBUNIT [file:human/PHKA2/PHKA2-uniprot.txt]:<br />
+"Hexadecamer of 4 heterotetramers, each composed of alpha, beta, gamma, and delta subunits. Alpha (PHKA1 or PHKA2) and beta (PHKB) are regulatory subunits, gamma (PHKG1 or PHKG2) is the catalytic subunit, and delta is calmodulin."</p>
+<p>Therefore <strong>PHKA2 is NOT itself a protein kinase.</strong> Its own molecular role is regulatory: the alpha/beta subunits are the targets of cAMP-dependent (PKA) phosphorylation which, together with Ca2+/calmodulin, relieves the inhibition of the catalytic gamma subunit and activates the holoenzyme. UniProt ACTIVITY REGULATION: "By phosphorylation of various serine residues and by calcium." PHKA2 carries multiple experimentally-mapped phosphoserines in its C-terminal multiphosphorylation domain (Ser695, Ser729, Ser735, Ser983, Ser1015, Ser1044).</p>
+<p>PhK phosphorylates glycogen phosphorylase (b -&gt; a), triggering glycogenolysis (Reactome R-HSA-71588; R-HSA-70221 Glycogen breakdown). So PHKA2 is a structural/regulatory part of the complex that carries out the holoenzyme activity GO:0004689 phosphorylase kinase activity, but does not itself enable it.</p>
+<p>UniProt FUNCTION: "Phosphorylase b kinase catalyzes the phosphorylation of serine in certain substrates, including troponin I. The alpha chain may bind calmodulin." Note this FUNCTION line describes the holoenzyme (PHK); the alpha chain's own contribution is calmodulin binding. Two Calmodulin-binding REGIONs are annotated (807-837, 1059-1099), and the KW list includes Calmodulin-binding.</p>
+<h2 id="localization">Localization</h2>
+<ul>
+<li>Reactome/GOA: cytosol (GO:0005829, TAS). The complex acts in the cytosol on cytosolic glycogen phosphorylase.</li>
+<li>UniProt SUBCELLULAR LOCATION: "Cell membrane {ECO:0000305}; Lipid-anchor {ECO:0000305}; Cytoplasmic side" — this is an ECO:0000305 (inferred) subcellular location, based on a possible C-terminal farnesyl-Cys (LIPID at 1232, itself by similarity ECO:0000250|UniProtKB:P18688; and PTM note says the terminal tripeptide is "probably not removed" and C-terminus "not methylated"). The plasma-membrane GO annotation (GO:0005886, IEA UniProtKB-SubCell SL-0039) rests on this weak by-similarity prenylation inference. The dominant, functionally relevant compartment is the cytosol.</li>
+<li>Cytoplasm (GO:0005737, IEA ARBA) is a correct but less-specific parent of cytosol.</li>
+</ul>
+<h2 id="disease">Disease</h2>
+<p>Deficiency causes <strong>Glycogen storage disease type IXa / GSD9A (X-linked liver phosphorylase kinase deficiency)</strong> — MIM:306000, Orphanet 264580. Most common form of PhK deficiency. Hepatomegaly, growth retardation, usually mild and improving with age (often asymptomatic in adults). Two subtypes: type 1/classic (no PhK activity in liver AND erythrocytes) and type 2/variant (deficient in liver, normal in erythrocytes). Extensive allelic series of GSD9A missense/indel variants in UniProt.</p>
+<p>[PMID:7549948 "X-linked liver glycogenosis (XLG) due to liver phosphorylase kinase (PHK)" ... "deficiency is the most frequent liver glycogen storage disease."; "We isolated and determined the structure of human liver alpha subunit of PHK (PHKA2) cDNA."; "a valine substitution for glycine at amino acid 193, in the PHKA2 gene of a family with XLG."]</p>
+<h2 id="goa-annotation-assessment-summary">GOA annotation assessment summary</h2>
+<ul>
+<li>GO:0005964 phosphorylase kinase complex (IBA, IEA-Ensembl, TAS PMID:7549948, part_of): ACCEPT x3. Core — this is the defining, well-supported complex membership.</li>
+<li>GO:0004689 phosphorylase kinase activity (IEA ARBA <code>enables</code>; TAS PMID:7549948 <code>enables</code>): MARK_AS_OVER_ANNOTATED. This is the HOLOENZYME activity, catalyzed by the gamma subunit. PHKA2 as a regulatory subunit contributes to it but does not itself enable it. Not REMOVE — the essence (participation in the complex activity) is right, but <code>enables</code> on the alpha subunit over-attributes catalysis. In core_functions captured via contributes_to_molecular_function.</li>
+<li>GO:0005516 calmodulin binding (IEA InterPro/KW): ACCEPT (core). Supported by two annotated CaM-binding regions and the KW; a genuine molecular function of the alpha subunit.</li>
+<li>GO:0005737 cytoplasm (IEA ARBA): ACCEPT as broad parent of cytosol; less specific.</li>
+<li>GO:0005886 plasma membrane (IEA SubCell SL-0039): MARK_AS_OVER_ANNOTATED. Rests on an ECO:0000305 by-similarity prenylation inference; the functionally relevant compartment is the cytosol. Not clearly wrong but weakly supported / likely over-annotation.</li>
+<li>GO:0005975 carbohydrate metabolic process (IEA InterPro; TAS PMID:7549948): ACCEPT (broad but correct).</li>
+<li>GO:0005977 glycogen metabolic process (IEA UniPathway): ACCEPT (correct, specific-enough; could be refined to glycogen catabolic).</li>
+<li>GO:0005515 protein binding (IPI x9, all high-throughput IntAct datasets, bare term): MARK_AS_OVER_ANNOTATED for all. Uninformative bare term. The biologically meaningful partners (PHKG2 catalytic gamma P15735, PHKB Q93100) are complex partners already captured by the complex annotation; the rest (UROD P06132, SPRED1 Q7Z699) are HT hits without functional interpretation. Per policy: MARK_AS_OVER_ANNOTATED, not REMOVE.</li>
+<li>GO:0005829 cytosol (TAS Reactome): ACCEPT (core location).</li>
+<li>GO:0006091 generation of precursor metabolites and energy (TAS PMID:7549948): KEEP_AS_NON_CORE. Downstream/indirect (glycogenolysis feeds energy metabolism) but not PHKA2's core function.</li>
+<li>GO:0036211 protein modification process (TAS PMID:7549948): MARK_AS_OVER_ANNOTATED. Refers to PhK phosphorylating its substrate — a gamma-subunit (catalytic) property, over-broad and over-attributed to the alpha regulatory subunit.</li>
+</ul>
+<h2 id="core-functions">Core functions</h2>
+<ul>
+<li>MF (own): calmodulin binding GO:0005516.</li>
+<li>contributes_to MF: phosphorylase kinase activity GO:0004689 (holoenzyme).</li>
+<li>directly_involved_in BP: glycogen catabolic process GO:0005980.</li>
+<li>in_complex: phosphorylase kinase complex GO:0005964.</li>
+<li>location: cytosol GO:0005829.<br />
+</content></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P46019
+gene_symbol: PHKA2
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  PHKA2 encodes the liver isoform of the alpha regulatory subunit of phosphorylase
+  kinase (PhK). PhK is a large hexadecameric (alpha-beta-gamma-delta)4 holoenzyme in
+  which the gamma subunit (PHKG1 in muscle, PHKG2 in liver) is the catalytic
+  serine/threonine kinase and the large alpha (PHKA1/PHKA2) and beta (PHKB) subunits
+  are regulatory; the delta subunit is calmodulin, conferring Ca2+ sensitivity. PHKA2
+  is itself non-catalytic: as a regulatory subunit it is a target of cAMP-dependent
+  (PKA) phosphorylation which, together with Ca2+/calmodulin, relieves inhibition and
+  activates the catalytic gamma subunit. The activated holoenzyme phosphorylates
+  glycogen phosphorylase (b to a), triggering glycogenolysis; PhK thereby couples
+  hormonal and neural signals to hepatic glycogen breakdown. PHKA2 binds calmodulin
+  and acts in the cytosol. Loss-of-function variants in PHKA2 cause X-linked liver
+  phosphorylase kinase deficiency (glycogen storage disease type IXa, GSD9A), the most
+  common form of PhK deficiency, characterized by hepatomegaly and growth retardation
+  that are usually mild and improve with age.
+existing_annotations:
+- term:
+    id: GO:0005964
+    label: phosphorylase kinase complex
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      Phylogenetically inferred membership in the phosphorylase kinase complex. This
+      is the defining, core cellular-component assignment for PHKA2 as the liver alpha
+      regulatory subunit of the (alpha-beta-gamma-delta)4 holoenzyme.
+    action: ACCEPT
+    reason: &gt;-
+      Strongly supported: PHKA2 is one of the alpha subunits of the phosphorylase
+      kinase holoenzyme. UniProt SUBUNIT describes the complex composition and assigns
+      alpha/beta as regulatory subunits, consistent with this IBA assignment.
+    supported_by:
+    - reference_id: file:human/PHKA2/PHKA2-uniprot.txt
+      supporting_text: &#34;beta, gamma, and delta subunits. Alpha (PHKA1 or PHKA2) and beta (PHKB)&#34;
+- term:
+    id: GO:0004689
+    label: phosphorylase kinase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: enables
+  review:
+    summary: &gt;-
+      ARBA electronic assertion that PHKA2 enables phosphorylase kinase activity. This
+      is the activity of the holoenzyme, catalyzed by the gamma subunit (PHKG1/PHKG2);
+      the alpha subunit is regulatory and non-catalytic.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The catalytic phosphorylase kinase activity resides in the gamma subunit, not the
+      alpha regulatory subunit. UniProt states that alpha and beta are regulatory
+      subunits while gamma is the catalytic subunit, so an &#39;enables&#39; assertion of the
+      holoenzyme kinase activity on PHKA2 over-attributes catalysis to a regulatory
+      chain. PHKA2 contributes to this holoenzyme activity as a complex member (captured
+      in core_functions via contributes_to_molecular_function) but does not
+      independently enable it.
+    supported_by:
+    - reference_id: file:human/PHKA2/PHKA2-uniprot.txt
+      supporting_text: &#34;are regulatory subunits, gamma (PHKG1 or PHKG2) is the catalytic&#34;
+- term:
+    id: GO:0005516
+    label: calmodulin binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      InterPro-based assertion of calmodulin binding. This is a genuine molecular
+      function of the alpha subunit: UniProt notes the alpha chain may bind calmodulin
+      and annotates two calmodulin-binding regions (807-837, 1059-1099).
+    action: ACCEPT
+    reason: &gt;-
+      Well supported and biologically informative for the alpha subunit. Consistent
+      with the Calmodulin-binding keyword and two annotated calmodulin-binding regions.
+      Calmodulin is the delta subunit of the complex, so alpha-CaM binding is
+      functionally central to Ca2+ regulation of the holoenzyme.
+    supported_by:
+    - reference_id: file:human/PHKA2/PHKA2-uniprot.txt
+      supporting_text: &#34;The alpha chain may&#34;
+    - reference_id: file:human/PHKA2/PHKA2-uniprot.txt
+      supporting_text: &#34;bind calmodulin.&#34;
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      ARBA electronic assertion of cytoplasmic localization. Correct but non-specific;
+      the more precise, curatorially supported location is the cytosol (GO:0005829).
+    action: ACCEPT
+    reason: &gt;-
+      Cytoplasm is a correct broad parent of the cytosol, where the phosphorylase
+      kinase complex acts on cytosolic glycogen phosphorylase. Retained as a valid,
+      if less specific, location; the cytosol annotation is the more informative one.
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Subcellular-location keyword mapping (SL-0039) derived from UniProt&#39;s Cell
+      membrane assignment, which is itself an ECO:0000305 (inference from prenylation)
+      annotation, not an experimental localization.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The UniProt Cell membrane / Lipid-anchor location is an ECO:0000305 inference
+      resting on a possible C-terminal farnesyl-cysteine (itself by-similarity,
+      ECO:0000250), with the PTM note stating the terminal tripeptide is &#39;probably not
+      removed&#39;. The functionally relevant and better-supported compartment is the
+      cytosol, where the complex phosphorylates cytosolic glycogen phosphorylase.
+      Retained but flagged as a weakly supported, likely over-annotated location.
+    supported_by:
+    - reference_id: file:human/PHKA2/PHKA2-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cell membrane&#34;
+- term:
+    id: GO:0005975
+    label: carbohydrate metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      InterPro-based involvement in carbohydrate metabolism. Correct but broad; PHKA2
+      participates specifically in glycogen catabolism as part of the phosphorylase
+      kinase complex.
+    action: ACCEPT
+    reason: &gt;-
+      Accurate high-level biological-process assignment. The more specific glycogen
+      metabolic / glycogen catabolic terms better capture the function and are
+      reflected in core_functions, but this broad parent is not incorrect.
+- term:
+    id: GO:0005977
+    label: glycogen metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Combined-IEA/UniPathway involvement in glycogen metabolism. Accurate: the
+      phosphorylase kinase complex regulates hepatic glycogenolysis, and PHKA2
+      deficiency causes a glycogen storage disease.
+    action: ACCEPT
+    reason: &gt;-
+      Well aligned with the gene&#39;s biology. UniProt PATHWAY records glycogen
+      metabolism, and PHKA2 loss-of-function causes glycogen storage disease type IXa.
+      The catabolic direction is captured more specifically in core_functions.
+    supported_by:
+    - reference_id: file:human/PHKA2/PHKA2-uniprot.txt
+      supporting_text: &#34;PATHWAY: Glycan biosynthesis; glycogen metabolism.&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:23455922
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare protein-binding annotation from a large-scale AP-MS protein-complex
+      interlaboratory reproducibility study. Uninformative term with no specific,
+      functionally interpreted partner recorded.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      &#39;Protein binding&#39; (GO:0005515) is an uninformative molecular-function term. The
+      supporting reference is a high-throughput interactome dataset that does not
+      characterize a specific PHKA2 function; the biologically meaningful partners
+      (PHKG2, PHKB) are already captured by the phosphorylase kinase complex
+      annotation. Per curation policy this experimental IPI is marked as
+      over-annotated rather than removed.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:26496610
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare protein-binding annotation from a quantitative human-interactome study.
+      Uninformative term with no specific functional partner recorded.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Uninformative &#39;protein binding&#39; term derived from a large-scale interactome
+      dataset. No specific PHKA2 function is established. Marked as over-annotated per
+      curation policy rather than removed.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:28514442
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare protein-binding annotation from a large-scale interactome/protein-community
+      study. Uninformative term.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Uninformative &#39;protein binding&#39; term from a high-throughput interactome dataset;
+      no specific PHKA2 molecular function is established. Marked over-annotated per
+      policy rather than removed.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare protein-binding annotation from a binary (Y2H) reference-interactome map.
+      Uninformative term.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Uninformative &#39;protein binding&#39; term from a large-scale binary interactome
+      screen. No specific, functionally interpreted PHKA2 partner is captured beyond
+      complex membership already annotated elsewhere. Marked over-annotated per policy.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32707033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare protein-binding annotation from a kinase-interaction-network study. The
+      relevant kinase partner (PHKG2, the catalytic gamma subunit) reflects complex
+      membership, but the bare term itself is uninformative.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Uninformative &#39;protein binding&#39; term. The functionally meaningful interaction
+      (with the catalytic gamma subunit PHKG2) is captured by the phosphorylase kinase
+      complex annotation; the bare MF term adds nothing. Marked over-annotated per
+      policy rather than removed.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32814053
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare protein-binding annotation from a neurodegenerative-disease interactome
+      mapping study (partner SPRED1). Uninformative term.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Uninformative &#39;protein binding&#39; term from a high-throughput interactome dataset;
+      the SPRED1 interaction is not functionally interpreted for PHKA2. Marked
+      over-annotated per policy rather than removed.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:33961781
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare protein-binding annotation from a proteome-scale, cell-specific interactome
+      study. Uninformative term.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Uninformative &#39;protein binding&#39; term from a large-scale interactome dataset; no
+      specific PHKA2 function is established. Marked over-annotated per policy.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:35271311
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare protein-binding annotation from the OpenCell endogenous-tagging cellular
+      cartography study. Uninformative term.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Uninformative &#39;protein binding&#39; term from a high-throughput cellular-organization
+      dataset; no specific PHKA2 molecular function is established. Marked over-annotated
+      per policy rather than removed.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:40205054
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare protein-binding annotation from a multimodal cell-maps structural/functional
+      genomics study. Uninformative term.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Uninformative &#39;protein binding&#39; term from a large-scale cell-mapping dataset; no
+      specific PHKA2 function is established. Marked over-annotated per policy rather
+      than removed.
+- term:
+    id: GO:0005964
+    label: phosphorylase kinase complex
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      Ensembl-Compara orthology transfer of experimentally verified phosphorylase
+      kinase complex membership. Consistent with the core complex assignment.
+    action: ACCEPT
+    reason: &gt;-
+      Correct and well supported; the same defining complex membership as the IBA and
+      TAS annotations. PHKA2 is the liver alpha regulatory subunit of the holoenzyme.
+    supported_by:
+    - reference_id: file:human/PHKA2/PHKA2-uniprot.txt
+      supporting_text: &#34;Hexadecamer of 4 heterotetramers, each composed of alpha,&#34;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-71588
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome-curated cytosolic localization. The cytosolic phosphorylase kinase
+      complex phosphorylates cytosolic glycogen phosphorylase (PYGL) in liver. This is
+      the core, functionally relevant location for PHKA2.
+    action: ACCEPT
+    reason: &gt;-
+      Well supported by Reactome curation of the hepatic glycogenolysis reaction; the
+      complex containing PHKA2 acts in the cytosol. This is the preferred location over
+      the by-similarity plasma-membrane assignment.
+- term:
+    id: GO:0004689
+    label: phosphorylase kinase activity
+  evidence_type: TAS
+  original_reference_id: PMID:7549948
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Author-statement (TAS) assignment of phosphorylase kinase activity from the paper
+      cloning the human liver PHKA2 alpha subunit. The described activity is that of the
+      PhK holoenzyme, catalyzed by the gamma subunit; the alpha subunit is regulatory.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The cited paper isolates and characterizes the liver alpha subunit and discusses
+      liver phosphorylase kinase (the holoenzyme), but the catalytic activity resides in
+      the gamma subunit. Assigning &#39;enables phosphorylase kinase activity&#39; to the
+      regulatory alpha subunit over-attributes catalysis. PHKA2 contributes to this
+      holoenzyme activity as a complex member (contributes_to_molecular_function in
+      core_functions) but does not independently enable it.
+    supported_by:
+    - reference_id: PMID:7549948
+      supporting_text: &#34;We isolated and determined the structure of human liver alpha subunit of PHK (PHKA2) cDNA.&#34;
+- term:
+    id: GO:0005964
+    label: phosphorylase kinase complex
+  evidence_type: TAS
+  original_reference_id: PMID:7549948
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      Author-statement (TAS) assignment of phosphorylase kinase complex membership from
+      the paper cloning the human liver PHKA2 alpha subunit. Core complex membership.
+    action: ACCEPT
+    reason: &gt;-
+      Directly supported: the reference characterizes PHKA2 as the human liver alpha
+      subunit of phosphorylase kinase, establishing its membership in the holoenzyme
+      complex.
+    supported_by:
+    - reference_id: PMID:7549948
+      supporting_text: &#34;We isolated and determined the structure of human liver alpha subunit of PHK (PHKA2) cDNA.&#34;
+- term:
+    id: GO:0005975
+    label: carbohydrate metabolic process
+  evidence_type: TAS
+  original_reference_id: PMID:7549948
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Author-statement involvement in carbohydrate metabolism. Correct but broad; the
+      specific process is glycogen catabolism via the phosphorylase kinase complex.
+    action: ACCEPT
+    reason: &gt;-
+      Accurate high-level assignment supported by the paper&#39;s framing of PHKA2 in liver
+      glycogenosis. More specific glycogen catabolic terms are captured in
+      core_functions, but this broad parent is not incorrect.
+    supported_by:
+    - reference_id: PMID:7549948
+      supporting_text: &#34;deficiency is the most frequent liver glycogen storage disease.&#34;
+- term:
+    id: GO:0006091
+    label: generation of precursor metabolites and energy
+  evidence_type: TAS
+  original_reference_id: PMID:7549948
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Author-statement involvement in generation of precursor metabolites and energy.
+      This reflects the downstream role of hepatic glycogenolysis in supplying glucose
+      for energy, an indirect/downstream consequence rather than PHKA2&#39;s core function.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Glycogenolysis driven by the phosphorylase kinase complex ultimately supplies
+      glucose for energy metabolism, so this term is defensible but represents a
+      downstream physiological role rather than the core molecular/complex function of
+      the regulatory alpha subunit. Retained as non-core.
+- term:
+    id: GO:0036211
+    label: protein modification process
+  evidence_type: TAS
+  original_reference_id: PMID:7549948
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Author-statement involvement in protein modification process, referring to PhK&#39;s
+      phosphorylation of its substrate (glycogen phosphorylase). This is a property of
+      the catalytic gamma subunit and is an over-broad, over-attributed term for the
+      regulatory alpha subunit.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Protein modification is what the holoenzyme&#39;s catalytic gamma subunit does
+      (phosphorylating glycogen phosphorylase); assigning it to the non-catalytic alpha
+      regulatory subunit both over-attributes the activity and is uninformatively broad.
+      Marked as over-annotated.
+    supported_by:
+    - reference_id: file:human/PHKA2/PHKA2-uniprot.txt
+      supporting_text: &#34;Phosphorylase b kinase catalyzes the phosphorylation of&#34;
+- term:
+    id: GO:0005980
+    label: glycogen catabolic process
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-71588
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Proposed specific biological-process annotation: as a subunit of the cytosolic
+      phosphorylase kinase complex, PHKA2 participates in glycogen catabolism (the
+      complex phosphorylates glycogen phosphorylase to trigger glycogenolysis).
+    action: NEW
+    reason: &gt;-
+      Captures the specific catabolic direction of PHKA2&#39;s glycogen-metabolic role,
+      more precise than the existing carbohydrate/glycogen metabolic process
+      annotations. Supported by Reactome curation of the hepatic glycogenolysis
+      reaction catalyzed by the PhK complex containing PHKA2, and by the gene&#39;s
+      loss-of-function disease (GSD IXa, a liver glycogenosis).
+    supported_by:
+    - reference_id: PMID:7549948
+      supporting_text: &#34;deficiency is the most frequent liver glycogen storage disease.&#34;
+core_functions:
+- description: &gt;-
+    As the liver alpha regulatory subunit, PHKA2 binds calmodulin (the delta subunit)
+    and is a component of the phosphorylase kinase holoenzyme, contributing to its
+    Ca2+- and phosphorylation-regulated phosphorylase kinase activity while being itself
+    non-catalytic. Through the complex it drives cytosolic glycogen catabolism.
+  molecular_function:
+    id: GO:0005516
+    label: calmodulin binding
+  contributes_to_molecular_function:
+    id: GO:0004689
+    label: phosphorylase kinase activity
+  directly_involved_in:
+  - id: GO:0005980
+    label: glycogen catabolic process
+  in_complex:
+    id: GO:0005964
+    label: phosphorylase kinase complex
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: file:human/PHKA2/PHKA2-uniprot.txt
+    supporting_text: &#34;are regulatory subunits, gamma (PHKG1 or PHKG2) is the catalytic&#34;
+  - reference_id: file:human/PHKA2/PHKA2-uniprot.txt
+    supporting_text: &#34;The alpha chain may&#34;
+  - reference_id: PMID:7549948
+    supporting_text: &#34;deficiency is the most frequent liver glycogen storage disease.&#34;
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Does the C-terminal cysteine of PHKA2 undergo farnesylation in vivo, and if so, does
+    it target a fraction of the complex to membranes, or is the functionally dominant
+    pool cytosolic?
+- question: &gt;-
+    Which specific PKA (and autocatalytic) phosphorylation sites on the PHKA2 alpha
+    subunit mediate activation of the holoenzyme, and how do GSD9A missense variants
+    perturb this regulation versus simply destabilizing the complex?
+suggested_experiments:
+- description: &gt;-
+    Reconstitute the liver holoenzyme with wild-type versus GSD9A-variant PHKA2 and
+    measure Ca2+/calmodulin- and PKA-phosphorylation-dependent activation of glycogen
+    phosphorylase to distinguish assembly defects from regulatory defects.
+- description: &gt;-
+    Determine the subcellular distribution of endogenous PHKA2 in hepatocytes (cytosol
+    versus membrane) and test whether inhibiting prenylation redistributes the complex.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:human/PHKA2/PHKA2-uniprot.txt
+  title: UniProtKB entry P46019 (KPB2_HUMAN), Phosphorylase b kinase regulatory subunit
+    alpha, liver isoform
+  findings: []
+- id: PMID:23455922
+  title: Interlaboratory reproducibility of large-scale human protein-complex analysis
+    by standardized AP-MS.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-throughput AP-MS dataset underpinning a bare protein-binding IPI; no
+      PHKA2-specific function established.
+- id: PMID:26496610
+  title: A human interactome in three quantitative dimensions organized by stoichiometries
+    and abundances.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Large-scale quantitative interactome dataset; source of a bare protein-binding IPI.
+- id: PMID:28514442
+  title: Architecture of the human interactome defines protein communities and disease
+    networks.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Large-scale interactome/community dataset; source of a bare protein-binding IPI.
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Binary (Y2H) reference-interactome dataset; source of bare protein-binding IPIs.
+- id: PMID:32707033
+  title: Kinase Interaction Network Expands Functional and Disease Roles of Human
+    Kinases.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Kinase-interaction-network dataset; the meaningful partner (catalytic gamma
+      subunit PHKG2) reflects complex membership already captured elsewhere.
+- id: PMID:32814053
+  title: Interactome Mapping Provides a Network of Neurodegenerative Disease Proteins
+    and Uncovers Widespread Protein Aggregation in Affected Brains.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Neurodegenerative-disease interactome dataset; source of a bare protein-binding
+      IPI (SPRED1), not functionally interpreted for PHKA2.
+- id: PMID:33961781
+  title: Dual proteome-scale networks reveal cell-specific remodeling of the human
+    interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Proteome-scale interactome dataset; source of a bare protein-binding IPI.
+- id: PMID:35271311
+  title: &#39;OpenCell: Endogenous tagging for the cartography of human cellular organization.&#39;
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Endogenous-tagging cellular-organization dataset; source of a bare protein-binding
+      IPI.
+- id: PMID:40205054
+  title: Multimodal cell maps as a foundation for structural and functional genomics.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Multimodal cell-mapping dataset; source of a bare protein-binding IPI.
+- id: PMID:7549948
+  title: Isolation of cDNA encoding the human liver phosphorylase kinase alpha subunit
+    (PHKA2) and identification of a missense mutation of the PHKA2 gene in a family
+    with liver phosphorylase kinase deficiency.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Abstract-only cache. Directly establishes PHKA2 as the human liver alpha subunit
+      of phosphorylase kinase and links it to X-linked liver PhK deficiency (GSD IXa);
+      basis for the TAS complex/activity/process annotations.
+- id: Reactome:R-HSA-71588
+  title: glycogen phosphorylase (PYGL) dimer b + 2 ATP =&gt; glycogen phosphorylase (PYGL)
+    dimer a + 2 ADP
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

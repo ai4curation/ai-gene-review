@@ -41,7 +41,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           token: ${{ secrets.PAT_FOR_PR }}
@@ -103,10 +103,16 @@ jobs:
             - Systematic annotation quality concerns for specific organisms or GO branches
             - Annotation rule problems (ARBA/UniRule — but defer pure ARBA issues to the
               existing arba-issue-monitor workflow)
+            - UniProt keyword-to-GO (KW2GO) mapping changes — issues (often labeled
+              "UniProt KW2GO mapping") that propose changing, adding, or removing the GO
+              term a UniProt keyword maps to (e.g. "move KW-1110 from GO:0039527 to
+              GO:0140476"). These have no single target gene but affect every protein
+              carrying that keyword, so they are in scope as Type C below.
             - Requests for new GO terms motivated by annotation gaps
 
             Skip issues that are:
-            - Pure ontology editing requests (GO term definitions, relationships)
+            - Pure ontology editing requests (GO term definitions, relationships) that do
+              NOT change a keyword mapping or any gene's annotations
             - Infrastructure/tooling issues for go-annotation itself
             - Already covered by an existing ARBA review in this repo
 
@@ -154,6 +160,11 @@ jobs:
             annotation pattern. Examples: "review all autophagy annotations", "HSP70 family
             annotations are inconsistent", "C. elegans annotations need updating".
 
+            ### Type C: UniProt KW2GO keyword-to-GO mapping change
+            The issue proposes changing/adding/removing the GO term that a UniProt keyword
+            maps to. There is no single target gene, but the mapping affects every protein
+            carrying that keyword. Examples: "move KW-1110 from GO:0039527 to GO:0140476".
+
             ## Step 4: Take action
 
             If DRY_RUN is true, report your analysis and stop without making changes.
@@ -185,6 +196,36 @@ jobs:
             4. Create a tracking issue in this repo referencing the project and the
                upstream go-annotation issue.
 
+            ### For Type C (KW2GO mapping change):
+
+            Do NOT attempt to review a gene — there isn't one. Instead capture the mapping
+            change so its downstream impact on this repo's reviews can be assessed.
+
+            1. Identify the UniProt keyword (e.g. KW-1110), its current GO mapping, and the
+               proposed GO mapping. Verify BOTH GO ids resolve and record their exact labels
+               using the OLS MCP (never guess a GO id or label). Note whether the change is a
+               generalization, a specialization, or a lateral move, and briefly why it was
+               proposed.
+            2. Assess downstream impact on this repo: search existing gene reviews for the
+               current and proposed GO ids to find genes whose `existing_annotations` may be
+               affected:
+
+               ```bash
+               grep -rl "GO:CURRENT_ID" genes --include='*-ai-review.yaml'
+               grep -rl "GO:PROPOSED_ID" genes --include='*-ai-review.yaml'
+               ```
+
+            3. Create a project file at `projects/PROJECT_NAME.md` (e.g. a KW2GO-mappings
+               project, or a keyword-specific page) with:
+               - The keyword, current GO term (id + label), proposed GO term (id + label),
+                 and the rationale.
+               - A link to geneontology/go-annotation#NNN.
+               - The list of affected gene reviews found above (or "none currently in repo").
+               - Recommended follow-up (which reviews to re-check once the mapping lands).
+            4. Create a PR with the project file.
+            5. Create a tracking issue in this repo referencing the project and the upstream
+               go-annotation issue.
+
             ## Guardrails
 
             - Pick exactly ONE issue per run. Do not batch.
@@ -192,12 +233,13 @@ jobs:
             - Never edit derived files — regenerate with just commands.
             - Validate any gene review changes with `just validate <organism> <gene>`.
             - If you cannot determine the organism or gene from the issue, skip it and
-              pick the next candidate.
+              pick the next candidate — UNLESS it is a Type C KW2GO mapping issue, which
+              legitimately has no target gene and is handled via a project file instead.
             - If the issue is ambiguous or would require extensive human judgment to scope,
               create a tracking issue with your analysis rather than attempting the work.
 
             End with a concise summary: issue scanned, issue selected (with link),
-            classification (Type A or B), action taken, and any blockers.
+            classification (Type A, B, or C), action taken, and any blockers.
 
       - name: Write step summary
         if: always()

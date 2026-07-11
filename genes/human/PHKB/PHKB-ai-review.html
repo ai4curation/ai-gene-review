@@ -1,0 +1,3204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PHKB - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PHKB</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q93100" target="_blank" class="term-link">
+                        Q93100
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PHKB";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q93100" data-a="DESCRIPTION: PHKB encodes the beta regulatory subunit of phosph..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PHKB encodes the beta regulatory subunit of phosphorylase kinase (PhK), a large ~1.3 MDa (alpha-beta-gamma-delta)4 hexadecameric enzyme complex that controls glycogenolysis. Within the holoenzyme the gamma subunit (PHKG1 in muscle, PHKG2 in liver) is the catalytic Ser/Thr protein kinase, the alpha (PHKA1/PHKA2) and beta (PHKB) subunits are large non-catalytic regulatory subunits, and the delta subunit is calmodulin. PHKB is a shared component of both the muscle and liver holoenzymes. It forms a central beta4 scaffold that connects the four alpha-beta-gamma-delta modules and possesses a glucoamylase-like fold that lacks detectable enzyme activity. PHKB is a target of cAMP-dependent protein kinase (PKA); phosphorylation of the alpha and beta subunits, together with Ca2+ sensing by the delta (calmodulin) subunit, relieves autoinhibition of the catalytic gamma subunit, allowing PhK to phosphorylate glycogen phosphorylase (converting it from the b to the a form) and thereby trigger glycogen breakdown. PhK is a cytosolic enzyme. Loss-of-function mutations in PHKB cause glycogen storage disease type IXb (combined liver and muscle phosphorylase kinase deficiency, autosomal recessive, generally mild).</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005964" target="_blank" class="term-link">
+                                    GO:0005964
+                                </a>
+                            </span>
+                            <span class="term-label">phosphorylase kinase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q93100" data-a="GO:0005964" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PHKB is the beta subunit of phosphorylase kinase, so it is a constituent of the phosphorylase kinase complex. This phylogenetic (IBA) assignment is accurate and represents a core cellular-component annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PHKB is definitionally a subunit of the (alpha-beta-gamma-delta)4 phosphorylase kinase holoenzyme. The IBA propagation is consistent with UniProt SUBUNIT and with cryo-EM of the human muscle complex.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PHKB/PHKB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">are regulatory subunits, gamma (PHKG1 or PHKG2) is the catalytic</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/38548794" target="_blank" class="term-link">
+                                        PMID:38548794
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">wherein four αβγδ modules are connected by the central β4 scaffold</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005516" target="_blank" class="term-link">
+                                    GO:0005516
+                                </a>
+                            </span>
+                            <span class="term-label">calmodulin binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q93100" data-a="GO:0005516" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro-based (IEA) calmodulin-binding annotation. UniProt annotates three predicted calmodulin-binding regions in PHKB (aa 7-29, 768-795, 920-951; ECO:0000255) and carries the Calmodulin-binding keyword. This is plausible but is a secondary/inferred activity - the primary calmodulin (delta) subunit of PhK binds the catalytic gamma subunit, not PHKB.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The calmodulin-binding regions of PHKB are computationally predicted (ECO:0000255) rather than experimentally demonstrated, and calmodulin sensing in PhK is chiefly mediated by the integral delta (calmodulin) subunit acting on the gamma subunit. Retain as a plausible non-core molecular function of the regulatory beta subunit rather than as its defining function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PHKB/PHKB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">note=&#34;Calmodulin-binding&#34;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q93100" data-a="GO:0005886" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UniProtKB-SubCell IEA mapping to plasma membrane, derived from the UniProt &#34;Cell membrane; Lipid-anchor; Cytoplasmic side&#34; location. That location is itself an ECO:0000305 inference based on predicted C-terminal farnesylation (by similarity to rabbit PHKB), not on direct human evidence. Phosphorylase kinase is otherwise well established as a cytosolic enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The plasma-membrane assignment rests on an inferred lipid anchor (farnesylation of the C-terminal cysteine, by similarity), and UniProt itself notes uncertainty about the C-terminal processing. The functionally dominant localization of the PhK holoenzyme is cytosolic (see the Reactome-based cytosol annotations). Keep as a weak, non-core membrane-association annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PHKB/PHKB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Cell membrane {ECO:0000305}; Lipid-anchor</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005975" target="_blank" class="term-link">
+                                    GO:0005975
+                                </a>
+                            </span>
+                            <span class="term-label">carbohydrate metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q93100" data-a="GO:0005975" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro-based (IEA) annotation to the broad parent term carbohydrate metabolic process. PHKB is a regulatory subunit of phosphorylase kinase, whose specific role is the control of glycogen breakdown; a more precise glycogen catabolic / glycogen metabolic term better captures its biology.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The term is correct but too general. PHKB acts specifically in glycogen catabolism via the phosphorylase kinase complex; the more specific glycogen metabolic / glycogen catabolic process terms (already present as other annotations) are preferable.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005980" target="_blank" class="term-link">
+                                    glycogen catabolic process
+                                </a>
+                            </span>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005977" target="_blank" class="term-link">
+                                    glycogen metabolic process
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PHKB/PHKB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Glycan biosynthesis; glycogen metabolism.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005977" target="_blank" class="term-link">
+                                    GO:0005977
+                                </a>
+                            </span>
+                            <span class="term-label">glycogen metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q93100" data-a="GO:0005977" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation (InterPro + UniPathway) to glycogen metabolic process. This accurately reflects PHKB&#39;s biological role as a regulatory subunit of the phosphorylase kinase complex that controls glycogen breakdown, and matches the UniProt pathway assignment.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Glycogen metabolic process correctly describes the biological role of PHKB. It is corroborated by an independent TAS annotation to the same term (PMID:9402963) and by the UniProt pathway &#34;Glycan biosynthesis; glycogen metabolism&#34;.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PHKB/PHKB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Glycan biosynthesis; glycogen metabolism.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21418524" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21418524
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Substrate preference and phosphatidylinositol monophosphate ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q93100" data-a="GO:0005515" data-r="PMID:21418524" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IntAct IPI protein-binding annotation, interactant PASK/PASKIN (Q96RG2). The cited paper concerns PASKIN substrate preference and phosphatidylinositol inhibition; PHKB is recorded only as a high-throughput binary interactant. The bare protein binding term (GO:0005515) conveys no specific molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Bare protein binding (GO:0005515) is uninformative and is discouraged as a molecular-function annotation. The interaction is not the subject of this paper and no informative function follows from it, so it is retained but flagged as an over-annotation rather than removed.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21418524" target="_blank" class="term-link">
+                                        PMID:21418524
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">regulates glycogen synthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25051373" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25051373
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    KIAA1199 interacts with glycogen phosphorylase kinase β-subu...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q93100" data-a="GO:0005515" data-r="PMID:25051373" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IntAct IPI protein-binding annotation, interactant CEMIP/KIAA1199 (Q8WUJ3). Pull-down and co-immunoprecipitation showed PHKB binds the C-terminal region of KIAA1199, proposed to promote glycogen breakdown and cancer-cell survival. Although this is real interaction evidence, the annotated term is the uninformative bare protein binding (GO:0005515).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The binding is experimentally supported, but the GO:0005515 protein binding term captures no specific molecular function and is discouraged. The biologically meaningful role (regulation of glycogen breakdown via the phosphorylase kinase complex) is captured by the process/complex annotations, so this bare-binding term is flagged as an over-annotation and retained.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25051373" target="_blank" class="term-link">
+                                        PMID:25051373
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the glycogen phosphorylase kinase β-subunit (PHKB) interacted with the</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25416956
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A proteome-scale map of the human interactome network.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q93100" data-a="GO:0005515" data-r="PMID:25416956" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IntAct IPI protein-binding annotation, interactant CAMK2B (Q13554), from a proteome-scale binary interactome map. PHKB is one of ~14,000 systematically screened interactions. The annotated term is the uninformative bare protein binding (GO:0005515).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Bare protein binding (GO:0005515) from a high-throughput interactome screen provides no specific molecular-function information and is discouraged. Retained but flagged as an over-annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link">
+                                        PMID:25416956
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">a systematic map of ?14,000 high-quality human</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005964" target="_blank" class="term-link">
+                                    GO:0005964
+                                </a>
+                            </span>
+                            <span class="term-label">phosphorylase kinase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q93100" data-a="GO:0005964" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ensembl-Compara ortholog-transfer (IEA) annotation to phosphorylase kinase complex, duplicating the IBA and IPI assignments. Correct and consistent with PHKB being a defining subunit of the holoenzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Redundant with the IBA and ComplexPortal IPI annotations to the same term; the cellular-component assignment is accurate.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PHKB/PHKB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">are regulatory subunits, gamma (PHKG1 or PHKG2) is the catalytic</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005964" target="_blank" class="term-link">
+                                    GO:0005964
+                                </a>
+                            </span>
+                            <span class="term-label">phosphorylase kinase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/38548794" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:38548794
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Architecture and activation of human muscle phosphorylase ki...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q93100" data-a="GO:0005964" data-r="PMID:38548794" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ComplexPortal IPI annotation to phosphorylase kinase complex, based on the cryo-EM structure of human muscle PhK, which resolves the beta subunit forming the central beta4 scaffold that connects the four alpha-beta-gamma-delta modules of the 1.3 MDa hexadecamer. This is strong, structure-based evidence for PHKB as a core component of the complex.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct structural evidence (cryo-EM) places PHKB in the phosphorylase kinase holoenzyme as the central scaffolding subunit. Core cellular-component annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/38548794" target="_blank" class="term-link">
+                                        PMID:38548794
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The 1.3-megadalton PhK α4β4γ4δ4 hexadecamer consists of a tetramer of</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/38548794" target="_blank" class="term-link">
+                                        PMID:38548794
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">wherein four αβγδ modules are connected by the central β4 scaffold</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005980" target="_blank" class="term-link">
+                                    GO:0005980
+                                </a>
+                            </span>
+                            <span class="term-label">glycogen catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/38548794" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:38548794
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Architecture and activation of human muscle phosphorylase ki...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q93100" data-a="GO:0005980" data-r="PMID:38548794" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ComplexPortal IDA annotation to glycogen catabolic process. As a subunit of phosphorylase kinase, PHKB participates in the activation of glycogen phosphorylase and thereby in glycogen breakdown. The cryo-EM study shows the beta subunit both scaffolds the complex and, via its ADP-binding pocket, allosterically enhances PhK activity. This is the core biological process for the gene.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PHKB is a regulatory subunit of the kinase that triggers glycogenolysis; glycogen catabolic process accurately and specifically captures its core biological role. The beta subunit contributes to the process not only structurally but through an allosteric ADP-binding pocket that enhances activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/38548794" target="_blank" class="term-link">
+                                        PMID:38548794
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We also reveal an ADP-binding pocket in the β-subunit, which plays a</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25051373" target="_blank" class="term-link">
+                                        PMID:25051373
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Glycogen phosphorylase kinase (PHK) is a serine/threonine-specific protein kinase that phosphorylates a serine residue in glycogen phosphorylase (PYG)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-71541
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q93100" data-a="GO:0005829" data-r="Reactome:R-HSA-71541" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome TAS annotation placing PHKB in the cytosol, from the muscle phosphorylase kinase reaction (PYGM phosphorylation). Phosphorylase kinase is a cytosolic enzyme, and this is a core, accurate localization for the complex.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The phosphorylase kinase complex acts in the cytosol where it phosphorylates cytosolic glycogen phosphorylase; cytosol is the functionally dominant localization and is well supported by Reactome.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-71541
+
+                                </span>
+
+                                <div class="support-text">The cytosolic phosphorylase kinase complex catalyzes the phosphorylation</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-71588
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q93100" data-a="GO:0005829" data-r="Reactome:R-HSA-71588" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome TAS annotation placing PHKB in the cytosol, from the liver phosphorylase kinase reaction (PYGL phosphorylation). This is the liver-variant holoenzyme (PHKA2/PHKB/PHKG2/calmodulin) in which PHKB is a shared subunit. Cytosol is a core, accurate localization for the complex.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Duplicates the cytosol assignment from the muscle-variant reaction and is equally accurate; PHKB is the shared beta subunit of both the muscle and liver cytosolic holoenzymes.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-71588
+
+                                </span>
+
+                                <div class="support-text">The cytosolic phosphorylase kinase complex catalyzes the phosphorylation of glycogen phosphorylase (PYGL)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005977" target="_blank" class="term-link">
+                                    GO:0005977
+                                </a>
+                            </span>
+                            <span class="term-label">glycogen metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9402963" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9402963
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Phosphorylase-kinase-deficient liver glycogenosis with an un...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q93100" data-a="GO:0005977" data-r="PMID:9402963" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TAS annotation to glycogen metabolic process, from a study identifying a PHKB missense mutation (plus a splice-site mutation) causing phosphorylase kinase-deficient liver glycogenosis. Loss of PHKB function impairs glycogen breakdown, confirming PHKB&#39;s role in glycogen metabolism.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Human genetic evidence (PHKB mutations causing phosphorylase kinase deficiency / liver glycogenosis) directly supports involvement in glycogen metabolism. Consistent with the IEA annotation to the same term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9402963" target="_blank" class="term-link">
+                                        PMID:9402963
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">liver glycogenosis caused by Phk deficiency</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006091" target="_blank" class="term-link">
+                                    GO:0006091
+                                </a>
+                            </span>
+                            <span class="term-label">generation of precursor metabolites and energy</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9402963" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9402963
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Phosphorylase-kinase-deficient liver glycogenosis with an un...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q93100" data-a="GO:0006091" data-r="PMID:9402963" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TAS annotation to generation of precursor metabolites and energy. This is a broad parent process; glycogenolysis driven by phosphorylase kinase does mobilize glucose (glucose-1-phosphate) for energy, but the term is much less specific than the glycogen catabolic / glycogen metabolic annotations and does not describe the distinctive function of PHKB.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The term is not wrong - glycogen breakdown ultimately supplies glucose for energy production - but it is high-level and generic. The specific glycogen catabolic/metabolic annotations better capture PHKB&#39;s role, so this broad energy term is retained as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9402963" target="_blank" class="term-link">
+                                        PMID:9402963
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">liver glycogenosis caused by Phk deficiency</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Non-catalytic beta regulatory subunit of phosphorylase kinase; forms the central beta4 scaffold of the (alpha-beta-gamma-delta)4 holoenzyme and, as a PKA-phosphorylation target together with the alpha subunit and the calmodulin (delta) sensor, relieves autoinhibition of the catalytic gamma subunit, thereby contributing to the phosphorylase kinase activity of the assembled complex.</h3>
+                <span class="vote-buttons" data-g="Q93100" data-a="FUNCTION: Non-catalytic beta regulatory subunit of phosphory..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005516" target="_blank" class="term-link">
+                            calmodulin binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005980" target="_blank" class="term-link">
+                                glycogen catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005964" target="_blank" class="term-link">
+                            phosphorylase kinase complex
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25051373" target="_blank" class="term-link">
+                                PMID:25051373
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">cAMP levels that stimulate protein kinase A (PKA) to phosphorylate the α- and β-subunits (PHKA and PHKB)</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/PHKB/PHKB-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">as a regulatory unit and modulates the activity of the holoenzyme in</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21418524" target="_blank" class="term-link">
+                            PMID:21418524
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Substrate preference and phosphatidylinositol monophosphate inhibition of the catalytic domain of the Per-Arnt-Sim domain kinase PASKIN.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25051373" target="_blank" class="term-link">
+                            PMID:25051373
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">KIAA1199 interacts with glycogen phosphorylase kinase β-subunit (PHKB) to promote glycogen breakdown and cancer cell survival.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link">
+                            PMID:25416956
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A proteome-scale map of the human interactome network.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/38548794" target="_blank" class="term-link">
+                            PMID:38548794
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Architecture and activation of human muscle phosphorylase kinase.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9402963" target="_blank" class="term-link">
+                            PMID:9402963
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Phosphorylase-kinase-deficient liver glycogenosis with an unusual biochemical phenotype in blood cells associated with a missense mutation in the beta subunit gene (PHKB).</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-71541
+
+                    </span>
+                </div>
+
+                <div class="reference-title">glycogen phosphorylase (PYGM) dimer b + 2 ATP =&gt; glycogen phosphorylase (PYGM) dimer a + 2 ADP</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-71588
+
+                    </span>
+                </div>
+
+                <div class="reference-title">glycogen phosphorylase (PYGL) dimer b + 2 ATP =&gt; glycogen phosphorylase (PYGL) dimer a + 2 ADP</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/PHKB/PHKB-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB Q93100 (KPBB_HUMAN) - Phosphorylase b kinase regulatory subunit beta</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PHKB-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q93100" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="phkb-human-review-notes">PHKB (human) review notes</h1>
+<p>UniProtKB:Q93100 (KPBB_HUMAN) — Phosphorylase b kinase regulatory subunit beta. HGNC:8927. 1093 aa.</p>
+<h2 id="core-biology-established">Core biology (established)</h2>
+<p>PHKB encodes the <strong>beta regulatory subunit of phosphorylase kinase (PhK)</strong>. PhK is a<br />
+large ~1.3 MDa (αβγδ)4 hexadecamer. Within it:<br />
+- <strong>gamma (PHKG1 muscle / PHKG2 liver) is the catalytic Ser/Thr protein kinase</strong>;<br />
+- <strong>alpha (PHKA1/PHKA2) and beta (PHKB) are large regulatory subunits</strong> — NOT themselves<br />
+  kinases;<br />
+- <strong>delta is calmodulin</strong> (the Ca2+ sensor).</p>
+<p>PHKB is shared between the muscle and liver holoenzymes (Reactome R-HSA-71541 muscle /<br />
+R-HSA-71588 liver; ComplexPortal CPX-2640 muscle, CPX-9581 liver).</p>
+<p>Mechanism of activation: both alpha and beta are phosphorylated by cAMP-dependent<br />
+protein kinase (PKA); this, together with Ca2+ sensing by the delta (calmodulin)<br />
+subunit, relieves autoinhibition of the catalytic gamma subunit, so PhK phosphorylates<br />
+glycogen phosphorylase (b → a) and triggers glycogenolysis.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/25051373" title="the γ-subunit possesses enzymatic activity that is tightly regulated by the other three regulatory subunits">PMID:25051373</a><br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/25051373" title="cAMP levels that stimulate protein kinase A (PKA) to phosphorylate the α- and β-subunits (PHKA and PHKB)">PMID:25051373</a></p>
+<p>Cryo-EM of human muscle PhK (Yang et al 2024) shows the beta subunit forms the central<br />
+β4 scaffold connecting the four αβγδ modules, has a glucoamylase-like fold but NO enzyme<br />
+activity, and contains an ADP-binding pocket that allosterically enhances PhK activity.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/38548794" title="The α- and β-subunits possess glucoamylase-like domains, but exhibit no detectable enzyme activities">PMID:38548794</a><br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/38548794" title="wherein four αβγδ modules are connected by the central β4 scaffold">PMID:38548794</a><br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/38548794" title="We also reveal an ADP-binding pocket in the β-subunit, which plays a role in allosterically enhancing PhK activity">PMID:38548794</a></p>
+<p>PHKB's own molecular role is regulatory/structural. It is NOT catalytic. Any<br />
+GO:0004689 phosphorylase kinase activity attributable to PHKB reflects the holoenzyme<br />
+(contributes_to), not intrinsic PHKB catalysis.</p>
+<p>UniProt records calmodulin-binding regions (aa 7-29, 768-795, 920-951; ECO:0000255<br />
+predicted) and the Calmodulin-binding keyword. Note: the primary calmodulin (delta)<br />
+subunit binds the gamma subunit; PHKB calmodulin binding is by keyword/InterPro<br />
+inference and is at most a secondary/contributory MF.</p>
+<h2 id="localization">Localization</h2>
+<ul>
+<li>Cytosolic (Reactome TAS): the PhK complex is a cytosolic enzyme (R-HSA-71541/71588).</li>
+<li>UniProt lists Cell membrane; Lipid-anchor; Cytoplasmic side (ECO:0000305, inferred<br />
+  from farnesylation of C-terminal Cys-1090, by similarity to rabbit P12798). The<br />
+  UniProt-SubCell IEA to GO:0005886 plasma membrane derives from this inferred lipid<br />
+  anchor. Weak/inferred; keep as non-core.</li>
+</ul>
+<h2 id="disease">Disease</h2>
+<p>GSD IXb / GSD9B (MIM:261750): autosomal-recessive liver + muscle phosphorylase kinase<br />
+deficiency, generally mild, clinical improvement with age.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/9402963" title="liver glycogenosis caused by Phk deficiency">PMID:9402963</a><br />
+UniProt: mild phenotype attributed to an "incomplete holoenzyme that lacks the beta<br />
+subunit, but that may possess residual activity".</p>
+<h2 id="interactions-ipi-protein-binding-annotations">Interactions (IPI protein binding annotations)</h2>
+<ul>
+<li>PMID:21418524 (IntAct, with PASK/PASKIN Q96RG2): this paper is about PASKIN substrate<br />
+  preference and PI-monophosphate inhibition; PHKB is only an IntAct high-throughput<br />
+  interactant. Bare GO:0005515 protein binding — uninformative → MARK_AS_OVER_ANNOTATED.</li>
+<li>PMID:25051373 (IntAct, with CEMIP/KIAA1199 Q8WUJ3): pull-down + co-IP shows PHKB binds<br />
+  the C-terminal region of KIAA1199/CEMIP, proposed to promote glycogen breakdown in<br />
+  cancer cells. Real binding evidence but bare protein binding term is uninformative →<br />
+  MARK_AS_OVER_ANNOTATED.</li>
+<li>PMID:25416956 (IntAct, with CAMK2B Q13554): proteome-scale Y2H interactome map; PHKB is<br />
+  one of ~14,000 binary interactions. Bare protein binding → MARK_AS_OVER_ANNOTATED.</li>
+</ul>
+<p>Per policy: bare protein binding IPIs are NOT removed; use MARK_AS_OVER_ANNOTATED.</p>
+<h2 id="annotation-by-annotation-plan">Annotation-by-annotation plan</h2>
+<ul>
+<li>GO:0005964 phosphorylase kinase complex (IBA, IEA, IPI-ComplexPortal): ACCEPT (core CC).</li>
+<li>GO:0005516 calmodulin binding (IEA/InterPro): KEEP_AS_NON_CORE (inferred; delta subunit<br />
+  is the main CaM; PHKB CaM-binding regions are ECO:0000255 predicted).</li>
+<li>GO:0005886 plasma membrane (IEA-SubCell): KEEP_AS_NON_CORE (inferred lipid anchor;<br />
+  complex is cytosolic; weak).</li>
+<li>GO:0005975 carbohydrate metabolic process (IEA/InterPro): MODIFY → glycogen catabolic<br />
+  process / glycogen metabolic process are more specific and accurate.</li>
+<li>GO:0005977 glycogen metabolic process (IEA + TAS): ACCEPT (accurate BP).</li>
+<li>GO:0005515 protein binding x3 (IPI): MARK_AS_OVER_ANNOTATED (uninformative).</li>
+<li>GO:0005980 glycogen catabolic process (IDA-ComplexPortal, PMID:38548794): ACCEPT (core).</li>
+<li>GO:0005829 cytosol (TAS x2, Reactome): ACCEPT (core CC).</li>
+<li>GO:0006091 generation of precursor metabolites and energy (TAS, PMID:9402963):<br />
+  KEEP_AS_NON_CORE (glycogenolysis liberates glucose for energy, but this is a broad<br />
+  parent process; keep non-core).<br />
+</content></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q93100
+gene_symbol: PHKB
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  PHKB encodes the beta regulatory subunit of phosphorylase kinase (PhK), a large
+  ~1.3 MDa (alpha-beta-gamma-delta)4 hexadecameric enzyme complex that controls
+  glycogenolysis. Within the holoenzyme the gamma subunit (PHKG1 in muscle, PHKG2
+  in liver) is the catalytic Ser/Thr protein kinase, the alpha (PHKA1/PHKA2) and
+  beta (PHKB) subunits are large non-catalytic regulatory subunits, and the delta
+  subunit is calmodulin. PHKB is a shared component of both the muscle and liver
+  holoenzymes. It forms a central beta4 scaffold that connects the four
+  alpha-beta-gamma-delta modules and possesses a glucoamylase-like fold that lacks
+  detectable enzyme activity. PHKB is a target of cAMP-dependent protein kinase
+  (PKA); phosphorylation of the alpha and beta subunits, together with Ca2+ sensing
+  by the delta (calmodulin) subunit, relieves autoinhibition of the catalytic gamma
+  subunit, allowing PhK to phosphorylate glycogen phosphorylase (converting it from
+  the b to the a form) and thereby trigger glycogen breakdown. PhK is a cytosolic
+  enzyme. Loss-of-function mutations in PHKB cause glycogen storage disease type IXb
+  (combined liver and muscle phosphorylase kinase deficiency, autosomal recessive,
+  generally mild).
+alternative_products:
+- name: &#39;1&#39;
+  id: Q93100-1
+- name: &#39;2&#39;
+  id: Q93100-2
+  sequence_note: VSP_012445
+- name: &#39;3&#39;
+  id: Q93100-3
+  sequence_note: VSP_012446
+- name: &#39;4&#39;
+  id: Q93100-4
+  sequence_note: VSP_012445, VSP_012446
+existing_annotations:
+- term:
+    id: GO:0005964
+    label: phosphorylase kinase complex
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: part_of
+  review:
+    summary: PHKB is the beta subunit of phosphorylase kinase, so it is a constituent
+      of the phosphorylase kinase complex. This phylogenetic (IBA) assignment is
+      accurate and represents a core cellular-component annotation.
+    action: ACCEPT
+    reason: PHKB is definitionally a subunit of the (alpha-beta-gamma-delta)4 phosphorylase
+      kinase holoenzyme. The IBA propagation is consistent with UniProt SUBUNIT and
+      with cryo-EM of the human muscle complex.
+    supported_by:
+      - reference_id: file:human/PHKB/PHKB-uniprot.txt
+        supporting_text: &#34;are regulatory subunits, gamma (PHKG1 or PHKG2) is the catalytic&#34;
+      - reference_id: PMID:38548794
+        supporting_text: &#34;wherein four αβγδ modules are connected by the central β4 scaffold&#34;
+- term:
+    id: GO:0005516
+    label: calmodulin binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: InterPro-based (IEA) calmodulin-binding annotation. UniProt annotates
+      three predicted calmodulin-binding regions in PHKB (aa 7-29, 768-795, 920-951;
+      ECO:0000255) and carries the Calmodulin-binding keyword. This is plausible but
+      is a secondary/inferred activity - the primary calmodulin (delta) subunit of
+      PhK binds the catalytic gamma subunit, not PHKB.
+    action: KEEP_AS_NON_CORE
+    reason: The calmodulin-binding regions of PHKB are computationally predicted
+      (ECO:0000255) rather than experimentally demonstrated, and calmodulin sensing
+      in PhK is chiefly mediated by the integral delta (calmodulin) subunit acting on
+      the gamma subunit. Retain as a plausible non-core molecular function of the
+      regulatory beta subunit rather than as its defining function.
+    supported_by:
+      - reference_id: file:human/PHKB/PHKB-uniprot.txt
+        supporting_text: &#39;note=&#34;Calmodulin-binding&#34;&#39;
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: UniProtKB-SubCell IEA mapping to plasma membrane, derived from the
+      UniProt &#34;Cell membrane; Lipid-anchor; Cytoplasmic side&#34; location. That location
+      is itself an ECO:0000305 inference based on predicted C-terminal farnesylation
+      (by similarity to rabbit PHKB), not on direct human evidence. Phosphorylase
+      kinase is otherwise well established as a cytosolic enzyme.
+    action: KEEP_AS_NON_CORE
+    reason: The plasma-membrane assignment rests on an inferred lipid anchor
+      (farnesylation of the C-terminal cysteine, by similarity), and UniProt itself
+      notes uncertainty about the C-terminal processing. The functionally dominant
+      localization of the PhK holoenzyme is cytosolic (see the Reactome-based cytosol
+      annotations). Keep as a weak, non-core membrane-association annotation.
+    supported_by:
+      - reference_id: file:human/PHKB/PHKB-uniprot.txt
+        supporting_text: &#34;Cell membrane {ECO:0000305}; Lipid-anchor&#34;
+- term:
+    id: GO:0005975
+    label: carbohydrate metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: InterPro-based (IEA) annotation to the broad parent term carbohydrate
+      metabolic process. PHKB is a regulatory subunit of phosphorylase kinase, whose
+      specific role is the control of glycogen breakdown; a more precise glycogen
+      catabolic / glycogen metabolic term better captures its biology.
+    action: MODIFY
+    reason: The term is correct but too general. PHKB acts specifically in glycogen
+      catabolism via the phosphorylase kinase complex; the more specific glycogen
+      metabolic / glycogen catabolic process terms (already present as other
+      annotations) are preferable.
+    proposed_replacement_terms:
+      - id: GO:0005980
+        label: glycogen catabolic process
+      - id: GO:0005977
+        label: glycogen metabolic process
+    supported_by:
+      - reference_id: file:human/PHKB/PHKB-uniprot.txt
+        supporting_text: &#34;Glycan biosynthesis; glycogen metabolism.&#34;
+- term:
+    id: GO:0005977
+    label: glycogen metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: IEA annotation (InterPro + UniPathway) to glycogen metabolic process.
+      This accurately reflects PHKB&#39;s biological role as a regulatory subunit of the
+      phosphorylase kinase complex that controls glycogen breakdown, and matches the
+      UniProt pathway assignment.
+    action: ACCEPT
+    reason: Glycogen metabolic process correctly describes the biological role of
+      PHKB. It is corroborated by an independent TAS annotation to the same term
+      (PMID:9402963) and by the UniProt pathway &#34;Glycan biosynthesis; glycogen
+      metabolism&#34;.
+    supported_by:
+      - reference_id: file:human/PHKB/PHKB-uniprot.txt
+        supporting_text: &#34;Glycan biosynthesis; glycogen metabolism.&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:21418524
+  qualifier: enables
+  review:
+    summary: IntAct IPI protein-binding annotation, interactant PASK/PASKIN (Q96RG2).
+      The cited paper concerns PASKIN substrate preference and phosphatidylinositol
+      inhibition; PHKB is recorded only as a high-throughput binary interactant. The
+      bare protein binding term (GO:0005515) conveys no specific molecular function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &#34;Bare protein binding (GO:0005515) is uninformative and is discouraged as
+      a molecular-function annotation. The interaction is not the subject of this
+      paper and no informative function follows from it, so it is retained but flagged
+      as an over-annotation rather than removed.&#34;
+    supported_by:
+      - reference_id: PMID:21418524
+        supporting_text: &#34;regulates glycogen synthesis&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25051373
+  qualifier: enables
+  review:
+    summary: IntAct IPI protein-binding annotation, interactant CEMIP/KIAA1199
+      (Q8WUJ3). Pull-down and co-immunoprecipitation showed PHKB binds the C-terminal
+      region of KIAA1199, proposed to promote glycogen breakdown and cancer-cell
+      survival. Although this is real interaction evidence, the annotated term is the
+      uninformative bare protein binding (GO:0005515).
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &#34;The binding is experimentally supported, but the GO:0005515 protein
+      binding term captures no specific molecular function and is discouraged. The
+      biologically meaningful role (regulation of glycogen breakdown via the
+      phosphorylase kinase complex) is captured by the process/complex annotations, so
+      this bare-binding term is flagged as an over-annotation and retained.&#34;
+    supported_by:
+      - reference_id: PMID:25051373
+        supporting_text: &#34;the glycogen phosphorylase kinase β-subunit (PHKB) interacted with the&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25416956
+  qualifier: enables
+  review:
+    summary: IntAct IPI protein-binding annotation, interactant CAMK2B (Q13554), from
+      a proteome-scale binary interactome map. PHKB is one of ~14,000 systematically
+      screened interactions. The annotated term is the uninformative bare protein
+      binding (GO:0005515).
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &#34;Bare protein binding (GO:0005515) from a high-throughput interactome
+      screen provides no specific molecular-function information and is discouraged.
+      Retained but flagged as an over-annotation.&#34;
+    supported_by:
+      - reference_id: PMID:25416956
+        supporting_text: &#34;a systematic map of ?14,000 high-quality human&#34;
+- term:
+    id: GO:0005964
+    label: phosphorylase kinase complex
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: part_of
+  review:
+    summary: Ensembl-Compara ortholog-transfer (IEA) annotation to phosphorylase
+      kinase complex, duplicating the IBA and IPI assignments. Correct and consistent
+      with PHKB being a defining subunit of the holoenzyme.
+    action: ACCEPT
+    reason: Redundant with the IBA and ComplexPortal IPI annotations to the same term;
+      the cellular-component assignment is accurate.
+    supported_by:
+      - reference_id: file:human/PHKB/PHKB-uniprot.txt
+        supporting_text: &#34;are regulatory subunits, gamma (PHKG1 or PHKG2) is the catalytic&#34;
+- term:
+    id: GO:0005964
+    label: phosphorylase kinase complex
+  evidence_type: IPI
+  original_reference_id: PMID:38548794
+  qualifier: part_of
+  review:
+    summary: ComplexPortal IPI annotation to phosphorylase kinase complex, based on
+      the cryo-EM structure of human muscle PhK, which resolves the beta subunit
+      forming the central beta4 scaffold that connects the four alpha-beta-gamma-delta
+      modules of the 1.3 MDa hexadecamer. This is strong, structure-based evidence for
+      PHKB as a core component of the complex.
+    action: ACCEPT
+    reason: Direct structural evidence (cryo-EM) places PHKB in the phosphorylase
+      kinase holoenzyme as the central scaffolding subunit. Core cellular-component
+      annotation.
+    supported_by:
+      - reference_id: PMID:38548794
+        supporting_text: &#34;The 1.3-megadalton PhK α4β4γ4δ4 hexadecamer consists of a tetramer of&#34;
+      - reference_id: PMID:38548794
+        supporting_text: &#34;wherein four αβγδ modules are connected by the central β4 scaffold&#34;
+- term:
+    id: GO:0005980
+    label: glycogen catabolic process
+  evidence_type: IDA
+  original_reference_id: PMID:38548794
+  qualifier: involved_in
+  review:
+    summary: ComplexPortal IDA annotation to glycogen catabolic process. As a subunit
+      of phosphorylase kinase, PHKB participates in the activation of glycogen
+      phosphorylase and thereby in glycogen breakdown. The cryo-EM study shows the
+      beta subunit both scaffolds the complex and, via its ADP-binding pocket,
+      allosterically enhances PhK activity. This is the core biological process for
+      the gene.
+    action: ACCEPT
+    reason: PHKB is a regulatory subunit of the kinase that triggers glycogenolysis;
+      glycogen catabolic process accurately and specifically captures its core
+      biological role. The beta subunit contributes to the process not only
+      structurally but through an allosteric ADP-binding pocket that enhances activity.
+    supported_by:
+      - reference_id: PMID:38548794
+        supporting_text: &#34;We also reveal an ADP-binding pocket in the β-subunit, which plays a&#34;
+      - reference_id: PMID:25051373
+        supporting_text: &#34;Glycogen phosphorylase kinase (PHK) is a serine/threonine-specific protein kinase that phosphorylates a serine residue in glycogen phosphorylase (PYG)&#34;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-71541
+  qualifier: located_in
+  review:
+    summary: Reactome TAS annotation placing PHKB in the cytosol, from the muscle
+      phosphorylase kinase reaction (PYGM phosphorylation). Phosphorylase kinase is a
+      cytosolic enzyme, and this is a core, accurate localization for the complex.
+    action: ACCEPT
+    reason: The phosphorylase kinase complex acts in the cytosol where it phosphorylates
+      cytosolic glycogen phosphorylase; cytosol is the functionally dominant
+      localization and is well supported by Reactome.
+    supported_by:
+      - reference_id: Reactome:R-HSA-71541
+        supporting_text: &#34;The cytosolic phosphorylase kinase complex catalyzes the phosphorylation&#34;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-71588
+  qualifier: located_in
+  review:
+    summary: Reactome TAS annotation placing PHKB in the cytosol, from the liver
+      phosphorylase kinase reaction (PYGL phosphorylation). This is the liver-variant
+      holoenzyme (PHKA2/PHKB/PHKG2/calmodulin) in which PHKB is a shared subunit.
+      Cytosol is a core, accurate localization for the complex.
+    action: ACCEPT
+    reason: Duplicates the cytosol assignment from the muscle-variant reaction and is
+      equally accurate; PHKB is the shared beta subunit of both the muscle and liver
+      cytosolic holoenzymes.
+    supported_by:
+      - reference_id: Reactome:R-HSA-71588
+        supporting_text: &#34;The cytosolic phosphorylase kinase complex catalyzes the phosphorylation of glycogen phosphorylase (PYGL)&#34;
+- term:
+    id: GO:0005977
+    label: glycogen metabolic process
+  evidence_type: TAS
+  original_reference_id: PMID:9402963
+  qualifier: involved_in
+  review:
+    summary: TAS annotation to glycogen metabolic process, from a study identifying a
+      PHKB missense mutation (plus a splice-site mutation) causing phosphorylase
+      kinase-deficient liver glycogenosis. Loss of PHKB function impairs glycogen
+      breakdown, confirming PHKB&#39;s role in glycogen metabolism.
+    action: ACCEPT
+    reason: Human genetic evidence (PHKB mutations causing phosphorylase kinase
+      deficiency / liver glycogenosis) directly supports involvement in glycogen
+      metabolism. Consistent with the IEA annotation to the same term.
+    supported_by:
+      - reference_id: PMID:9402963
+        supporting_text: &#34;liver glycogenosis caused by Phk deficiency&#34;
+- term:
+    id: GO:0006091
+    label: generation of precursor metabolites and energy
+  evidence_type: TAS
+  original_reference_id: PMID:9402963
+  qualifier: involved_in
+  review:
+    summary: TAS annotation to generation of precursor metabolites and energy. This
+      is a broad parent process; glycogenolysis driven by phosphorylase kinase does
+      mobilize glucose (glucose-1-phosphate) for energy, but the term is much less
+      specific than the glycogen catabolic / glycogen metabolic annotations and does
+      not describe the distinctive function of PHKB.
+    action: KEEP_AS_NON_CORE
+    reason: The term is not wrong - glycogen breakdown ultimately supplies glucose for
+      energy production - but it is high-level and generic. The specific glycogen
+      catabolic/metabolic annotations better capture PHKB&#39;s role, so this broad energy
+      term is retained as non-core.
+    supported_by:
+      - reference_id: PMID:9402963
+        supporting_text: &#34;liver glycogenosis caused by Phk deficiency&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:21418524
+  title: Substrate preference and phosphatidylinositol monophosphate inhibition of
+    the catalytic domain of the Per-Arnt-Sim domain kinase PASKIN.
+  findings: []
+- id: PMID:25051373
+  title: KIAA1199 interacts with glycogen phosphorylase kinase β-subunit (PHKB) to
+    promote glycogen breakdown and cancer cell survival.
+  findings: []
+- id: PMID:25416956
+  title: A proteome-scale map of the human interactome network.
+  findings: []
+- id: PMID:38548794
+  title: Architecture and activation of human muscle phosphorylase kinase.
+  findings: []
+- id: PMID:9402963
+  title: Phosphorylase-kinase-deficient liver glycogenosis with an unusual biochemical
+    phenotype in blood cells associated with a missense mutation in the beta subunit
+    gene (PHKB).
+  findings: []
+- id: Reactome:R-HSA-71541
+  title: glycogen phosphorylase (PYGM) dimer b + 2 ATP =&gt; glycogen phosphorylase (PYGM)
+    dimer a + 2 ADP
+  findings: []
+- id: Reactome:R-HSA-71588
+  title: glycogen phosphorylase (PYGL) dimer b + 2 ATP =&gt; glycogen phosphorylase (PYGL)
+    dimer a + 2 ADP
+  findings: []
+- id: file:human/PHKB/PHKB-uniprot.txt
+  title: UniProtKB Q93100 (KPBB_HUMAN) - Phosphorylase b kinase regulatory subunit beta
+  findings: []
+core_functions:
+- description: Non-catalytic beta regulatory subunit of phosphorylase kinase; forms
+    the central beta4 scaffold of the (alpha-beta-gamma-delta)4 holoenzyme and, as a
+    PKA-phosphorylation target together with the alpha subunit and the calmodulin
+    (delta) sensor, relieves autoinhibition of the catalytic gamma subunit, thereby
+    contributing to the phosphorylase kinase activity of the assembled complex.
+  supported_by:
+    - reference_id: PMID:25051373
+      supporting_text: &#34;cAMP levels that stimulate protein kinase A (PKA) to phosphorylate the α- and β-subunits (PHKA and PHKB)&#34;
+    - reference_id: file:human/PHKB/PHKB-uniprot.txt
+      supporting_text: &#34;as a regulatory unit and modulates the activity of the holoenzyme in&#34;
+  molecular_function:
+    id: GO:0005516
+    label: calmodulin binding
+  contributes_to_molecular_function:
+    id: GO:0004689
+    label: phosphorylase kinase activity
+  in_complex:
+    id: GO:0005964
+    label: phosphorylase kinase complex
+  directly_involved_in:
+    - id: GO:0005980
+      label: glycogen catabolic process
+  locations:
+    - id: GO:0005829
+      label: cytosol
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

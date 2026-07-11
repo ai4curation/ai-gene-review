@@ -1,0 +1,4447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AHCY - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>AHCY</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P23526" target="_blank" class="term-link">
+                        P23526
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "AHCY";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P23526" data-a="DESCRIPTION: AHCY (adenosylhomocysteinase; S-adenosyl-L-homocys..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>AHCY (adenosylhomocysteinase; S-adenosyl-L-homocysteine hydrolase, SAHH / AdoHcyase; EC 3.13.2.1) is an NAD+-dependent enzyme that catalyzes the reversible hydrolysis of S-adenosyl-L-homocysteine (SAH/AdoHcy) to L-homocysteine and adenosine. Each subunit binds one tightly associated NAD+ cofactor, and the active enzyme is a homotetramer. Because SAH is a potent product inhibitor of virtually all S-adenosyl-L-methionine (SAM)-dependent methyltransferases, AHCY continuously clears the SAH generated during cellular transmethylation reactions and thereby relieves this feedback inhibition, sustaining methylation capacity. In doing so it links the SAM/L-methionine cycle to homocysteine metabolism and one-carbon metabolism. The protein is predominantly cytosolic, with reported minor nuclear and endoplasmic-reticulum pools. In humans, loss of AHCY activity causes hypermethioninemia with S-adenosylhomocysteine hydrolase deficiency (SAHH deficiency; HMAHCHD), a metabolic disorder with elevated SAH, SAM and methionine and clinical features including failure to thrive, developmental/psychomotor delay, myopathy/myocardiopathy and hepatopathy.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004013" target="_blank" class="term-link">
+                                    GO:0004013
+                                </a>
+                            </span>
+                            <span class="term-label">adenosylhomocysteinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P23526" data-a="GO:0004013" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function. AHCY is the S-adenosyl-L-homocysteine hydrolase that converts SAH to L-homocysteine + adenosine. The phylogenetic (IBA) call is consistent with direct experimental evidence (IDA, PMID:10933798) and with the UniProt catalytic-activity annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Well-supported family-level enzymatic function; this is the defining activity of AHCY and its orthologs across eukaryotes and bacteria.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/AHCY/AHCY-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=S-adenosyl-L-homocysteine + H2O = L-homocysteine + adenosine</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P23526" data-a="GO:0005829" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosol is the principal site of AHCY activity, supported by phylogenetic inference and corroborated by direct immunofluorescence (IDA:HPA) and Reactome curation of the cytosolic AHCY:NAD+ tetramer.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent across IBA, IDA and TAS lines; the SAH-hydrolysis reaction proceeds in the cytosol.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-174401
+
+                                </span>
+
+                                <div class="support-text">Adenosylhomocysteinase (AHCY) is a tetrameric, NAD+-bound, cytosolic protein that regulates all adenosylmethionine-(AdoMet) dependent transmethylations by hydrolysing the feedback inhibitor adenosylhomocysteine (AdoHcy) to homocysteine (HCYS) and adenosine (Ade-Rib)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033353" target="_blank" class="term-link">
+                                    GO:0033353
+                                </a>
+                            </span>
+                            <span class="term-label">L-methionine cycle</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P23526" data-a="GO:0033353" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> AHCY operates within the L-methionine/SAM cycle: by hydrolysing SAH it regenerates homocysteine (which can be remethylated to methionine) and relieves methyltransferase product inhibition, making it a core participant of this cycle.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core biological-process context, supported phylogenetically and by the enzyme&#39;s established position in the methionine/one-carbon cycle. (Ontology label is now &#34;L-methionine cycle&#34;; UniProt still displays the older synonym &#34;S-adenosylmethionine cycle&#34;.)
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-174401
+
+                                </span>
+
+                                <div class="support-text">Adenosylhomocysteinase (AHCY) is a tetrameric, NAD+-bound, cytosolic protein that regulates all adenosylmethionine-(AdoMet) dependent transmethylations by hydrolysing the feedback inhibitor adenosylhomocysteine (AdoHcy) to homocysteine (HCYS) and adenosine (Ade-Rib)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004013" target="_blank" class="term-link">
+                                    GO:0004013
+                                </a>
+                            </span>
+                            <span class="term-label">adenosylhomocysteinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P23526" data-a="GO:0004013" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic assignment of the core enzymatic activity via ARBA/RHEA/EC (EC 3.13.2.1, RHEA:21708). Redundant with, and consistent with, the IDA and IBA calls for the same term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Automated mapping is correct and matches the experimentally validated catalytic activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/AHCY/AHCY-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=S-adenosyl-L-homocysteine + H2O = L-homocysteine + adenosine</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P23526" data-a="GO:0005634" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (UniProt SubCell) nuclear assignment. A nuclear pool of AHCY is experimentally observed (GFP-tagging, PMID:28647132) and is thought to act at sites of AdoMet-dependent methylation, but it is a secondary distribution rather than the principal catalytic compartment.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Real but minor localization; the dominant, functionally most relevant location is the cytosol.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28647132" target="_blank" class="term-link">
+                                        PMID:28647132
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">AHCY is located both in cytoplasm and the nucleus.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P23526" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (UniProt SubCell) cytoplasmic assignment. This is the broader parent of the more specific and better-supported cytosol annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct but less specific than cytosol; consistent with the enzyme&#39;s established cytoplasmic/cytosolic localization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/AHCY/AHCY-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P23526" data-a="GO:0005783" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (UniProt SubCell) ER assignment derived from the same GFP-tagging study (PMID:28647132) that reported an ER-associated pool. No ER-specific function of AHCY is established; the enzyme&#39;s catalysis is cytosolic.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Reported minor distribution, not a core functional location.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/AHCY/AHCY-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Endoplasmic reticulum</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042470" target="_blank" class="term-link">
+                                    GO:0042470
+                                </a>
+                            </span>
+                            <span class="term-label">melanosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P23526" data-a="GO:0042470" data-r="GO_REF:0000044" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (UniProt SubCell) melanosome assignment traceable to high-throughput melanosome-fraction mass spectrometry (PubMed:17081065). This is co-purification of an abundant cytosolic enzyme in an organelle proteomics dataset, not an established site of AHCY function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Large-scale organelle proteomics identification; no evidence for a melanosome-specific role, and inclusion likely reflects abundance/co-fractionation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/AHCY/AHCY-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">melanosome fractions from stage I to stage IV</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25416956
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A proteome-scale map of the human interactome network.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P23526" data-a="GO:0005515" data-r="PMID:25416956" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a proteome-scale binary interactome (Y2H) map. The IntAct partner captured here (e.g. ANKRD40/Q6AI12, APPBP2/Q92624, C1orf50/Q9BV19) is not functionally interpreted, and the term conveys no specific molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Uninformative &#34;protein binding&#34; from a high-throughput interactome screen; retained per policy (experimental IPI) but flagged as over-annotated because it does not describe AHCY&#39;s molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link">
+                                        PMID:25416956
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">we describe a systematic map of ?14,000 high-quality human binary protein-protein interactions</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25910212" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25910212
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Widespread macromolecular interaction perturbations in human...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P23526" data-a="GO:0005515" data-r="PMID:25910212" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a large-scale interactome-perturbation study. No specific, functionally informative interaction for AHCY is defined.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Uninformative &#34;protein binding&#34; from a high-throughput screen; retained per policy but non-core and over-annotated.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25910212" target="_blank" class="term-link">
+                                        PMID:25910212
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Widespread macromolecular interaction perturbations in human genetic disorders.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28514442
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Architecture of the human interactome defines protein commun...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P23526" data-a="GO:0005515" data-r="PMID:28514442" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a large-scale interactome (protein-community) study; uninformative as a molecular-function statement for AHCY.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> High-throughput interactome IPI with no specific functional interaction defined; retained but flagged as over-annotated.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link">
+                                        PMID:28514442
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Architecture of the human interactome defines protein communities and disease networks.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31515488" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31515488
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Extensive disruption of protein interactions by genetic vari...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P23526" data-a="GO:0005515" data-r="PMID:31515488" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a study of variant-driven interaction disruption; uninformative for AHCY&#39;s molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> High-throughput interactome IPI; retained per policy but non-core and over-annotated.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31515488" target="_blank" class="term-link">
+                                        PMID:31515488
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Extensive disruption of protein interactions by genetic variants across the allele frequency spectrum in human populations.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P23526" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a reference binary interactome map; no specific, functionally informative AHCY interaction is defined.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> High-throughput interactome IPI; retained per policy but over-annotated.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                                        PMID:32296183
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">A reference map of the human binary protein interactome.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33961781
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dual proteome-scale networks reveal cell-specific remodeling...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P23526" data-a="GO:0005515" data-r="PMID:33961781" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a proteome-scale (BioPlex-type) affinity-MS interactome; uninformative for AHCY&#39;s specific molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> High-throughput interactome IPI; retained per policy but over-annotated.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                                        PMID:33961781
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Dual proteome-scale networks reveal cell-specific remodeling of the human interactome.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/35271311" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:35271311
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    OpenCell: Endogenous tagging for the cartography of human ce...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P23526" data-a="GO:0005515" data-r="PMID:35271311" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from the OpenCell endogenous-tagging IP-MS/imaging resource. Informative for localization/interaction cartography at scale, but the term itself does not describe a specific AHCY molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> High-throughput interactome IPI; retained per policy but over-annotated.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/35271311" target="_blank" class="term-link">
+                                        PMID:35271311
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">we combined genome engineering, confocal live-cell imaging, mass spectrometry and data science to systematically map the localization and interactions of human proteins</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000052
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P23526" data-a="GO:0005829" data-r="GO_REF:0000052" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct immunofluorescence localization (Human Protein Atlas) to the cytosol, consistent with the enzyme&#39;s known predominantly cytosolic distribution and its cytosolic SAH-hydrolysis activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct experimental support for the core cellular location.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/AHCY/AHCY-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">GO:0005829; C:cytosol; IDA:HPA</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28647132" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28647132
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mutations in S-adenosylhomocysteine hydrolase (AHCY) affect ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P23526" data-a="GO:0005634" data-r="PMID:28647132" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (GFP-tagging, fluorescence microscopy) demonstration that endogenous AHCY is present in both cytoplasm and nucleus, with disease mutations altering the nucleocytoplasmic ratio. The nuclear pool is a genuine but secondary distribution.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Real experimental localization but not the principal catalytic compartment; kept as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28647132" target="_blank" class="term-link">
+                                        PMID:28647132
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">AHCY is located both in cytoplasm and the nucleus.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28647132" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28647132
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mutations in S-adenosylhomocysteine hydrolase (AHCY) affect ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P23526" data-a="GO:0005783" data-r="PMID:28647132" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental report (same GFP-tagging study) of an ER-associated AHCY pool. No ER-specific function is established.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Secondary localization from imaging; retained as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/AHCY/AHCY-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Endoplasmic reticulum</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004013" target="_blank" class="term-link">
+                                    GO:0004013
+                                </a>
+                            </span>
+                            <span class="term-label">adenosylhomocysteinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10933798" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10933798
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Substrate binding stabilizes S-adenosylhomocysteine hydrolas...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P23526" data-a="GO:0004013" data-r="PMID:10933798" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental (IDA) evidence for the core adenosylhomocysteinase activity. This study characterizes substrate binding and the catalytic cycle of the homotetrameric enzyme and is the FUNCTION/CATALYTIC ACTIVITY reference in UniProt.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Strongest, direct experimental support for AHCY&#39;s defining molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10933798" target="_blank" class="term-link">
+                                        PMID:10933798
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">a reduction in the overall dimensions of the homotetrameric enzyme following substrate binding and oxidation observed in earlier crystallographic studies</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070062" target="_blank" class="term-link">
+                                    GO:0070062
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular exosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23533145
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    In-depth proteomic analyses of exosomes isolated from expres...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P23526" data-a="GO:0070062" data-r="PMID:23533145" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput MS detection of AHCY in exosome preparations (prostatic-secretion urinary exosomes). AHCY is an abundant cytosolic protein routinely detected in exosome/secretome datasets; this is not evidence of a functional extracellular role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Detection in a large-scale exosome proteome (co-isolation of an abundant cytosolic enzyme); not an established functional location.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/AHCY/AHCY-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">GO:0070062; C:extracellular exosome; HDA:UniProtKB</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-5579084
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P23526" data-a="GO:0005829" data-r="Reactome:R-HSA-5579084" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome-traceable cytosolic location for AHCY, in the context of the reaction that is lost in AHCY deficiency (HMAHCHD). Consistent with the core cytosolic localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Author-traceable statement consistent with all other lines for the core location.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-5579084
+
+                                </span>
+
+                                <div class="support-text">Adenosylhomocysteinase (AHCY) is a tetrameric, NAD+-bound, cytosolic protein</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070062" target="_blank" class="term-link">
+                                    GO:0070062
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular exosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19056867
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Large-scale proteomics and phosphoproteomics of urinary exos...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P23526" data-a="GO:0070062" data-r="PMID:19056867" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput MS detection in urinary exosomes (1132 proteins identified). Reflects co-isolation of an abundant cytosolic protein, not a functional secreted location.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Large-scale exosome proteomics; over-annotation of location for an abundant cytosolic enzyme.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link">
+                                        PMID:19056867
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the analysis identified 1132 proteins unambiguously</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070062" target="_blank" class="term-link">
+                                    GO:0070062
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular exosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20458337" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20458337
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    MHC class II-associated proteins in B-cell exosomes and pote...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P23526" data-a="GO:0070062" data-r="PMID:20458337" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput MS detection in B-cell-derived exosomes (539 proteins identified). Consistent with routine detection of an abundant cytosolic protein in exosome proteomes rather than a functional extracellular role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Large-scale exosome proteomics; over-annotation of location.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20458337" target="_blank" class="term-link">
+                                        PMID:20458337
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">identified 539 proteins, including known and not</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-174401
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P23526" data-a="GO:0005829" data-r="Reactome:R-HSA-174401" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome-traceable cytosolic location for the active AHCY:NAD+ tetramer that hydrolyses AdoHcy. Consistent with the core cytosolic localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Author-traceable statement for the core location; consistent with IBA and IDA.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-174401
+
+                                </span>
+
+                                <div class="support-text">Adenosylhomocysteinase (AHCY) is a tetrameric, NAD+-bound, cytosolic protein</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004013" target="_blank" class="term-link">
+                                    GO:0004013
+                                </a>
+                            </span>
+                            <span class="term-label">adenosylhomocysteinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/2596825" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:2596825
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Sequence of full length cDNA for human S-adenosylhomocystein...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P23526" data-a="GO:0004013" data-r="PMID:2596825" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author-traceable assignment of adenosylhomocysteinase activity accompanying the original human AHCY full-length cDNA/protein report. Consistent with the core MF.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Traceable statement for the defining enzymatic function; redundant with the stronger IDA evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/2596825" target="_blank" class="term-link">
+                                        PMID:2596825
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Sequence of full length cDNA for human S-adenosylhomocysteine hydrolase.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071269" target="_blank" class="term-link">
+                                    GO:0071269
+                                </a>
+                            </span>
+                            <span class="term-label">L-homocysteine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10933798" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10933798
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Substrate binding stabilizes S-adenosylhomocysteine hydrolas...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P23526" data-a="GO:0071269" data-r="PMID:10933798" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed new BP annotation reflecting the UniProt-curated pathway (L-homocysteine biosynthesis; L-homocysteine from S-adenosyl-L-homocysteine, step 1/1; UniPathway UPA00314/UER00076). This is the direct product-forming process of the AHCY-catalyzed reaction (SAH -&gt; L-homocysteine + adenosine) and is more specific than the L-methionine cycle context (GO:0033353). Supported experimentally by the characterized catalytic activity (PMID:10933798).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The direct enzymatic product process (L-homocysteine biosynthesis from SAH) is not captured in the current GOA set but is well established and is used in core_functions.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/AHCY/AHCY-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=S-adenosyl-L-homocysteine + H2O = L-homocysteine + adenosine</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Adenosylhomocysteinase (S-adenosyl-L-homocysteine hydrolase): NAD+-dependent hydrolysis of S-adenosyl-L-homocysteine to L-homocysteine and adenosine, clearing the methyltransferase product inhibitor SAH and sustaining cellular transmethylation.</h3>
+                <span class="vote-buttons" data-g="P23526" data-a="FUNCTION: Adenosylhomocysteinase (S-adenosyl-L-homocysteine ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004013" target="_blank" class="term-link">
+                            adenosylhomocysteinase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071269" target="_blank" class="term-link">
+                                L-homocysteine biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10933798" target="_blank" class="term-link">
+                                PMID:10933798
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">a reduction in the overall dimensions of the homotetrameric enzyme following substrate binding and oxidation observed in earlier crystallographic studies</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/AHCY/AHCY-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Reaction=S-adenosyl-L-homocysteine + H2O = L-homocysteine + adenosine</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Participation in the L-methionine/S-adenosylmethionine cycle: by hydrolysing SAH, AHCY regenerates homocysteine and relieves feedback inhibition of SAM-dependent methyltransferases, coupling the methionine cycle to homocysteine and one-carbon metabolism.</h3>
+                <span class="vote-buttons" data-g="P23526" data-a="FUNCTION: Participation in the L-methionine/S-adenosylmethio..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004013" target="_blank" class="term-link">
+                            adenosylhomocysteinase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033353" target="_blank" class="term-link">
+                                L-methionine cycle
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            Reactome:R-HSA-174401
+
+                        </span>
+
+                        <div class="finding-text">Adenosylhomocysteinase (AHCY) is a tetrameric, NAD+-bound, cytosolic protein that regulates all adenosylmethionine-(AdoMet) dependent transmethylations by hydrolysing the feedback inhibitor adenosylhomocysteine (AdoHcy) to homocysteine (HCYS) and adenosine (Ade-Rib)</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/AHCY/AHCY-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry P23526 (SAHH_HUMAN), Adenosylhomocysteinase</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10933798" target="_blank" class="term-link">
+                            PMID:10933798
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Substrate binding stabilizes S-adenosylhomocysteine hydrolase in a closed conformation.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link">
+                            PMID:19056867
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Large-scale proteomics and phosphoproteomics of urinary exosomes.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20458337" target="_blank" class="term-link">
+                            PMID:20458337
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">MHC class II-associated proteins in B-cell exosomes and potential functional implications for exosome biogenesis.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link">
+                            PMID:23533145
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">In-depth proteomic analyses of exosomes isolated from expressed prostatic secretions in urine.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link">
+                            PMID:25416956
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A proteome-scale map of the human interactome network.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25910212" target="_blank" class="term-link">
+                            PMID:25910212
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Widespread macromolecular interaction perturbations in human genetic disorders.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/2596825" target="_blank" class="term-link">
+                            PMID:2596825
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Sequence of full length cDNA for human S-adenosylhomocysteine hydrolase.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link">
+                            PMID:28514442
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Architecture of the human interactome defines protein communities and disease networks.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28647132" target="_blank" class="term-link">
+                            PMID:28647132
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Mutations in S-adenosylhomocysteine hydrolase (AHCY) affect its nucleocytoplasmic distribution and capability to interact with S-adenosylhomocysteine hydrolase-like 1 protein.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31515488" target="_blank" class="term-link">
+                            PMID:31515488
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Extensive disruption of protein interactions by genetic variants across the allele frequency spectrum in human populations.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                            PMID:33961781
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Dual proteome-scale networks reveal cell-specific remodeling of the human interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/35271311" target="_blank" class="term-link">
+                            PMID:35271311
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenCell: Endogenous tagging for the cartography of human cellular organization.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-174401
+
+                    </span>
+                </div>
+
+                <div class="reference-title">AHCY:NAD+ tetramer hydrolyses AdoHcy</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-5579084
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Defective AHCY does not hydrolyse AdoHcy</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(AHCY-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P23526" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="ahcy-human-curation-notes">AHCY (human) — curation notes</h1>
+<p>UniProt: P23526 (SAHH_HUMAN). Gene: AHCY / SAHH. HGNC:343. 432 aa. EC 3.13.2.1.</p>
+<h2 id="core-biology">Core biology</h2>
+<p>AHCY is <strong>adenosylhomocysteinase</strong> (S-adenosyl-L-homocysteine hydrolase, SAHH / AdoHcyase),<br />
+the NAD+-dependent enzyme that reversibly hydrolyses <strong>S-adenosyl-L-homocysteine (SAH/AdoHcy)<br />
+to L-homocysteine + adenosine</strong> [file:human/AHCY/AHCY-uniprot.txt "Reaction=S-adenosyl-L-homocysteine + H2O = L-homocysteine + adenosine"; RHEA:21708; EC=3.13.2.1].</p>
+<p>Function is experimentally established: <a href="https://pubmed.ncbi.nlm.nih.gov/10933798">PMID:10933798</a> provides FUNCTION and CATALYTIC ACTIVITY<br />
+evidence (ECO:0000269) and is the IDA basis for GO:0004013.</p>
+<p>Because SAH is a potent product inhibitor of essentially every SAM-dependent methyltransferase,<br />
+AHCY clears SAH and thereby sustains cellular transmethylation, coupling the SAM/methionine cycle<br />
+to homocysteine metabolism. Reactome frames this explicitly: "Adenosylhomocysteinase (AHCY) is a<br />
+tetrameric, NAD+-bound, cytosolic protein that regulates all adenosylmethionine-(AdoMet) dependent<br />
+transmethylations by hydrolysing the feedback inhibitor adenosylhomocysteine (AdoHcy) to homocysteine<br />
+(HCYS) and adenosine (Ade-Rib)" [Reactome:R-HSA-174401].</p>
+<ul>
+<li><strong>Cofactor:</strong> binds 1 NAD(+) per subunit [file:UniProt PubMed:12590576, PubMed:9586999].</li>
+<li><strong>Quaternary structure:</strong> homotetramer [file:UniProt SUBUNIT "Homotetramer"; PMID:19177456; PMID:28647132; PMID:9586999].</li>
+<li><strong>Pathway:</strong> L-homocysteine biosynthesis; L-homocysteine from S-adenosyl-L-homocysteine, step 1/1 (UniPathway UPA00314; UER00076). Maps to GO:0071269 L-homocysteine biosynthetic process.</li>
+<li><strong>Localization:</strong> primarily cytosolic (IDA:HPA GO:0005829; Reactome TAS). Also reported in nucleus and ER by GFP-tagging <a href="https://pubmed.ncbi.nlm.nih.gov/28647132">PMID:28647132</a>, and in melanosome fractions [PubMed:17081065, IEA-SubCell]. Nuclear pool is thought to act at sites of AdoMet-dependent methylation [PMID:28647132 abstract].</li>
+</ul>
+<h2 id="disease">Disease</h2>
+<p>Deficiency causes <strong>Hypermethioninemia with S-adenosylhomocysteine hydrolase deficiency (HMAHCHD;<br />
+MIM:613752)</strong> — elevated SAH/SAM/methionine, failure to thrive, psychomotor/developmental delay,<br />
+facial dysmorphism, myopathy/myocardiopathy, hepatopathy [file:UniProt DISEASE; Reactome:R-HSA-5579084;<br />
+PMID:15024124]. Numerous loss-of-function missense variants (R49C, G71S, D86G, A89V, Y143C, Y328D,<br />
+W112* truncation) reduce catalytic activity and/or perturb tetramerization and nucleocytoplasmic<br />
+distribution [file:UniProt VARIANT features; PMID:19177456; PMID:28647132].</p>
+<h2 id="goa-annotation-review-summary-p23526-goatsv-31-lines">GOA annotation review summary (P23526-goa.tsv, 31 lines)</h2>
+<p>Molecular function<br />
+- GO:0004013 adenosylhomocysteinase activity — IBA, IEA, IDA (PMID:10933798), TAS (PMID:2596825): ACCEPT (core MF). IDA is the strongest.<br />
+- GO:0005515 protein binding — IPI x13 rows from large-scale interactome / OpenCell screens (PMID:25416956, 25910212, 28514442, 31515488, 32296183, 33961781, 35271311): uninformative bare "protein binding". Per policy, MARK_AS_OVER_ANNOTATED (do NOT REMOVE experimental IPIs). The biologically meaningful interaction (AHCYL1 homolog, homotetramer) is captured elsewhere; the IntAct partners (ANKRD40 Q6AI12, C1orf50 Q9BV19, APPBP2 Q92624) are not functionally interpreted.</p>
+<p>Biological process<br />
+- GO:0033353 L-methionine cycle — IBA: ACCEPT (core; methionine/SAM cycle context). (UniProt DR still shows the older label "S-adenosylmethionine cycle" for GO:0033353; current ontology label is "L-methionine cycle".)</p>
+<p>Cellular component<br />
+- GO:0005829 cytosol — IBA + IDA(HPA) + TAS(Reactome x2): ACCEPT (core location). Multiple independent lines.<br />
+- GO:0005737 cytoplasm — IEA SubCell: ACCEPT (broader parent of cytosol; consistent, less specific).<br />
+- GO:0005634 nucleus — IEA SubCell + EXP (PMID:28647132): KEEP_AS_NON_CORE. Real but minor/secondary pool shown by GFP tagging; not the principal site of catalysis.<br />
+- GO:0005783 endoplasmic reticulum — IEA SubCell + EXP (PMID:28647132): KEEP_AS_NON_CORE. Same GFP-tagging study; secondary distribution, not a known ER function.<br />
+- GO:0042470 melanosome — IEA SubCell (from melanosome-fraction MS PubMed:17081065): MARK_AS_OVER_ANNOTATED. High-throughput organelle proteomics co-purification; not an established site of AHCY function.<br />
+- GO:0070062 extracellular exosome — HDA x3 (PMID:23533145, 19056867, 20458337): MARK_AS_OVER_ANNOTATED. Abundant cytosolic protein routinely detected in exosome/secretome MS; not a functional secreted location.</p>
+<h2 id="notes-on-evidence-access">Notes on evidence access</h2>
+<ul>
+<li>No deep-research file (falcon out of credits, HTTP 402). Grounded in UniProt, GOA, cached publications, Reactome.</li>
+<li>Interactome/exosome papers are large-scale MS/Y2H studies; AHCY appears in supplementary lists, not named in abstracts, so PMID verbatim quotes for the specific AHCY finding are not available in the cache. Location/exosome supporting_text drawn from file:UniProt where possible.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P23526
+gene_symbol: AHCY
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  AHCY (adenosylhomocysteinase; S-adenosyl-L-homocysteine hydrolase, SAHH / AdoHcyase;
+  EC 3.13.2.1) is an NAD+-dependent enzyme that catalyzes the reversible hydrolysis of
+  S-adenosyl-L-homocysteine (SAH/AdoHcy) to L-homocysteine and adenosine. Each subunit
+  binds one tightly associated NAD+ cofactor, and the active enzyme is a homotetramer.
+  Because SAH is a potent product inhibitor of virtually all S-adenosyl-L-methionine
+  (SAM)-dependent methyltransferases, AHCY continuously clears the SAH generated during
+  cellular transmethylation reactions and thereby relieves this feedback inhibition,
+  sustaining methylation capacity. In doing so it links the SAM/L-methionine cycle to
+  homocysteine metabolism and one-carbon metabolism. The protein is predominantly
+  cytosolic, with reported minor nuclear and endoplasmic-reticulum pools. In humans,
+  loss of AHCY activity causes hypermethioninemia with S-adenosylhomocysteine hydrolase
+  deficiency (SAHH deficiency; HMAHCHD), a metabolic disorder with elevated SAH, SAM and
+  methionine and clinical features including failure to thrive, developmental/psychomotor
+  delay, myopathy/myocardiopathy and hepatopathy.
+alternative_products:
+- name: &#39;1&#39;
+  id: P23526-1
+- name: &#39;2&#39;
+  id: P23526-2
+  sequence_note: VSP_045404
+existing_annotations:
+- term:
+    id: GO:0004013
+    label: adenosylhomocysteinase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Core molecular function. AHCY is the S-adenosyl-L-homocysteine hydrolase that
+      converts SAH to L-homocysteine + adenosine. The phylogenetic (IBA) call is
+      consistent with direct experimental evidence (IDA, PMID:10933798) and with the
+      UniProt catalytic-activity annotation.
+    action: ACCEPT
+    reason: &gt;-
+      Well-supported family-level enzymatic function; this is the defining activity of
+      AHCY and its orthologs across eukaryotes and bacteria.
+    supported_by:
+    - reference_id: file:human/AHCY/AHCY-uniprot.txt
+      supporting_text: &#34;Reaction=S-adenosyl-L-homocysteine + H2O = L-homocysteine + adenosine&#34;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Cytosol is the principal site of AHCY activity, supported by phylogenetic
+      inference and corroborated by direct immunofluorescence (IDA:HPA) and Reactome
+      curation of the cytosolic AHCY:NAD+ tetramer.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent across IBA, IDA and TAS lines; the SAH-hydrolysis reaction proceeds in
+      the cytosol.
+    supported_by:
+    - reference_id: Reactome:R-HSA-174401
+      supporting_text: &gt;-
+        Adenosylhomocysteinase (AHCY) is a tetrameric, NAD+-bound, cytosolic protein
+        that regulates all adenosylmethionine-(AdoMet) dependent transmethylations by
+        hydrolysing the feedback inhibitor adenosylhomocysteine (AdoHcy) to homocysteine
+        (HCYS) and adenosine (Ade-Rib)
+- term:
+    id: GO:0033353
+    label: L-methionine cycle
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      AHCY operates within the L-methionine/SAM cycle: by hydrolysing SAH it regenerates
+      homocysteine (which can be remethylated to methionine) and relieves methyltransferase
+      product inhibition, making it a core participant of this cycle.
+    action: ACCEPT
+    reason: &gt;-
+      Core biological-process context, supported phylogenetically and by the enzyme&#39;s
+      established position in the methionine/one-carbon cycle. (Ontology label is now
+      &#34;L-methionine cycle&#34;; UniProt still displays the older synonym &#34;S-adenosylmethionine cycle&#34;.)
+    supported_by:
+    - reference_id: Reactome:R-HSA-174401
+      supporting_text: &gt;-
+        Adenosylhomocysteinase (AHCY) is a tetrameric, NAD+-bound, cytosolic protein
+        that regulates all adenosylmethionine-(AdoMet) dependent transmethylations by
+        hydrolysing the feedback inhibitor adenosylhomocysteine (AdoHcy) to homocysteine
+        (HCYS) and adenosine (Ade-Rib)
+- term:
+    id: GO:0004013
+    label: adenosylhomocysteinase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic assignment of the core enzymatic activity via ARBA/RHEA/EC (EC 3.13.2.1,
+      RHEA:21708). Redundant with, and consistent with, the IDA and IBA calls for the
+      same term.
+    action: ACCEPT
+    reason: &gt;-
+      Automated mapping is correct and matches the experimentally validated catalytic
+      activity.
+    supported_by:
+    - reference_id: file:human/AHCY/AHCY-uniprot.txt
+      supporting_text: &#34;Reaction=S-adenosyl-L-homocysteine + H2O = L-homocysteine + adenosine&#34;
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic (UniProt SubCell) nuclear assignment. A nuclear pool of AHCY is
+      experimentally observed (GFP-tagging, PMID:28647132) and is thought to act at sites
+      of AdoMet-dependent methylation, but it is a secondary distribution rather than the
+      principal catalytic compartment.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Real but minor localization; the dominant, functionally most relevant location is
+      the cytosol.
+    supported_by:
+    - reference_id: PMID:28647132
+      supporting_text: &#34;AHCY is located both in cytoplasm and the nucleus.&#34;
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic (UniProt SubCell) cytoplasmic assignment. This is the broader parent of
+      the more specific and better-supported cytosol annotation.
+    action: ACCEPT
+    reason: &gt;-
+      Correct but less specific than cytosol; consistent with the enzyme&#39;s established
+      cytoplasmic/cytosolic localization.
+    supported_by:
+    - reference_id: file:human/AHCY/AHCY-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm&#34;
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic (UniProt SubCell) ER assignment derived from the same GFP-tagging study
+      (PMID:28647132) that reported an ER-associated pool. No ER-specific function of AHCY
+      is established; the enzyme&#39;s catalysis is cytosolic.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Reported minor distribution, not a core functional location.
+    supported_by:
+    - reference_id: file:human/AHCY/AHCY-uniprot.txt
+      supporting_text: &#34;Endoplasmic reticulum&#34;
+- term:
+    id: GO:0042470
+    label: melanosome
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic (UniProt SubCell) melanosome assignment traceable to high-throughput
+      melanosome-fraction mass spectrometry (PubMed:17081065). This is co-purification of
+      an abundant cytosolic enzyme in an organelle proteomics dataset, not an established
+      site of AHCY function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Large-scale organelle proteomics identification; no evidence for a melanosome-specific
+      role, and inclusion likely reflects abundance/co-fractionation.
+    supported_by:
+    - reference_id: file:human/AHCY/AHCY-uniprot.txt
+      supporting_text: &#34;melanosome fractions from stage I to stage IV&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25416956
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from a proteome-scale binary interactome (Y2H) map. The
+      IntAct partner captured here (e.g. ANKRD40/Q6AI12, APPBP2/Q92624, C1orf50/Q9BV19)
+      is not functionally interpreted, and the term conveys no specific molecular function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Uninformative &#34;protein binding&#34; from a high-throughput interactome screen; retained
+      per policy (experimental IPI) but flagged as over-annotated because it does not
+      describe AHCY&#39;s molecular function.
+    supported_by:
+    - reference_id: PMID:25416956
+      supporting_text: &gt;-
+        we describe a systematic map of ?14,000 high-quality human binary
+        protein-protein interactions
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25910212
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from a large-scale interactome-perturbation study. No specific,
+      functionally informative interaction for AHCY is defined.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Uninformative &#34;protein binding&#34; from a high-throughput screen; retained per policy
+      but non-core and over-annotated.
+    supported_by:
+    - reference_id: PMID:25910212
+      supporting_text: &#34;Widespread macromolecular interaction perturbations in human genetic disorders.&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:28514442
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from a large-scale interactome (protein-community) study;
+      uninformative as a molecular-function statement for AHCY.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      High-throughput interactome IPI with no specific functional interaction defined;
+      retained but flagged as over-annotated.
+    supported_by:
+    - reference_id: PMID:28514442
+      supporting_text: &#34;Architecture of the human interactome defines protein communities and disease networks.&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:31515488
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from a study of variant-driven interaction disruption;
+      uninformative for AHCY&#39;s molecular function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      High-throughput interactome IPI; retained per policy but non-core and over-annotated.
+    supported_by:
+    - reference_id: PMID:31515488
+      supporting_text: &gt;-
+        Extensive disruption of protein interactions by genetic variants across the
+        allele frequency spectrum in human populations.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from a reference binary interactome map; no specific,
+      functionally informative AHCY interaction is defined.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      High-throughput interactome IPI; retained per policy but over-annotated.
+    supported_by:
+    - reference_id: PMID:32296183
+      supporting_text: &#34;A reference map of the human binary protein interactome.&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:33961781
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from a proteome-scale (BioPlex-type) affinity-MS interactome;
+      uninformative for AHCY&#39;s specific molecular function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      High-throughput interactome IPI; retained per policy but over-annotated.
+    supported_by:
+    - reference_id: PMID:33961781
+      supporting_text: &#34;Dual proteome-scale networks reveal cell-specific remodeling of the human interactome.&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:35271311
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from the OpenCell endogenous-tagging IP-MS/imaging resource.
+      Informative for localization/interaction cartography at scale, but the term itself
+      does not describe a specific AHCY molecular function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      High-throughput interactome IPI; retained per policy but over-annotated.
+    supported_by:
+    - reference_id: PMID:35271311
+      supporting_text: &gt;-
+        we combined genome engineering, confocal live-cell imaging, mass spectrometry and
+        data science to systematically map the localization and interactions of human proteins
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct immunofluorescence localization (Human Protein Atlas) to the cytosol,
+      consistent with the enzyme&#39;s known predominantly cytosolic distribution and its
+      cytosolic SAH-hydrolysis activity.
+    action: ACCEPT
+    reason: &gt;-
+      Direct experimental support for the core cellular location.
+    supported_by:
+    - reference_id: file:human/AHCY/AHCY-uniprot.txt
+      supporting_text: &#34;GO:0005829; C:cytosol; IDA:HPA&#34;
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: EXP
+  original_reference_id: PMID:28647132
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Experimental (GFP-tagging, fluorescence microscopy) demonstration that endogenous
+      AHCY is present in both cytoplasm and nucleus, with disease mutations altering the
+      nucleocytoplasmic ratio. The nuclear pool is a genuine but secondary distribution.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Real experimental localization but not the principal catalytic compartment; kept
+      as non-core.
+    supported_by:
+    - reference_id: PMID:28647132
+      supporting_text: &#34;AHCY is located both in cytoplasm and the nucleus.&#34;
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: EXP
+  original_reference_id: PMID:28647132
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Experimental report (same GFP-tagging study) of an ER-associated AHCY pool. No
+      ER-specific function is established.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Secondary localization from imaging; retained as non-core.
+    supported_by:
+    - reference_id: file:human/AHCY/AHCY-uniprot.txt
+      supporting_text: &#34;Endoplasmic reticulum&#34;
+- term:
+    id: GO:0004013
+    label: adenosylhomocysteinase activity
+  evidence_type: IDA
+  original_reference_id: PMID:10933798
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct experimental (IDA) evidence for the core adenosylhomocysteinase activity.
+      This study characterizes substrate binding and the catalytic cycle of the
+      homotetrameric enzyme and is the FUNCTION/CATALYTIC ACTIVITY reference in UniProt.
+    action: ACCEPT
+    reason: &gt;-
+      Strongest, direct experimental support for AHCY&#39;s defining molecular function.
+    supported_by:
+    - reference_id: PMID:10933798
+      supporting_text: &gt;-
+        a reduction in the overall dimensions of the homotetrameric enzyme following
+        substrate binding and oxidation observed in earlier crystallographic studies
+- term:
+    id: GO:0070062
+    label: extracellular exosome
+  evidence_type: HDA
+  original_reference_id: PMID:23533145
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput MS detection of AHCY in exosome preparations (prostatic-secretion
+      urinary exosomes). AHCY is an abundant cytosolic protein routinely detected in
+      exosome/secretome datasets; this is not evidence of a functional extracellular role.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Detection in a large-scale exosome proteome (co-isolation of an abundant cytosolic
+      enzyme); not an established functional location.
+    supported_by:
+    - reference_id: file:human/AHCY/AHCY-uniprot.txt
+      supporting_text: &#34;GO:0070062; C:extracellular exosome; HDA:UniProtKB&#34;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-5579084
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome-traceable cytosolic location for AHCY, in the context of the reaction that
+      is lost in AHCY deficiency (HMAHCHD). Consistent with the core cytosolic localization.
+    action: ACCEPT
+    reason: &gt;-
+      Author-traceable statement consistent with all other lines for the core location.
+    supported_by:
+    - reference_id: Reactome:R-HSA-5579084
+      supporting_text: &gt;-
+        Adenosylhomocysteinase (AHCY) is a tetrameric, NAD+-bound, cytosolic protein
+- term:
+    id: GO:0070062
+    label: extracellular exosome
+  evidence_type: HDA
+  original_reference_id: PMID:19056867
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput MS detection in urinary exosomes (1132 proteins identified). Reflects
+      co-isolation of an abundant cytosolic protein, not a functional secreted location.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Large-scale exosome proteomics; over-annotation of location for an abundant cytosolic
+      enzyme.
+    supported_by:
+    - reference_id: PMID:19056867
+      supporting_text: &#34;the analysis identified 1132 proteins unambiguously&#34;
+- term:
+    id: GO:0070062
+    label: extracellular exosome
+  evidence_type: HDA
+  original_reference_id: PMID:20458337
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput MS detection in B-cell-derived exosomes (539 proteins identified).
+      Consistent with routine detection of an abundant cytosolic protein in exosome
+      proteomes rather than a functional extracellular role.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Large-scale exosome proteomics; over-annotation of location.
+    supported_by:
+    - reference_id: PMID:20458337
+      supporting_text: &#34;identified 539 proteins, including known and not&#34;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-174401
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome-traceable cytosolic location for the active AHCY:NAD+ tetramer that
+      hydrolyses AdoHcy. Consistent with the core cytosolic localization.
+    action: ACCEPT
+    reason: &gt;-
+      Author-traceable statement for the core location; consistent with IBA and IDA.
+    supported_by:
+    - reference_id: Reactome:R-HSA-174401
+      supporting_text: &gt;-
+        Adenosylhomocysteinase (AHCY) is a tetrameric, NAD+-bound, cytosolic protein
+- term:
+    id: GO:0004013
+    label: adenosylhomocysteinase activity
+  evidence_type: TAS
+  original_reference_id: PMID:2596825
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Author-traceable assignment of adenosylhomocysteinase activity accompanying the
+      original human AHCY full-length cDNA/protein report. Consistent with the core MF.
+    action: ACCEPT
+    reason: &gt;-
+      Traceable statement for the defining enzymatic function; redundant with the stronger
+      IDA evidence.
+    supported_by:
+    - reference_id: PMID:2596825
+      supporting_text: &gt;-
+        Sequence of full length cDNA for human S-adenosylhomocysteine hydrolase.
+- term:
+    id: GO:0071269
+    label: L-homocysteine biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:10933798
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Proposed new BP annotation reflecting the UniProt-curated pathway (L-homocysteine
+      biosynthesis; L-homocysteine from S-adenosyl-L-homocysteine, step 1/1; UniPathway
+      UPA00314/UER00076). This is the direct product-forming process of the AHCY-catalyzed
+      reaction (SAH -&gt; L-homocysteine + adenosine) and is more specific than the
+      L-methionine cycle context (GO:0033353). Supported experimentally by the
+      characterized catalytic activity (PMID:10933798).
+    action: NEW
+    reason: &gt;-
+      The direct enzymatic product process (L-homocysteine biosynthesis from SAH) is not
+      captured in the current GOA set but is well established and is used in core_functions.
+    supported_by:
+    - reference_id: file:human/AHCY/AHCY-uniprot.txt
+      supporting_text: &#34;Reaction=S-adenosyl-L-homocysteine + H2O = L-homocysteine + adenosine&#34;
+core_functions:
+- description: &gt;-
+    Adenosylhomocysteinase (S-adenosyl-L-homocysteine hydrolase): NAD+-dependent
+    hydrolysis of S-adenosyl-L-homocysteine to L-homocysteine and adenosine, clearing the
+    methyltransferase product inhibitor SAH and sustaining cellular transmethylation.
+  molecular_function:
+    id: GO:0004013
+    label: adenosylhomocysteinase activity
+  directly_involved_in:
+  - id: GO:0071269
+    label: L-homocysteine biosynthetic process
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: PMID:10933798
+    supporting_text: &gt;-
+      a reduction in the overall dimensions of the homotetrameric enzyme following
+      substrate binding and oxidation observed in earlier crystallographic studies
+  - reference_id: file:human/AHCY/AHCY-uniprot.txt
+    supporting_text: &#34;Reaction=S-adenosyl-L-homocysteine + H2O = L-homocysteine + adenosine&#34;
+- description: &gt;-
+    Participation in the L-methionine/S-adenosylmethionine cycle: by hydrolysing SAH,
+    AHCY regenerates homocysteine and relieves feedback inhibition of SAM-dependent
+    methyltransferases, coupling the methionine cycle to homocysteine and one-carbon
+    metabolism.
+  molecular_function:
+    id: GO:0004013
+    label: adenosylhomocysteinase activity
+  directly_involved_in:
+  - id: GO:0033353
+    label: L-methionine cycle
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: Reactome:R-HSA-174401
+    supporting_text: &gt;-
+      Adenosylhomocysteinase (AHCY) is a tetrameric, NAD+-bound, cytosolic protein
+      that regulates all adenosylmethionine-(AdoMet) dependent transmethylations by
+      hydrolysing the feedback inhibitor adenosylhomocysteine (AdoHcy) to homocysteine
+      (HCYS) and adenosine (Ade-Rib)
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:human/AHCY/AHCY-uniprot.txt
+  title: UniProtKB entry P23526 (SAHH_HUMAN), Adenosylhomocysteinase
+  findings: []
+- id: PMID:10933798
+  title: Substrate binding stabilizes S-adenosylhomocysteine hydrolase in a closed
+    conformation.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified; IDA basis for GO:0004013 and UniProt FUNCTION/CATALYTIC ACTIVITY.
+      Characterizes substrate-induced closed conformation of the homotetramer.
+- id: PMID:19056867
+  title: Large-scale proteomics and phosphoproteomics of urinary exosomes.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Large-scale exosome proteomics; AHCY detected among ~1132 proteins. Supports HDA
+      exosome localization but not a functional secreted role.
+- id: PMID:20458337
+  title: MHC class II-associated proteins in B-cell exosomes and potential functional
+    implications for exosome biogenesis.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Large-scale B-cell exosome proteomics (539 proteins). Supports HDA exosome
+      detection only.
+- id: PMID:23533145
+  title: In-depth proteomic analyses of exosomes isolated from expressed prostatic
+    secretions in urine.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Large-scale prostatic-secretion urinary exosome proteomics. Supports HDA exosome
+      detection only.
+- id: PMID:25416956
+  title: A proteome-scale map of the human interactome network.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Proteome-scale binary interactome map; source of bare &#34;protein binding&#34; IPI. No
+      specific functional AHCY interaction defined.
+- id: PMID:25910212
+  title: Widespread macromolecular interaction perturbations in human genetic disorders.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Large-scale interactome-perturbation study; source of bare &#34;protein binding&#34; IPI.
+- id: PMID:2596825
+  title: Sequence of full length cDNA for human S-adenosylhomocysteine hydrolase.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Original human AHCY full-length cDNA report; TAS basis for GO:0004013.
+- id: PMID:28514442
+  title: Architecture of the human interactome defines protein communities and disease
+    networks.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Large-scale interactome study; source of bare &#34;protein binding&#34; IPI.
+- id: PMID:28647132
+  title: Mutations in S-adenosylhomocysteine hydrolase (AHCY) affect its nucleocytoplasmic
+    distribution and capability to interact with S-adenosylhomocysteine hydrolase-like
+    1 protein.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      AHCY-specific study; EXP basis for nucleus/ER localization and for the AHCYL1
+      interaction and disease-variant nucleocytoplasmic effects.
+- id: PMID:31515488
+  title: Extensive disruption of protein interactions by genetic variants across the
+    allele frequency spectrum in human populations.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Large-scale variant/interaction study; source of bare &#34;protein binding&#34; IPI.
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reference binary interactome (HuRI); source of bare &#34;protein binding&#34; IPI.
+- id: PMID:33961781
+  title: Dual proteome-scale networks reveal cell-specific remodeling of the human
+    interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Proteome-scale affinity-MS interactome; source of bare &#34;protein binding&#34; IPI.
+- id: PMID:35271311
+  title: &#39;OpenCell: Endogenous tagging for the cartography of human cellular organization.&#39;
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      OpenCell endogenous-tagging IP-MS/imaging resource; source of bare &#34;protein binding&#34; IPI.
+- id: Reactome:R-HSA-174401
+  title: AHCY:NAD+ tetramer hydrolyses AdoHcy
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reactome reaction for the core AHCY activity; TAS basis for cytosol localization.
+- id: Reactome:R-HSA-5579084
+  title: Defective AHCY does not hydrolyse AdoHcy
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reactome reaction capturing loss of AHCY activity in HMAHCHD; TAS basis for cytosol.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

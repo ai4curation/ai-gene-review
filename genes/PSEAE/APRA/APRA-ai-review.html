@@ -1,0 +1,3388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>APRA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>APRA</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q03023" target="_blank" class="term-link">
+                        Q03023
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas aeruginosa (strain ATCC 15692 / DSM 22644 / CIP 104116 / JCM 14847 / LMG 12228 / 1C / PRS 101 / PAO1)</span>
+            </div>
+
+
+
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+
+                    <span class="badge">aprA</span>
+
+                    <span class="badge">PA1249</span>
+
+                    <span class="badge">AP</span>
+
+                    <span class="badge">aeruginolysin</span>
+
+                    <span class="badge">alkaline metalloproteinase</span>
+
+                </div>
+            </div>
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "APRA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q03023" data-a="DESCRIPTION: Secreted zinc-dependent alkaline metalloendopeptid..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Secreted zinc-dependent alkaline metalloendopeptidase (serralysin / aeruginolysin) of the peptidase M10B (RTX-metalloprotease) family. The mature enzyme is a two-domain protein comprising an N-terminal catalytic metallopeptidase domain bearing a single catalytic zinc ion (coordinated by an HEXXH-type motif) and a C-terminal parallel beta-roll domain built from hemolysin-type (RTX) calcium-binding repeats; calcium binding drives folding and activation and stabilises the fold. It lacks a cleavable Sec signal peptide and is exported across both membranes by a dedicated type I secretion system (the AprDEF transporter), acting in the extracellular environment. Catalytically it preferentially cleaves peptide bonds N-terminal to hydrophobic residues and degrades a broad, immune-biased set of substrates. In the host it cleaves monomeric flagellin, complement components (notably C2, plus C1q, C1s, C3, C5a), cytokines, and the epithelial sodium channel, contributing to innate-immune evasion and modulation of host epithelial physiology.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004222" target="_blank" class="term-link">
+                                    GO:0004222
+                                </a>
+                            </span>
+                            <span class="term-label">metalloendopeptidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q03023" data-a="GO:0004222" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function. AprA is a zinc-dependent metalloendopeptidase (serralysin, EC 3.4.24.40) of the peptidase M10B family, with a catalytic zinc ion coordinated by an HEXXH-type motif (His185, His189, His195; active-site Glu186) and an endopeptidase mechanism cleaving internal peptide bonds.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Strongly supported by the solved crystal structures, the assigned EC number, MEROPS family classification (M10.056), and the catalytic zinc-binding active site. This is the central, defining molecular function of the protein.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    UniProtKB:Q03023
+
+                                </span>
+
+                                <div class="support-text">RecName: Full=Serralysin; EC=3.4.24.40. Active site His185/His189/His195 coordinate catalytic Zn(2+); Belongs to the peptidase M10B family.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005509" target="_blank" class="term-link">
+                                    GO:0005509
+                                </a>
+                            </span>
+                            <span class="term-label">calcium ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q03023" data-a="GO:0005509" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Structural calcium binding. The C-terminal beta-roll is formed by hemolysin-type (RTX) calcium-binding repeats and the protein binds 8 Ca(2+) ions per subunit; the calcium-loaded beta-roll is required for folding, activation, and type I secretion.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly demonstrated by X-ray crystallography (calcium-binding parallel beta-roll motif) and recorded as a UniProt cofactor (binds 8 Ca(2+) per subunit). This is a genuine, structurally essential function that contributes to rather than constitutes the core catalytic function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    UniProtKB:Q03023
+
+                                </span>
+
+                                <div class="support-text">COFACTOR Name=Ca(2+); Note=Binds 8 Ca(2+) ions per subunit. Hemolysin-type calcium-binding repeats form a parallel beta-roll.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q03023" data-a="GO:0005576" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct localization. AprA is a secreted protein exported by a dedicated type I secretion system (AprDEF) and acts extracellularly on host and microbial substrates.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt records the subcellular location as &#34;Secreted&#34;, and all characterised activities (flagellin/complement/ENaC cleavage) occur extracellularly. The more precise child term GO:0005615 (extracellular space) would also be appropriate, but extracellular region is correct.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    UniProtKB:Q03023
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Secreted.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006508" target="_blank" class="term-link">
+                                    GO:0006508
+                                </a>
+                            </span>
+                            <span class="term-label">proteolysis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q03023" data-a="GO:0006508" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core biological process. AprA is a proteolytic enzyme; proteolysis is the process directly carried out by its metalloendopeptidase activity on host and microbial protein substrates.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Proteolysis is the fundamental process executed by this protease and is well supported by biochemical characterisation of its catalytic activity and substrate specificity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    UniProtKB:Q03023
+
+                                </span>
+
+                                <div class="support-text">CATALYTIC ACTIVITY: Preferential cleavage of bonds with hydrophobic residues in P1&#39;.; EC=3.4.24.40</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008233" target="_blank" class="term-link">
+                                    GO:0008233
+                                </a>
+                            </span>
+                            <span class="term-label">peptidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q03023" data-a="GO:0008233" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but uninformatively broad. Peptidase activity is a high-level parent of the specific metalloendopeptidase activity (GO:0004222) already annotated for this enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The annotation is not wrong, but GO:0004222 (metalloendopeptidase activity) already captures this function at the appropriate level of specificity. Retained as a correct broad parent; it is not the core (most informative) molecular-function term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    UniProtKB:Q03023
+
+                                </span>
+
+                                <div class="support-text">RecName: Full=Serralysin; EC=3.4.24.40; Belongs to the peptidase M10B family.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008237" target="_blank" class="term-link">
+                                    GO:0008237
+                                </a>
+                            </span>
+                            <span class="term-label">metallopeptidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q03023" data-a="GO:0008237" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but broad. Metallopeptidase activity is a parent of the specific metalloendopeptidase activity (GO:0004222) already annotated.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> AprA is genuinely a zinc metallopeptidase, so the term is accurate, but it is subsumed by the more informative GO:0004222. Retained as a correct broad parent rather than the core molecular-function term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    UniProtKB:Q03023
+
+                                </span>
+
+                                <div class="support-text">Binds 1 zinc ion per subunit; catalytic Zn(2+) coordinated by His185/His189/His195; peptidase M10B (serralysin) family.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                                    GO:0008270
+                                </a>
+                            </span>
+                            <span class="term-label">zinc ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q03023" data-a="GO:0008270" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Catalytic zinc binding. AprA binds one catalytic Zn(2+) ion in its active site, coordinated by the HEXXH-derived histidines (His185, His189, His195).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly supported by crystallography and UniProt cofactor/binding-site annotations; the catalytic zinc is essential for the metalloendopeptidase mechanism.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    UniProtKB:Q03023
+
+                                </span>
+
+                                <div class="support-text">COFACTOR Name=Zn(2+); Note=Binds 1 zinc ion per subunit. BINDING 185/189/195 ligand=Zn(2+) ligand_note=catalytic.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031012" target="_blank" class="term-link">
+                                    GO:0031012
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q03023" data-a="GO:0031012" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Incorrect localization from an over-propagated electronic inference. This InterPro-to-GO mapping (peptidase M10 / matrixin signature) places AprA in the extracellular matrix, but AprA is a freely secreted bacterial protease, not a structural component of or resident in a host extracellular matrix.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Extracellular matrix (GO:0031012) is part_of extracellular region, so this is a more specific localization claim than GO:0005576, not a looser one, and the specific claim is unsupported. The annotation derives from InterPro IPR001818 (peptidase M10), a signature shared with eukaryotic matrix metalloproteinases (matrixins/MMPs) that genuinely reside in and act on the ECM; for a bacterial secreted serralysin this is an over-propagated IEA. AprA is secreted via the type I secretion system (AprDEF) and acts on soluble host substrates (complement C2/C1q/C1s, cytokines, monomeric flagellin); there is no evidence it localizes to or is a component of the extracellular matrix. Its correct localization is already captured by GO:0005576 (extracellular region). This is the demonstrably-wrong, argue-against-on-biological-grounds case for which REMOVE (rather than MARK_AS_OVER_ANNOTATED) is appropriate.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    UniProtKB:Q03023
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Secreted.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0141141" target="_blank" class="term-link">
+                                    GO:0141141
+                                </a>
+                            </span>
+                            <span class="term-label">symbiont-mediated evasion of recognition by host pattern recognition receptor</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22131330" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22131330
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Pseudomonas aeruginosa alkaline protease blocks complement a...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q03023" data-a="GO:0141141" data-r="PMID:22131330" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Well-supported virulence function. AprA enables P. aeruginosa to evade host pattern-recognition-receptor detection. Its best-characterised mechanism is degradation of free monomeric flagellin, the ligand for the PRRs TLR5 (mammals) and FLS2 (plants), while flagellar (polymeric) flagellin and the receptors themselves are spared, preserving motility.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The term is genuinely correct for AprA and experimentally established. The most apt primary reference is the flagellin/TLR5/FLS2 study (PMID:21901099), which directly demonstrates evasion of PRR recognition; the cited complement paper (PMID:22131330) also bears on innate-immune evasion (lectin-pathway initiators MBL/ficolins are soluble PRRs). Added the flagellin reference as supporting evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21901099" target="_blank" class="term-link">
+                                        PMID:21901099
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">monomeric flagellin, while polymeric flagellin (involved in bacterial motility)</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21901099" target="_blank" class="term-link">
+                                        PMID:21901099
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">and TLR5 itself resist degradation.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21901099" target="_blank" class="term-link">
+                                        PMID:21901099
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">This was due to decreased activation of the receptor FLS2 and</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001869" target="_blank" class="term-link">
+                                    GO:0001869
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of complement activation, lectin pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22131330" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22131330
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Pseudomonas aeruginosa alkaline protease blocks complement a...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q03023" data-a="GO:0001869" data-r="PMID:22131330" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> AprA blocks lectin-pathway complement activation. It degrades complement C1s and C2 and, by cleaving C2, prevents formation of the C4b2a C3 convertase and C3b deposition via the lectin (and classical) pathway, while the alternative pathway is unaffected.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly demonstrated experimentally (IDA). Serum degradation and repletion assays show the inhibitory mechanism is cleavage of C2, blocking lectin-pathway C3b deposition. This is a specific, downstream (non-core) virulence consequence of the protease activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22131330" target="_blank" class="term-link">
+                                        PMID:22131330
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">deposition via the classical and lectin pathways, whereas the alternative</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22131330" target="_blank" class="term-link">
+                                        PMID:22131330
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">of action for complement inhibition is cleavage of C2. In summary, we showed</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008233" target="_blank" class="term-link">
+                                    GO:0008233
+                                </a>
+                            </span>
+                            <span class="term-label">peptidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22859302" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22859302
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Activation of the epithelial sodium channel (ENaC) by the al...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q03023" data-a="GO:0008233" data-r="PMID:22859302" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental confirmation of proteolytic activity. Purified AprA (AP) was shown to be folded and proteolytically active and to activate ENaC by cleavage.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct experimental evidence (IDA) of peptidase activity for purified AprA. The activity is more specifically a zinc metalloendopeptidase activity (GO:0004222), but the experimental peptidase annotation is correct as recorded.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22859302" target="_blank" class="term-link">
+                                        PMID:22859302
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">further characterize this AP-induced ENaC activation, AP was purified, and its</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22859302" target="_blank" class="term-link">
+                                        PMID:22859302
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">folding, activity, and ability to activate ENaC were assessed.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010765" target="_blank" class="term-link">
+                                    GO:0010765
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of sodium ion transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22859302" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22859302
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Activation of the epithelial sodium channel (ENaC) by the al...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q03023" data-a="GO:0010765" data-r="PMID:22859302" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> AprA proteolytically activates the epithelial sodium channel (ENaC). Apically applied AprA increased basal ENaC current consistent with sustained channel activation in human bronchial epithelia (CF and non-CF), with activation mapped to the channel&#39;s gamma-subunit.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly demonstrated experimentally (IDA) by short-circuit current measurements on polarized epithelial monolayers. A specific, downstream (non-core) effect of the protease on host ion transport, relevant to airway pathophysiology in cystic fibrosis.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22859302" target="_blank" class="term-link">
+                                        PMID:22859302
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">trypsin-inducible ENaC current, consistent with sustained activation of ENaC. To</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22859302" target="_blank" class="term-link">
+                                        PMID:22859302
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">ENaC in polarized monolayers indicated that AP activated ENaC in immortalized</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045959" target="_blank" class="term-link">
+                                    GO:0045959
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of complement activation, classical pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22131330" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22131330
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Pseudomonas aeruginosa alkaline protease blocks complement a...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q03023" data-a="GO:0045959" data-r="PMID:22131330" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> AprA blocks classical-pathway complement activation. By degrading C1s and cleaving C2 it prevents C3b deposition via the classical (and lectin) pathway, inhibiting opsonization, C5a formation, and complement-dependent neutrophil phagocytosis/killing.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly demonstrated experimentally (IDA); the C2-cleavage mechanism blocks classical-pathway complement activation while sparing the alternative pathway. A specific, downstream (non-core) virulence consequence of the protease activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22131330" target="_blank" class="term-link">
+                                        PMID:22131330
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">both human C1s and C2. However, repletion assays demonstrated that the mechanism</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22131330" target="_blank" class="term-link">
+                                        PMID:22131330
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">complement activation via cleavage of C2.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEAE/APRA/APRA-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">AprA was identified as the first bacterial protease demonstrated to cleave C2</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Secreted zinc metalloendopeptidase that degrades extracellular (host and microbial) protein substrates</h3>
+                <span class="vote-buttons" data-g="Q03023" data-a="FUNCTION: Secreted zinc metalloendopeptidase that degrades e..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004222" target="_blank" class="term-link">
+                            metalloendopeptidase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006508" target="_blank" class="term-link">
+                                proteolysis
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                extracellular region
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            UniProtKB:Q03023
+
+                        </span>
+
+                        <div class="finding-text">RecName: Full=Serralysin; EC=3.4.24.40; catalytic Zn(2+) coordinated by His185/His189/His195; SUBCELLULAR LOCATION: Secreted.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22859302" target="_blank" class="term-link">
+                                PMID:22859302
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">folding, activity, and ability to activate ENaC were assessed.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22131330" target="_blank" class="term-link">
+                            PMID:22131330
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Pseudomonas aeruginosa alkaline protease blocks complement activation via the classical and lectin pathways.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">AprA degrades human C1s and C2; the mechanism of complement inhibition is cleavage of C2, blocking C3b deposition via the classical and lectin pathways while sparing the alternative pathway.</div>
+
+                        <div class="finding-text">"of action for complement inhibition is cleavage of C2. In summary, we showed"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22859302" target="_blank" class="term-link">
+                            PMID:22859302
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Activation of the epithelial sodium channel (ENaC) by the alkaline protease from Pseudomonas aeruginosa.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Purified AprA proteolytically activates ENaC (mapped to the gamma-subunit), increasing basal sodium current in primary human bronchial epithelia from CF and non-CF patients.</div>
+
+                        <div class="finding-text">"ENaC in polarized monolayers indicated that AP activated ENaC in immortalized"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21901099" target="_blank" class="term-link">
+                            PMID:21901099
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Pseudomonas evades immune recognition of flagellin in both mammals and plants.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">AprA degrades free monomeric flagellin (the TLR5/FLS2 ligand) but not polymeric flagellar flagellin or the receptors, allowing the bacterium to evade pattern-recognition-receptor detection while retaining motility.</div>
+
+                        <div class="finding-text">"monomeric flagellin, while polymeric flagellin (involved in bacterial motility)"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEAE/APRA/APRA-deep-research-falcon.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Deep research report (falcon/Edison) for APRA</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">AprA is a calcium-activated, zinc-dependent serralysin (M10B) secreted by the AprDEF type I secretion system, with an immune-biased substrate range (complement C2/C1q/C1s/C3/C5a, cytokines IFN-gamma/TNF-alpha, monomeric flagellin, ENaC, fibrin); aprA deletion attenuates virulence in a murine infection model.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(APRA-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q03023" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Comprehensive Research Report: *Pseudomonas aeruginosa* AprA (Alkaline Protease / Serralysin)</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">31 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-06-25T17:26:08.144599</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="APRA-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="APRA-deep-research-falcon_artifacts/artifact-01.md" class="term-link">Edison artifact artifact-01</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="comprehensive-research-report-pseudomonas-aeruginosa-apra-alkaline-protease-serralysin">Comprehensive Research Report: <em>Pseudomonas aeruginosa</em> AprA (Alkaline Protease / Serralysin)</h1>
+<p><strong>Gene:</strong> <em>aprA</em> (PA1249) | <strong>UniProt:</strong> Q03023 | <strong>Organism:</strong> <em>Pseudomonas aeruginosa</em> PAO1</p>
+<h2 id="1-gene-and-protein-identity">1. Gene and Protein Identity</h2>
+<p>The <em>aprA</em> gene (ordered locus name PA1249) of <em>Pseudomonas aeruginosa</em> strain PAO1 encodes the alkaline protease (AP), also known as aeruginolysin, a secreted zinc-dependent metalloproteinase classified as a serralysin (EC 3.4.24.40). The mature protein is approximately 50 kDa and belongs to the peptidase M10B family within the metzincin superfamily of metalloproteases (laarman2012pseudomonasaeruginosaalkaline pages 2-3, butterworth2014modulationofthe pages 1-2). AprA is recognized as a key extracellular virulence factor of <em>P. aeruginosa</em> that functions primarily as an immune-modulating protease rather than a conventional tissue-degrading enzyme (krumina2026molecularmechanismsunderlying pages 8-10).</p>
+<h2 id="2-protein-structure-and-domain-architecture">2. Protein Structure and Domain Architecture</h2>
+<p>AprA is a two-domain metalloprotease precursor protein with the following architecture:</p>
+<ul>
+<li>
+<p><strong>N-terminal catalytic domain:</strong> Contains the canonical HEXXHXXGXXH zinc coordination motif that is the hallmark of the metzincin superfamily. The active-site zinc ion (Zn²⁺) is essential for catalytic activity and is coordinated by three histidine residues within this motif (butterworth2014modulationofthe pages 1-2). This domain shares evolutionary similarity with mammalian matrix metalloproteinases (MMP2 and MMP9) (butterworth2014modulationofthe pages 4-5).</p>
+</li>
+<li>
+<p><strong>C-terminal calcium-binding RTX domain:</strong> Contains multiple RTX (Repeats-in-ToXin) nonapeptide repeats that are rich in aspartate and glycine residues. These repeats form a parallel β-roll motif upon binding calcium ions. The RTX domain is intrinsically disordered in the absence of Ca²⁺, and calcium binding at millimolar concentrations (apparent affinity of 50–60 mM) induces proper folding of the entire protein and is essential for activation of the N-terminal protease domain (butterworth2014modulationofthe pages 4-5, butterworth2014modulationofthe pages 1-2, butterworth2014modulationofthe pages 10-10). This calcium-dependent folding mechanism is a key regulatory feature of serralysin-type proteases and may also facilitate secretion, as the unfolded protein can be threaded through the type I secretion channel.</p>
+</li>
+</ul>
+<p>The structural and functional features of AprA are summarized below:</p>
+<table>
+<thead>
+<tr>
+<th>Domain/Motif</th>
+<th>Location</th>
+<th>Function</th>
+<th>Key Features</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>N-terminal catalytic domain</td>
+<td>N-terminal region of mature AprA</td>
+<td>Catalyzes proteolytic cleavage of host and microbial substrates as a Zn²⁺-dependent metalloprotease</td>
+<td>Contains the conserved HEXXHXXGXXH zinc-binding motif characteristic of serralysin-type metalloproteases; the active-site Zn²⁺ is essential for catalysis; responsible for cleavage of substrates such as complement proteins and ENaC (butterworth2014modulationofthe pages 1-2)</td>
+</tr>
+<tr>
+<td>C-terminal calcium-binding RTX domain</td>
+<td>C-terminal region</td>
+<td>Promotes folding, stabilization, and activation of the protease after Ca²⁺ binding</td>
+<td>Contains RTX-associated Asp/Gly-rich nonapeptide repeats that form a Ca²⁺-bound parallel β-roll; intrinsically disordered or poorly folded without Ca²⁺; Ca²⁺ binding induces proper folding and enables full protease activity (butterworth2014modulationofthe pages 4-5, butterworth2014modulationofthe pages 1-2, butterworth2014modulationofthe pages 10-10)</td>
+</tr>
+<tr>
+<td>Metalloprotease superfamily classification</td>
+<td>Whole protein / family-level annotation</td>
+<td>Places AprA within the serralysin branch of secreted bacterial metalloproteases</td>
+<td>AprA is a serralysin-family alkaline metalloprotease belonging to peptidase family M10B within the metzincin-like metalloprotease superfamily; this classification is consistent with the Zn²⁺ catalytic motif and Ca²⁺-regulated RTX architecture (krumina2026molecularmechanismsunderlying pages 8-10, butterworth2014modulationofthe pages 1-2)</td>
+</tr>
+<tr>
+<td>AprI inhibitor interaction</td>
+<td>Functional interaction with AprA catalytic machinery</td>
+<td>Protects the bacterium from uncontrolled AprA proteolysis and can block AprA activity extracellularly in vitro</td>
+<td>AprI is the cognate alkaline protease inhibitor; it inhibits AprA near-stoichiometrically and blocks AprA-dependent ENaC activation; inhibitor action is linked to interaction with the Zn²⁺-containing protease active site, consistent with structural studies of the AprA-AprI system (butterworth2014modulationofthe pages 4-5, butterworth2014modulationofthe pages 7-9, butterworth2014modulationofthe pages 10-10)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the major structural and functional features of Pseudomonas aeruginosa AprA, including its catalytic and RTX calcium-binding regions, family classification, and interaction with the cognate inhibitor AprI. It is useful for connecting domain organization to secretion, activation, catalysis, and regulation.</em></p>
+<h2 id="3-enzymatic-activity-and-substrate-specificity">3. Enzymatic Activity and Substrate Specificity</h2>
+<p>AprA catalyzes the proteolytic cleavage of peptide bonds in a Zn²⁺-dependent manner, with Ca²⁺ serving as an essential cofactor for structural integrity and enzymatic activation. Without Ca²⁺, the enzyme exhibits minimal activity (butterworth2014modulationofthe pages 4-5). The enzyme retains sustained catalytic activity in the extracellular environment, maintaining 63% activity after 24 hours at 37°C (butterworth2014modulationofthe pages 4-5).</p>
+<p>AprA has a broad but selective substrate specificity, with a marked preference for host immune proteins rather than generic structural extracellular matrix components. The primary substrates and their biological consequences are summarized in the following table:</p>
+<table>
+<thead>
+<tr>
+<th>Substrate</th>
+<th>Pathway/System Affected</th>
+<th>Biological Consequence</th>
+<th>Key Reference</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Complement C2</td>
+<td>Classical and lectin complement pathways</td>
+<td>AprA cleaves C2, preventing formation of the C4b2a C3 convertase, reducing C3b opsonization, C5a generation, neutrophil recruitment, phagocytosis, and complement-mediated killing (laarman2012pseudomonasaeruginosaalkaline pages 7-8, gonzalezalsina2023pseudomonasaeruginosaand pages 10-12)</td>
+<td>(laarman2012pseudomonasaeruginosaalkaline pages 7-8, gonzalezalsina2023pseudomonasaeruginosaand pages 10-12)</td>
+</tr>
+<tr>
+<td>C1q</td>
+<td>Classical complement pathway</td>
+<td>Degradation of C1q impairs complement recognition/activation and contributes to immune evasion (laarman2012pseudomonasaeruginosaalkaline pages 2-3, gonzalezalsina2023pseudomonasaeruginosaand pages 10-12)</td>
+<td>(laarman2012pseudomonasaeruginosaalkaline pages 2-3, gonzalezalsina2023pseudomonasaeruginosaand pages 10-12)</td>
+</tr>
+<tr>
+<td>C1s</td>
+<td>Classical complement pathway</td>
+<td>Cleavage of C1s contributes to suppression of classical pathway activation, although C2 cleavage appears to be the dominant inhibitory mechanism (laarman2012pseudomonasaeruginosaalkaline pages 7-8, laarman2012pseudomonasaeruginosaalkaline pages 1-2, laarman2012pseudomonasaeruginosaalkaline pages 2-3)</td>
+<td>(laarman2012pseudomonasaeruginosaalkaline pages 7-8, laarman2012pseudomonasaeruginosaalkaline pages 1-2, laarman2012pseudomonasaeruginosaalkaline pages 2-3)</td>
+</tr>
+<tr>
+<td>C3</td>
+<td>Central complement cascade</td>
+<td>At higher concentrations/longer incubation, AprA can cleave C3, further reducing opsonization and downstream complement effector functions (laarman2012pseudomonasaeruginosaalkaline pages 7-8, laarman2012pseudomonasaeruginosaalkaline pages 2-3)</td>
+<td>(laarman2012pseudomonasaeruginosaalkaline pages 7-8, laarman2012pseudomonasaeruginosaalkaline pages 2-3)</td>
+</tr>
+<tr>
+<td>IFN-γ</td>
+<td>Host cytokine signaling / innate immunity</td>
+<td>Degradation of IFN-γ dampens host inflammatory and antimicrobial signaling, aiding immune evasion (laarman2012pseudomonasaeruginosaalkaline pages 2-3)</td>
+<td>(laarman2012pseudomonasaeruginosaalkaline pages 2-3)</td>
+</tr>
+<tr>
+<td>TNF-α</td>
+<td>Host cytokine signaling / inflammation</td>
+<td>Degradation of TNF-α reduces inflammatory signaling and host defense activation (laarman2012pseudomonasaeruginosaalkaline pages 2-3, akter2026structuralandfunctional pages 2-5)</td>
+<td>(laarman2012pseudomonasaeruginosaalkaline pages 2-3, akter2026structuralandfunctional pages 2-5)</td>
+</tr>
+<tr>
+<td>Flagellin</td>
+<td>TLR5-mediated innate immune recognition</td>
+<td>Cleavage of monomeric flagellin prevents TLR5 activation, reducing host detection of P. aeruginosa (laarman2012pseudomonasaeruginosaalkaline pages 2-3, keim2024polymicrobialinteractionsbetween pages 30-34)</td>
+<td>(laarman2012pseudomonasaeruginosaalkaline pages 2-3, keim2024polymicrobialinteractionsbetween pages 30-34)</td>
+</tr>
+<tr>
+<td>ENaC</td>
+<td>Airway epithelial ion transport</td>
+<td>Proteolytic cleavage activates epithelial sodium channel activity, potentially altering airway surface physiology; activation is slower than trypsin and can be blocked by AprI (butterworth2014modulationofthe pages 4-5, butterworth2014modulationofthe pages 7-9)</td>
+<td>(butterworth2014modulationofthe pages 4-5, butterworth2014modulationofthe pages 7-9)</td>
+</tr>
+<tr>
+<td>Fibrin</td>
+<td>Tissue/extracellular host substrate in corneal infection</td>
+<td>Fibrin degradation contributes to tissue damage and virulence in infected corneal tissue (akter2026structuralandfunctional pages 2-5)</td>
+<td>(akter2026structuralandfunctional pages 2-5)</td>
+</tr>
+<tr>
+<td><em>S. aureus</em> SasG</td>
+<td>Polymicrobial aggregation / biofilm formation</td>
+<td>AprA cleaves SasG, removing/exposing domains that promote <em>S. aureus</em> aggregation, enhancing polymicrobial biofilm formation, persistence, and antibiotic tolerance in chronic wounds (keim2024polymicrobialinteractionsbetween pages 8-10, keim2024polymicrobialinteractionsbetween pages 10-13, keim2024polymicrobialinteractionsbetween pages 13-14)</td>
+<td>(keim2024polymicrobialinteractionsbetween pages 8-10, keim2024polymicrobialinteractionsbetween pages 10-13, keim2024polymicrobialinteractionsbetween pages 13-14)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes experimentally supported and review-supported AprA substrates, the host or microbial systems they affect, and the resulting biological consequences. It is useful for linking AprA's biochemical specificity to its roles in immune evasion, tissue damage, and polymicrobial biofilm biology.</em></p>
+<h3 id="primary-enzymatic-function-complement-evasion">Primary Enzymatic Function — Complement Evasion</h3>
+<p>The best-characterized enzymatic activity of AprA is its cleavage of complement component C2. AprA was identified as the first bacterial protease demonstrated to cleave C2 (laarman2012pseudomonasaeruginosaalkaline pages 7-8). At physiologically relevant concentrations (200 nM, within the range secreted by <em>P. aeruginosa</em>), AprA specifically cleaves C2 into C2a and C2b fragments. The resulting fluid-phase C2a cannot bind to surface-deposited C4b, preventing formation of the active C3 convertase (C4b2a) required for classical and lectin pathway complement activation (laarman2012pseudomonasaeruginosaalkaline pages 7-8). AprA cleaves C2 at sites similar to the natural cleavage sites of the complement proteases C1s and MASP, suggesting it targets accessible, structurally exposed regions (laarman2012pseudomonasaeruginosaalkaline pages 7-8). At higher concentrations and longer incubation times, AprA can also cleave C3 and C4 (laarman2012pseudomonasaeruginosaalkaline pages 7-8). Importantly, AprA does not inhibit the alternative complement pathway, as C2 is not involved in that route (laarman2012pseudomonasaeruginosaalkaline pages 7-8, laarman2012pseudomonasaeruginosaalkaline pages 1-2). The IC₅₀ for AprA-mediated inhibition of complement-dependent phagocytosis is approximately 100 nM (laarman2012pseudomonasaeruginosaalkaline pages 6-6). AprA also degrades C1q, C1s, and C5a, further suppressing complement recognition and downstream effector functions (laarman2012pseudomonasaeruginosaalkaline pages 2-3, gonzalezalsina2023pseudomonasaeruginosaand pages 10-12).</p>
+<h3 id="additional-host-substrates">Additional Host Substrates</h3>
+<p>Beyond complement proteins, AprA degrades cytokines IFN-γ and TNF-α, dampening host inflammatory and antimicrobial signaling (laarman2012pseudomonasaeruginosaalkaline pages 2-3). AprA cleaves monomeric bacterial flagellin, preventing Toll-like receptor 5 (TLR5) activation and thus reducing innate immune detection of <em>P. aeruginosa</em> (laarman2012pseudomonasaeruginosaalkaline pages 2-3). AprA also disrupts neutrophil extracellular traps (NETs), a key antimicrobial defense mechanism (krumina2026molecularmechanismsunderlying pages 8-10). Additionally, AprA proteolytically activates the epithelial sodium channel (ENaC) on the apical surface of airway epithelial cells, leading to increased sodium absorption; this activation is slower than trypsin-mediated activation (approximately 5-fold slower kinetics) and can be blocked by the cognate inhibitor AprI (butterworth2014modulationofthe pages 4-5, butterworth2014modulationofthe pages 7-9). In corneal tissue, AprA degrades fibrin and contributes to tissue necrosis (akter2026structuralandfunctional pages 2-5).</p>
+<h2 id="4-subcellular-localization-and-secretion">4. Subcellular Localization and Secretion</h2>
+<p>AprA is secreted into the extracellular milieu via the Type I Secretion System (T1SS), a one-step secretion apparatus that directly translocates substrates across both inner and outer membranes without a periplasmic intermediate (akter2026structuralandfunctional pages 2-5, krumina2026molecularmechanismsunderlying pages 8-10, sousa2021genomicandmetabolic pages 5-7). The T1SS responsible for AprA secretion is encoded by the <em>aprDEF</em> gene cluster, organized in a dedicated operon located immediately upstream of the <em>aprA</em> structural gene (krumina2026molecularmechanismsunderlying pages 8-10). This system comprises three essential components: AprD, an ABC transporter that provides energy for translocation from the inner membrane; AprE, a membrane fusion protein (MFP) that bridges the periplasm; and AprF, an outer membrane factor (OMF) (krumina2026molecularmechanismsunderlying pages 8-10, sousa2021genomicandmetabolic pages 5-7). The protein is secreted with its propeptide intact (krumina2026molecularmechanismsunderlying pages 22-23). Once released, AprA functions exclusively in the extracellular environment, where it encounters and degrades host immune molecules at sites of infection (laarman2012pseudomonasaeruginosaalkaline pages 2-3, akter2026structuralandfunctional pages 2-5).</p>
+<p>A periplasmic inhibitor, AprI, is co-expressed with AprA and serves to protect the bacterium from unregulated protease activity during secretion. AprI inhibits AprA at near-stoichiometric concentrations and can block AprA-mediated ENaC activation in a dose-dependent manner (butterworth2014modulationofthe pages 4-5, butterworth2014modulationofthe pages 7-9).</p>
+<h2 id="5-regulation-of-expression">5. Regulation of Expression</h2>
+<p>Expression of <em>aprA</em> is tightly regulated by multiple signaling systems:</p>
+<ul>
+<li>
+<p><strong>Quorum sensing:</strong> AprA expression is controlled by the LasR-LasI (Las) quorum sensing system, with additional input from the RhlI-RhlR (Rhl) system. The LasR transcriptional activator directly regulates the <em>apr</em> gene cluster, linking AprA production to bacterial population density (krumina2026molecularmechanismsunderlying pages 8-10, gonzalezalsina2023pseudomonasaeruginosaand pages 10-12). The <em>aprA</em> gene was found to be part of the approximately 61% of LasR-regulated genes that were dysregulated in stringent response mutants (pletzer2020thestringentstress pages 12-13).</p>
+</li>
+<li>
+<p><strong>Stringent stress response:</strong> AprA is a downstream effector of the ppGpp-mediated stringent stress response. Under stringent response activation (e.g., serine hydroxamate induction), <em>aprA</em> is upregulated 4.1-fold, whereas in ppGpp-deficient mutants (<em>relA spoT</em> double mutant), <em>aprA</em> is downregulated 9.6-fold (pletzer2020thestringentstress pages 8-9, pletzer2020thestringentstress pages 7-8). This regulation may reflect a bacterial strategy to produce extracellular proteases for nutrient acquisition during amino acid starvation (pletzer2020thestringentstress pages 7-8).</p>
+</li>
+<li>
+<p><strong>Two-component regulatory systems:</strong> AprA is also subject to regulation by two-component signal transduction systems, including indirect control through hierarchical regulators such as AlgR and GacA (pletzer2020thestringentstress pages 9-11).</p>
+</li>
+</ul>
+<h2 id="6-role-in-virulence-and-pathogenesis">6. Role in Virulence and Pathogenesis</h2>
+<h3 id="complement-evasion-and-immune-modulation">Complement Evasion and Immune Modulation</h3>
+<p>AprA is a critical immune evasion factor. By degrading C2, C1q, C1s, C3, and C5a, AprA potently inhibits complement-mediated opsonization, phagocytosis, and neutrophil killing of <em>P. aeruginosa</em> (laarman2012pseudomonasaeruginosaalkaline pages 1-2, laarman2012pseudomonasaeruginosaalkaline pages 7-8, gonzalezalsina2023pseudomonasaeruginosaand pages 10-12). This complement resistance operates as part of a redundant system in <em>P. aeruginosa</em>, alongside elastase (LasB) and Protease IV, which also degrade complement components (laarman2012pseudomonasaeruginosaalkaline pages 7-8). The cytokine-degrading and flagellin-cleaving activities further suppress innate immune activation (laarman2012pseudomonasaeruginosaalkaline pages 2-3).</p>
+<h3 id="in-vivo-virulence-evidence">In Vivo Virulence Evidence</h3>
+<p>In a murine cutaneous infection model, deletion of <em>aprA</em> significantly enhanced mouse survival to 77% compared with only 33% survival in wild-type PAO1-infected mice after 3 days (P = 0.025), despite no differences in initial lesion sizes or bacterial counts (pletzer2020thestringentstress pages 8-9). This directly demonstrates that AprA contributes to <em>P. aeruginosa</em> virulence through its proteolytic degradation of host defense molecules. AprA has also been identified as the downstream effector responsible for the reduced cytotoxicity observed in stringent response mutants (pletzer2020thestringentstress pages 1-2).</p>
+<h3 id="polymicrobial-interactions-and-biofilm-formation">Polymicrobial Interactions and Biofilm Formation</h3>
+<p>Recent research has revealed a novel role for AprA in mediating polymicrobial interactions. In chronic wound co-infections of <em>P. aeruginosa</em> and <em>Staphylococcus aureus</em>, AprA cleaves the <em>S. aureus</em> surface protein SasG by removing its A domain and exposing the B domain, enabling homodimeric interactions between adjacent <em>S. aureus</em> cells (keim2024polymicrobialinteractionsbetween pages 8-10). This SasG processing induces MRSA aggregation and promotes polymicrobial biofilm formation. Heterologous expression of AprA alone in <em>E. coli</em> is sufficient to induce SasG-dependent aggregation at levels comparable to wild-type <em>P. aeruginosa</em> (keim2024polymicrobialinteractionsbetween pages 8-10, keim2024polymicrobialinteractionsbetween pages 10-13). AprA works synergistically with LasB elastase for maximal SasG processing, and the resulting aggregates display increased tolerance to vancomycin and ciprofloxacin (keim2024polymicrobialinteractionsbetween pages 13-14). AprA expression is upregulated in vivo in clinical wound specimens (keim2024polymicrobialinteractionsbetween pages 8-10). These findings indicate that AprA promotes polymicrobial coexistence, delayed wound healing, and increased antimicrobial resistance in chronic wound infections (keim2024polymicrobialinteractionsbetween pages 13-14, keim2024polymicrobialinteractionsbetween pages 14-17).</p>
+<h3 id="additional-virulence-contributions">Additional Virulence Contributions</h3>
+<p>AprA also contributes to pyocyanin production, an important virulence factor in <em>P. aeruginosa</em> (krumina2026molecularmechanismsunderlying pages 8-10, krumina2026molecularmechanismsunderlying pages 22-23). In corneal infections, AprA causes tissue necrosis, degrades fibrin, and increases bacterial attachment to corneal epithelium by exposing host cell receptors (akter2026structuralandfunctional pages 2-5).</p>
+<h2 id="7-clinical-and-epidemiological-significance">7. Clinical and Epidemiological Significance</h2>
+<p>The <em>apr</em> gene is highly conserved among clinical <em>P. aeruginosa</em> isolates. In a study of Mexican clinical isolates from hospital- and community-acquired infections, the alkaline protease gene (<em>apr</em>) was detected in 99.1% of strains, underscoring its near-ubiquitous presence in pathogenic <em>P. aeruginosa</em> populations (gonzalezalsina2023pseudomonasaeruginosaand pages 10-12). AprA has been highlighted as a promising target for anti-virulence therapeutic development, particularly given that <em>aprA</em> deletion enhances host survival in infection models without affecting bacterial growth, suggesting that targeting AprA could reduce virulence without imposing strong selective pressure for resistance (pletzer2020thestringentstress pages 8-9, pletzer2020thestringentstress pages 12-13).</p>
+<h2 id="8-summary">8. Summary</h2>
+<p>AprA (alkaline protease/aeruginolysin) of <em>P. aeruginosa</em> PAO1 is a secreted, calcium-activated, zinc-dependent metalloprotease of the serralysin (M10B) family. It is exported via the AprDEF type I secretion system and functions exclusively in the extracellular environment. Its primary enzymatic activity is the proteolytic cleavage of host immune proteins—most notably complement component C2, which blocks classical and lectin pathway activation. AprA also degrades complement factors C1q, C1s, C3, and C5a, cytokines IFN-γ and TNF-α, and monomeric flagellin, collectively enabling immune evasion. Expression is regulated by the Las/Rhl quorum sensing hierarchy and the ppGpp-mediated stringent stress response. Recent work has expanded its functional repertoire to include promotion of polymicrobial biofilm formation through processing of the <em>S. aureus</em> surface protein SasG. Deletion of <em>aprA</em> significantly reduces virulence in murine infection models, establishing it as a key contributor to <em>P. aeruginosa</em> pathogenesis and a potential anti-virulence therapeutic target.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(laarman2012pseudomonasaeruginosaalkaline pages 2-3): A. Laarman, B. Bardoel, M. Ruyken, Job Fernie, F. Milder, J. V. van Strijp, and S. Rooijakkers. Pseudomonas aeruginosa alkaline protease blocks complement activation via the classical and lectin pathways. The Journal of Immunology, 188:386-393, Jan 2012. URL: https://doi.org/10.4049/jimmunol.1102162, doi:10.4049/jimmunol.1102162. This article has 160 citations.</p>
+</li>
+<li>
+<p>(butterworth2014modulationofthe pages 1-2): Michael B. Butterworth, Liang Zhang, Xiaoning Liu, Robert M. Shanks, and Patrick H. Thibodeau. Modulation of the epithelial sodium channel (enac) by bacterial metalloproteases and protease inhibitors. PLoS ONE, 9:e100313, Jun 2014. URL: https://doi.org/10.1371/journal.pone.0100313, doi:10.1371/journal.pone.0100313. This article has 36 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(krumina2026molecularmechanismsunderlying pages 8-10): Angelika Krūmiņa, Aigars Reinis, Agneta Jeske, Indra Zeltiņa, and Ludmila Vīksna. Molecular mechanisms underlying the pathogenicity of pseudomonas aeruginosa. Medicina, 62:462, Feb 2026. URL: https://doi.org/10.3390/medicina62030462, doi:10.3390/medicina62030462. This article has 1 citations.</p>
+</li>
+<li>
+<p>(butterworth2014modulationofthe pages 4-5): Michael B. Butterworth, Liang Zhang, Xiaoning Liu, Robert M. Shanks, and Patrick H. Thibodeau. Modulation of the epithelial sodium channel (enac) by bacterial metalloproteases and protease inhibitors. PLoS ONE, 9:e100313, Jun 2014. URL: https://doi.org/10.1371/journal.pone.0100313, doi:10.1371/journal.pone.0100313. This article has 36 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(butterworth2014modulationofthe pages 10-10): Michael B. Butterworth, Liang Zhang, Xiaoning Liu, Robert M. Shanks, and Patrick H. Thibodeau. Modulation of the epithelial sodium channel (enac) by bacterial metalloproteases and protease inhibitors. PLoS ONE, 9:e100313, Jun 2014. URL: https://doi.org/10.1371/journal.pone.0100313, doi:10.1371/journal.pone.0100313. This article has 36 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(butterworth2014modulationofthe pages 7-9): Michael B. Butterworth, Liang Zhang, Xiaoning Liu, Robert M. Shanks, and Patrick H. Thibodeau. Modulation of the epithelial sodium channel (enac) by bacterial metalloproteases and protease inhibitors. PLoS ONE, 9:e100313, Jun 2014. URL: https://doi.org/10.1371/journal.pone.0100313, doi:10.1371/journal.pone.0100313. This article has 36 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(laarman2012pseudomonasaeruginosaalkaline pages 7-8): A. Laarman, B. Bardoel, M. Ruyken, Job Fernie, F. Milder, J. V. van Strijp, and S. Rooijakkers. Pseudomonas aeruginosa alkaline protease blocks complement activation via the classical and lectin pathways. The Journal of Immunology, 188:386-393, Jan 2012. URL: https://doi.org/10.4049/jimmunol.1102162, doi:10.4049/jimmunol.1102162. This article has 160 citations.</p>
+</li>
+<li>
+<p>(gonzalezalsina2023pseudomonasaeruginosaand pages 10-12): Alex González-Alsina, Margalida Mateu-Borrás, Antonio Doménech-Sánchez, and Sebastián Albertí. Pseudomonas aeruginosa and the complement system: a review of the evasion strategies. Microorganisms, 11:664, Mar 2023. URL: https://doi.org/10.3390/microorganisms11030664, doi:10.3390/microorganisms11030664. This article has 31 citations.</p>
+</li>
+<li>
+<p>(laarman2012pseudomonasaeruginosaalkaline pages 1-2): A. Laarman, B. Bardoel, M. Ruyken, Job Fernie, F. Milder, J. V. van Strijp, and S. Rooijakkers. Pseudomonas aeruginosa alkaline protease blocks complement activation via the classical and lectin pathways. The Journal of Immunology, 188:386-393, Jan 2012. URL: https://doi.org/10.4049/jimmunol.1102162, doi:10.4049/jimmunol.1102162. This article has 160 citations.</p>
+</li>
+<li>
+<p>(akter2026structuralandfunctional pages 2-5): Tanzina Akter, Paula-Maree Challita, Abrar Maswood Haider, Shiful Islam, Kaniz Fatema, Fiona Stapleton, and Mark Willcox. Structural and functional insights into pseudomonas aeruginosa’s secretion systems 1–6: regulation, role in microbial keratitis and drug targets. European Journal of Clinical Microbiology &amp; Infectious Diseases, 45:79-101, Oct 2026. URL: https://doi.org/10.1007/s10096-025-05295-2, doi:10.1007/s10096-025-05295-2. This article has 3 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(keim2024polymicrobialinteractionsbetween pages 30-34): Klara Keim, Mohini Bhattacharya, H. A. Crosby, C. Jenul, Krista B. Mills, Michael J. Schurr, and A. Horswill. Polymicrobial interactions between staphylococcus aureus and pseudomonas aeruginosa promote biofilm formation and persistence in chronic wound infections. bioRxiv, Nov 2024. URL: https://doi.org/10.1101/2024.11.04.621402, doi:10.1101/2024.11.04.621402. This article has 18 citations.</p>
+</li>
+<li>
+<p>(keim2024polymicrobialinteractionsbetween pages 8-10): Klara Keim, Mohini Bhattacharya, H. A. Crosby, C. Jenul, Krista B. Mills, Michael J. Schurr, and A. Horswill. Polymicrobial interactions between staphylococcus aureus and pseudomonas aeruginosa promote biofilm formation and persistence in chronic wound infections. bioRxiv, Nov 2024. URL: https://doi.org/10.1101/2024.11.04.621402, doi:10.1101/2024.11.04.621402. This article has 18 citations.</p>
+</li>
+<li>
+<p>(keim2024polymicrobialinteractionsbetween pages 10-13): Klara Keim, Mohini Bhattacharya, H. A. Crosby, C. Jenul, Krista B. Mills, Michael J. Schurr, and A. Horswill. Polymicrobial interactions between staphylococcus aureus and pseudomonas aeruginosa promote biofilm formation and persistence in chronic wound infections. bioRxiv, Nov 2024. URL: https://doi.org/10.1101/2024.11.04.621402, doi:10.1101/2024.11.04.621402. This article has 18 citations.</p>
+</li>
+<li>
+<p>(keim2024polymicrobialinteractionsbetween pages 13-14): Klara Keim, Mohini Bhattacharya, H. A. Crosby, C. Jenul, Krista B. Mills, Michael J. Schurr, and A. Horswill. Polymicrobial interactions between staphylococcus aureus and pseudomonas aeruginosa promote biofilm formation and persistence in chronic wound infections. bioRxiv, Nov 2024. URL: https://doi.org/10.1101/2024.11.04.621402, doi:10.1101/2024.11.04.621402. This article has 18 citations.</p>
+</li>
+<li>
+<p>(laarman2012pseudomonasaeruginosaalkaline pages 6-6): A. Laarman, B. Bardoel, M. Ruyken, Job Fernie, F. Milder, J. V. van Strijp, and S. Rooijakkers. Pseudomonas aeruginosa alkaline protease blocks complement activation via the classical and lectin pathways. The Journal of Immunology, 188:386-393, Jan 2012. URL: https://doi.org/10.4049/jimmunol.1102162, doi:10.4049/jimmunol.1102162. This article has 160 citations.</p>
+</li>
+<li>
+<p>(sousa2021genomicandmetabolic pages 5-7): Telma de Sousa, Michel Hébraud, Maria L. N. Enes Dapkevicius, Luís Maltez, José Eduardo Pereira, Rosa Capita, Carlos Alonso-Calleja, Gilberto Igrejas, and Patricia Poeta. Genomic and metabolic characteristics of the pathogenicity in pseudomonas aeruginosa. International Journal of Molecular Sciences, 22:12892, Nov 2021. URL: https://doi.org/10.3390/ijms222312892, doi:10.3390/ijms222312892. This article has 225 citations.</p>
+</li>
+<li>
+<p>(krumina2026molecularmechanismsunderlying pages 22-23): Angelika Krūmiņa, Aigars Reinis, Agneta Jeske, Indra Zeltiņa, and Ludmila Vīksna. Molecular mechanisms underlying the pathogenicity of pseudomonas aeruginosa. Medicina, 62:462, Feb 2026. URL: https://doi.org/10.3390/medicina62030462, doi:10.3390/medicina62030462. This article has 1 citations.</p>
+</li>
+<li>
+<p>(pletzer2020thestringentstress pages 12-13): Daniel Pletzer, Travis M. Blimkie, Heidi Wolfmeier, Yicong Li, Arjun Baghela, Amy H. Y. Lee, Reza Falsafi, and Robert E. W. Hancock. The stringent stress response controls proteases and global regulators under optimal growth conditions in pseudomonas aeruginosa. Aug 2020. URL: https://doi.org/10.1128/msystems.00495-20, doi:10.1128/msystems.00495-20. This article has 39 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pletzer2020thestringentstress pages 8-9): Daniel Pletzer, Travis M. Blimkie, Heidi Wolfmeier, Yicong Li, Arjun Baghela, Amy H. Y. Lee, Reza Falsafi, and Robert E. W. Hancock. The stringent stress response controls proteases and global regulators under optimal growth conditions in pseudomonas aeruginosa. Aug 2020. URL: https://doi.org/10.1128/msystems.00495-20, doi:10.1128/msystems.00495-20. This article has 39 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pletzer2020thestringentstress pages 7-8): Daniel Pletzer, Travis M. Blimkie, Heidi Wolfmeier, Yicong Li, Arjun Baghela, Amy H. Y. Lee, Reza Falsafi, and Robert E. W. Hancock. The stringent stress response controls proteases and global regulators under optimal growth conditions in pseudomonas aeruginosa. Aug 2020. URL: https://doi.org/10.1128/msystems.00495-20, doi:10.1128/msystems.00495-20. This article has 39 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pletzer2020thestringentstress pages 9-11): Daniel Pletzer, Travis M. Blimkie, Heidi Wolfmeier, Yicong Li, Arjun Baghela, Amy H. Y. Lee, Reza Falsafi, and Robert E. W. Hancock. The stringent stress response controls proteases and global regulators under optimal growth conditions in pseudomonas aeruginosa. Aug 2020. URL: https://doi.org/10.1128/msystems.00495-20, doi:10.1128/msystems.00495-20. This article has 39 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pletzer2020thestringentstress pages 1-2): Daniel Pletzer, Travis M. Blimkie, Heidi Wolfmeier, Yicong Li, Arjun Baghela, Amy H. Y. Lee, Reza Falsafi, and Robert E. W. Hancock. The stringent stress response controls proteases and global regulators under optimal growth conditions in pseudomonas aeruginosa. Aug 2020. URL: https://doi.org/10.1128/msystems.00495-20, doi:10.1128/msystems.00495-20. This article has 39 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(keim2024polymicrobialinteractionsbetween pages 14-17): Klara Keim, Mohini Bhattacharya, H. A. Crosby, C. Jenul, Krista B. Mills, Michael J. Schurr, and A. Horswill. Polymicrobial interactions between staphylococcus aureus and pseudomonas aeruginosa promote biofilm formation and persistence in chronic wound infections. bioRxiv, Nov 2024. URL: https://doi.org/10.1101/2024.11.04.621402, doi:10.1101/2024.11.04.621402. This article has 18 citations.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="APRA-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+<li><a href="APRA-deep-research-falcon_artifacts/artifact-01.md">Edison artifact artifact-01</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>krumina2026molecularmechanismsunderlying pages 8-10</li>
+<li>butterworth2014modulationofthe pages 1-2</li>
+<li>butterworth2014modulationofthe pages 4-5</li>
+<li>laarman2012pseudomonasaeruginosaalkaline pages 2-3</li>
+<li>akter2026structuralandfunctional pages 2-5</li>
+<li>laarman2012pseudomonasaeruginosaalkaline pages 7-8</li>
+<li>laarman2012pseudomonasaeruginosaalkaline pages 6-6</li>
+<li>krumina2026molecularmechanismsunderlying pages 22-23</li>
+<li>pletzer2020thestringentstress pages 12-13</li>
+<li>pletzer2020thestringentstress pages 7-8</li>
+<li>pletzer2020thestringentstress pages 9-11</li>
+<li>pletzer2020thestringentstress pages 8-9</li>
+<li>pletzer2020thestringentstress pages 1-2</li>
+<li>keim2024polymicrobialinteractionsbetween pages 8-10</li>
+<li>keim2024polymicrobialinteractionsbetween pages 13-14</li>
+<li>gonzalezalsina2023pseudomonasaeruginosaand pages 10-12</li>
+<li>butterworth2014modulationofthe pages 10-10</li>
+<li>butterworth2014modulationofthe pages 7-9</li>
+<li>laarman2012pseudomonasaeruginosaalkaline pages 1-2</li>
+<li>keim2024polymicrobialinteractionsbetween pages 30-34</li>
+<li>keim2024polymicrobialinteractionsbetween pages 10-13</li>
+<li>sousa2021genomicandmetabolic pages 5-7</li>
+<li>keim2024polymicrobialinteractionsbetween pages 14-17</li>
+<li>https://doi.org/10.4049/jimmunol.1102162,</li>
+<li>https://doi.org/10.1371/journal.pone.0100313,</li>
+<li>https://doi.org/10.3390/medicina62030462,</li>
+<li>https://doi.org/10.3390/microorganisms11030664,</li>
+<li>https://doi.org/10.1007/s10096-025-05295-2,</li>
+<li>https://doi.org/10.1101/2024.11.04.621402,</li>
+<li>https://doi.org/10.3390/ijms222312892,</li>
+<li>https://doi.org/10.1128/msystems.00495-20,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(APRA-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q03023" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="apra-apra-pa1249-pseudomonas-aeruginosa-alkaline-metalloprotease-serralysin">APRA (aprA / PA1249) — Pseudomonas aeruginosa alkaline metalloprotease (Serralysin)</h1>
+<p>UniProt: Q03023 (APRA_PSEAE); EC 3.4.24.40; MEROPS M10.056; peptidase M10B<br />
+(serralysin) family. 479 aa precursor (propeptide 1–9, mature chain 10–479).</p>
+<h2 id="summary">Summary</h2>
+<p>AprA is a secreted, zinc-dependent alkaline metalloendopeptidase of the<br />
+serralysin (RTX-type metalloprotease, peptidase M10B) family. It is a major<br />
+extracellular virulence factor of <em>P. aeruginosa</em>. Structurally it is a<br />
+two-domain protein: an N-terminal catalytic metallopeptidase domain (HEXXH zinc<br />
+motif) and a C-terminal β-roll domain formed by hemolysin-type (RTX)<br />
+calcium-binding repeats that bind multiple Ca²⁺ ions. It has no cleavable<br />
+N-terminal signal peptide and is exported by a dedicated type I secretion system<br />
+(the AprDEF ABC-transporter / RTX exporter encoded in the same operon), with a<br />
+C-terminal secretion signal. It is co-secreted with, and held in check by, the<br />
+periplasmic/secreted inhibitor AprI.</p>
+<p>Catalytically it preferentially cleaves peptide bonds N-terminal to (in P1' of)<br />
+hydrophobic residues. Biologically it acts on a broad range of host substrates,<br />
+and its best-characterized roles are in innate-immune evasion and modulation of<br />
+host epithelial physiology.</p>
+<h2 id="structure-cofactors-from-uniprot-q03023-crystallography">Structure / cofactors (from UniProt Q03023 + crystallography)</h2>
+<ul>
+<li>Catalytic Zn²⁺: coordinated by His185, His189, His195; catalytic Glu186<br />
+  (active site His-Glu-X-X-His … His "zincin/metzincin" motif). [UniProt Q03023<br />
+  FT ACT_SITE 186; BINDING 185/189/195 Zn] [PMID:8253063 EMBO J 1993, crystal<br />
+  structure: "two-domain protein with a calcium binding parallel beta roll motif"]</li>
+<li>Binds 8 Ca²⁺ per subunit and 1 Zn²⁺ per subunit. [UniProt Q03023 COFACTOR]</li>
+<li>C-terminal β-roll formed by hemolysin-type (RTX) Ca-binding repeats (FT REPEAT<br />
+  341–354, 355–367, 368–385; PROSITE PS00330 HEMOLYSIN_CALCIUM). The Ca²⁺-loaded<br />
+  β-roll is also the structural element required for type I secretion/folding.</li>
+<li>Cognate inhibitor complex solved: AprA + AprI ("inhibition by a zinc-NH2<br />
+  coordinative bond"). <a href="https://pubmed.ncbi.nlm.nih.gov/11445573">PMID:11445573</a></li>
+<li>Subcellular location: Secreted. [UniProt Q03023]</li>
+</ul>
+<h2 id="catalytic-activity-specificity">Catalytic activity / specificity</h2>
+<ul>
+<li>EC 3.4.24.40; "Preferential cleavage of bonds with hydrophobic residues in P1'."<br />
+  [UniProt Q03023 CATALYTIC ACTIVITY; ECO:0000269|PubMed:4199986]</li>
+<li>Specificity established with synthetic peptides. [PMID:4199986 Morihara 1973]</li>
+</ul>
+<h2 id="biological-roles-host-substrates-virulence">Biological roles / host substrates (virulence)</h2>
+<h3 id="1-innate-immune-evasion-via-degradation-of-monomeric-flagellin-tlr5fls2">1. Innate-immune evasion via degradation of monomeric flagellin (TLR5/FLS2)</h3>
+<ul>
+<li>AprA degrades free <strong>monomeric flagellin</strong> (the TLR5/FLS2 ligand) but not<br />
+  polymeric flagellin in the flagellum, so the bacterium evades pattern-recognition<br />
+  receptor detection while keeping motility.<br />
+  [PMID:21901099 Bardoel 2011, "AprA effectively degrades the TLR5 ligand<br />
+  monomeric flagellin, while polymeric flagellin (involved in bacterial motility)<br />
+  and TLR5 itself resist degradation"]<br />
+  ["by degrading the ligand for TLR5 and FLS2, P. aeruginosa escapes recognition<br />
+  by the innate immune systems of both mammals and plants"]</li>
+<li><code>aprA</code> mutants give &gt;100-fold enhanced TLR5 activation. <a href="https://pubmed.ncbi.nlm.nih.gov/21901099">PMID:21901099</a></li>
+<li>This is the strongest experimental basis for the GO term<br />
+  GO:0141141 "symbiont-mediated evasion of recognition by host pattern recognition<br />
+  receptor". (Note: the GOA EXP annotation for GO:0141141 currently cites the<br />
+<em>complement</em> paper PMID:22131330; the flagellin paper PMID:21901099 is the more<br />
+  apt primary reference. Complement lectin-pathway initiators (MBL/ficolins) are<br />
+  also soluble PRRs, so the term is still defensible for the gene.)</li>
+</ul>
+<h3 id="2-inhibition-of-complement-classical-lectin-pathways-via-c2-cleavage">2. Inhibition of complement (classical + lectin pathways) via C2 cleavage</h3>
+<ul>
+<li>AprA degrades human C1s and C2; complement inhibition mechanism is <strong>cleavage of<br />
+  C2</strong>; blocks C3b deposition via the classical and lectin (not alternative)<br />
+  pathways; blocks neutrophil phagocytosis/killing and C5a formation.<br />
+  [PMID:22131330 Laarman 2012, "AprA specifically blocked C3b deposition via the<br />
+  classical and lectin pathways, whereas the alternative pathway was not affected";<br />
+  "the mechanism of action for complement inhibition is cleavage of C2"]</li>
+<li>Basis for GO:0045959 (neg. reg. complement, classical) and GO:0001869 (neg. reg.<br />
+  complement, lectin), both IDA.</li>
+</ul>
+<h3 id="3-activation-of-the-epithelial-sodium-channel-enac">3. Activation of the epithelial sodium channel (ENaC)</h3>
+<ul>
+<li>Purified AP proteolytically activates ENaC by cleaving the <strong>γ-subunit</strong>,<br />
+  increasing basal Na⁺ current in human bronchial epithelia (CF and non-CF);<br />
+  proposed to reduce airway-surface-liquid volume / mucociliary clearance in CF.<br />
+  [PMID:22859302 Butterworth 2012, "This activation was mapped to the γ-subunit of<br />
+  ENaC"; "an increase in basal ENaC current and a loss of trypsin-inducible ENaC<br />
+  current, consistent with sustained activation of ENaC"]</li>
+<li>Basis for GO:0010765 (positive regulation of sodium ion transport, IDA) and a<br />
+  second experimental confirmation of peptidase activity (GO:0008233, IDA).</li>
+</ul>
+<h2 id="go-annotation-review-orientation">GO annotation review orientation</h2>
+<p>Core function:<br />
+- <strong>Molecular function:</strong> zinc metalloendopeptidase activity (GO:0004222), with<br />
+  catalytic Zn²⁺ binding (GO:0008270) and structural Ca²⁺ binding (GO:0005509).<br />
+- <strong>Cellular component:</strong> secreted / extracellular region (GO:0005576;<br />
+  GO:0005615 extracellular space is the more precise term).<br />
+- <strong>Biological process:</strong> proteolysis (GO:0006508), executed on host substrates<br />
+  to drive virulence (immune evasion; host ion-transport modulation = non-core,<br />
+  pleiotropic downstream consequences).</p>
+<p>Likely over-/under-annotations to flag:<br />
+- GO:0008233 (peptidase) and GO:0008237 (metallopeptidase) IEA are correct but are<br />
+  high-level parents of the more informative GO:0004222 metalloendopeptidase<br />
+  activity → general/redundant.<br />
+- GO:0031012 "extracellular matrix" (located_in, IEA from InterPro) is a likely<br />
+  over-annotation — AprA is freely secreted into the extracellular space, not a<br />
+  structural ECM component. Prefer GO:0005576 / GO:0005615.</p>
+<h2 id="additional-findings-from-falconedison-deep-research-apra-deep-research-falconmd">Additional findings (from falcon/Edison deep research, APRA-deep-research-falcon.md)</h2>
+<p>Broader experimentally/review-supported substrate range and roles (not all yet GO-annotated):<br />
+- Complement: primary substrate is <strong>C2</strong> (cleaved into C2a/C2b, ~200 nM, blocks<br />
+  C4b2a convertase); also degrades <strong>C1q, C1s, C3, C5a</strong>. "AprA was identified as<br />
+  the first bacterial protease demonstrated to cleave C2."<br />
+- Cytokines: degrades <strong>IFN-γ</strong> and <strong>TNF-α</strong>, dampening inflammatory signaling.<br />
+- Disrupts <strong>neutrophil extracellular traps (NETs)</strong>.<br />
+- <strong>Corneal infection</strong>: degrades <strong>fibrin</strong>, causes tissue necrosis, increases<br />
+  bacterial attachment to corneal epithelium.<br />
+- <strong>Polymicrobial biofilm</strong>: cleaves <em>S. aureus</em> surface protein <strong>SasG</strong> (removes<br />
+  A domain, exposes B domain → MRSA aggregation, biofilm, antibiotic tolerance)<br />
+  [keim2024, bioRxiv preprint — treat as provisional].<br />
+- <strong>Virulence in vivo</strong>: <em>aprA</em> deletion raised murine survival to 77% vs 33% for<br />
+  WT PAO1 (cutaneous infection), with no change in bacterial counts [pletzer2020].<br />
+- Secretion: <strong>type I secretion system</strong> encoded by the <em>aprDEF</em> operon (AprD ABC<br />
+  transporter, AprE membrane-fusion protein, AprF outer-membrane factor); secreted<br />
+  with propeptide intact; folding/activation is Ca²⁺-dependent (RTX β-roll).<br />
+- Regulation: Las/Rhl quorum sensing and the ppGpp stringent response.<br />
+- Conservation: <em>apr</em> gene present in ~99% of clinical <em>P. aeruginosa</em> isolates;<br />
+  proposed anti-virulence drug target.</p>
+<p>Note: the falcon report mis-attributes the flagellin/TLR5 finding to Laarman 2012;<br />
+the correct primary source is Bardoel 2011 (PMID:21901099).</p>
+<h2 id="references">References</h2>
+<ul>
+<li>UniProt Q03023 (APRA_PSEAE)</li>
+<li>PMID:4199986 — substrate specificity (synthetic peptides), EC 3.4.24.40</li>
+<li>PMID:8253063 — crystal structure, two-domain + Ca β-roll</li>
+<li>PMID:11445573 — AprA–AprI inhibitor complex structure</li>
+<li>PMID:21901099 — flagellin/TLR5/FLS2 immune evasion (Bardoel 2011)</li>
+<li>PMID:22131330 — complement classical/lectin inhibition via C2 cleavage (Laarman 2012)</li>
+<li>PMID:22859302 — ENaC γ-subunit activation (Butterworth 2012)</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q03023
+gene_symbol: APRA
+aliases: [aprA, PA1249, AP, aeruginolysin, &#34;alkaline metalloproteinase&#34;]
+product_type: PROTEIN
+taxon:
+  id: NCBITaxon:208964
+  label: Pseudomonas aeruginosa (strain ATCC 15692 / DSM 22644 / CIP 104116 / JCM
+    14847 / LMG 12228 / 1C / PRS 101 / PAO1)
+description: Secreted zinc-dependent alkaline metalloendopeptidase (serralysin / aeruginolysin)
+  of the peptidase M10B (RTX-metalloprotease) family. The mature enzyme is a two-domain
+  protein comprising an N-terminal catalytic metallopeptidase domain bearing a single
+  catalytic zinc ion (coordinated by an HEXXH-type motif) and a C-terminal parallel
+  beta-roll domain built from hemolysin-type (RTX) calcium-binding repeats; calcium
+  binding drives folding and activation and stabilises the fold. It lacks a cleavable
+  Sec signal peptide and is exported across both membranes by a dedicated type I secretion
+  system (the AprDEF transporter), acting in the extracellular environment. Catalytically
+  it preferentially cleaves peptide bonds N-terminal to hydrophobic residues and degrades
+  a broad, immune-biased set of substrates. In the host it cleaves monomeric flagellin,
+  complement components (notably C2, plus C1q, C1s, C3, C5a), cytokines, and the epithelial
+  sodium channel, contributing to innate-immune evasion and modulation of host epithelial
+  physiology.
+existing_annotations:
+- term:
+    id: GO:0004222
+    label: metalloendopeptidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Core molecular function. AprA is a zinc-dependent metalloendopeptidase
+      (serralysin, EC 3.4.24.40) of the peptidase M10B family, with a catalytic zinc
+      ion coordinated by an HEXXH-type motif (His185, His189, His195; active-site
+      Glu186) and an endopeptidase mechanism cleaving internal peptide bonds.
+    action: ACCEPT
+    reason: Strongly supported by the solved crystal structures, the assigned EC number,
+      MEROPS family classification (M10.056), and the catalytic zinc-binding active
+      site. This is the central, defining molecular function of the protein.
+    supported_by:
+    - reference_id: UniProtKB:Q03023
+      supporting_text: &#39;RecName: Full=Serralysin; EC=3.4.24.40. Active site His185/His189/His195
+        coordinate catalytic Zn(2+); Belongs to the peptidase M10B family.&#39;
+- term:
+    id: GO:0005509
+    label: calcium ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Structural calcium binding. The C-terminal beta-roll is formed by hemolysin-type
+      (RTX) calcium-binding repeats and the protein binds 8 Ca(2+) ions per subunit;
+      the calcium-loaded beta-roll is required for folding, activation, and type I
+      secretion.
+    action: ACCEPT
+    reason: Directly demonstrated by X-ray crystallography (calcium-binding parallel
+      beta-roll motif) and recorded as a UniProt cofactor (binds 8 Ca(2+) per subunit).
+      This is a genuine, structurally essential function that contributes to rather
+      than constitutes the core catalytic function.
+    supported_by:
+    - reference_id: UniProtKB:Q03023
+      supporting_text: &#39;COFACTOR Name=Ca(2+); Note=Binds 8 Ca(2+) ions per subunit.
+        Hemolysin-type calcium-binding repeats form a parallel beta-roll.&#39;
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: Correct localization. AprA is a secreted protein exported by a dedicated
+      type I secretion system (AprDEF) and acts extracellularly on host and microbial
+      substrates.
+    action: ACCEPT
+    reason: UniProt records the subcellular location as &#34;Secreted&#34;, and all characterised
+      activities (flagellin/complement/ENaC cleavage) occur extracellularly. The more
+      precise child term GO:0005615 (extracellular space) would also be appropriate,
+      but extracellular region is correct.
+    supported_by:
+    - reference_id: UniProtKB:Q03023
+      supporting_text: &#39;SUBCELLULAR LOCATION: Secreted.&#39;
+- term:
+    id: GO:0006508
+    label: proteolysis
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: Core biological process. AprA is a proteolytic enzyme; proteolysis is
+      the process directly carried out by its metalloendopeptidase activity on host
+      and microbial protein substrates.
+    action: ACCEPT
+    reason: Proteolysis is the fundamental process executed by this protease and is
+      well supported by biochemical characterisation of its catalytic activity and
+      substrate specificity.
+    supported_by:
+    - reference_id: UniProtKB:Q03023
+      supporting_text: &#34;CATALYTIC ACTIVITY: Preferential cleavage of bonds with hydrophobic\
+        \ residues in P1&#39;.; EC=3.4.24.40&#34;
+- term:
+    id: GO:0008233
+    label: peptidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: enables
+  review:
+    summary: Correct but uninformatively broad. Peptidase activity is a high-level
+      parent of the specific metalloendopeptidase activity (GO:0004222) already annotated
+      for this enzyme.
+    action: ACCEPT
+    reason: The annotation is not wrong, but GO:0004222 (metalloendopeptidase activity)
+      already captures this function at the appropriate level of specificity. Retained
+      as a correct broad parent; it is not the core (most informative) molecular-function
+      term.
+    supported_by:
+    - reference_id: UniProtKB:Q03023
+      supporting_text: &#39;RecName: Full=Serralysin; EC=3.4.24.40; Belongs to the peptidase
+        M10B family.&#39;
+- term:
+    id: GO:0008237
+    label: metallopeptidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Correct but broad. Metallopeptidase activity is a parent of the specific
+      metalloendopeptidase activity (GO:0004222) already annotated.
+    action: ACCEPT
+    reason: AprA is genuinely a zinc metallopeptidase, so the term is accurate, but
+      it is subsumed by the more informative GO:0004222. Retained as a correct broad
+      parent rather than the core molecular-function term.
+    supported_by:
+    - reference_id: UniProtKB:Q03023
+      supporting_text: Binds 1 zinc ion per subunit; catalytic Zn(2+) coordinated by
+        His185/His189/His195; peptidase M10B (serralysin) family.
+- term:
+    id: GO:0008270
+    label: zinc ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Catalytic zinc binding. AprA binds one catalytic Zn(2+) ion in its active
+      site, coordinated by the HEXXH-derived histidines (His185, His189, His195).
+    action: ACCEPT
+    reason: Directly supported by crystallography and UniProt cofactor/binding-site
+      annotations; the catalytic zinc is essential for the metalloendopeptidase mechanism.
+    supported_by:
+    - reference_id: UniProtKB:Q03023
+      supporting_text: &#39;COFACTOR Name=Zn(2+); Note=Binds 1 zinc ion per subunit. BINDING
+        185/189/195 ligand=Zn(2+) ligand_note=catalytic.&#39;
+- term:
+    id: GO:0031012
+    label: extracellular matrix
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: located_in
+  review:
+    summary: Incorrect localization from an over-propagated electronic inference.
+      This InterPro-to-GO mapping (peptidase M10 / matrixin signature) places AprA
+      in the extracellular matrix, but AprA is a freely secreted bacterial protease,
+      not a structural component of or resident in a host extracellular matrix.
+    action: REMOVE
+    reason: &#39;Extracellular matrix (GO:0031012) is part_of extracellular region, so
+      this is a more specific localization claim than GO:0005576, not a looser one,
+      and the specific claim is unsupported. The annotation derives from InterPro
+      IPR001818 (peptidase M10), a signature shared with eukaryotic matrix metalloproteinases
+      (matrixins/MMPs) that genuinely reside in and act on the ECM; for a bacterial
+      secreted serralysin this is an over-propagated IEA. AprA is secreted via the
+      type I secretion system (AprDEF) and acts on soluble host substrates (complement
+      C2/C1q/C1s, cytokines, monomeric flagellin); there is no evidence it localizes
+      to or is a component of the extracellular matrix. Its correct localization is
+      already captured by GO:0005576 (extracellular region). This is the demonstrably-wrong,
+      argue-against-on-biological-grounds case for which REMOVE (rather than
+      MARK_AS_OVER_ANNOTATED) is appropriate.&#39;
+    supported_by:
+    - reference_id: UniProtKB:Q03023
+      supporting_text: &#39;SUBCELLULAR LOCATION: Secreted.&#39;
+- term:
+    id: GO:0141141
+    label: symbiont-mediated evasion of recognition by host pattern recognition receptor
+  evidence_type: EXP
+  original_reference_id: PMID:22131330
+  qualifier: involved_in
+  review:
+    summary: Well-supported virulence function. AprA enables P. aeruginosa to evade
+      host pattern-recognition-receptor detection. Its best-characterised mechanism
+      is degradation of free monomeric flagellin, the ligand for the PRRs TLR5 (mammals)
+      and FLS2 (plants), while flagellar (polymeric) flagellin and the receptors themselves
+      are spared, preserving motility.
+    action: ACCEPT
+    reason: The term is genuinely correct for AprA and experimentally established.
+      The most apt primary reference is the flagellin/TLR5/FLS2 study (PMID:21901099),
+      which directly demonstrates evasion of PRR recognition; the cited complement
+      paper (PMID:22131330) also bears on innate-immune evasion (lectin-pathway initiators
+      MBL/ficolins are soluble PRRs). Added the flagellin reference as supporting evidence.
+    additional_reference_ids:
+    - PMID:21901099
+    supported_by:
+    - reference_id: PMID:21901099
+      supporting_text: monomeric flagellin, while polymeric flagellin (involved in
+        bacterial motility)
+    - reference_id: PMID:21901099
+      supporting_text: and TLR5 itself resist degradation.
+    - reference_id: PMID:21901099
+      supporting_text: This was due to decreased activation of the receptor FLS2 and
+- term:
+    id: GO:0001869
+    label: negative regulation of complement activation, lectin pathway
+  evidence_type: IDA
+  original_reference_id: PMID:22131330
+  qualifier: involved_in
+  review:
+    summary: AprA blocks lectin-pathway complement activation. It degrades complement
+      C1s and C2 and, by cleaving C2, prevents formation of the C4b2a C3 convertase
+      and C3b deposition via the lectin (and classical) pathway, while the alternative
+      pathway is unaffected.
+    action: ACCEPT
+    reason: Directly demonstrated experimentally (IDA). Serum degradation and repletion
+      assays show the inhibitory mechanism is cleavage of C2, blocking lectin-pathway
+      C3b deposition. This is a specific, downstream (non-core) virulence consequence
+      of the protease activity.
+    supported_by:
+    - reference_id: PMID:22131330
+      supporting_text: deposition via the classical and lectin pathways, whereas the
+        alternative
+    - reference_id: PMID:22131330
+      supporting_text: of action for complement inhibition is cleavage of C2. In summary,
+        we showed
+- term:
+    id: GO:0008233
+    label: peptidase activity
+  evidence_type: IDA
+  original_reference_id: PMID:22859302
+  qualifier: enables
+  review:
+    summary: Experimental confirmation of proteolytic activity. Purified AprA (AP)
+      was shown to be folded and proteolytically active and to activate ENaC by cleavage.
+    action: ACCEPT
+    reason: Direct experimental evidence (IDA) of peptidase activity for purified AprA.
+      The activity is more specifically a zinc metalloendopeptidase activity (GO:0004222),
+      but the experimental peptidase annotation is correct as recorded.
+    supported_by:
+    - reference_id: PMID:22859302
+      supporting_text: further characterize this AP-induced ENaC activation, AP was
+        purified, and its
+    - reference_id: PMID:22859302
+      supporting_text: folding, activity, and ability to activate ENaC were assessed.
+- term:
+    id: GO:0010765
+    label: positive regulation of sodium ion transport
+  evidence_type: IDA
+  original_reference_id: PMID:22859302
+  qualifier: involved_in
+  review:
+    summary: AprA proteolytically activates the epithelial sodium channel (ENaC).
+      Apically applied AprA increased basal ENaC current consistent with sustained
+      channel activation in human bronchial epithelia (CF and non-CF), with activation
+      mapped to the channel&#39;s gamma-subunit.
+    action: ACCEPT
+    reason: Directly demonstrated experimentally (IDA) by short-circuit current measurements
+      on polarized epithelial monolayers. A specific, downstream (non-core) effect
+      of the protease on host ion transport, relevant to airway pathophysiology in
+      cystic fibrosis.
+    supported_by:
+    - reference_id: PMID:22859302
+      supporting_text: trypsin-inducible ENaC current, consistent with sustained activation
+        of ENaC. To
+    - reference_id: PMID:22859302
+      supporting_text: ENaC in polarized monolayers indicated that AP activated ENaC
+        in immortalized
+- term:
+    id: GO:0045959
+    label: negative regulation of complement activation, classical pathway
+  evidence_type: IDA
+  original_reference_id: PMID:22131330
+  qualifier: involved_in
+  review:
+    summary: AprA blocks classical-pathway complement activation. By degrading C1s
+      and cleaving C2 it prevents C3b deposition via the classical (and lectin) pathway,
+      inhibiting opsonization, C5a formation, and complement-dependent neutrophil
+      phagocytosis/killing.
+    action: ACCEPT
+    reason: Directly demonstrated experimentally (IDA); the C2-cleavage mechanism
+      blocks classical-pathway complement activation while sparing the alternative
+      pathway. A specific, downstream (non-core) virulence consequence of the protease
+      activity.
+    supported_by:
+    - reference_id: PMID:22131330
+      supporting_text: both human C1s and C2. However, repletion assays demonstrated
+        that the mechanism
+    - reference_id: PMID:22131330
+      supporting_text: complement activation via cleavage of C2.
+    - reference_id: file:PSEAE/APRA/APRA-deep-research-falcon.md
+      supporting_text: AprA was identified as the first bacterial protease demonstrated
+        to cleave C2
+core_functions:
+- description: Secreted zinc metalloendopeptidase that degrades extracellular (host
+    and microbial) protein substrates
+  molecular_function:
+    id: GO:0004222
+    label: metalloendopeptidase activity
+  directly_involved_in:
+  - id: GO:0006508
+    label: proteolysis
+  locations:
+  - id: GO:0005576
+    label: extracellular region
+  supported_by:
+  - reference_id: UniProtKB:Q03023
+    supporting_text: &#39;RecName: Full=Serralysin; EC=3.4.24.40; catalytic Zn(2+) coordinated
+      by His185/His189/His195; SUBCELLULAR LOCATION: Secreted.&#39;
+  - reference_id: PMID:22859302
+    supporting_text: folding, activity, and ability to activate ENaC were assessed.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:22131330
+  title: Pseudomonas aeruginosa alkaline protease blocks complement activation via
+    the classical and lectin pathways.
+  findings:
+  - statement: &gt;-
+      AprA degrades human C1s and C2; the mechanism of complement inhibition is
+      cleavage of C2, blocking C3b deposition via the classical and lectin pathways
+      while sparing the alternative pathway.
+    supporting_text: of action for complement inhibition is cleavage of C2. In summary,
+      we showed
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified abstract; directly supports the classical- and lectin-pathway
+      complement-inhibition annotations (GO:0045959, GO:0001869) via C2 cleavage.
+- id: PMID:22859302
+  title: Activation of the epithelial sodium channel (ENaC) by the alkaline protease
+    from Pseudomonas aeruginosa.
+  findings:
+  - statement: &gt;-
+      Purified AprA proteolytically activates ENaC (mapped to the gamma-subunit),
+      increasing basal sodium current in primary human bronchial epithelia from CF
+      and non-CF patients.
+    supporting_text: ENaC in polarized monolayers indicated that AP activated ENaC
+      in immortalized
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified abstract; supports the peptidase-activity (IDA) and
+      positive-regulation-of-sodium-ion-transport (GO:0010765) annotations.
+- id: PMID:21901099
+  title: Pseudomonas evades immune recognition of flagellin in both mammals and plants.
+  findings:
+  - statement: &gt;-
+      AprA degrades free monomeric flagellin (the TLR5/FLS2 ligand) but not polymeric
+      flagellar flagellin or the receptors, allowing the bacterium to evade
+      pattern-recognition-receptor detection while retaining motility.
+    supporting_text: monomeric flagellin, while polymeric flagellin (involved in
+      bacterial motility)
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Full text (PMC) reviewed; the most apt primary reference for GO:0141141
+      (symbiont-mediated evasion of recognition by host PRR), establishing degradation
+      of monomeric flagellin to evade TLR5/FLS2.
+- id: file:PSEAE/APRA/APRA-deep-research-falcon.md
+  title: Deep research report (falcon/Edison) for APRA
+  findings:
+  - statement: &gt;-
+      AprA is a calcium-activated, zinc-dependent serralysin (M10B) secreted by the
+      AprDEF type I secretion system, with an immune-biased substrate range (complement
+      C2/C1q/C1s/C3/C5a, cytokines IFN-gamma/TNF-alpha, monomeric flagellin, ENaC,
+      fibrin); aprA deletion attenuates virulence in a murine infection model.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

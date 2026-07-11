@@ -1,0 +1,15 @@
+| Substrate | Pathway/System Affected | Biological Consequence | Key Reference |
+|---|---|---|---|
+| Complement C2 | Classical and lectin complement pathways | AprA cleaves C2, preventing formation of the C4b2a C3 convertase, reducing C3b opsonization, C5a generation, neutrophil recruitment, phagocytosis, and complement-mediated killing (pqac-00000001, pqac-00000027, pqac-00000030) | (pqac-00000001, pqac-00000027, pqac-00000030) |
+| C1q | Classical complement pathway | Degradation of C1q impairs complement recognition/activation and contributes to immune evasion (pqac-00000003, pqac-00000029, pqac-00000030) | (pqac-00000003, pqac-00000029, pqac-00000030) |
+| C1s | Classical complement pathway | Cleavage of C1s contributes to suppression of classical pathway activation, although C2 cleavage appears to be the dominant inhibitory mechanism (pqac-00000001, pqac-00000028, pqac-00000029) | (pqac-00000001, pqac-00000028, pqac-00000029) |
+| C3 | Central complement cascade | At higher concentrations/longer incubation, AprA can cleave C3, further reducing opsonization and downstream complement effector functions (pqac-00000001, pqac-00000003, pqac-00000027) | (pqac-00000001, pqac-00000003, pqac-00000027) |
+| IFN-γ | Host cytokine signaling / innate immunity | Degradation of IFN-γ dampens host inflammatory and antimicrobial signaling, aiding immune evasion (pqac-00000008, pqac-00000014, pqac-00000029) | (pqac-00000008, pqac-00000014, pqac-00000029) |
+| TNF-α | Host cytokine signaling / inflammation | Degradation of TNF-α reduces inflammatory signaling and host defense activation (pqac-00000008, pqac-00000014, pqac-00000009) | (pqac-00000008, pqac-00000014, pqac-00000009) |
+| Flagellin | TLR5-mediated innate immune recognition | Cleavage of monomeric flagellin prevents TLR5 activation, reducing host detection of P. aeruginosa (pqac-00000003, pqac-00000014, pqac-00000025) | (pqac-00000003, pqac-00000014, pqac-00000025) |
+| ENaC | Airway epithelial ion transport | Proteolytic cleavage activates epithelial sodium channel activity, potentially altering airway surface physiology; activation is slower than trypsin and can be blocked by AprI (pqac-00000002, pqac-00000006) | (pqac-00000002, pqac-00000006) |
+| Fibrin | Tissue/extracellular host substrate in corneal infection | Fibrin degradation contributes to tissue damage and virulence in infected corneal tissue (pqac-00000009) | (pqac-00000009) |
+| *S. aureus* SasG | Polymicrobial aggregation / biofilm formation | AprA cleaves SasG, removing/exposing domains that promote *S. aureus* aggregation, enhancing polymicrobial biofilm formation, persistence, and antibiotic tolerance in chronic wounds (pqac-00000020, pqac-00000022, pqac-00000023) | (pqac-00000020, pqac-00000022, pqac-00000023) |
+
+
+*Table: This table summarizes experimentally supported and review-supported AprA substrates, the host or microbial systems they affect, and the resulting biological consequences. It is useful for linking AprA's biochemical specificity to its roles in immune evasion, tissue damage, and polymicrobial biofilm biology.*

@@ -1,0 +1,3766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HGD - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>HGD</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q93099" target="_blank" class="term-link">
+                        Q93099
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "HGD";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q93099" data-a="DESCRIPTION: HGD (homogentisate 1,2-dioxygenase; EC 1.13.11.5) ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>HGD (homogentisate 1,2-dioxygenase; EC 1.13.11.5) is a cytosolic, iron(II)-dependent ring-cleaving dioxygenase that catalyzes the third step of the tyrosine (and, upstream, phenylalanine) degradation pathway. It converts homogentisate and molecular oxygen to 4-maleylacetoacetate, opening the aromatic ring. Each subunit binds one catalytic Fe(II) ion (coordinated by His335, Glu341 and His371), and the active enzyme assembles as a homohexamer arranged as a dimer of trimers. HGD is expressed most highly in liver, kidney, prostate and intestine, consistent with its role in amino-acid catabolism. Loss-of-function variants in HGD cause alkaptonuria, an autosomal recessive inborn error of metabolism in which homogentisic acid accumulates; its oxidized, polymerized form deposits as ochronotic pigment in cartilage and other connective tissues, producing dark urine, ochronotic osteoarthropathy/spondyloarthropathy, and later cardiac-valve and renal disease.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004411" target="_blank" class="term-link">
+                                    GO:0004411
+                                </a>
+                            </span>
+                            <span class="term-label">homogentisate 1,2-dioxygenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q93099" data-a="GO:0004411" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function. HGD catalyzes homogentisate + O2 -&gt; 4-maleylacetoacetate (EC 1.13.11.5, RHEA:15449). The phylogenetic (IBA) inference is at the correct level of specificity and matches the experimentally established activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the defining, experimentally validated activity of HGD, consistent across IBA, IEA, IMP and TAS evidence and confirmed structurally (PMID:10876237).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8782815" target="_blank" class="term-link">
+                                        PMID:8782815
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">resulting from loss of homogentisate 1,2 dioxygenase (HGO) activity</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006559" target="_blank" class="term-link">
+                                    GO:0006559
+                                </a>
+                            </span>
+                            <span class="term-label">L-phenylalanine catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q93099" data-a="GO:0006559" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HGD acts in the phenylalanine degradation pathway (UniPathway UPA00139: acetoacetate and fumarate from L-phenylalanine, step 4/6). Phenylalanine is catabolized via tyrosine to homogentisate, HGD&#39;s substrate.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct pathway-level involvement; homogentisate is a shared intermediate of phenylalanine and tyrosine catabolism, both of which route through HGD.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8782815" target="_blank" class="term-link">
+                                        PMID:8782815
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">an intermediary product of the catabolism of tyrosine and phenylalanine</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004411" target="_blank" class="term-link">
+                                    GO:0004411
+                                </a>
+                            </span>
+                            <span class="term-label">homogentisate 1,2-dioxygenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q93099" data-a="GO:0004411" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic assignment of the core dioxygenase activity via InterPro IPR005708, ARBA, RHEA:15449 and EC:1.13.11.5. Fully consistent with experimental evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Duplicate of the experimentally supported core MF; the IEA mapping is at the correct specificity for the homogentisate dioxygenase family signature.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006559" target="_blank" class="term-link">
+                                    GO:0006559
+                                </a>
+                            </span>
+                            <span class="term-label">L-phenylalanine catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q93099" data-a="GO:0006559" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic assignment (InterPro IPR005708 + UniPathway UPA00139) of phenylalanine catabolic-process involvement. Consistent with the pathway role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct pathway membership; duplicate of the IBA/TAS phenylalanine catabolic-process annotations.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21044950" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21044950
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Genome-wide YFP fluorescence complementation screen identifi...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q93099" data-a="GO:0005515" data-r="PMID:21044950" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a high-throughput fluorescence-complementation screen (HGD-TERF1 pair). Uninformative regarding molecular function and unrelated to HGD&#39;s catalytic role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Per curation guidelines the generic &#34;protein binding&#34; term conveys no functional information, and this hit derives from a genome-wide telomere-signaling screen with no evidence it reflects a biologically meaningful, HGD-specific partnership. Retained (not removed) as a legitimately recorded IPI, but flagged as over-annotation and non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21044950" target="_blank" class="term-link">
+                                        PMID:21044950
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">telomere signaling</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q93099" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from the HuRI binary interactome (HGD-NTAQ1 pair; also listed in the UniProt INTERACTION block). Uninformative as a molecular-function term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> &#34;protein binding&#34; is too generic to be a useful MF annotation; the HGD-NTAQ1 interaction is a systematic-screen datapoint, not a characterized functional module. Kept as recorded but marked over-annotated / non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                                        PMID:32296183
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">binary protein interactome</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link">
+                                    GO:0042802
+                                </a>
+                            </span>
+                            <span class="term-label">identical protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25416956
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A proteome-scale map of the human interactome network.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q93099" data-a="GO:0042802" data-r="PMID:25416956" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Self (identical protein) interaction reflecting HGD&#39;s known homo-oligomerization. HGD assembles as a homohexamer (dimer of trimers), so self-association is a genuine structural property but not its core catalytic function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The identical-protein-binding annotation is biologically consistent with the crystallographically defined homohexamer (PMID:10876237), so it is retained; it documents the oligomeric assembly rather than the primary dioxygenase function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link">
+                                        PMID:25416956
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">human interactome</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10876237" target="_blank" class="term-link">
+                                        PMID:10876237
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Crystal structure of human homogentisate dioxygenase</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link">
+                                    GO:0042802
+                                </a>
+                            </span>
+                            <span class="term-label">identical protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q93099" data-a="GO:0042802" data-r="PMID:32296183" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Second self-interaction datapoint (HuRI), again reflecting the homohexameric assembly of HGD.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Duplicate identical-protein-binding evidence consistent with the known homohexamer; retained as a structural (non-core) property.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                                        PMID:32296183
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">binary protein interactome</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006572" target="_blank" class="term-link">
+                                    GO:0006572
+                                </a>
+                            </span>
+                            <span class="term-label">L-tyrosine catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36555443" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:36555443
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Untargeted NMR Metabolomics Reveals Alternative Biomarkers a...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q93099" data-a="GO:0006572" data-r="PMID:36555443" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HGD performs the ring-opening step of tyrosine catabolism, acting on homogentisate (the tyrosine-degradation intermediate). This is the most direct biological-process term for HGD.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Well supported: HGA is an intermediate of tyrosine degradation and is opened/oxidized by hexameric HGD; loss of HGD activity blocks this step and causes HGA accumulation (alkaptonuria).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/36555443" target="_blank" class="term-link">
+                                        PMID:36555443
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The aromatic ring is opened and oxidized by the hexameric homogentisate-1,2-dioxygenase (HGD)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004411" target="_blank" class="term-link">
+                                    GO:0004411
+                                </a>
+                            </span>
+                            <span class="term-label">homogentisate 1,2-dioxygenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8782815" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8782815
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The molecular basis of alkaptonuria.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q93099" data-a="GO:0004411" data-r="PMID:8782815" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mutant-phenotype (IMP) evidence: alkaptonuria arises from loss of HGD activity, and at least one disease missense variant was shown biochemically to be loss-of-function, directly linking HGD to homogentisate 1,2-dioxygenase activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimental support for the core catalytic activity from the gene-defining study; the curator read the full text and demonstrated loss-of-function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8782815" target="_blank" class="term-link">
+                                        PMID:8782815
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">provide biochemical evidence that at least one of these missense mutations is a loss-of-function mutation</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070062" target="_blank" class="term-link">
+                                    GO:0070062
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular exosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23533145
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    In-depth proteomic analyses of exosomes isolated from expres...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q93099" data-a="GO:0070062" data-r="PMID:23533145" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HGD detected by bulk proteomics of prostatic-secretion-derived urinary exosomes. HGD is a cytosolic enzyme; this reflects co-purification in an exosome preparation rather than a functional secretory/exosomal localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> High-throughput proteomic detection in exosome fractions is common for abundant cytosolic proteins and does not establish a functional site of action. Retained as a recorded observation but explicitly non-core; the functional localization is cytosol.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link">
+                                        PMID:23533145
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">exosomes isolated from expressed prostatic</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070062" target="_blank" class="term-link">
+                                    GO:0070062
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular exosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19056867
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Large-scale proteomics and phosphoproteomics of urinary exos...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q93099" data-a="GO:0070062" data-r="PMID:19056867" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Second bulk-proteomic detection of HGD in urinary exosomes; same interpretation as PMID:23533145 (co-purification of a cytosolic enzyme).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Bystander detection in an exosome proteome, not a functional localization; retained as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link">
+                                        PMID:19056867
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">urinary exosomes</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-71164
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q93099" data-a="GO:0005829" data-r="Reactome:R-HSA-71164" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core cellular component. HGD is a cytosolic enzyme that carries out the homogentisate dioxygenation step in the cytoplasm.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the Reactome reaction record and the soluble cytosolic nature of the enzyme; this is the functionally relevant localization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-71164
+
+                                </span>
+
+                                <div class="support-text">Cytosolic homogentisate 1,2-dioxygenase (HGD) catalyzes the reaction of homogentisate and</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004411" target="_blank" class="term-link">
+                                    GO:0004411
+                                </a>
+                            </span>
+                            <span class="term-label">homogentisate 1,2-dioxygenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8782815" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8782815
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The molecular basis of alkaptonuria.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q93099" data-a="GO:0004411" data-r="PMID:8782815" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author-statement (TAS) support for the core dioxygenase activity from the gene-defining alkaptonuria study.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Duplicate of the core MF with independent (TAS) evidence; fully consistent with all other lines of evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8782815" target="_blank" class="term-link">
+                                        PMID:8782815
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">resulting from loss of homogentisate 1,2 dioxygenase (HGO) activity</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006559" target="_blank" class="term-link">
+                                    GO:0006559
+                                </a>
+                            </span>
+                            <span class="term-label">L-phenylalanine catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8782815" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8782815
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The molecular basis of alkaptonuria.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q93099" data-a="GO:0006559" data-r="PMID:8782815" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author-statement support for HGD&#39;s role in phenylalanine catabolism (homogentisate is a shared Phe/Tyr catabolic intermediate).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct pathway-level involvement; consistent with the IBA/IEA phenylalanine catabolic-process annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8782815" target="_blank" class="term-link">
+                                        PMID:8782815
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">an intermediary product of the catabolism of tyrosine and phenylalanine</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006572" target="_blank" class="term-link">
+                                    GO:0006572
+                                </a>
+                            </span>
+                            <span class="term-label">L-tyrosine catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8782815" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8782815
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The molecular basis of alkaptonuria.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q93099" data-a="GO:0006572" data-r="PMID:8782815" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author-statement support for HGD&#39;s role in tyrosine catabolism; duplicate of the IMP tyrosine-catabolic-process annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The gene-defining study places HGD in tyrosine catabolism (homogentisate is a tyrosine-degradation intermediate); consistent core biological process.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8782815" target="_blank" class="term-link">
+                                        PMID:8782815
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">an intermediary product of the catabolism of tyrosine and phenylalanine</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Iron(II)-dependent homogentisate 1,2-dioxygenase catalyzing the ring-opening third step of tyrosine (and phenylalanine) catabolism in the cytosol: homogentisate + O2 -&gt; 4-maleylacetoacetate.</h3>
+                <span class="vote-buttons" data-g="Q93099" data-a="FUNCTION: Iron(II)-dependent homogentisate 1,2-dioxygenase c..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004411" target="_blank" class="term-link">
+                            homogentisate 1,2-dioxygenase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006572" target="_blank" class="term-link">
+                                L-tyrosine catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8782815" target="_blank" class="term-link">
+                                PMID:8782815
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">resulting from loss of homogentisate 1,2 dioxygenase (HGO) activity</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36555443" target="_blank" class="term-link">
+                                PMID:36555443
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">The aromatic ring is opened and oxidized by the hexameric homogentisate-1,2-dioxygenase (HGD)</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8782815" target="_blank" class="term-link">
+                            PMID:8782815
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The molecular basis of alkaptonuria.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">HGD (originally HGO) is the alkaptonuria gene; alkaptonuria results from loss of homogentisate 1,2-dioxygenase activity, causing accumulation of homogentisic acid, an intermediary product of tyrosine and phenylalanine catabolism.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/36555443" target="_blank" class="term-link">
+                            PMID:36555443
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Untargeted NMR Metabolomics Reveals Alternative Biomarkers and Pathways in Alkaptonuria.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Homogentisic acid, the substrate of HGD, is an intermediate of phenylalanine and tyrosine degradation; the aromatic ring is opened and oxidized by the hexameric homogentisate 1,2-dioxygenase, and reduced HGD catalytic activity causes HGA accumulation in alkaptonuria.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10876237" target="_blank" class="term-link">
+                            PMID:10876237
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Crystal structure of human homogentisate dioxygenase.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">X-ray structure of human HGD reveals a homohexamer (dimer of trimers) with one catalytic Fe ion per subunit at the active site.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21044950" target="_blank" class="term-link">
+                            PMID:21044950
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Genome-wide YFP fluorescence complementation screen identifies new regulators for telomere signaling in human cells.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">High-throughput protein-complementation screen for telomere-signaling regulators reported an HGD-TERF1 interaction; a bulk-screen hit rather than a functional partner of HGD&#39;s catalytic role.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link">
+                            PMID:25416956
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A proteome-scale map of the human interactome network.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Systematic binary protein-protein interaction mapping recorded an HGD self (identical-protein) interaction, consistent with its known homo-oligomer.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">HuRI binary interactome map recorded HGD self-interaction (identical protein binding) and an HGD-NTAQ1 interaction.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link">
+                            PMID:23533145
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">In-depth proteomic analyses of exosomes isolated from expressed prostatic secretions in urine.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">HGD peptides were detected by bulk proteomics of prostatic-secretion-derived urinary exosomes; a mass-spectrometry co-purification, not evidence of functional exosomal localization.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link">
+                            PMID:19056867
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Large-scale proteomics and phosphoproteomics of urinary exosomes.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">HGD was identified among proteins in a large-scale proteomic survey of urinary exosomes.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-71164
+
+                    </span>
+                </div>
+
+                <div class="reference-title">HGD dioxygenates homogentisate</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Cytosolic homogentisate 1,2-dioxygenase catalyzes the reaction of homogentisate and molecular oxygen to form 4-maleylacetoacetate; HGD is a homohexamer with one Fe(2+) ion per monomer as catalytic cofactor.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(HGD-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q93099" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Comprehensive Research Report: HGD (Homogentisate 1,2-Dioxygenase) — Human Gene (UniProt Q93099)</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">34 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-05T18:09:12.568474</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="HGD-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="HGD-deep-research-falcon_artifacts/artifact-01.md" class="term-link">Edison artifact artifact-01</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="comprehensive-research-report-hgd-homogentisate-12-dioxygenase-human-gene-uniprot-q93099">Comprehensive Research Report: HGD (Homogentisate 1,2-Dioxygenase) — Human Gene (UniProt Q93099)</h1>
+<h2 id="1-gene-and-protein-identity">1. Gene and Protein Identity</h2>
+<p>The human <em>HGD</em> gene (synonym: <em>HGO</em>) encodes homogentisate 1,2-dioxygenase (EC 1.13.11.5), also known as homogentisic acid oxidase or homogentisicase. The gene is located on chromosome 3q21-q23 and produces a 445-amino acid protein with a molecular weight of approximately 49,973 Da (vilboux2009mutationspectrumof pages 1-2, vijukumar2025acenturyof pages 13-17). HGD belongs to the homogentisate dioxygenase protein family and contains several characteristic domains including HgmA_C, HgmA_N, Homogentis_dOase, and the RmlC-like jellyroll/cupin superfold (OpenTargets Search: -HGD). The key properties of HGD are summarized below:</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Value</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene name</td>
+<td><strong>HGD</strong> (synonym: <strong>HGO</strong>)</td>
+<td>(OpenTargets Search: -HGD)</td>
+</tr>
+<tr>
+<td>UniProt ID</td>
+<td><strong>Q93099</strong></td>
+<td>(OpenTargets Search: -HGD)</td>
+</tr>
+<tr>
+<td>Recommended protein name</td>
+<td><strong>Homogentisate 1,2-dioxygenase</strong></td>
+<td>(OpenTargets Search: -HGD)</td>
+</tr>
+<tr>
+<td>EC number</td>
+<td><strong>1.13.11.5</strong></td>
+<td>(OpenTargets Search: -HGD)</td>
+</tr>
+<tr>
+<td>Protein family</td>
+<td><strong>Homogentisate dioxygenase family</strong></td>
+<td>(OpenTargets Search: -HGD)</td>
+</tr>
+<tr>
+<td>Key domains</td>
+<td><strong>HgmA_C, HgmA_N, Homogentis_dOase, RmlC-like_jellyroll, RmlC_Cupin_sf</strong></td>
+<td>(OpenTargets Search: -HGD)</td>
+</tr>
+<tr>
+<td>Amino-acid length</td>
+<td><strong>445 aa</strong></td>
+<td>(OpenTargets Search: -HGD, vilboux2009mutationspectrumof pages 1-2)</td>
+</tr>
+<tr>
+<td>Molecular weight</td>
+<td><strong>49,973 Da</strong></td>
+<td>(vilboux2009mutationspectrumof pages 1-2)</td>
+</tr>
+<tr>
+<td>Chromosomal location</td>
+<td><strong>3q21-q23</strong></td>
+<td>(vijukumar2025acenturyof pages 13-17, vijukumar2025acenturyof pages 10-13)</td>
+</tr>
+<tr>
+<td>Quaternary structure</td>
+<td><strong>Functional hexamer</strong>, organized as a <strong>dimer of trimers</strong></td>
+<td>(vilboux2009mutationspectrumof pages 1-2)</td>
+</tr>
+<tr>
+<td>Cofactor</td>
+<td><strong>Fe(II)</strong> non-heme iron</td>
+<td>(traore2022chargemaintenanceduring pages 3-5, traore2022chargemaintenanceduring pages 26-38)</td>
+</tr>
+<tr>
+<td>Active-site metal ligands</td>
+<td><strong>His335, Glu341, His371</strong></td>
+<td>(vilboux2009mutationspectrumof pages 1-2)</td>
+</tr>
+<tr>
+<td>Primary substrate</td>
+<td><strong>Homogentisate (homogentisic acid)</strong></td>
+<td>(traore2022chargemaintenanceduring pages 3-5, milella2024alkaptonuriafrommolecular pages 2-4)</td>
+</tr>
+<tr>
+<td>Reaction catalyzed</td>
+<td>Oxidative ring cleavage of homogentisate with incorporation of molecular oxygen</td>
+<td>(traore2022chargemaintenanceduring pages 3-5, traore2022chargemaintenanceduring pages 26-38)</td>
+</tr>
+<tr>
+<td>Product</td>
+<td><strong>Maleylacetoacetate</strong> (also written <strong>4-maleylacetoacetate</strong>)</td>
+<td>(traore2022chargemaintenanceduring pages 3-5, milella2024alkaptonuriafrommolecular pages 2-4, holme2013tyrosinemetabolism pages 2-4)</td>
+</tr>
+<tr>
+<td>Pathway role</td>
+<td>Enzyme in <strong>phenylalanine/tyrosine catabolism</strong>; acts downstream of <strong>4-hydroxyphenylpyruvate dioxygenase (HPPD)</strong> and upstream of maleylacetoacetate isomerization</td>
+<td>(milella2024alkaptonuriafrommolecular pages 2-4, holme2013tyrosinemetabolism pages 2-4, holme2013tyrosinemetabolism pages 1-2)</td>
+</tr>
+<tr>
+<td>Primary tissue expression</td>
+<td>Mainly <strong>liver</strong> and <strong>kidney</strong></td>
+<td>(milella2024alkaptonuriafrommolecular pages 2-4, zatkova2020alkaptonuriacurrentperspectives pages 4-6)</td>
+</tr>
+<tr>
+<td>Additional reported tissue expression</td>
+<td>Prostate, small intestine, colon, chondrocytes, synoviocytes, osteoblasts, brain</td>
+<td>(zatkova2020alkaptonuriacurrentperspectives pages 4-6)</td>
+</tr>
+<tr>
+<td>Subcellular localization</td>
+<td><strong>Cytoplasm / cytosol</strong></td>
+<td>(milella2024alkaptonuriafrommolecular pages 2-4, zatkova2020alkaptonuriacurrentperspectives pages 4-6)</td>
+</tr>
+<tr>
+<td>Disease association</td>
+<td><strong>Alkaptonuria (AKU)</strong> caused by HGD deficiency or pathogenic variants</td>
+<td>(vilboux2009mutationspectrumof pages 1-2, milella2024alkaptonuriafrommolecular pages 2-4, zatkova2020alkaptonuriacurrentperspectives pages 4-6)</td>
+</tr>
+<tr>
+<td>Mutation burden in disease</td>
+<td><strong>212+ variants</strong> reported by 2020; predominantly missense</td>
+<td>(milella2024alkaptonuriafrommolecular pages 2-4, zatkova2020alkaptonuriacurrentperspectives pages 4-6)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the core molecular, structural, biochemical, localization, and disease-related properties of human HGD/Homogentisate 1,2-dioxygenase. It is useful as a compact reference for the gene’s canonical function and medically relevant annotations.</em></p>
+<h2 id="2-enzymatic-reaction-and-catalytic-mechanism">2. Enzymatic Reaction and Catalytic Mechanism</h2>
+<h3 id="21-reaction-catalyzed">2.1 Reaction Catalyzed</h3>
+<p>HGD catalyzes the oxidative ring cleavage of homogentisate (2,5-dihydroxyphenylacetate, also called homogentisic acid) with the incorporation of molecular oxygen (O₂) to produce maleylacetoacetate (4-maleylacetoacetate) (traore2022chargemaintenanceduring pages 3-5, milella2024alkaptonuriafrommolecular pages 2-4). This reaction represents an essential step in the catabolism of the aromatic amino acids phenylalanine and tyrosine, converting an aromatic substrate into a linear dicarboxylic acid that can be further metabolized to fumarate and acetoacetate.</p>
+<h3 id="22-iron-cofactor-and-active-site">2.2 Iron Cofactor and Active Site</h3>
+<p>HGD is a nonheme Fe(II)-dependent dioxygenase. The active site iron is coordinated by two histidine residues (His335 and His371) and one glutamate residue (Glu341), together with a water molecule, forming a distorted square pyramidal coordination geometry (traore2022chargemaintenanceduring pages 3-5, vilboux2009mutationspectrumof pages 1-2). This iron coordination motif is critical for the enzyme's ability to activate molecular oxygen.</p>
+<h3 id="23-catalytic-mechanism">2.3 Catalytic Mechanism</h3>
+<p>Detailed mechanistic studies of HGD and related nonheme iron dioxygenases have elucidated the catalytic cycle. The substrate homogentisate binds to the Fe(II) center in a monodentate monoanionic fashion, with the ionized hydroxyl group interacting with the iron ion (traore2022chargemaintenanceduring pages 3-5, traore2022chargemaintenanceduring pages 5-6). The catalytic mechanism then proceeds through: (i) binding and activation of O₂ via electron transfer from Fe(II) to form an Fe(III)-superoxide intermediate; (ii) electron transfer from the aromatic substrate to the Fe(III) center, generating an Fe(II) species and a substrate semiquinone radical; (iii) formation of an alkylperoxo intermediate; and (iv) sequential oxygen atom insertion into the aromatic ring to yield the ring-opened product maleylacetoacetate (traore2022chargemaintenanceduring pages 3-5, traore2022chargemaintenanceduring pages 5-6). Charge maintenance at the iron center throughout the catalytic cycle — tuned by both the protein-derived carboxylate ligand and the substrate — is crucial for promoting each catalytic step (traore2022chargemaintenanceduring pages 26-38, traore2022chargemaintenanceduring pages 5-6).</p>
+<h3 id="24-quaternary-structure">2.4 Quaternary Structure</h3>
+<p>The crystal structure of human HGD reveals that the functional enzyme is a hexamer organized as a dimer of trimers (vilboux2009mutationspectrumof pages 1-2). Each protomer contains an active site with the Fe(II) cofactor. The hexameric assembly is essential for full catalytic activity, and disease-causing mutations can disrupt protomer interactions, folding, stability, or substrate binding (zatkova2020alkaptonuriacurrentperspectives pages 4-6).</p>
+<h2 id="3-biochemical-pathway-context">3. Biochemical Pathway Context</h2>
+<p>HGD occupies a central position in the phenylalanine/tyrosine catabolic pathway. The complete degradation pathway consists of six enzymatic steps, with HGD catalyzing the fourth step:</p>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Enzyme name</th>
+<th>EC number</th>
+<th>Substrate</th>
+<th>Product</th>
+<th>Associated disease when deficient</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Phenylalanine hydroxylase (PAH)</td>
+<td>EC 1.14.16.1</td>
+<td>L-Phenylalanine</td>
+<td>L-Tyrosine</td>
+<td>Phenylketonuria (PKU)</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Tyrosine aminotransferase (TAT)</td>
+<td>EC 2.6.1.5</td>
+<td>L-Tyrosine</td>
+<td>4-Hydroxyphenylpyruvate</td>
+<td>Tyrosinemia type II</td>
+</tr>
+<tr>
+<td>3</td>
+<td>4-Hydroxyphenylpyruvate dioxygenase (HPPD/HPD)</td>
+<td>EC 1.13.11.27</td>
+<td>4-Hydroxyphenylpyruvate</td>
+<td>Homogentisate</td>
+<td>Hawkinsinuria / Tyrosinemia type III; inhibited pharmacologically by nitisinone (NTBC) (milella2024alkaptonuriafrommolecular pages 2-4, holme2013tyrosinemetabolism pages 2-4, holme2013tyrosinemetabolism pages 1-2)</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Homogentisate 1,2-dioxygenase (HGD)</td>
+<td>EC 1.13.11.5</td>
+<td>Homogentisate</td>
+<td>Maleylacetoacetate</td>
+<td>Alkaptonuria (traore2022chargemaintenanceduring pages 3-5, milella2024alkaptonuriafrommolecular pages 2-4, vilboux2009mutationspectrumof pages 1-2)</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Maleylacetoacetate isomerase (MAAI/GSTZ1)</td>
+<td>EC 5.2.1.2</td>
+<td>Maleylacetoacetate</td>
+<td>Fumarylacetoacetate</td>
+<td>Maleylacetoacetate isomerase deficiency (rare); pathway context in tyrosine catabolism (milella2024alkaptonuriafrommolecular pages 2-4)</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Fumarylacetoacetate hydrolase (FAH)</td>
+<td>EC 3.7.1.2</td>
+<td>Fumarylacetoacetate</td>
+<td>Fumarate + Acetoacetate</td>
+<td>Tyrosinemia type I (milella2024alkaptonuriafrommolecular pages 2-4)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the canonical tyrosine degradation pathway, highlighting where HGD acts and where nitisinone blocks the upstream HPPD step. It is useful for placing HGD within its metabolic context and linking each step to the major inborn error associated with enzyme deficiency.</em></p>
+<p>The upstream enzyme 4-hydroxyphenylpyruvate dioxygenase (HPPD; EC 1.13.11.27) converts 4-hydroxyphenylpyruvate to homogentisate, which serves as the direct substrate for HGD (milella2024alkaptonuriafrommolecular pages 2-4, holme2013tyrosinemetabolism pages 2-4). The product maleylacetoacetate is subsequently isomerized by maleylacetoacetate isomerase (MAAI/GSTZ1) to fumarylacetoacetate, which is then hydrolyzed by fumarylacetoacetate hydrolase (FAH) to fumarate and acetoacetate — metabolites that feed into the citric acid cycle and ketone body metabolism, respectively (milella2024alkaptonuriafrommolecular pages 2-4, holme2013tyrosinemetabolism pages 2-4, holme2013tyrosinemetabolism pages 1-2). Inherited defects have been identified at four of the five enzymatic steps of this pathway, and each step is associated with a distinct inborn error of metabolism (holme2013tyrosinemetabolism pages 1-2). The therapeutic agent nitisinone (NTBC), used to treat both tyrosinemia type I and alkaptonuria, acts by inhibiting the upstream enzyme HPPD, thereby blocking homogentisate production (milella2024alkaptonuriafrommolecular pages 2-4, holme2013tyrosinemetabolism pages 1-2).</p>
+<h2 id="4-tissue-distribution-and-subcellular-localization">4. Tissue Distribution and Subcellular Localization</h2>
+<h3 id="41-tissue-expression">4.1 Tissue Expression</h3>
+<p>HGD is predominantly expressed in the liver and kidneys, with mouse model studies confirming expression specifically in the kidney cortex (milella2024alkaptonuriafrommolecular pages 2-4, zatkova2020alkaptonuriacurrentperspectives pages 4-6). Beyond these primary sites, HGD expression has also been detected in prostate, small intestine, colon, chondrocytes, synoviocytes, osteoblasts, and brain (zatkova2020alkaptonuriacurrentperspectives pages 4-6). The liver and kidney represent the major sites of tyrosine catabolism, and accordingly harbor the highest levels of HGD activity.</p>
+<h3 id="42-subcellular-localization">4.2 Subcellular Localization</h3>
+<p>HGD functions as a cytosolic enzyme. The tyrosine catabolism pathway operates in the cytoplasm, and HGD, like the other enzymes in this catabolic sequence, is localized to the cytoplasmic compartment (milella2024alkaptonuriafrommolecular pages 2-4, zatkova2020alkaptonuriacurrentperspectives pages 4-6).</p>
+<h2 id="5-disease-association-alkaptonuria">5. Disease Association: Alkaptonuria</h2>
+<h3 id="51-pathophysiology">5.1 Pathophysiology</h3>
+<p>Deficiency of HGD activity causes alkaptonuria (AKU; OMIM 203500), an autosomal recessive inborn error of metabolism first described in 1584 and later used by Sir Archibald Garrod in 1902 to illustrate the concept of Mendelian inheritance in humans (vilboux2009mutationspectrumof pages 1-2, vilboux2009mutationspectrumof pages 7-8). The global incidence is estimated at 1 in 250,000 to 1,000,000 live births (vilboux2009mutationspectrumof pages 1-2). When HGD activity is absent or severely deficient (requiring loss of &gt;99% of enzyme activity for clinical manifestation), homogentisic acid accumulates in body fluids and tissues (vilboux2009mutationspectrumof pages 1-2, vilboux2009mutationspectrumof pages 7-8).</p>
+<h3 id="52-clinical-manifestations">5.2 Clinical Manifestations</h3>
+<p>The earliest and most characteristic sign of AKU is darkened urine, resulting from HGA oxidation, observable from birth (abdelkhalek2023homogentisate12dioxygenase(hgd) pages 3-5, vilboux2009mutationspectrumof pages 2-3). The accumulated HGA undergoes auto-oxidation via semiquinone radical intermediates, producing a melanin-like ochronotic pigment through oxidative coupling mechanisms involving phenolic ether and biphenyl linkages (grasso2025ochronoticdepositionin pages 5-7, grasso2025ochronoticdepositionin pages 1-2). This pigment deposits in connective tissues, particularly cartilage, tendons, and sclera — a process known as ochronosis (milella2024alkaptonuriafrommolecular pages 2-4, milella2024alkaptonuriafrommolecular pages 4-6).</p>
+<p>Progressive clinical complications include: (i) ochronotic arthropathy with cartilage degradation, joint pain, and early-onset osteoarthritis, often requiring surgical joint replacement of knees, hips, and shoulders; (ii) spinal degeneration with intervertebral disc calcification; (iii) cardiovascular involvement, notably aortic valve thickening and calcification, with 100% of patients over 65 years showing aortic stenosis; and (iv) renal and prostatic stones (milella2024alkaptonuriafrommolecular pages 2-4, vilboux2009mutationspectrumof pages 2-3).</p>
+<h3 id="53-mutational-landscape">5.3 Mutational Landscape</h3>
+<p>As of recent analyses, more than 200 different disease-associated HGD variants have been reported in the HGD Mutation Database from approximately 530+ AKU patients worldwide (milella2024alkaptonuriafrommolecular pages 2-4, zatkova2020alkaptonuriacurrentperspectives pages 4-6). These include approximately 65% missense variants, 14% splicing variants, 11% frameshift variants, 5% genomic deletions, and 4% nonsense variants. Mutations are distributed across all 14 exons but cluster preferentially in exons 3, 6, 8, and 13 (vilboux2009mutationspectrumof pages 1-2, zatkova2020alkaptonuriacurrentperspectives pages 4-6). Four highly recurrent mutations include p.M368V, p.G161R, c.174delA, and p.C120F (vilboux2009mutationspectrumof pages 7-8). Despite this extensive mutational burden, clear genotype-phenotype correlations have not been established (milella2024alkaptonuriafrommolecular pages 2-4). Recent work has continued to expand this catalogue, including a 2023 study identifying the first HGD variants in Egyptian patients, including a novel variant c.1079G&gt;T (p.Gly360Val) (abdelkhalek2023homogentisate12dioxygenase(hgd) pages 3-5).</p>
+<h2 id="6-therapeutic-developments">6. Therapeutic Developments</h2>
+<h3 id="61-nitisinone-ntbc-and-the-sonia-2-trial">6.1 Nitisinone (NTBC) and the SONIA 2 Trial</h3>
+<p>The landmark SONIA 2 (Suitability of Nitisinone in Alkaptonuria 2) clinical trial was an international, multicenter, randomized, evaluator-blinded, no-treatment controlled trial enrolling 138 AKU patients aged ≥25 years, with a 12-month evaluation period followed by an additional 36-month treatment period (bernardini2025acomprehensivein pages 18-23, vijukumar2025acenturyof pages 6-10). The primary endpoint demonstrated that nitisinone reduced urinary homogentisic acid excretion by 99.7% compared to controls (85.7 μmol/L in the nitisinone group versus 26,027.9 μmol/L in untreated controls at 12 months) (vijukumar2025acenturyof pages 6-10, bernardini2025acomprehensivein pages 82-84). Over 48 months, nitisinone significantly slowed disease progression as measured by the AKU Severity Score Index (AKUSSI) (vijukumar2025acenturyof pages 6-10, vijukumar2025acenturyof pages 13-17). Based on these results, the European Medicines Agency (EMA) approved nitisinone (Orfadin) in September 2020 as the first disease-modifying treatment for adult patients with alkaptonuria (vijukumar2025acenturyof pages 13-17). Side effects include iatrogenic hypertyrosinemia with potential corneal keratopathy, managed through dietary protein restriction and monitoring (zatkova2020alkaptonuriacurrentperspectives pages 3-4). Research into safer second-generation HPPD inhibitors is ongoing (bernardini2025acomprehensivein pages 18-23).</p>
+<h3 id="62-emerging-therapies">6.2 Emerging Therapies</h3>
+<p>Enzyme replacement and gene therapy are being explored as future approaches for AKU, with a suitable mouse model available for preclinical testing (zatkova2020alkaptonuriacurrentperspectives pages 3-4). Studies on functional characterization of HGD variants using minigene splicing assays have been conducted to improve variant classification and support diagnosis, and to lay the foundation for future therapeutic strategies targeting splicing defects in AKU.</p>
+<h2 id="7-non-canonical-moonlighting-function-of-hgd-in-cancer">7. Non-Canonical ("Moonlighting") Function of HGD in Cancer</h2>
+<p>A recent and notable discovery has identified a moonlighting function for HGD beyond its canonical role in tyrosine catabolism. In small cell lung cancer (SCLC), HGD is highly upregulated under chemotherapeutic stress and catalyzes the oxidation of tryptophan to N-formylkynurenine (FK), bypassing the canonical tryptophan-degrading enzymes IDO1, IDO2, and TDO2, which are negligibly expressed in SCLC cells (shen2026hgdderivednformylkynureninepromotes pages 1-7, shen2026hgdderivednformylkynureninepromotes pages 20-24, shen2026hgdderivednformylkynureninepromotes pages 11-16). This function is strictly dependent on HGD's dioxygenase catalytic activity, as demonstrated by the failure of catalytically inactive HGD mutants (R225H and I216T) to produce FK (shen2026hgdderivednformylkynureninepromotes pages 11-16). The HGD-generated FK directly binds to the ER-shaping protein ATL2 (Atlastin-2), triggering its oligomerization and subsequent endoplasmic reticulum membrane remodeling, which maintains ER homeostasis and promotes chemoresistance via enhanced autophagosome formation (shen2026hgdderivednformylkynureninepromotes pages 1-7, shen2026hgdderivednformylkynureninepromotes pages 16-20). A selective HGD inhibitor (iTrp-HCl) was identified that specifically blocks HGD-driven FK accumulation without affecting canonical IDO/TDO-mediated tryptophan metabolism in normal tissues, representing a potential therapeutic strategy to overcome SCLC chemoresistance (shen2026hgdderivednformylkynureninepromotes pages 20-24).</p>
+<h2 id="8-ochronotic-pigment-formation-molecular-insights">8. Ochronotic Pigment Formation: Molecular Insights</h2>
+<p>Recent structural and biophysical studies have advanced understanding of ochronotic pigment formation. HGA polymerizes slowly at physiological pH (91% signal loss over 10 weeks at pH 7.4, 35°C) but rapidly under alkaline conditions (grasso2025ochronoticdepositionin pages 2-5). The polymerization process involves semiquinone radical intermediates, as confirmed by EPR spectroscopy, consistent with an oxidative coupling mechanism (grasso2025ochronoticdepositionin pages 5-7). The resulting pigments are polydisperse polymers (11–50 kDa) with strong negative charges, containing phenolic ether and biphenyl linkages as revealed by solid-state NMR (grasso2025ochronoticdepositionin pages 1-2). The diphenol ring of HGA is essential for polymerization, as its removal completely abolishes the reaction, while modifications to the –CH₂COOH group do not affect reactivity (grasso2025ochronoticdepositionin pages 5-7). In connective tissues, loss of protective glycosaminoglycans (GAGs) unmasks collagen-binding sites for HGA and its byproducts, facilitating irreversible pigment accumulation that contributes to cartilage degradation and premature osteoarthropathy (milella2024alkaptonuriafrommolecular pages 4-6, vijukumar2025acenturyof pages 10-13).</p>
+<h2 id="9-summary">9. Summary</h2>
+<p>Human HGD encodes a cytosolic, nonheme Fe(II)-dependent dioxygenase that catalyzes the oxidative ring cleavage of homogentisate to maleylacetoacetate in the phenylalanine/tyrosine catabolic pathway. The enzyme assembles as a hexamer (dimer of trimers) with iron coordinated by His335, Glu341, and His371 at each active site. HGD is predominantly expressed in liver and kidney and carries out its function in the cytoplasm. Deficiency of HGD causes alkaptonuria, a rare autosomal recessive disorder with over 200 known pathogenic variants, characterized by ochronosis, progressive arthropathy, and cardiovascular complications. The SONIA 2 trial demonstrated that nitisinone, an inhibitor of the upstream enzyme HPPD, reduces urinary HGA by 99.7% and significantly slows disease progression, leading to EMA approval in 2020. Emerging research has revealed a non-canonical moonlighting function for HGD in oxidizing tryptophan to N-formylkynurenine in SCLC, promoting chemotherapy resistance via ATL2-mediated ER remodeling — a finding that positions HGD as a potential therapeutic target in oncology.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(vilboux2009mutationspectrumof pages 1-2): Thierry Vilboux, Michael Kayser, Wendy Introne, Pim Suwannarat, Isa Bernardini, Roxanne Fischer, Kevin O'Brien, Robert Kleta, Marjan Huizing, and William A. Gahl. Mutation spectrum of homogentisic acid oxidase (hgd) in alkaptonuria. Human Mutation, 30:1611-1619, Dec 2009. URL: https://doi.org/10.1002/humu.21120, doi:10.1002/humu.21120. This article has 120 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(vijukumar2025acenturyof pages 13-17): Abhishek Vijukumar, Kamaljeet ., Harkomal Singh, Tarun Kalra, and Bintoo Sharma. A century of alkaptonuria: evolving insights into a rare metabolic disorder. GenoMed Connect, Dec 2025. URL: https://doi.org/10.69709/genomc.2025.122212, doi:10.69709/genomc.2025.122212. This article has 0 citations.</p>
+</li>
+<li>
+<p>(OpenTargets Search: -HGD): Open Targets Query (-HGD, 11 results). Buniello, A. et al. (2025). Open Targets Platform: facilitating therapeutic hypotheses building in drug discovery. Nucleic Acids Research.</p>
+</li>
+<li>
+<p>(vijukumar2025acenturyof pages 10-13): Abhishek Vijukumar, Kamaljeet ., Harkomal Singh, Tarun Kalra, and Bintoo Sharma. A century of alkaptonuria: evolving insights into a rare metabolic disorder. GenoMed Connect, Dec 2025. URL: https://doi.org/10.69709/genomc.2025.122212, doi:10.69709/genomc.2025.122212. This article has 0 citations.</p>
+</li>
+<li>
+<p>(traore2022chargemaintenanceduring pages 3-5): Ephrahime S. Traore and Aimin Liu. Charge maintenance during catalysis in nonheme iron oxygenases. ACS catalysis, 12 10:6191-6208, May 2022. URL: https://doi.org/10.1021/acscatal.1c04770, doi:10.1021/acscatal.1c04770. This article has 29 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(traore2022chargemaintenanceduring pages 26-38): Ephrahime S. Traore and Aimin Liu. Charge maintenance during catalysis in nonheme iron oxygenases. ACS catalysis, 12 10:6191-6208, May 2022. URL: https://doi.org/10.1021/acscatal.1c04770, doi:10.1021/acscatal.1c04770. This article has 29 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(milella2024alkaptonuriafrommolecular pages 2-4): Maria Serena Milella, Michela Geminiani, Alfonso Trezza, Anna Visibelli, Daniela Braconi, and Annalisa Santucci. Alkaptonuria: from molecular insights to a dedicated digital platform. Cells, 13:1072, Jun 2024. URL: https://doi.org/10.3390/cells13121072, doi:10.3390/cells13121072. This article has 13 citations.</p>
+</li>
+<li>
+<p>(holme2013tyrosinemetabolism pages 2-4): Elisabeth Holme and Grant A. Mitchell. Tyrosine metabolism. Physician's Guide to the Diagnosis, Treatment, and Follow-Up of Inherited Metabolic Diseases, pages 23-31, Jan 2013. URL: https://doi.org/10.1007/978-3-642-40337-8_2, doi:10.1007/978-3-642-40337-8_2. This article has 18 citations.</p>
+</li>
+<li>
+<p>(holme2013tyrosinemetabolism pages 1-2): Elisabeth Holme and Grant A. Mitchell. Tyrosine metabolism. Physician's Guide to the Diagnosis, Treatment, and Follow-Up of Inherited Metabolic Diseases, pages 23-31, Jan 2013. URL: https://doi.org/10.1007/978-3-642-40337-8_2, doi:10.1007/978-3-642-40337-8_2. This article has 18 citations.</p>
+</li>
+<li>
+<p>(zatkova2020alkaptonuriacurrentperspectives pages 4-6): Andrea Zatkova, Lakshminarayan Ranganath, and Ludevit Kadasi. Alkaptonuria: current perspectives. The Application of Clinical Genetics, 13:37-47, Jan 2020. URL: https://doi.org/10.2147/tacg.s186773, doi:10.2147/tacg.s186773. This article has 93 citations.</p>
+</li>
+<li>
+<p>(traore2022chargemaintenanceduring pages 5-6): Ephrahime S. Traore and Aimin Liu. Charge maintenance during catalysis in nonheme iron oxygenases. ACS catalysis, 12 10:6191-6208, May 2022. URL: https://doi.org/10.1021/acscatal.1c04770, doi:10.1021/acscatal.1c04770. This article has 29 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(vilboux2009mutationspectrumof pages 7-8): Thierry Vilboux, Michael Kayser, Wendy Introne, Pim Suwannarat, Isa Bernardini, Roxanne Fischer, Kevin O'Brien, Robert Kleta, Marjan Huizing, and William A. Gahl. Mutation spectrum of homogentisic acid oxidase (hgd) in alkaptonuria. Human Mutation, 30:1611-1619, Dec 2009. URL: https://doi.org/10.1002/humu.21120, doi:10.1002/humu.21120. This article has 120 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(abdelkhalek2023homogentisate12dioxygenase(hgd) pages 3-5): Zeinab S. Abdelkhalek, Iman G. Mahmoud, Heba Omair, Mohamed Abdulhay, and Mohamed A. Elmonem. Homogentisate 1,2-dioxygenase (hgd) gene variants in young egyptian patients with alkaptonuria. Scientific Reports, Sep 2023. URL: https://doi.org/10.1038/s41598-023-41200-7, doi:10.1038/s41598-023-41200-7. This article has 7 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(vilboux2009mutationspectrumof pages 2-3): Thierry Vilboux, Michael Kayser, Wendy Introne, Pim Suwannarat, Isa Bernardini, Roxanne Fischer, Kevin O'Brien, Robert Kleta, Marjan Huizing, and William A. Gahl. Mutation spectrum of homogentisic acid oxidase (hgd) in alkaptonuria. Human Mutation, 30:1611-1619, Dec 2009. URL: https://doi.org/10.1002/humu.21120, doi:10.1002/humu.21120. This article has 120 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(grasso2025ochronoticdepositionin pages 5-7): Daniela Grasso, Valentina Balloni, Maria Camilla Baratto, Adele Mucci, Annalisa Santucci, and Andrea Bernini. Ochronotic deposition in alkaptonuria: semiquinone-mediated oxidative coupling and metabolic drivers of homogentisic acid accumulation. International Journal of Molecular Sciences, 26:9674, Oct 2025. URL: https://doi.org/10.3390/ijms26199674, doi:10.3390/ijms26199674. This article has 0 citations.</p>
+</li>
+<li>
+<p>(grasso2025ochronoticdepositionin pages 1-2): Daniela Grasso, Valentina Balloni, Maria Camilla Baratto, Adele Mucci, Annalisa Santucci, and Andrea Bernini. Ochronotic deposition in alkaptonuria: semiquinone-mediated oxidative coupling and metabolic drivers of homogentisic acid accumulation. International Journal of Molecular Sciences, 26:9674, Oct 2025. URL: https://doi.org/10.3390/ijms26199674, doi:10.3390/ijms26199674. This article has 0 citations.</p>
+</li>
+<li>
+<p>(milella2024alkaptonuriafrommolecular pages 4-6): Maria Serena Milella, Michela Geminiani, Alfonso Trezza, Anna Visibelli, Daniela Braconi, and Annalisa Santucci. Alkaptonuria: from molecular insights to a dedicated digital platform. Cells, 13:1072, Jun 2024. URL: https://doi.org/10.3390/cells13121072, doi:10.3390/cells13121072. This article has 13 citations.</p>
+</li>
+<li>
+<p>(bernardini2025acomprehensivein pages 18-23): Giulia Bernardini, Alfonso Trezza, Elena Petricci, Giulia Romagnoli, Demetra Zambardino, Fabrizio Manetti, Daniela Braconi, Michela Geminiani, and Annalisa Santucci. A comprehensive in vitro and in silico approach for targeting 4-hydroxyphenyl pyruvate dioxygenase: towards new therapeutics for alkaptonuria. International Journal of Molecular Sciences, 26:3181, Mar 2025. URL: https://doi.org/10.3390/ijms26073181, doi:10.3390/ijms26073181. This article has 0 citations.</p>
+</li>
+<li>
+<p>(vijukumar2025acenturyof pages 6-10): Abhishek Vijukumar, Kamaljeet ., Harkomal Singh, Tarun Kalra, and Bintoo Sharma. A century of alkaptonuria: evolving insights into a rare metabolic disorder. GenoMed Connect, Dec 2025. URL: https://doi.org/10.69709/genomc.2025.122212, doi:10.69709/genomc.2025.122212. This article has 0 citations.</p>
+</li>
+<li>
+<p>(bernardini2025acomprehensivein pages 82-84): Giulia Bernardini, Alfonso Trezza, Elena Petricci, Giulia Romagnoli, Demetra Zambardino, Fabrizio Manetti, Daniela Braconi, Michela Geminiani, and Annalisa Santucci. A comprehensive in vitro and in silico approach for targeting 4-hydroxyphenyl pyruvate dioxygenase: towards new therapeutics for alkaptonuria. International Journal of Molecular Sciences, 26:3181, Mar 2025. URL: https://doi.org/10.3390/ijms26073181, doi:10.3390/ijms26073181. This article has 0 citations.</p>
+</li>
+<li>
+<p>(zatkova2020alkaptonuriacurrentperspectives pages 3-4): Andrea Zatkova, Lakshminarayan Ranganath, and Ludevit Kadasi. Alkaptonuria: current perspectives. The Application of Clinical Genetics, 13:37-47, Jan 2020. URL: https://doi.org/10.2147/tacg.s186773, doi:10.2147/tacg.s186773. This article has 93 citations.</p>
+</li>
+<li>
+<p>(shen2026hgdderivednformylkynureninepromotes pages 1-7): Weitao Shen, Ruibin Yi, Yueming Zhang, Jiayi Cai, Qingxi Zhang, Haoxuan Ying, Ting Wei, and Jian Zhang. Hgd-derived n-formylkynurenine promotes small cell lung cancer chemoresistance by activating atl2-mediated endoplasmic reticulum remodelling. Unknown journal, Jan 2026. URL: https://doi.org/10.21203/rs.3.rs-8510398/v1, doi:10.21203/rs.3.rs-8510398/v1.</p>
+</li>
+<li>
+<p>(shen2026hgdderivednformylkynureninepromotes pages 20-24): Weitao Shen, Ruibin Yi, Yueming Zhang, Jiayi Cai, Qingxi Zhang, Haoxuan Ying, Ting Wei, and Jian Zhang. Hgd-derived n-formylkynurenine promotes small cell lung cancer chemoresistance by activating atl2-mediated endoplasmic reticulum remodelling. Unknown journal, Jan 2026. URL: https://doi.org/10.21203/rs.3.rs-8510398/v1, doi:10.21203/rs.3.rs-8510398/v1.</p>
+</li>
+<li>
+<p>(shen2026hgdderivednformylkynureninepromotes pages 11-16): Weitao Shen, Ruibin Yi, Yueming Zhang, Jiayi Cai, Qingxi Zhang, Haoxuan Ying, Ting Wei, and Jian Zhang. Hgd-derived n-formylkynurenine promotes small cell lung cancer chemoresistance by activating atl2-mediated endoplasmic reticulum remodelling. Unknown journal, Jan 2026. URL: https://doi.org/10.21203/rs.3.rs-8510398/v1, doi:10.21203/rs.3.rs-8510398/v1.</p>
+</li>
+<li>
+<p>(shen2026hgdderivednformylkynureninepromotes pages 16-20): Weitao Shen, Ruibin Yi, Yueming Zhang, Jiayi Cai, Qingxi Zhang, Haoxuan Ying, Ting Wei, and Jian Zhang. Hgd-derived n-formylkynurenine promotes small cell lung cancer chemoresistance by activating atl2-mediated endoplasmic reticulum remodelling. Unknown journal, Jan 2026. URL: https://doi.org/10.21203/rs.3.rs-8510398/v1, doi:10.21203/rs.3.rs-8510398/v1.</p>
+</li>
+<li>
+<p>(grasso2025ochronoticdepositionin pages 2-5): Daniela Grasso, Valentina Balloni, Maria Camilla Baratto, Adele Mucci, Annalisa Santucci, and Andrea Bernini. Ochronotic deposition in alkaptonuria: semiquinone-mediated oxidative coupling and metabolic drivers of homogentisic acid accumulation. International Journal of Molecular Sciences, 26:9674, Oct 2025. URL: https://doi.org/10.3390/ijms26199674, doi:10.3390/ijms26199674. This article has 0 citations.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="HGD-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+<li><a href="HGD-deep-research-falcon_artifacts/artifact-01.md">Edison artifact artifact-01</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>vilboux2009mutationspectrumof pages 1-2</li>
+<li>zatkova2020alkaptonuriacurrentperspectives pages 4-6</li>
+<li>milella2024alkaptonuriafrommolecular pages 2-4</li>
+<li>holme2013tyrosinemetabolism pages 1-2</li>
+<li>vilboux2009mutationspectrumof pages 7-8</li>
+<li>vijukumar2025acenturyof pages 13-17</li>
+<li>zatkova2020alkaptonuriacurrentperspectives pages 3-4</li>
+<li>bernardini2025acomprehensivein pages 18-23</li>
+<li>shen2026hgdderivednformylkynureninepromotes pages 11-16</li>
+<li>shen2026hgdderivednformylkynureninepromotes pages 20-24</li>
+<li>grasso2025ochronoticdepositionin pages 2-5</li>
+<li>grasso2025ochronoticdepositionin pages 5-7</li>
+<li>grasso2025ochronoticdepositionin pages 1-2</li>
+<li>vijukumar2025acenturyof pages 10-13</li>
+<li>traore2022chargemaintenanceduring pages 3-5</li>
+<li>traore2022chargemaintenanceduring pages 26-38</li>
+<li>holme2013tyrosinemetabolism pages 2-4</li>
+<li>traore2022chargemaintenanceduring pages 5-6</li>
+<li>vilboux2009mutationspectrumof pages 2-3</li>
+<li>milella2024alkaptonuriafrommolecular pages 4-6</li>
+<li>vijukumar2025acenturyof pages 6-10</li>
+<li>bernardini2025acomprehensivein pages 82-84</li>
+<li>shen2026hgdderivednformylkynureninepromotes pages 1-7</li>
+<li>shen2026hgdderivednformylkynureninepromotes pages 16-20</li>
+<li>https://doi.org/10.1002/humu.21120,</li>
+<li>https://doi.org/10.69709/genomc.2025.122212,</li>
+<li>https://doi.org/10.1021/acscatal.1c04770,</li>
+<li>https://doi.org/10.3390/cells13121072,</li>
+<li>https://doi.org/10.1007/978-3-642-40337-8_2,</li>
+<li>https://doi.org/10.2147/tacg.s186773,</li>
+<li>https://doi.org/10.1038/s41598-023-41200-7,</li>
+<li>https://doi.org/10.3390/ijms26199674,</li>
+<li>https://doi.org/10.3390/ijms26073181,</li>
+<li>https://doi.org/10.21203/rs.3.rs-8510398/v1,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(HGD-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q93099" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="hgd-homogentisate-12-dioxygenase-review-notes">HGD (homogentisate 1,2-dioxygenase) — review notes</h1>
+<p>UniProtKB: Q93099 (HGD_HUMAN); HGNC:4892; EC 1.13.11.5; 445 aa.</p>
+<h2 id="core-biology-grounding-hgd-uniprottxt-reactomer-hsa-71164md-reposdismechkbdisordersalkaptonuriayaml">Core biology (grounding: HGD-uniprot.txt, reactome/R-HSA-71164.md, ~/repos/dismech/kb/disorders/Alkaptonuria.yaml)</h2>
+<ul>
+<li>Cytosolic Fe(II)-dependent ring-cleaving dioxygenase; catalyzes the THIRD committed<br />
+  step of tyrosine (and, upstream, phenylalanine) catabolism:<br />
+  homogentisate + O2 -&gt; 4-maleylacetoacetate + H+ (RHEA:15449, EC 1.13.11.5).<br />
+  [UniProt CATALYTIC ACTIVITY; ECO:0000269|PubMed:8782815]</li>
+<li>Cofactor: one Fe cation per monomer (CHEBI:24875). Fe-binding residues His335, Glu341,<br />
+  His371. [UniProt COFACTOR/BINDING; ECO:0000269|PubMed:10876237, PDB:1EY2/1EYB]</li>
+<li>Quaternary structure: homohexamer arranged as a dimer of trimers.<br />
+  [UniProt SUBUNIT; ECO:0000269|PubMed:10876237]</li>
+<li>Belongs to homogentisate dioxygenase family; cupin/RmlC-like jelly-roll fold<br />
+  (Pfam PF04209 HgmA_C, PF20510 HgmA_N; InterPro IPR005708; TIGR01015 hmgA).</li>
+<li>Pathway: UniPathway UPA00139 (L-phenylalanine degradation; acetoacetate and fumarate<br />
+  from L-phenylalanine, step 4/6). Reactome R-HSA-8963684 Tyrosine catabolism;<br />
+  R-HSA-71164 "HGD dioxygenates homogentisate" (cytosolic).</li>
+<li>Tissue: highest in prostate, small intestine, colon, kidney, liver (HPA: kidney/liver<br />
+  enriched).</li>
+</ul>
+<h2 id="disease">Disease</h2>
+<ul>
+<li>Alkaptonuria (AKU; MIM:203500; MONDO:0008753), autosomal recessive. Biallelic<br />
+  loss-of-function HGD variants -&gt; HGA accumulation -&gt; ochronotic pigment deposition in<br />
+  connective tissue -&gt; dark urine, ochronotic arthropathy/spondyloarthropathy, cardiac<br />
+  valve and renal disease. Many characterized loss-of-activity variants (e.g. G161R,<br />
+  P230S "complete loss", M368V, E168K). Nitisinone inhibits the upstream enzyme HPPD to<br />
+  lower HGA production; does not correct HGD deficiency.</li>
+</ul>
+<h2 id="annotation-by-annotation-reasoning">Annotation-by-annotation reasoning</h2>
+<ul>
+<li>GO:0004411 homogentisate 1,2-dioxygenase activity (IBA, IEA, IMP PMID:8782815, TAS<br />
+  PMID:8782815): CORE MF. ACCEPT all. Directly established biochemically; EC 1.13.11.5;<br />
+  RHEA:15449. IMP/8782815 = loss-of-function missense shown biochemically.</li>
+<li>GO:0006559 L-phenylalanine catabolic process (IBA, IEA, TAS PMID:8782815): CORE-ish BP.<br />
+  HGD is in the Phe-&gt;...-&gt;fumarate+acetoacetate subpathway (UPA00139 step 4/6). ACCEPT.</li>
+<li>GO:0006572 L-tyrosine catabolic process (IMP PMID:36555443, TAS PMID:8782815): CORE BP,<br />
+  most direct process term (HGA is the tyrosine-catabolism intermediate acted on). ACCEPT.</li>
+<li>GO:0042802 identical protein binding (IPI PMID:25416956; IPI PMID:32296183, with Q93099):<br />
+  reflects the homohexamer (self-interaction). Real but not the core function -&gt; KEEP_AS_NON_CORE.</li>
+<li>GO:0005515 protein binding (IPI PMID:21044950 with TERF1/P54274; IPI PMID:32296183 with<br />
+  NTAQ1/Q96HA8): bare "protein binding", uninformative per curation guidelines. These are<br />
+  large HT interactome/complementation screens (TERF1 telomere Y2H screen; HuRI binary<br />
+  interactome). MARK_AS_OVER_ANNOTATED (do not REMOVE HT-supported IPI; not a core function<br />
+  and no informative MF captured). NTAQ1 interaction is also recorded in UniProt INTERACTION.</li>
+<li>GO:0070062 extracellular exosome (HDA PMID:23533145 prostatic-secretion exosomes;<br />
+  PMID:19056867 urinary exosomes): HGD is cytosolic; exosome detection is bulk proteomic<br />
+  co-purification, not a functional localization. KEEP_AS_NON_CORE (bystander detection).</li>
+<li>GO:0005829 cytosol (TAS Reactome:R-HSA-71164): CORE CC; enzyme is cytosolic. ACCEPT.</li>
+</ul>
+<h2 id="references-used">References used</h2>
+<ul>
+<li>PMID:8782815 (cloning of HGO=AKU gene; function; catalytic activity) — abstract only in<br />
+  cache but is the canonical primary functional reference.</li>
+<li>PMID:36555443 (untargeted NMR metabolomics of AKU; full text) — describes hexameric HGD<br />
+  and tyrosine/phenylalanine catabolic role.</li>
+<li>PMID:10876237 (crystal structure, Fe sites, hexamer) — via UniProt, not cited in GOA rows.</li>
+<li>Reactome R-HSA-71164 (cytosolic localization / reaction).</li>
+<li>file: dismech Alkaptonuria.yaml for disease pathophysiology.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q93099
+gene_symbol: HGD
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  HGD (homogentisate 1,2-dioxygenase; EC 1.13.11.5) is a cytosolic, iron(II)-dependent
+  ring-cleaving dioxygenase that catalyzes the third step of the tyrosine (and, upstream,
+  phenylalanine) degradation pathway. It converts homogentisate and molecular oxygen to
+  4-maleylacetoacetate, opening the aromatic ring. Each subunit binds one catalytic Fe(II)
+  ion (coordinated by His335, Glu341 and His371), and the active enzyme assembles as a
+  homohexamer arranged as a dimer of trimers. HGD is expressed most highly in liver,
+  kidney, prostate and intestine, consistent with its role in amino-acid catabolism.
+  Loss-of-function variants in HGD cause alkaptonuria, an autosomal recessive inborn error
+  of metabolism in which homogentisic acid accumulates; its oxidized, polymerized form
+  deposits as ochronotic pigment in cartilage and other connective tissues, producing dark
+  urine, ochronotic osteoarthropathy/spondyloarthropathy, and later cardiac-valve and
+  renal disease.
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:8782815
+  title: The molecular basis of alkaptonuria.
+  findings:
+  - statement: &gt;-
+      HGD (originally HGO) is the alkaptonuria gene; alkaptonuria results from loss of
+      homogentisate 1,2-dioxygenase activity, causing accumulation of homogentisic acid,
+      an intermediary product of tyrosine and phenylalanine catabolism.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Canonical primary reference: cloning of the human HGO/HGD gene and demonstration
+      that it is the AKU gene, with biochemical loss-of-function evidence. Cache is
+      abstract-only (full_text_available: false) but the abstract directly supports the
+      catalytic function and the tyrosine/phenylalanine catabolic role.
+- id: PMID:36555443
+  title: Untargeted NMR Metabolomics Reveals Alternative Biomarkers and Pathways in Alkaptonuria.
+  findings:
+  - statement: &gt;-
+      Homogentisic acid, the substrate of HGD, is an intermediate of phenylalanine and
+      tyrosine degradation; the aromatic ring is opened and oxidized by the hexameric
+      homogentisate 1,2-dioxygenase, and reduced HGD catalytic activity causes HGA
+      accumulation in alkaptonuria.
+    reference_section_type: INTRODUCTION
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full-text available; supports HGD&#39;s role in tyrosine/phenylalanine catabolism and
+      its hexameric quaternary structure. Used as the IMP reference for L-tyrosine
+      catabolic process.
+- id: PMID:10876237
+  title: Crystal structure of human homogentisate dioxygenase.
+  findings:
+  - statement: &gt;-
+      X-ray structure of human HGD reveals a homohexamer (dimer of trimers) with one
+      catalytic Fe ion per subunit at the active site.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Structural basis (UniProt-cited, PDB 1EY2/1EYB) for the Fe(II) cofactor, active-site
+      metal-binding residues, and the homohexameric assembly; supports the metal-binding
+      and identical-protein-binding interpretations. Not a GOA row but grounds the review.
+- id: PMID:21044950
+  title: Genome-wide YFP fluorescence complementation screen identifies new regulators for telomere signaling in human cells.
+  findings:
+  - statement: &gt;-
+      High-throughput protein-complementation screen for telomere-signaling regulators
+      reported an HGD-TERF1 interaction; a bulk-screen hit rather than a functional
+      partner of HGD&#39;s catalytic role.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Genome-wide fluorescence-complementation screen (source of the HGD-TERF1 IntAct
+      pair). Correctly cited but supports only the uninformative &#34;protein binding&#34; term,
+      not a core function.
+- id: PMID:25416956
+  title: A proteome-scale map of the human interactome network.
+  findings:
+  - statement: &gt;-
+      Systematic binary protein-protein interaction mapping recorded an HGD self
+      (identical-protein) interaction, consistent with its known homo-oligomer.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Large-scale (Y2H) interactome screen; source of an HGD-HGD identical-protein-binding
+      pair. Correctly cited but low relevance beyond corroborating self-association.
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings:
+  - statement: &gt;-
+      HuRI binary interactome map recorded HGD self-interaction (identical protein
+      binding) and an HGD-NTAQ1 interaction.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      HuRI reference interactome; source of the HGD-HGD (identical protein binding) and
+      HGD-NTAQ1 (protein binding) pairs. Correctly cited; high-throughput screen data.
+- id: PMID:23533145
+  title: In-depth proteomic analyses of exosomes isolated from expressed prostatic secretions in urine.
+  findings:
+  - statement: &gt;-
+      HGD peptides were detected by bulk proteomics of prostatic-secretion-derived urinary
+      exosomes; a mass-spectrometry co-purification, not evidence of functional exosomal
+      localization.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Abstract-only in cache; HDA source for the extracellular-exosome CC term. Supports
+      only bystander detection of a cytosolic enzyme in an exosome proteome.
+- id: PMID:19056867
+  title: Large-scale proteomics and phosphoproteomics of urinary exosomes.
+  findings:
+  - statement: &gt;-
+      HGD was identified among proteins in a large-scale proteomic survey of urinary
+      exosomes.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Abstract-only in cache; second HDA source for the extracellular-exosome CC term;
+      bulk proteomic co-purification of a cytosolic enzyme.
+- id: Reactome:R-HSA-71164
+  title: HGD dioxygenates homogentisate
+  findings:
+  - statement: &gt;-
+      Cytosolic homogentisate 1,2-dioxygenase catalyzes the reaction of homogentisate and
+      molecular oxygen to form 4-maleylacetoacetate; HGD is a homohexamer with one Fe(2+)
+      ion per monomer as catalytic cofactor.
+    reference_section_type: OTHER
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reactome reaction record establishing the cytosolic localization and the catalyzed
+      reaction; source of the cytosol TAS annotation.
+existing_annotations:
+- term:
+    id: GO:0004411
+    label: homogentisate 1,2-dioxygenase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Core molecular function. HGD catalyzes homogentisate + O2 -&gt; 4-maleylacetoacetate
+      (EC 1.13.11.5, RHEA:15449). The phylogenetic (IBA) inference is at the correct level
+      of specificity and matches the experimentally established activity.
+    action: ACCEPT
+    reason: &gt;-
+      This is the defining, experimentally validated activity of HGD, consistent across
+      IBA, IEA, IMP and TAS evidence and confirmed structurally (PMID:10876237).
+    supported_by:
+    - reference_id: PMID:8782815
+      supporting_text: &gt;-
+        resulting
+        from loss of homogentisate 1,2 dioxygenase (HGO) activity
+- term:
+    id: GO:0006559
+    label: L-phenylalanine catabolic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      HGD acts in the phenylalanine degradation pathway (UniPathway UPA00139: acetoacetate
+      and fumarate from L-phenylalanine, step 4/6). Phenylalanine is catabolized via
+      tyrosine to homogentisate, HGD&#39;s substrate.
+    action: ACCEPT
+    reason: &gt;-
+      Correct pathway-level involvement; homogentisate is a shared intermediate of
+      phenylalanine and tyrosine catabolism, both of which route through HGD.
+    supported_by:
+    - reference_id: PMID:8782815
+      supporting_text: &gt;-
+        an intermediary product of the
+        catabolism of tyrosine and phenylalanine
+- term:
+    id: GO:0004411
+    label: homogentisate 1,2-dioxygenase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic assignment of the core dioxygenase activity via InterPro IPR005708,
+      ARBA, RHEA:15449 and EC:1.13.11.5. Fully consistent with experimental evidence.
+    action: ACCEPT
+    reason: &gt;-
+      Duplicate of the experimentally supported core MF; the IEA mapping is at the correct
+      specificity for the homogentisate dioxygenase family signature.
+- term:
+    id: GO:0006559
+    label: L-phenylalanine catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic assignment (InterPro IPR005708 + UniPathway UPA00139) of phenylalanine
+      catabolic-process involvement. Consistent with the pathway role.
+    action: ACCEPT
+    reason: &gt;-
+      Correct pathway membership; duplicate of the IBA/TAS phenylalanine catabolic-process
+      annotations.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:21044950
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from a high-throughput fluorescence-complementation screen
+      (HGD-TERF1 pair). Uninformative regarding molecular function and unrelated to HGD&#39;s
+      catalytic role.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Per curation guidelines the generic &#34;protein binding&#34; term conveys no functional
+      information, and this hit derives from a genome-wide telomere-signaling screen with
+      no evidence it reflects a biologically meaningful, HGD-specific partnership. Retained
+      (not removed) as a legitimately recorded IPI, but flagged as over-annotation and
+      non-core.
+    supported_by:
+    - reference_id: PMID:21044950
+      supporting_text: telomere signaling
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from the HuRI binary interactome (HGD-NTAQ1 pair; also listed
+      in the UniProt INTERACTION block). Uninformative as a molecular-function term.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      &#34;protein binding&#34; is too generic to be a useful MF annotation; the HGD-NTAQ1
+      interaction is a systematic-screen datapoint, not a characterized functional module.
+      Kept as recorded but marked over-annotated / non-core.
+    supported_by:
+    - reference_id: PMID:32296183
+      supporting_text: binary protein interactome
+- term:
+    id: GO:0042802
+    label: identical protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25416956
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Self (identical protein) interaction reflecting HGD&#39;s known homo-oligomerization.
+      HGD assembles as a homohexamer (dimer of trimers), so self-association is a genuine
+      structural property but not its core catalytic function.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The identical-protein-binding annotation is biologically consistent with the
+      crystallographically defined homohexamer (PMID:10876237), so it is retained; it
+      documents the oligomeric assembly rather than the primary dioxygenase function.
+    supported_by:
+    - reference_id: PMID:25416956
+      supporting_text: human interactome
+    - reference_id: PMID:10876237
+      supporting_text: Crystal structure of human homogentisate dioxygenase
+- term:
+    id: GO:0042802
+    label: identical protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Second self-interaction datapoint (HuRI), again reflecting the homohexameric
+      assembly of HGD.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Duplicate identical-protein-binding evidence consistent with the known homohexamer;
+      retained as a structural (non-core) property.
+    supported_by:
+    - reference_id: PMID:32296183
+      supporting_text: binary protein interactome
+- term:
+    id: GO:0006572
+    label: L-tyrosine catabolic process
+  evidence_type: IMP
+  original_reference_id: PMID:36555443
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      HGD performs the ring-opening step of tyrosine catabolism, acting on homogentisate
+      (the tyrosine-degradation intermediate). This is the most direct biological-process
+      term for HGD.
+    action: ACCEPT
+    reason: &gt;-
+      Well supported: HGA is an intermediate of tyrosine degradation and is opened/oxidized
+      by hexameric HGD; loss of HGD activity blocks this step and causes HGA accumulation
+      (alkaptonuria).
+    supported_by:
+    - reference_id: PMID:36555443
+      supporting_text: &gt;-
+        The aromatic ring is opened and oxidized by the hexameric homogentisate-1,2-dioxygenase (HGD)
+- term:
+    id: GO:0004411
+    label: homogentisate 1,2-dioxygenase activity
+  evidence_type: IMP
+  original_reference_id: PMID:8782815
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Mutant-phenotype (IMP) evidence: alkaptonuria arises from loss of HGD activity, and
+      at least one disease missense variant was shown biochemically to be loss-of-function,
+      directly linking HGD to homogentisate 1,2-dioxygenase activity.
+    action: ACCEPT
+    reason: &gt;-
+      Experimental support for the core catalytic activity from the gene-defining study;
+      the curator read the full text and demonstrated loss-of-function.
+    supported_by:
+    - reference_id: PMID:8782815
+      supporting_text: &gt;-
+        provide
+        biochemical evidence that at least one of these missense mutations is a
+        loss-of-function mutation
+- term:
+    id: GO:0070062
+    label: extracellular exosome
+  evidence_type: HDA
+  original_reference_id: PMID:23533145
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      HGD detected by bulk proteomics of prostatic-secretion-derived urinary exosomes.
+      HGD is a cytosolic enzyme; this reflects co-purification in an exosome preparation
+      rather than a functional secretory/exosomal localization.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      High-throughput proteomic detection in exosome fractions is common for abundant
+      cytosolic proteins and does not establish a functional site of action. Retained as a
+      recorded observation but explicitly non-core; the functional localization is cytosol.
+    supported_by:
+    - reference_id: PMID:23533145
+      supporting_text: exosomes isolated from expressed prostatic
+- term:
+    id: GO:0070062
+    label: extracellular exosome
+  evidence_type: HDA
+  original_reference_id: PMID:19056867
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Second bulk-proteomic detection of HGD in urinary exosomes; same interpretation as
+      PMID:23533145 (co-purification of a cytosolic enzyme).
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Bystander detection in an exosome proteome, not a functional localization; retained
+      as non-core.
+    supported_by:
+    - reference_id: PMID:19056867
+      supporting_text: urinary exosomes
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-71164
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Core cellular component. HGD is a cytosolic enzyme that carries out the homogentisate
+      dioxygenation step in the cytoplasm.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with the Reactome reaction record and the soluble cytosolic nature of the
+      enzyme; this is the functionally relevant localization.
+    supported_by:
+    - reference_id: Reactome:R-HSA-71164
+      supporting_text: &gt;-
+        Cytosolic homogentisate 1,2-dioxygenase (HGD) catalyzes the reaction of homogentisate and
+- term:
+    id: GO:0004411
+    label: homogentisate 1,2-dioxygenase activity
+  evidence_type: TAS
+  original_reference_id: PMID:8782815
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Author-statement (TAS) support for the core dioxygenase activity from the
+      gene-defining alkaptonuria study.
+    action: ACCEPT
+    reason: &gt;-
+      Duplicate of the core MF with independent (TAS) evidence; fully consistent with all
+      other lines of evidence.
+    supported_by:
+    - reference_id: PMID:8782815
+      supporting_text: &gt;-
+        resulting
+        from loss of homogentisate 1,2 dioxygenase (HGO) activity
+- term:
+    id: GO:0006559
+    label: L-phenylalanine catabolic process
+  evidence_type: TAS
+  original_reference_id: PMID:8782815
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Author-statement support for HGD&#39;s role in phenylalanine catabolism (homogentisate
+      is a shared Phe/Tyr catabolic intermediate).
+    action: ACCEPT
+    reason: &gt;-
+      Correct pathway-level involvement; consistent with the IBA/IEA phenylalanine
+      catabolic-process annotations.
+    supported_by:
+    - reference_id: PMID:8782815
+      supporting_text: &gt;-
+        an intermediary product of the
+        catabolism of tyrosine and phenylalanine
+- term:
+    id: GO:0006572
+    label: L-tyrosine catabolic process
+  evidence_type: TAS
+  original_reference_id: PMID:8782815
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Author-statement support for HGD&#39;s role in tyrosine catabolism; duplicate of the IMP
+      tyrosine-catabolic-process annotation.
+    action: ACCEPT
+    reason: &gt;-
+      The gene-defining study places HGD in tyrosine catabolism (homogentisate is a
+      tyrosine-degradation intermediate); consistent core biological process.
+    supported_by:
+    - reference_id: PMID:8782815
+      supporting_text: &gt;-
+        an intermediary product of the
+        catabolism of tyrosine and phenylalanine
+core_functions:
+- description: &gt;-
+    Iron(II)-dependent homogentisate 1,2-dioxygenase catalyzing the ring-opening third step
+    of tyrosine (and phenylalanine) catabolism in the cytosol: homogentisate + O2 -&gt;
+    4-maleylacetoacetate.
+  molecular_function:
+    id: GO:0004411
+    label: homogentisate 1,2-dioxygenase activity
+  directly_involved_in:
+  - id: GO:0006572
+    label: L-tyrosine catabolic process
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: PMID:8782815
+    supporting_text: &gt;-
+      resulting
+      from loss of homogentisate 1,2 dioxygenase (HGO) activity
+  - reference_id: PMID:36555443
+    supporting_text: &gt;-
+      The aromatic ring is opened and oxidized by the hexameric homogentisate-1,2-dioxygenase (HGD)
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

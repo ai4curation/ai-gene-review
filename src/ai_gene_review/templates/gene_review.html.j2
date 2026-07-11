@@ -343,6 +343,42 @@
             margin-left: 1rem;
         }
 
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
         a.term-link {
             color: #2563eb;
             text-decoration: none;
@@ -1034,6 +1070,43 @@
                             <strong>Reason:</strong> {{ annotation.reason }}
                         </div>
                         {% endif %}
+                        {% if annotation.review and annotation.review.propagation_review %}
+                        {% set propagation = annotation.review.propagation_review %}
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">{{ propagation.root_cause | replace('_', ' ') }}</span>
+                            </div>
+                            {% if propagation.failure_modes %}
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+                                {% for mode in propagation.failure_modes %}
+                                <span class="badge">{{ mode | replace('_', ' ') }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            {% if propagation.source_entities %}
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+                                {% for source in propagation.source_entities %}
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">{{ source.source_id }}</span>
+                                    {% if source.source_label %}
+                                    &middot; {{ source.source_label }}
+                                    {% endif %}
+                                    {% if source.source_status %}
+                                    <span class="badge">{{ source.source_status | replace('_', ' ') }}</span>
+                                    {% endif %}
+                                    {% if source.comment %}
+                                    <div class="propagation-comment">{{ source.comment }}</div>
+                                    {% endif %}
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
                         {% if annotation.proposed_replacement_terms %}
                         <div style="margin-top: 0.5rem;">
                             <strong>Proposed replacements:</strong>
@@ -1082,6 +1155,28 @@
                                 </span>
                                 {% if support.supporting_text %}
                                 <div class="support-text">{{ support.supporting_text }}</div>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        {% if annotation.review and annotation.review.knowledge_gaps %}
+                        <div class="supported-by">
+                            <div class="supported-by-title">Knowledge gap{{ 's' if annotation.review.knowledge_gaps | length > 1 else '' }}:</div>
+                            {% for gap in annotation.review.knowledge_gaps %}
+                            <div class="support-item">
+                                <div>{{ gap.gap_statement }}
+                                    {% if gap.status %}<span class="badge">{{ gap.status }}</span>{% endif %}
+                                    {% if gap.gap_kind %}{% for k in gap.gap_kind %}<span class="badge">{{ k }}</span>{% endfor %}{% endif %}
+                                    {% if gap.dark_aspect %}<span class="badge">{{ gap.dark_aspect }}</span>{% endif %}
+                                </div>
+                                {% if gap.resolution %}
+                                <div class="support-text"><strong>Resolve:</strong> {{ gap.resolution }}</div>
+                                {% endif %}
+                                {% if gap.provenance %}
+                                {% for p in gap.provenance %}
+                                <div class="support-text"><em>"{{ p.supporting_text }}"</em> — {{ p.reference_id }}</div>
+                                {% endfor %}
                                 {% endif %}
                             </div>
                             {% endfor %}
@@ -1290,6 +1385,51 @@
                     <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
                 </span>
             </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if gene.knowledge_gaps %}
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+        {% for gap in gene.knowledge_gaps %}
+        <div class="question-card">
+            <p><strong>Gap:</strong> {{ gap.gap_statement }}</p>
+            <p style="margin-top: 0.4rem;">
+                {% if gap.status %}<span class="badge">{{ gap.status }}</span>{% endif %}
+                {% if gap.gap_kind %}{% for k in gap.gap_kind %}<span class="badge">{{ k }}</span>{% endfor %}{% endif %}
+                {% if gap.dark_aspect %}<span class="badge">{{ gap.dark_aspect }}</span>{% endif %}
+            </p>
+            {% if gap.boundary %}
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> {{ gap.boundary }}</p>
+            {% endif %}
+            {% if gap.significance %}
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> {{ gap.significance }}</p>
+            {% endif %}
+            {% if gap.resolution %}
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> {{ gap.resolution }}</p>
+            {% endif %}
+            {% if gap.provenance %}
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+                {% for p in gap.provenance %}
+                <li><em>"{{ p.supporting_text }}"</em> — {{ p.reference_id }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+            {% if gap.proposed_terms %}
+            <p style="margin-top: 0.5rem;"><strong>Proposed term{{ 's' if gap.proposed_terms | length > 1 else '' }} (ontology gap):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+                {% for pt in gap.proposed_terms %}
+                <li><strong>{{ pt.proposed_name }}</strong>{% if pt.justification %} — {{ pt.justification }}{% endif %}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
         </div>
         {% endfor %}
     </div>

@@ -1,0 +1,12 @@
+| Pathway/Regulator | Effect on irg-2 Expression | Stimulus/Context | Key Reference |
+|---|---|---|---|
+| ZIP-2 bZIP transcription factor | Positive regulator; required for induction of irg-2 downstream of translational inhibition | Activated during *Pseudomonas aeruginosa* infection and by translation-elongation defects/ribosome damage caused by bacterial toxins | Vasquez-Rifo et al. 2020; Kniazeva & Ruvkun 2025 (pqac-00000013, pqac-00000014, pqac-00000015, pqac-00000019) |
+| PMK-1 p38 MAPK | Largely independent; irg-2/C49G7.5 is a Class D pathogen-response gene not requiring PMK-1 for induction | *P. aeruginosa* infection; induced despite PMK-1 loss, indicating alternative immune signaling | Troemel et al. 2006 (pqac-00000024, pqac-00000027) |
+| TGF-β/DBL-1 pathway | Positive regulator of irg-2 as part of core host immune response | Pathogen-responsive immune transcriptional program; linked to DBL-1, DAF-4/SMA-6, and SMAD signaling | Simonsen et al. 2012 review summarizing primary studies (pqac-00000000) |
+| ENDU-2 | Positive regulator; promotes irg-2 transcription by binding its promoter and facilitating Pol II recruitment | Post-heat-stress recovery / heat hormesis; irg-2 is a Class III post-heat-stress responsive gene | Xu et al. 2023 (pqac-00000034, pqac-00000035, pqac-00000036, pqac-00000037, pqac-00000040, pqac-00000041) |
+| RNP-6/PUF60 splicing factor | Negative/suppressive regulator; loss of RNP-6 elevates irg-2 expression | Basal immune homeostasis and infection-responsive splicing/PMK-1-linked immune regulation | Kew et al. 2020 (pqac-00000042, pqac-00000043, pqac-00000045, pqac-00000049) |
+| Oleate / fat-6 / fat-7 | Required for full pathogen-induced irg-2 induction; deficiency attenuates induction | *P. aeruginosa* infection; oleate biosynthesis supports immune effector induction | Anderson et al. 2019 (pqac-00000029) |
+| ARF-1 / Golgi membrane stress pathway | irg-2 is activated when ARF-1 or Golgi trafficking is disrupted | Membrane lipid imbalance, compromised Golgi/secretory function, or increased secretory load; arf-1 or copa-1 knockdown robustly activates irg-2 | Fanelli et al. 2023 (pqac-00000003, pqac-00000004, pqac-00000006, pqac-00000031) |
+
+
+*Table: This table summarizes the main signaling pathways and cellular stress mechanisms reported to control irg-2 expression in *C. elegans*. It highlights where evidence supports positive regulation, negative regulation, or pathway independence, which is useful for interpreting irg-2 as an infection- and stress-responsive gene.*

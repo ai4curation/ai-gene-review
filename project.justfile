@@ -107,7 +107,7 @@ fetch-gene organism gene *args="":
             echo ""
         fi
     fi
-    uv run ai-gene-review fetch-gene {{organism}} {{gene}} --output-dir . {{args}}
+    uv run --no-dev ai-gene-review fetch-gene {{organism}} {{gene}} --output-dir . {{args}}
 
 # Fetch ncRNA gene data from RNAcentral
 # Use --alias to specify a custom directory name and file prefix
@@ -132,6 +132,45 @@ fetch-descriptions organism gene:
 # Example: just fetch-descriptions-bulk yeast -g CAT2 -g SSA1
 fetch-descriptions-bulk organism *args="":
     uv run ai-gene-review fetch-descriptions-bulk {{organism}} --output-dir . {{args}}
+
+# Fetch PANTHER PAINT (PTN node-level) annotations for a family.
+# Resolves the family's PTN tree nodes and slices the node-level IBD.gaf
+# (IBD/IRD/IKR, plus any IBA-on-node) into interpro/panther/<FAMILY>/<FAMILY>-paint.tsv.
+# Requires the family's <FAMILY>-entries.csv (fetch a member gene first).
+# Example: just fetch-panther-paint PTHR10177
+# Example: just fetch-panther-paint PTHR35730 --extra-uniprot Q67XT3
+fetch-panther-paint family *args="":
+    uv run ai-gene-review fetch-panther-paint {{family}} --output-dir . {{args}}
+
+# Bulk-generate PANTHER PAINT slices for every cached family (single leaf-GAF pass).
+# Families whose members resolve to no node-level annotations are skipped.
+fetch-panther-paint-all *args="":
+    uv run ai-gene-review fetch-panther-paint --all --output-dir . {{args}}
+
+# Fetch and cache a single GO-CAM model to gocams/<id>/<id>-src.yaml
+# Example: just fetch-gocam gomodel:568b0f9600000284
+fetch-gocam model_id *args="":
+    uv run ai-gene-review fetch-gocam {{model_id}} {{args}}
+
+# Cache all ~2k production GO-CAM models, then rebuild gocams/index.tsv
+# Example: just cache-gocams
+# Example: just cache-gocams --limit 50
+cache-gocams *args="":
+    uv run ai-gene-review cache-gocams {{args}}
+
+# Rebuild gocams/index.tsv (gene product -> GO-CAM activity) from the cache
+gocam-index *args="":
+    uv run ai-gene-review gocam-index {{args}}
+
+# Seed a GoCamReview stub at gocams/<id>/<id>-review.yaml (model must be cached)
+# Example: just seed-gocam-review 568b0f9600000284
+seed-gocam-review model_id *args="":
+    uv run ai-gene-review seed-gocam-review {{model_id}} {{args}}
+
+# Validate a GO-CAM review file against the schema
+# Example: just validate-gocam-review gocams/568b0f9600000284/568b0f9600000284-review.yaml
+validate-gocam-review file:
+    uv run linkml-validate -s src/ai_gene_review/schema/gene_review.yaml -C GoCamReview {{file}}
 
 # Report review status of gene description files
 # Example: just descriptions-status yeast
@@ -203,6 +242,14 @@ deep-research-cyberian organism gene_id *args="":
 deep-research-openscientist organism gene_id *args="":
     uv run python scripts/deep_research_wrapper.py {{organism}} {{gene_id}} openscientist {{args}}
 
+# Deep research using Asta (fast provider; works like the other providers)
+# Gene symbol automatically looked up from UniProt file if --alias not provided
+# Examples:
+#   just deep-research-asta human TP53
+#   just deep-research-asta METEA C5B1I4 --alias mllA
+deep-research-asta organism gene_id *args="":
+    uv run python scripts/deep_research_wrapper.py {{organism}} {{gene_id}} asta {{args}}
+
 # Deep research using Codex via agentapi (yolo mode)
 # Uses cyberian provider with agent_type=codex for autonomous research
 # Gene symbol automatically looked up from UniProt file if --alias not provided
@@ -211,6 +258,17 @@ deep-research-openscientist organism gene_id *args="":
 #   just deep-research-codex METEA C5B1I4 --alias mllA
 deep-research-codex organism gene_id *args="":
     uv run python scripts/deep_research_wrapper.py {{organism}} {{gene_id}} cyberian --extra-args --param agent_type=codex {{args}}
+
+# Deep research on an InterPro entry (family/domain) behind InterPro2GO annotations.
+# Metadata is auto-fetched and cached under interpro/<database>/<ID>/ if absent.
+# Output: interpro/<database>/<ID>/<ID>-deep-research-<provider>.md
+# Provider defaults to falcon (Edison).
+# Examples:
+#   just deep-research-interpro-family IPR000719                    # falcon (Edison)
+#   just deep-research-interpro-family IPR001128 openai --fallback perplexity-lite
+#   just deep-research-interpro-family PTHR10314 perplexity --database panther
+deep-research-interpro-family interpro_id provider="falcon" *args="":
+    uv run python scripts/deep_research_interpro_family.py {{interpro_id}} {{provider}} {{args}}
 
 # Fetch Edison/Falcon artifacts for a deep research trajectory and attach them to a report
 # Example: just fetch-research-artifacts <trajectory-id> genes/human/TP53/TP53-deep-research-falcon.md
@@ -241,11 +299,21 @@ gene-hypothesis-research provider organism gene *args="":
     set -euo pipefail
     provider="{{provider}}"
     args=( {{args}} )
-    if [[ "$provider" == "openscientist" && "${args[*]}" != *"max_iterations"* ]]; then
-        if [[ " ${args[*]} " == *" -- "* ]]; then
-            args+=(--param max_iterations=3)
-        else
-            args+=(-- --param max_iterations=3)
+    # OpenScientist defaults: >=3 iterations for a real run, and a generous job
+    # timeout. Fold-discovery / structural runs routinely exceed the upstream
+    # 3600s default (they cancel mid-analysis), so default to 7200s -- the
+    # maximum the API allows (OpenScientistParams.timeout is capped at le=7200).
+    # Keep --timeout-seconds (subprocess wall) above this; the script default does.
+    if [[ "$provider" == "openscientist" ]]; then
+        extra=()
+        if [[ "${args[*]}" != *"max_iterations"* ]]; then extra+=(--param max_iterations=3); fi
+        if [[ "${args[*]}" != *"timeout="* ]]; then extra+=(--param timeout=7200); fi
+        if [[ ${#extra[@]} -gt 0 ]]; then
+            if [[ " ${args[*]} " == *" -- "* ]]; then
+                args+=("${extra[@]}")
+            else
+                args+=(-- "${extra[@]}")
+            fi
         fi
     fi
     uv run python scripts/gene_hypothesis_deep_research.py run {{organism}} {{gene}} "$provider" "${args[@]}"
@@ -260,11 +328,21 @@ gene-hypothesis-research-all-core provider organism gene *args="":
     set -euo pipefail
     provider="{{provider}}"
     args=( {{args}} )
-    if [[ "$provider" == "openscientist" && "${args[*]}" != *"max_iterations"* ]]; then
-        if [[ " ${args[*]} " == *" -- "* ]]; then
-            args+=(--param max_iterations=3)
-        else
-            args+=(-- --param max_iterations=3)
+    # OpenScientist defaults: >=3 iterations for a real run, and a generous job
+    # timeout. Fold-discovery / structural runs routinely exceed the upstream
+    # 3600s default (they cancel mid-analysis), so default to 7200s -- the
+    # maximum the API allows (OpenScientistParams.timeout is capped at le=7200).
+    # Keep --timeout-seconds (subprocess wall) above this; the script default does.
+    if [[ "$provider" == "openscientist" ]]; then
+        extra=()
+        if [[ "${args[*]}" != *"max_iterations"* ]]; then extra+=(--param max_iterations=3); fi
+        if [[ "${args[*]}" != *"timeout="* ]]; then extra+=(--param timeout=7200); fi
+        if [[ ${#extra[@]} -gt 0 ]]; then
+            if [[ " ${args[*]} " == *" -- "* ]]; then
+                args+=("${extra[@]}")
+            else
+                args+=(-- "${extra[@]}")
+            fi
         fi
     fi
     uv run python scripts/gene_hypothesis_deep_research.py run-all-core {{organism}} {{gene}} "$provider" "${args[@]}"
@@ -278,6 +356,38 @@ gene-hypothesis-research-combined-core provider organism gene *args="":
     set -euo pipefail
     provider="{{provider}}"
     args=( {{args}} )
+    # OpenScientist defaults: >=3 iterations for a real run, and a generous job
+    # timeout. Fold-discovery / structural runs routinely exceed the upstream
+    # 3600s default (they cancel mid-analysis), so default to 7200s -- the
+    # maximum the API allows (OpenScientistParams.timeout is capped at le=7200).
+    # Keep --timeout-seconds (subprocess wall) above this; the script default does.
+    if [[ "$provider" == "openscientist" ]]; then
+        extra=()
+        if [[ "${args[*]}" != *"max_iterations"* ]]; then extra+=(--param max_iterations=3); fi
+        if [[ "${args[*]}" != *"timeout="* ]]; then extra+=(--param timeout=7200); fi
+        if [[ ${#extra[@]} -gt 0 ]]; then
+            if [[ " ${args[*]} " == *" -- "* ]]; then
+                args+=("${extra[@]}")
+            else
+                args+=(-- "${extra[@]}")
+            fi
+        fi
+    fi
+    uv run python scripts/gene_hypothesis_deep_research.py run-combined-core {{organism}} {{gene}} "$provider" "${args[@]}"
+
+# Find independent literature support for a gene-function hypothesis via deep research
+# Recall-tuned (expect false positives an agent then sifts); general-purpose,
+# not tied to IBA. Supply the hypothesis as free text, an existing annotation,
+# or a GO term. Intended for the fast `asta` provider but works with any provider.
+# Examples:
+#   just gene-function-support asta human TP53 --hypothesis "TP53 is a sequence-specific DNA-binding transcription factor" --dry-run
+#   just gene-function-support asta human TP53 --annotation-term-id GO:0003700
+#   just gene-function-support asta human TP53 --term-id GO:0003700 --term-label "DNA-binding transcription factor activity"
+gene-function-support provider organism gene *args="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    provider="{{provider}}"
+    args=( {{args}} )
     if [[ "$provider" == "openscientist" && "${args[*]}" != *"max_iterations"* ]]; then
         if [[ " ${args[*]} " == *" -- "* ]]; then
             args+=(--param max_iterations=3)
@@ -285,7 +395,39 @@ gene-hypothesis-research-combined-core provider organism gene *args="":
             args+=(-- --param max_iterations=3)
         fi
     fi
-    uv run python scripts/gene_hypothesis_deep_research.py run-combined-core {{organism}} {{gene}} "$provider" "${args[@]}"
+    uv run python scripts/gene_hypothesis_deep_research.py run-function-support {{organism}} {{gene}} "$provider" "${args[@]}"
+
+# List IBA annotations that are candidates for support-finding research
+# By default only IBAs lacking independent PMID/DOI support are listed.
+# Examples:
+#   just gene-iba-support-list human CFAP300
+#   just gene-iba-support-list human CFAP300 --missing-provider asta
+#   just gene-iba-support-list human CFAP300 --include-supported
+gene-iba-support-list organism gene *args="":
+    uv run python scripts/gene_hypothesis_deep_research.py list-iba {{organism}} {{gene}} {{args}}
+
+# Find independent literature support for a gene's IBA annotations via deep research
+# Thin wrapper over gene-function-support: feeds each IBA annotation in as a
+# neutral gene-function hypothesis. Recall-tuned (expect false positives).
+# By default only IBAs lacking independent support are researched; existing
+# provider outputs are skipped unless --overwrite is supplied.
+# Examples:
+#   just gene-iba-support-research asta human CFAP300 --dry-run
+#   just gene-iba-support-research asta human CFAP300 --annotation-term-id GO:0005737
+#   just gene-iba-support-research asta human CFAP300 --include-supported
+gene-iba-support-research provider organism gene *args="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    provider="{{provider}}"
+    args=( {{args}} )
+    if [[ "$provider" == "openscientist" && "${args[*]}" != *"max_iterations"* ]]; then
+        if [[ " ${args[*]} " == *" -- "* ]]; then
+            args+=(--param max_iterations=3)
+        else
+            args+=(-- --param max_iterations=3)
+        fi
+    fi
+    uv run python scripts/gene_hypothesis_deep_research.py run-iba-support {{organism}} {{gene}} "$provider" "${args[@]}"
 
 # ============== ASSAY_TO_FUNCTION readout-mining pipeline ==============
 
@@ -360,6 +502,17 @@ module-deep-research-cyberian module *args="":
 
 module-deep-research-codex module *args="":
     uv run python scripts/module_deep_research_wrapper.py "{{module}}" codex {{args}}
+
+# Species/taxon-specific module + pathway research. This writes to the project
+# support folder when a project can be resolved, e.g. projects/P_PUTIDA/deep-research/.
+# Examples:
+#   just module-pathway-deep-research-falcon "central carbon metabolism" ppu00020 PSEPK --dry-run
+#   just module-pathway-deep-research falcon "aromatic compound catabolism" ppu01220 PSEPK
+module-pathway-deep-research provider module pathway organism *args="":
+    uv run python scripts/module_pathway_taxon_deep_research_wrapper.py "{{module}}" "{{pathway}}" "{{organism}}" "{{provider}}" {{args}}
+
+module-pathway-deep-research-falcon module pathway organism *args="":
+    uv run python scripts/module_pathway_taxon_deep_research_wrapper.py "{{module}}" "{{pathway}}" "{{organism}}" falcon {{args}}
 
 # Fetch a specific PMID
 fetch-pmid pmid output_dir="publications":
@@ -478,7 +631,17 @@ validate-files files:
 validate-deep-research:
     uv run python scripts/validate_deep_research.py
 
-# Validate module YAML files against the ModuleReview schema
+# Aggregate all curated KnowledgeGap entries into a structured register
+# (reports/knowledge_gaps.tsv + projects/FUNCTION_KNOWLEDGE_GAPS/structured-gaps.md)
+aggregate-knowledge-gaps:
+    uv run python scripts/aggregate_knowledge_gaps.py
+
+# Validate module YAML files: (1) structural schema validation against
+# ModuleReview, and (2) custom module validation: ontology term-label checks,
+# GO branch checks for known F/P/C slots, PANTHER/PAINT PTN checks, and template
+# conformance. The external linkml-term-validator only checks enum-bound slots,
+# which ModuleReview lacks, so module semantics are checked by the project's
+# module_validator instead.
 validate-modules:
     #!/usr/bin/env bash
     set -uo pipefail
@@ -489,9 +652,19 @@ validate-modules:
     fi
     rc=0
     while IFS= read -r f; do
-        echo "Validating $f"
+        echo "Schema-validating $f"
         uv run linkml-validate --schema {{schema_path}} --target-class ModuleReview "$f" || rc=1
     done <<< "$files"
+    echo "Validating module term labels, reference titles, and supporting_text..."
+    # module_validator also verifies every literature reference (PMID/DOI):
+    #  - each title (references list or EvidenceItem) must match the cited
+    #    publication title (catches wrong PMIDs and stale/abbreviated titles);
+    #  - each supporting_text quote must be a verbatim (normalized) substring of
+    #    the cached publications/PMID_*.md.
+    # Both use linkml-reference-validator's own matcher. Mismatches are errors;
+    # unfetchable/uncached references are advisory warnings.
+    # shellcheck disable=SC2086
+    uv run python -m ai_gene_review.validation.module_validator $files || rc=1
     exit "$rc"
 
 # Full validation of a single gene file (schema + terms + references + best practices)
@@ -981,6 +1154,16 @@ render-organism organism:
 render-all:
     uv run python -m ai_gene_review.render --all genes/
 
+# Render prediction evaluation table from *-predictions-review.yaml files
+render-prediction-eval pattern='genes/*/*/*-protnlm-predictions-review.yaml' output='pages/projects/PROTNLM_EVALUATION/protnlm-eval.html' title='ProtNLM-50 Prediction Evaluation':
+    uv run python -m ai_gene_review.render_prediction_eval '{{pattern}}' -o '{{output}}' --title '{{title}}'
+
+# Render the BioReason-Pro comparison prediction evaluation tables (SFT, GO-GPT, DeepECTF)
+render-bioreason-eval:
+    uv run python -m ai_gene_review.render_prediction_eval 'genes/*/*/*-sft-predictions.yaml' -o 'pages/projects/BIOREASON_COMPARISON/sft-eval.html' --title 'BioReason-Pro SFT Prediction Evaluation'
+    uv run python -m ai_gene_review.render_prediction_eval 'genes/*/*/*-gogpt-leaf-predictions.yaml' -o 'pages/projects/BIOREASON_COMPARISON/gogpt-eval.html' --title 'BioReason-Pro GO-GPT Prediction Evaluation'
+    uv run python -m ai_gene_review.render_prediction_eval 'projects/BIOREASON_COMPARISON/recapitulation-experiment/claude-expt-1/genes/ECOLI/*/*-det-predictions-review.yaml' -o 'pages/projects/BIOREASON_COMPARISON/deepectf-eval.html' --title 'BioReason-Pro DeepECTF Evaluation (ESR-ECOLI-DET-Mini)'
+
 # Render project markdown files to HTML with auto-linked gene symbols
 render-projects:
     uv run ai-gene-review render-projects --all
@@ -1456,6 +1639,29 @@ spkw-analysis:
     @if [ ! -f exports/annotations.duckdb ]; then just export-annotations-duckdb; fi
     uv run python scripts/query_redundancy.py all
 
+# Report what is lost if an evidence code is subtracted (default: IBA), closure-aware.
+# Shows uniquely-lost endorsed annotations and orphaned core_functions terms.
+# Example: just subtraction-report-evidence ISS genes/human
+subtraction-report-evidence evidence="IBA" paths="genes":
+    uv run ai-gene-review subtraction-report {{paths}} -e {{evidence}}
+
+# Write the IBA subtraction report as two TSVs under reports/.
+subtraction-report-iba-tsv output="reports/iba-subtraction":
+    @mkdir -p reports
+    uv run ai-gene-review subtraction-report genes -e IBA -r GO_REF:0000033 --format tsv -o {{output}}
+
+# Inverse: what core biology would be LOST if IBA were the only evidence (IBA too conservative).
+# LOST core_functions terms are grounded only by non-IBA (often experimental) evidence.
+# --exclude-branch GO:0005488 drops low-information 'binding' molecular functions.
+subtraction-report-iba-only-tsv paths="genes" output="reports/iba-only":
+    @mkdir -p reports
+    uv run ai-gene-review subtraction-report {{paths}} --keep-only -e IBA -r GO_REF:0000033 --exclude-branch GO:0005488 --format tsv -o {{output}}
+
+# Ranked report of human genes whose curated core molecular functions (non-binding)
+# IBA alone would miss; enriches with evidence codes. Writes reports/iba-too-conservative-core-mf.md
+subtraction-report-iba-conservative-core-mf:
+    uv run python projects/IBA_REVIEW/iba_too_conservative_core_mf.py
+
 # Generate statistics HTML report from annotation data
 stats output_file="docs/stats_report.html":
     @echo "📊 Generating statistics report..."
@@ -1539,19 +1745,25 @@ gen-all: gen-project pydantic
 
 # Deploy linkml-browser app for viewing exported annotations
 deploy-browser: export-annotations-json
-    @echo "Deploying linkml-browser to app/ directory..."
-    @rm -rf app
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "Deploying linkml-browser to app/ directory..."
+    tmp_dir="$(mktemp -d)"
+    trap 'rm -rf "$tmp_dir"' EXIT
     uv run linkml-browser deploy \
         exports/exported_annotations.json \
-        app \
+        "$tmp_dir" \
         --schema src/ai_gene_review/schema/display_schema.json \
         --title "Gene Annotation Review Browser" \
         --description "Browse and filter gene annotation reviews" \
         --force
-    uv run python src/ai_gene_review/tools/minify_linkml_browser_data.py app/data.js
-    @cp src/ai_gene_review/browser/index.html app/
-    @echo "Browser deployed to app/ directory"
-    @echo "To view: open app/index.html or run 'just serve-browser'"
+    uv run python src/ai_gene_review/tools/minify_linkml_browser_data.py "$tmp_dir/data.js"
+    mkdir -p app
+    cp "$tmp_dir/data.js" app/data.js
+    cp "$tmp_dir/schema.js" app/schema.js
+    cp src/ai_gene_review/browser/index.html app/
+    echo "Browser deployed to app/ directory"
+    echo "To view: open app/index.html or run 'just serve-browser'"
 
 # Serve the linkml-browser app locally  
 serve-browser:
@@ -1560,17 +1772,24 @@ serve-browser:
 
 # Update browser data without regenerating HTML
 update-browser-data: export-annotations-json
-    @echo "Updating browser data..."
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "Updating browser data..."
+    tmp_dir="$(mktemp -d)"
+    trap 'rm -rf "$tmp_dir"' EXIT
     uv run linkml-browser deploy \
         exports/exported_annotations.json \
-        app \
+        "$tmp_dir" \
         --schema src/ai_gene_review/schema/display_schema.json \
         --title "Gene Annotation Review Browser" \
         --description "Browse and filter gene annotation reviews" \
         --force
-    uv run python src/ai_gene_review/tools/minify_linkml_browser_data.py app/data.js
-    @cp src/ai_gene_review/browser/index.html app/
-    @echo "Data updated in app/"
+    uv run python src/ai_gene_review/tools/minify_linkml_browser_data.py "$tmp_dir/data.js"
+    mkdir -p app
+    cp "$tmp_dir/data.js" app/data.js
+    cp "$tmp_dir/schema.js" app/schema.js
+    cp src/ai_gene_review/browser/index.html app/
+    echo "Data updated in app/"
 
 # ============== Markdown and Documentation Tools ==============
 

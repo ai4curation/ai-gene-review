@@ -1,0 +1,3337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>cct-8 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>cct-8</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9N358" target="_blank" class="term-link">
+                        Q9N358
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Caenorhabditis elegans</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "cct-8";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9N358" data-a="DESCRIPTION: cct-8 encodes the theta (CCT-theta / TCP-1-theta) ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>cct-8 encodes the theta (CCT-theta / TCP-1-theta) subunit of the eukaryotic cytosolic chaperonin CCT (chaperonin-containing TCP-1), also known as TRiC. CCT/TRiC is an ATP-dependent, hetero-oligomeric double-ring chaperonin whose two rings are each built from eight distinct but paralogous subunits (CCT1-CCT8 / alpha-theta); cct-8 is the theta paralog. The assembled complex, not any individual subunit, is the folding machine: it uses cycles of ATP binding and hydrolysis by its subunits to fold roughly a tenth of the cytosolic proteome, most notably the obligate cytoskeletal substrates actin and tubulin, as well as WD40 beta-propeller proteins. The theta subunit contributes an equatorial nucleotide-binding module and an apical substrate-binding surface; it is one of the low-ATPase subunits and participates in substrate contacts and in allosteric coordination of the folding cycle. In C. elegans, cct-8 acts in the cytoplasm, is required for correct subcellular localization of the germ-granule protein PGL-1, and is a limiting determinant of TRiC/CCT assembly: raising CCT8 levels increases assembled chaperonin, suppresses aggregation of polyglutamine and mutant Huntingtin proteins, and extends lifespan, so cct-8 supports cytosolic protein homeostasis during aging and in the germline.</p>
+    </div>
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Proposed New Ontology Terms</h2>
+
+        <div class="proposed-term">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>chaperonin substrate-binding subunit activity</h3>
+                <span class="vote-buttons" data-g="Q9N358" data-a="chaperonin substrate-binding subunit activity" data-r="" data-act="NEW">
+                    <button class="vote-btn" data-v="up" title="Agree this term should be created">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with creating this term">👎</button>
+                </span>
+            </div>
+
+
+            <p><strong>Definition:</strong> A molecular function of a single subunit of a group II chaperonin (CCT/TRiC) that presents an apical-domain substrate-binding surface and contributes subunit-specific contacts to the ATP-dependent folding of client proteins by the assembled chaperonin, without itself folding a substrate independently of the complex.</p>
+
+
+
+            <p><strong>Justification:</strong> Individual CCT subunits have no adequate GO molecular-function term and can only be annotated with the complex-level foldase activity or a generic catalytic term, obscuring subunit-specific substrate selectivity.</p>
+
+
+
+            <p><strong>Parent term:</strong>
+                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003674" target="_blank" class="term-link">
+                    molecular_function
+                </a>
+            </p>
+
+
+
+
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006457" target="_blank" class="term-link">
+                                    GO:0006457
+                                </a>
+                            </span>
+                            <span class="term-label">protein folding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9N358" data-a="GO:0006457" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> cct-8 is the theta subunit of the cytosolic chaperonin CCT/TRiC, which catalyzes ATP-dependent folding of cytoskeletal and other cytosolic substrates. Protein folding is the core biological process for this subunit.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The phylogenetic (IBA) inference is fully consistent with the conserved chaperonin family assignment (PANTHER PTHR11353; InterPro theta-subunit signatures) and with direct biochemical demonstration that purified CCT catalyzes actin folding. In C. elegans, raising CCT8 levels increases assembled TRiC/CCT and suppresses protein aggregation, confirming the folding role in vivo.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16762366" target="_blank" class="term-link">
+                                        PMID:16762366
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The eukaryotic cytosolic chaperonin CCT is an essential ATP-dependent protein folding machine whose action is required for folding the cytoskeletal proteins actin and tubulin</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27892468" target="_blank" class="term-link">
+                                        PMID:27892468
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">increased TRiC/CCT complex is required to avoid aggregation of mutant Huntingtin protein</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:interpro/panther/PTHR11353/PTHR11353-metadata.yaml
+
+                                </span>
+
+                                <div class="support-text">CHAPERONIN</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005832" target="_blank" class="term-link">
+                                    GO:0005832
+                                </a>
+                            </span>
+                            <span class="term-label">chaperonin-containing T-complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9N358" data-a="GO:0005832" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> cct-8 is an integral subunit of the chaperonin-containing T-complex (CCT/TRiC), which is built from eight paralogous subunits per ring.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The CCT complex is assembled from a stoichiometric array of subunits Cct1p-Cct8p; cct-8 is the theta subunit. In C. elegans, ectopic CCT8 is rate-limiting for assembly of the complex. Complex membership is the most important and best-supported annotation for this gene.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15704212" target="_blank" class="term-link">
+                                        PMID:15704212
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Eukaryotic chaperonins, the Cct complexes, are assembled into two rings, each of which is composed of a stoichiometric array of eight different subunits, which are denoted Cct1p-Cct8p.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27892468" target="_blank" class="term-link">
+                                        PMID:27892468
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">ectopic expression of a single subunit (CCT8) is sufficient to increase TRiC/CCT assembly</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9N358" data-a="GO:0005524" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Each CCT subunit binds ATP/ADP through the conserved equatorial nucleotide-binding site of the group II chaperonin fold; nucleotide binding is integral to the folding cycle.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ATP binding is a conserved, well-established property of CCT/TRiC subunits, consistent with the InterPro chaperonin domains and the ATP-dependent mechanism of the complex. The theta subunit is a low-ATPase subunit that binds and retains nucleotide, so ATP binding is the most accurate concrete molecular-function annotation for it.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16762366" target="_blank" class="term-link">
+                                        PMID:16762366
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The eukaryotic cytosolic chaperonin CCT is an essential ATP-dependent protein folding machine</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9N358" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CCT/TRiC is a cytosolic chaperonin; cct-8 acts in the cytoplasm on cytosolic substrates.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Cytoplasmic localization is consistent with the known biology of the cytosolic chaperonin and with the UniProt subcellular location. The more specific term cytosol (GO:0005829) would be preferable, but the broader cytoplasm annotation is not incorrect and is retained.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16762366" target="_blank" class="term-link">
+                                        PMID:16762366
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The eukaryotic cytosolic chaperonin CCT</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006457" target="_blank" class="term-link">
+                                    GO:0006457
+                                </a>
+                            </span>
+                            <span class="term-label">protein folding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9N358" data-a="GO:0006457" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro domain-based annotation of protein folding, duplicating the IBA protein-folding annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent electronic (InterPro) support for the core protein-folding process, in agreement with the IBA annotation and the conserved chaperonin mechanism.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16762366" target="_blank" class="term-link">
+                                        PMID:16762366
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Yeast CCT catalyses the folding of yeast ACT1p and human beta-actin with nearly identical rate constants and yields.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016887" target="_blank" class="term-link">
+                                    GO:0016887
+                                </a>
+                            </span>
+                            <span class="term-label">ATP hydrolysis activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9N358" data-a="GO:0016887" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The CCT subunits form ATPases; ATP hydrolysis around the ring powers the substrate-folding cycle of the chaperonin.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ATP hydrolysis is a conserved catalytic activity of the CCT/TRiC family, supported by the InterPro chaperonin domains. This is a family-level electronic annotation; the theta subunit specifically is one of the low-ATPase subunits that retains bound ADP, but it preserves the catalytic P-loop and aspartate, so the term is retained rather than removed.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16762366" target="_blank" class="term-link">
+                                        PMID:16762366
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The eukaryotic cytosolic chaperonin CCT is an essential ATP-dependent protein folding machine</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:worm/cct-8/cct-8-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">CCT-8 occupies a defined position in the low-ATPase hemisphere and plays a specialized role in substrate binding, allosteric regulation, and complex assembly</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140662" target="_blank" class="term-link">
+                                    GO:0140662
+                                </a>
+                            </span>
+                            <span class="term-label">ATP-dependent protein folding chaperone</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9N358" data-a="GO:0140662" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ATP-dependent protein folding chaperone is the most informative molecular-function term for CCT/TRiC; cct-8 contributes to this activity as a subunit of the complex.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This term precisely captures the activity of the CCT chaperonin. Strictly it is a complex-level activity to which the theta subunit contributes rather than one it enables alone, but the annotation is appropriate and is the best available molecular-function descriptor for this gene.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16762366" target="_blank" class="term-link">
+                                        PMID:16762366
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The eukaryotic cytosolic chaperonin CCT is an essential ATP-dependent protein folding machine</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>cct-8 is the theta subunit of the cytosolic chaperonin CCT/TRiC. As part of the hetero-oligomeric complex it binds nucleotide through its equatorial domain and presents an apical substrate-binding surface, contributing to the ATP-dependent folding of actin, tubulin, and other cytosolic clients. The foldase activity is a property of the assembled complex, to which the theta subunit contributes; theta is a low-ATPase subunit whose distinctive contribution is substrate binding and allosteric coordination rather than bulk ATP consumption.</h3>
+                <span class="vote-buttons" data-g="Q9N358" data-a="FUNCTION: cct-8 is the theta subunit of the cytosolic chaper..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                            ATP binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006457" target="_blank" class="term-link">
+                                protein folding
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005832" target="_blank" class="term-link">
+                            chaperonin-containing T-complex
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16762366" target="_blank" class="term-link">
+                                PMID:16762366
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">The eukaryotic cytosolic chaperonin CCT is an essential ATP-dependent protein folding machine whose action is required for folding the cytoskeletal proteins actin and tubulin</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15704212" target="_blank" class="term-link">
+                                PMID:15704212
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Eukaryotic chaperonins, the Cct complexes, are assembled into two rings, each of which is composed of a stoichiometric array of eight different subunits, which are denoted Cct1p-Cct8p.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27892468" target="_blank" class="term-link">
+                                PMID:27892468
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">ectopic expression of a single subunit (CCT8) is sufficient to increase TRiC/CCT assembly</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16762366" target="_blank" class="term-link">
+                            PMID:16762366
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Quantitative actin folding reactions using yeast CCT purified via an internal tag in the CCT3/gamma subunit.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">CCT/TRiC is an ATP-dependent folding machine for actin and tubulin.</div>
+
+                        <div class="finding-text">"The eukaryotic cytosolic chaperonin CCT is an essential ATP-dependent protein folding machine whose action is required for folding the cytoskeletal proteins actin and tubulin"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Purified yeast CCT catalyzes actin folding.</div>
+
+                        <div class="finding-text">"Yeast CCT catalyses the folding of yeast ACT1p and human beta-actin with nearly identical rate constants and yields."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15704212" target="_blank" class="term-link">
+                            PMID:15704212
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Physiological effects of unassembled chaperonin Cct subunits in the yeast Saccharomyces cerevisiae.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">CCT is built from eight distinct subunits Cct1p-Cct8p per ring.</div>
+
+                        <div class="finding-text">"Eukaryotic chaperonins, the Cct complexes, are assembled into two rings, each of which is composed of a stoichiometric array of eight different subunits, which are denoted Cct1p-Cct8p."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The CCT subunits are functionally non-equivalent.</div>
+
+                        <div class="finding-text">"These results provide evidence for functional differences among Cct subunits and for physiological properties of unassembled subunits."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27892468" target="_blank" class="term-link">
+                            PMID:27892468
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Somatic increase of CCT8 mimics proteostasis of human pluripotent stem cells and extends C. elegans lifespan.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">A single CCT8 subunit is rate-limiting for TRiC/CCT assembly, and increased complex prevents mutant Huntingtin aggregation.</div>
+
+                        <div class="finding-text">"ectopic expression of a single subunit (CCT8) is sufficient to increase TRiC/CCT assembly"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Somatic CCT8 increase extends C. elegans lifespan TRiC/CCT-dependently.</div>
+
+                        <div class="finding-text">"increased expression of CCT8 in somatic tissues extends Caenorhabditis elegans lifespan in a TRiC/CCT-dependent manner"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">CCT8 increase corrects age-associated proteostasis decline in worm HD models.</div>
+
+                        <div class="finding-text">"ameliorates the age-associated demise of proteostasis and corrects proteostatic deficiencies in worm models"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34172445" target="_blank" class="term-link">
+                            PMID:34172445
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Systemic regulation of mitochondria by germline proteostasis prevents protein aggregation in the soma of C. elegans.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Neuronal knockdown of cct-8 promotes polyQ67 aggregation in C. elegans neurons.</div>
+
+                        <div class="finding-text">"knockdown of cct-8 promotes neuronal polyQ67 aggregation"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19805813" target="_blank" class="term-link">
+                            PMID:19805813
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A genomewide RNAi screen for genes that affect the stability, distribution and function of P granules in Caenorhabditis elegans.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">A genome-wide RNAi screen identified 173 P-granule genes; cct-8 was a hit, and UniProt curates cct-8 as required for correct pgl-1 localization.</div>
+
+                        <div class="finding-text">"we report on a genomewide RNAi screen in C. elegans, which identified 173 genes that affect the stability, localization, and function of P granules"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9851916" target="_blank" class="term-link">
+                            PMID:9851916
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Genome sequence of the nematode C. elegans: a platform for investigating biology.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:interpro/panther/PTHR11353/PTHR11353-metadata.yaml
+
+                    </span>
+                </div>
+
+                <div class="reference-title">PANTHER family PTHR11353 (CHAPERONIN) metadata</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">cct-8 is classified in the PANTHER chaperonin family PTHR11353.</div>
+
+                        <div class="finding-text">"CHAPERONIN"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:worm/cct-8/cct-8-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProt record Q9N358 (TCPQ_CAEEL, T-complex protein 1 subunit theta)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">cct-8 is required for correct subcellular localization of pgl-1.</div>
+
+                        <div class="finding-text">"Low and diffuse subcellular localization of pgl-1"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:worm/cct-8/cct-8-deep-research-falcon.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Falcon deep research synthesis for C. elegans cct-8</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Theta is a low-ATPase subunit that contributes substrate binding, allostery, and assembly rather than bulk ATP consumption.</div>
+
+                        <div class="finding-text">"CCT-8 occupies a defined position in the low-ATPase hemisphere and plays a specialized role in substrate binding, allosteric regulation, and complex assembly"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which native C. elegans clients depend specifically on the theta (cct-8) subunit contacts, as opposed to the CCT/TRiC complex as a whole?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9N358" data-a="Q: Which native C. elegans clients depend specificall..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is PGL-1 a direct CCT/TRiC substrate, or is its P-granule mislocalization on cct-8 depletion an indirect consequence of impaired actin/tubulin folding?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9N358" data-a="Q: Is PGL-1 a direct CCT/TRiC substrate, or is its P-..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is the low-ATPase, substrate-binding character of the theta subunit seen in mammalian/yeast CCT structures conserved and functionally important in C. elegans?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9N358" data-a="Q: Is the low-ATPase, substrate-binding character of ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Perform affinity purification/mass spectrometry of tagged cct-8 (or the assembled CCT/TRiC) from C. elegans to identify native clients, and test whether PGL-1 co-purifies with the chaperonin.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: cct-8 engages a defined set of native C. elegans clients that includes cytoskeletal proteins and may include germ-granule components.</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q9N358" data-a="EXPERIMENT: Perform affinity purification/mass spectrometry of..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Map theta-subunit apical-domain substrate contacts by crosslinking mass spectrometry or cryo-EM of CCT/TRiC caught with folding substrates, to define the subunit-specific substrate-binding contribution.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The theta apical domain makes distinct substrate contacts that differ from the other seven CCT subunits.</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q9N358" data-a="EXPERIMENT: Map theta-subunit apical-domain substrate contacts..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The native C. elegans client repertoire that specifically depends on the theta (CCT8) subunit is undefined, and there is no GO molecular-function term that expresses &#34;substrate-binding subunit of the CCT chaperonin&#34;. The theta subunit&#39;s own activity can therefore only be annotated as the complex-level foldase (GO:0140662) or as generic ATP binding/hydrolysis, leaving cct-8 molecular-function-dark at the subunit level.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">ONTOLOGY</span><span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> It is firmly established that cct-8 is the theta subunit of the eight-membered CCT/TRiC ring, that the assembled complex folds actin, tubulin, WD40 proteins, and about 10% of the cytosolic proteome, and that the eight subunits are functionally non-equivalent. Structural work in CCT/TRiC further shows theta is a low-ATPase subunit that makes substrate contacts (actin and tubulin contact CCT8-containing apical domains) and contributes to allostery and assembly.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> CCT subunits are individually essential and non-redundant, so subunit-specific substrate engagement underlies the complex&#39;s client selectivity. Because no ontology term names a chaperonin substrate-binding subunit activity, the theta subunit&#39;s characterized structural/regulatory role cannot be curated, and its native worm-specific clients remain unmapped.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Affinity-proteomics of the C. elegans CCT/TRiC to define native theta clients, plus crosslinking or cryo-EM mapping of theta apical-domain contacts, would define the subunit contribution; a new GO molecular-function term for a chaperonin substrate-binding subunit activity would let the knowledge be expressed.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"These results provide evidence for functional differences among Cct subunits and for physiological properties of unassembled subunits."</em> — PMID:15704212</li>
+
+                <li><em>"Both actin and tubulin make specific contacts with CCT-8-containing apical domains during folding"</em> — file:worm/cct-8/cct-8-deep-research-falcon.md</li>
+
+            </ul>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Proposed term (ontology gap):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><strong>chaperonin substrate-binding subunit activity</strong> — Individual CCT subunits such as cct-8/theta have no adequate GO molecular-function term: they can currently be annotated only with the complex-level foldase activity (GO:0140662) or a generic catalytic term, neither of which captures the subunit-specific substrate-binding contribution that distinguishes the eight paralogous subunits.</li>
+
+            </ul>
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> It is unknown whether the germ-granule protein PGL-1 is a direct CCT/TRiC client of cct-8 or whether the pgl-1 mislocalization seen on cct-8 depletion is an indirect consequence of impaired folding of another substrate (for example actin, which scaffolds germ granules).</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">RESIDUAL_SUBGAP</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> cct-8 depletion causes low, diffuse PGL-1 localization in C. elegans embryos rather than confinement to granules, and cct-8 knockdown promotes neuronal polyglutamine aggregation, identifying cct-8 as required for correct protein solubility/localization in vivo. Whether PGL-1 physically engages the chaperonin has not been tested.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Distinguishing a direct chaperonin-client relationship from an indirect cytoskeletal effect would clarify how the general folding machinery supports germline biomolecular-condensate (P-granule) assembly.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Test whether PGL-1 physically engages CCT/TRiC (co-purification, in vitro folding assays) and whether actin/tubulin folding defects alone reproduce the P-granule phenotype.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Low and diffuse subcellular localization of pgl-1"</em> — file:worm/cct-8/cct-8-uniprot.txt</li>
+
+                <li><em>"knockdown of cct-8 promotes neuronal polyQ67 aggregation"</em> — PMID:34172445</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Tags</h2>
+        <div class="aliases">
+
+            <span class="badge">caeel-proteostasis</span>
+
+        </div>
+    </div>
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(cct-8-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9N358" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Comprehensive Research Report: *cct-8* (CCT-8 / T-complex protein 1 subunit theta) in *Caenorhabditis elegans*</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">32 citations</span>
+
+
+                    <span class="report-badge">1 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-03T19:28:04.402405</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="cct-8-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="comprehensive-research-report-cct-8-cct-8-t-complex-protein-1-subunit-theta-in-caenorhabditis-elegans">Comprehensive Research Report: <em>cct-8</em> (CCT-8 / T-complex protein 1 subunit theta) in <em>Caenorhabditis elegans</em></h1>
+<h2 id="1-gene-and-protein-identity">1. Gene and Protein Identity</h2>
+<p>The <em>C. elegans</em> gene <em>cct-8</em> (ORF name Y55F3AR.3; UniProt Q9N358) encodes the theta (θ) subunit of the eukaryotic group II chaperonin known as TRiC (TCP-1 Ring Complex), also designated CCT (chaperonin containing TCP-1). CCT-8 belongs to the TCP-1 chaperonin family and contains the characteristic domain architecture of the CCT/GroEL superfamily, including the Cpn60/TCP-1 equatorial domain (ATP-binding), an intermediate hinge domain, and the apical substrate-binding domain (Chap_CCT_theta, IPR012721) (smith2022mechanisticinsightsinto pages 1-3, willison2018thesubstratespecificity pages 1-2). The protein is conserved across eukaryotes, with clear orthologs in yeast (CCT8), mammals (CCT8/CCTθ), and other organisms (brackley2009activitiesofthe pages 1-2).</p>
+<h2 id="2-primary-molecular-function">2. Primary Molecular Function</h2>
+<h3 id="21-atp-dependent-protein-folding-chaperonin">2.1. ATP-Dependent Protein Folding Chaperonin</h3>
+<p>CCT-8 does not function as a classical enzyme catalyzing a small-molecule chemical reaction. Instead, it is a structural and functional subunit of the ~1 MDa TRiC/CCT chaperonin complex, which uses ATP binding and hydrolysis to drive conformational changes that facilitate the folding of nascent and non-native polypeptides within a central enclosed chamber (smith2022mechanisticinsightsinto pages 1-3, ghozlan2022thetrickybusiness pages 1-2). The complex consists of two stacked rings, each composed of eight paralogous but distinct subunits (CCT1–CCT8 in yeast/worm nomenclature, or CCTα–θ in mammalian nomenclature) arranged in a defined order (monkemeyer2019structuralandfunctional pages 42-42, brackley2009activitiesofthe pages 1-2).</p>
+<h3 id="22-substrate-specificity">2.2. Substrate Specificity</h3>
+<p>The TRiC/CCT complex is an essential molecular chaperone responsible for folding an estimated 10% of cytosolic proteins (noormohammadi2016somaticincreaseof pages 1-2, smith2022mechanisticinsightsinto pages 1-3). Its principal obligate substrates are the cytoskeletal proteins <strong>actin</strong> and <strong>tubulin</strong>, which are completely dependent on TRiC/CCT to reach their native conformations and cannot be folded by other chaperonins such as GroEL (brackley2009activitiesofthe pages 2-4, willison2018thesubstratespecificity pages 1-2, monkemeyer2019structuralandfunctional pages 31-33). Additional substrate classes include <strong>WD40 β-propeller repeat proteins</strong> and a variety of other structurally complex proteins involved in cell cycle regulation (e.g., Cdc20, Cdh1, cyclin E, Polo-like kinase 1), tumor suppression (Von Hippel-Lindau protein), and signal transduction (brackley2009activitiesofthe pages 2-4, ghozlan2022thetrickybusiness pages 6-7). The complex lowers folding energy barriers for substrates with complex topologies and can even partially encase and sequentially fold proteins larger than its central cavity (ghozlan2022thetrickybusiness pages 6-7).</p>
+<h3 id="23-cct-8-subunit-specific-properties">2.3. CCT-8 Subunit-Specific Properties</h3>
+<p>Within the TRiC/CCT complex, CCT-8 has distinctive biochemical characteristics that differentiate it from other subunits:</p>
+<ul>
+<li><strong>Low ATP affinity:</strong> CCT-8 is classified as a low ATP-affinity subunit, belonging to the "CCT6 hemisphere" (CCT1, CCT3, CCT6, CCT8), in contrast to the high-ATPase "CCT2 hemisphere" (CCT2, CCT4, CCT5, CCT7) (ghozlan2022thetrickybusiness pages 5-6, smith2022mechanisticinsightsinto pages 3-5).</li>
+<li><strong>ADP retention:</strong> CCT-8 retains bound ADP through specific structural features including residue K171, which forms an extra salt bridge with the nucleoside, and D499, which hydrogen-bonds the ribose ring. These adaptations stabilize ADP binding and limit nucleotide exchange, meaning CCT-8 does not significantly consume ATP during folding cycles (smith2022mechanisticinsightsinto pages 3-5).</li>
+<li><strong>Regulatory role in allostery and assembly:</strong> Rather than directly powering folding through ATP hydrolysis, CCT-8 contributes to allosteric cooperativity within the complex through its N-terminal region, potentially in an ATP hydrolysis-independent manner. This suggests a specialized structural/regulatory function in coordinating the conformational cycle of the complex (ghozlan2022thetrickybusiness pages 5-6).</li>
+<li><strong>Substrate binding contacts:</strong> Despite low ATPase activity, CCT-8 plays an important role in substrate positioning. Structural analyses show that many substrates form contacts with CCT8, CCT3, and CCT6 on the positively charged patch of the CCT6 hemisphere. Both actin and tubulin make specific contacts with CCT-8-containing apical domains during folding (smith2022mechanisticinsightsinto pages 3-5, smith2022mechanisticinsightsinto pages 5-8).</li>
+<li><strong>Complex assembly:</strong> Mutations in the ATP-binding P-loop or catalytic aspartic acid of low-affinity subunits including CCT-8 do not cause growth loss in yeast, unlike equivalent mutations in high-affinity subunits, indicating a functionally distinct contribution to overall complex activity (ghozlan2022thetrickybusiness pages 4-5).</li>
+</ul>
+<h2 id="3-subcellular-localization">3. Subcellular Localization</h2>
+<p>TRiC/CCT is a <strong>cytosolic chaperonin complex</strong> (brackley2009activitiesofthe pages 1-2, zeng2024revisitingthechaperonin pages 1-4, smith2022mechanisticinsightsinto pages 1-3, smith2022mechanisticinsightsinto pages 9-10). The "C" in CCT explicitly stands for "cytosolic" (smith2022mechanisticinsightsinto pages 9-10). CCT-8, as an integral subunit of this complex, carries out its primary function in the <strong>cytoplasm/cytosol</strong>, where it assists in folding newly synthesized polypeptides emerging from ribosomes and helps maintain solubility of metastable proteins. Some evidence suggests that CCT subunits may also associate with membranes through S-palmitoylation post-translational modifications, possibly facilitating ordered assembly near the endoplasmic reticulum (ghozlan2022thetrickybusiness pages 4-5), though the predominant localization and function is cytosolic.</p>
+<h2 id="4-biological-processes-and-pathway-involvement-in-c-elegans">4. Biological Processes and Pathway Involvement in <em>C. elegans</em></h2>
+<h3 id="41-proteostasis-and-aging">4.1. Proteostasis and Aging</h3>
+<p>A landmark study by Noormohammadi et al. (2016, <em>Nature Communications</em>) demonstrated that <em>cct-8</em> is a critical regulator of proteostasis and longevity in <em>C. elegans</em>. Key findings include:</p>
+<ul>
+<li><strong>Somatic overexpression of <em>cct-8</em> is sufficient to increase TRiC/CCT complex assembly</strong>, promoting the formation of functional double-ring structures and enhancing the protein folding capacity of somatic tissues (noormohammadi2016somaticincreaseof pages 1-2, noormohammadi2016somaticincreaseof pages 7-8).</li>
+<li><em>cct-8</em> overexpression <strong>extends <em>C. elegans</em> lifespan by approximately 20% under normal conditions</strong> and by 20–40% under mild heat stress conditions (noormohammadi2016somaticincreaseof pages 6-7, noormohammadi2016somaticincreaseof pages 7-8).</li>
+<li>CCT subunit expression <strong>decreases with age</strong>, and restoring <em>cct-8</em> expression can overcome the age-associated decline in proteotoxic stress resistance (noormohammadi2016somaticincreaseof pages 6-7, noormohammadi2016somaticincreaseof pages 8-9).</li>
+</ul>
+<h3 id="42-suppression-of-polyglutamine-aggregation">4.2. Suppression of Polyglutamine Aggregation</h3>
+<p>CCT-8 plays a direct role in suppressing toxic protein aggregation in <em>C. elegans</em> models of Huntington's disease:</p>
+<ul>
+<li>Ectopic expression of <em>cct-8</em> <strong>reduces polyQ67 aggregate burden and improves motility</strong> in worms expressing expanded polyglutamine tracts in neurons, without reducing total polyQ protein levels—consistent with enhanced folding/aggregation control rather than reduced expression (noormohammadi2016somaticincreaseof pages 8-9, noormohammadi2016somaticincreaseof pages 7-8).</li>
+<li>Conversely, neuronal-specific knockdown of TRiC/CCT subunits (including <em>cct-8</em>) is sufficient to <strong>promote polyQ67 aggregation in neurons</strong> (calculli2021systemicregulationof pages 2-3).</li>
+<li>In human iPSC-derived striatal neurons carrying the Huntington's disease mutation, knockdown of CCT8 triggers polyQ aggregate accumulation and induces caspase-3-mediated cell death, with mutant HTT-expressing neurons being more vulnerable to CCT dysfunction than control cells (noormohammadi2016somaticincreaseof pages 6-6).</li>
+</ul>
+<h3 id="43-integration-with-longevity-signaling-pathways">4.3. Integration with Longevity Signaling Pathways</h3>
+<p>The TRiC/CCT complex, and <em>cct-8</em> specifically, is functionally required for lifespan extension across multiple canonical <em>C. elegans</em> longevity paradigms:</p>
+<ul>
+<li><strong>Insulin/IGF-1 signaling (IIS):</strong> Knockdown of <em>cct-8</em> significantly reduces the extended lifespan of <em>daf-2</em> (insulin receptor) mutant worms (noormohammadi2016somaticincreaseof pages 9-10, noormohammadi2016somaticincreaseof pages 8-9).</li>
+<li><strong>Dietary restriction (DR):</strong> Similarly, <em>cct-8</em> loss-of-function shortens the lifespan of <em>eat-2</em> mutants, a genetic model of dietary restriction (noormohammadi2016somaticincreaseof pages 9-10, noormohammadi2016somaticincreaseof pages 8-9).</li>
+<li><strong>Germline signaling:</strong> In germline-lacking <em>glp-1</em> mutants, <em>cct-8</em> knockdown also reduces extended lifespan. Notably, germline-lacking worms show upregulated CCT-1 expression in somatic tissues (particularly the intestine), suggesting that germline-to-soma signaling modulates TRiC/CCT levels as part of a longevity program (noormohammadi2016somaticincreaseof pages 9-10).</li>
+<li>Importantly, loss of TRiC/CCT function does not significantly affect wild-type lifespan, indicating that the complex is specifically required for the enhanced proteostasis that underlies longevity in these genetic backgrounds (noormohammadi2016somaticincreaseof pages 8-9).</li>
+</ul>
+<h3 id="44-relationship-with-the-heat-shock-response">4.4. Relationship with the Heat Shock Response</h3>
+<p><em>cct-8</em> overexpression can extend lifespan even when the heat shock transcription factor <em>hsf-1</em> is knocked down, demonstrating that the protective effects of enhanced TRiC/CCT assembly operate at least partly <strong>independently of the canonical heat shock response</strong> (noormohammadi2016somaticincreaseof pages 6-7, noormohammadi2016somaticincreaseof pages 9-10, noormohammadi2016somaticincreaseof pages 10-11). This is a significant finding because it indicates that boosting chaperonin capacity can compensate for deficient transcriptional stress responses, providing an alternative axis for maintaining proteostasis.</p>
+<h3 id="45-germline-and-proliferative-cell-function">4.5. Germline and Proliferative Cell Function</h3>
+<p>High levels of TRiC/CCT are essential for germline stability and the maintenance of proliferating cells in <em>C. elegans</em>. Adult knockdown of CCT subunits dramatically decreases germ cell numbers and destabilizes the germline (noormohammadi2016somaticincreaseof pages 6-7). This is consistent with the high demand for protein folding capacity in rapidly dividing cells.</p>
+<h2 id="5-summary-of-functional-annotation">5. Summary of Functional Annotation</h2>
+<p>The following table summarizes the key functional attributes of CCT-8/<em>cct-8</em> in <em>C. elegans</em>:</p>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Description</th>
+<th>Evidence/Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene Identity</td>
+<td><strong>cct-8</strong> in <em>Caenorhabditis elegans</em> encodes <strong>T-complex protein 1 subunit theta (CCT-8/CCT8)</strong>, one of the eight distinct subunits of the cytosolic <strong>TRiC/CCT chaperonin</strong>. This matches the theta subunit annotation and places the protein in the conserved TCP-1 chaperonin family.</td>
+<td>(smith2022mechanisticinsightsinto pages 1-3, willison2018thesubstratespecificity pages 1-2, brackley2009activitiesofthe pages 1-2)</td>
+</tr>
+<tr>
+<td>Protein Function</td>
+<td>CCT-8 functions as a <strong>structural and functional subunit of the ATP-dependent TRiC/CCT folding machine</strong>, which promotes folding of obligate cytoskeletal substrates such as <strong>actin and tubulin</strong> and also assists folding/assembly of additional cytosolic proteins, including many WD40-repeat proteins. The complex facilitates folding rather than catalyzing a classic small-molecule enzymatic transformation.</td>
+<td>(smith2022mechanisticinsightsinto pages 1-3, brackley2009activitiesofthe pages 2-4, willison2018thesubstratespecificity pages 1-2, ghozlan2022thetrickybusiness pages 6-7)</td>
+</tr>
+<tr>
+<td>Subcellular Localization</td>
+<td>TRiC/CCT is a <strong>cytosolic/cytoplasmic chaperonin complex</strong> in eukaryotic cells; therefore CCT-8’s primary site of action is the <strong>cytosol</strong>, where newly synthesized and metastable cytosolic proteins are folded.</td>
+<td>(brackley2009activitiesofthe pages 1-2, zeng2024revisitingthechaperonin pages 1-4, smith2022mechanisticinsightsinto pages 1-3, smith2022mechanisticinsightsinto pages 9-10)</td>
+</tr>
+<tr>
+<td>Biological Processes</td>
+<td>In <em>C. elegans</em>, cct-8 supports <strong>proteostasis</strong>, resistance to <strong>proteotoxic stress</strong>, maintenance of protein folding capacity during <strong>aging</strong>, and suppression of toxic protein aggregation. Overexpression of cct-8 increases TRiC/CCT assembly and improves organismal protein homeostasis.</td>
+<td>(noormohammadi2016somaticincreaseof pages 9-10, noormohammadi2016somaticincreaseof pages 6-7, noormohammadi2016somaticincreaseof pages 1-2, noormohammadi2016somaticincreaseof pages 7-8)</td>
+</tr>
+<tr>
+<td>Biological Processes</td>
+<td>cct-8 also contributes to <strong>germline stability/proliferative cell function</strong> and is linked to maintenance of tissue fitness under stress. Adult knockdown of CCT subunits decreases germ cell numbers, while high TRiC/CCT levels are important for proliferating cells and germline integrity.</td>
+<td>(noormohammadi2016somaticincreaseof pages 6-7, noormohammadi2016somaticincreaseof pages 9-10)</td>
+</tr>
+<tr>
+<td>Pathway Involvement</td>
+<td>cct-8 is functionally required for lifespan extension in major <em>C. elegans</em> longevity paradigms, including <strong>reduced insulin/IGF-1 signaling</strong> (<strong>daf-2</strong>), <strong>dietary restriction</strong> (<strong>eat-2</strong>), and <strong>germline-loss signaling</strong> (<strong>glp-1</strong>). Knockdown of cct-8 shortens the extended lifespan of these long-lived backgrounds, indicating that TRiC/CCT-dependent proteostasis is a shared downstream requirement.</td>
+<td>(noormohammadi2016somaticincreaseof pages 9-10, noormohammadi2016somaticincreaseof pages 8-9)</td>
+</tr>
+<tr>
+<td>Pathway Involvement</td>
+<td>cct-8-mediated lifespan extension is at least partly <strong>HSF-1-independent</strong>: cct-8 overexpression can remain beneficial even when <strong>hsf-1</strong> is knocked down, suggesting that boosting TRiC/CCT assembly can bypass some dependence on the canonical heat-shock transcriptional program.</td>
+<td>(noormohammadi2016somaticincreaseof pages 6-7, noormohammadi2016somaticincreaseof pages 9-10, noormohammadi2016somaticincreaseof pages 10-11)</td>
+</tr>
+<tr>
+<td>Key Phenotypes</td>
+<td><strong>Somatic overexpression</strong> of cct-8 extends <em>C. elegans</em> lifespan by about <strong>20% under normal conditions</strong> and by roughly <strong>20–40% under mild heat stress/heat-stress paradigms</strong>, consistent with improved proteostasis in adulthood.</td>
+<td>(noormohammadi2016somaticincreaseof pages 6-7, noormohammadi2016somaticincreaseof pages 7-8)</td>
+</tr>
+<tr>
+<td>Key Phenotypes</td>
+<td>cct-8 overexpression reduces <strong>polyQ67 aggregate burden</strong>, improves <strong>motility</strong>, and ameliorates proteotoxic phenotypes in worm models of <strong>Huntington-like polyglutamine toxicity</strong> without reducing total polyQ protein levels, consistent with improved folding/aggregation control rather than reduced expression.</td>
+<td>(noormohammadi2016somaticincreaseof pages 1-2, noormohammadi2016somaticincreaseof pages 8-9, noormohammadi2016somaticincreaseof pages 7-8)</td>
+</tr>
+<tr>
+<td>Key Phenotypes</td>
+<td>Loss or downregulation of TRiC/CCT activity, including cct-8 perturbation, compromises proteostasis and promotes aggregation of disease-linked proteins; neuronal-specific CCT downregulation is sufficient to enhance <strong>neuronal polyQ67 aggregation</strong>.</td>
+<td>(noormohammadi2016somaticincreaseof pages 6-6, calculli2021systemicregulationof pages 2-3)</td>
+</tr>
+<tr>
+<td>Subunit-Specific Properties</td>
+<td>Within TRiC/CCT, CCT-8 belongs to the <strong>low-ATPase / low-ATP-affinity CCT6 hemisphere</strong> (with CCT1/3/6/8). It retains bound <strong>ADP</strong> unusually strongly, has <strong>slow ADP off-rates</strong>, and may contribute less to ATP consumption than high-affinity subunits, implying a more specialized regulatory role in the ATPase cycle.</td>
+<td>(ghozlan2022thetrickybusiness pages 5-6, smith2022mechanisticinsightsinto pages 3-5, ghozlan2022thetrickybusiness pages 4-5)</td>
+</tr>
+<tr>
+<td>Subunit-Specific Properties</td>
+<td>CCT-8 contributes to <strong>allosteric cooperativity</strong> and <strong>complex assembly</strong>, potentially via N-terminal features that function partly independently of ATP hydrolysis. These properties suggest that cct-8 is not merely interchangeable with other subunits but helps define TRiC/CCT architecture and regulation.</td>
+<td>(ghozlan2022thetrickybusiness pages 5-6)</td>
+</tr>
+<tr>
+<td>Subunit-Specific Properties</td>
+<td>CCT-8 also participates directly in <strong>substrate binding contacts</strong>. Structural studies indicate many substrates contact CCT8, and <strong>actin</strong> and <strong>tubulin</strong> each make contacts with CCT8-containing apical domains during the folding cycle, helping position/stabilize folding intermediates.</td>
+<td>(smith2022mechanisticinsightsinto pages 3-5, smith2022mechanisticinsightsinto pages 5-8)</td>
+</tr>
+<tr>
+<td>Structural Context</td>
+<td>The eight TRiC/CCT subunits occupy <strong>fixed positions</strong> within each ring; proposed arrangements place CCT8 at a defined site and indicate it may participate in <strong>homotypic inter-ring contacts</strong>, supporting its contribution to complex architecture as well as folding function.</td>
+<td>(monkemeyer2019structuralandfunctional pages 42-42, monkemeyer2019structuralandfunctional pages 29-31, brackley2009activitiesofthe pages 2-4)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the verified functional annotation of </em>C. elegans<em> cct-8/CCT-8 as the theta subunit of the TRiC/CCT chaperonin. It highlights molecular function, localization, pathway links, phenotypes, and subunit-specific properties most relevant to proteostasis, aging, and polyQ aggregation.</em></p>
+<h2 id="6-evolutionary-conservation-and-broader-significance">6. Evolutionary Conservation and Broader Significance</h2>
+<p>The functional importance of CCT8 is broadly conserved across eukaryotes. In mammals, CCT8 has been identified as upregulated in several cancers (hepatocellular carcinoma, colorectal cancer) and is associated with tumor progression (OpenTargets Search: -CCT8). The human ortholog has been shown to be essential for T cell maturation, selection, and function, with loss of CCT8 in T cells impairing proteostasis, nuclear actin filament formation, and immune responses. Recent work has also identified FKBP4 (an Hsp90 co-chaperone) as a facilitator of CCT8 folding, connecting the Hsp90 system to TRiC/CCT-dependent proteostasis. In <em>Arabidopsis</em>, CCT8 overexpression similarly ameliorates protein aggregation in differentiated cells and confers stress tolerance (zeng2024revisitingthechaperonin pages 6-8).</p>
+<h2 id="7-conclusions">7. Conclusions</h2>
+<p><em>cct-8</em> in <em>C. elegans</em> encodes the theta subunit of the TRiC/CCT cytosolic chaperonin complex, an essential ATP-dependent molecular machine that folds actin, tubulin, WD40 proteins, and approximately 10% of the cytosolic proteome. Within the complex, CCT-8 occupies a defined position in the low-ATPase hemisphere and plays a specialized role in substrate binding, allosteric regulation, and complex assembly rather than direct ATP consumption. In <em>C. elegans</em>, <em>cct-8</em> is a critical determinant of proteostasis during aging: its overexpression extends lifespan, suppresses polyglutamine aggregation, and improves stress resistance, while its loss-of-function compromises the longevity conferred by reduced insulin signaling, dietary restriction, and germline ablation pathways. The protein functions primarily in the cytosol and is essential for both somatic tissue maintenance during aging and germline cell integrity.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(smith2022mechanisticinsightsinto pages 1-3): Theresa M. Smith and Barry M. Willardson. Mechanistic insights into protein folding by the eukaryotic chaperonin complex cct. Biochemical Society Transactions, 50:1403-1414, Oct 2022. URL: https://doi.org/10.1042/bst20220591, doi:10.1042/bst20220591. This article has 23 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(willison2018thesubstratespecificity pages 1-2): Keith R. Willison. The substrate specificity of eukaryotic cytosolic chaperonin cct. Philosophical Transactions of the Royal Society B: Biological Sciences, 373:20170192, Jun 2018. URL: https://doi.org/10.1098/rstb.2017.0192, doi:10.1098/rstb.2017.0192. This article has 76 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(brackley2009activitiesofthe pages 1-2): Karen I. Brackley and Julie Grantham. Activities of the chaperonin containing tcp-1 (cct): implications for cell cycle progression and cytoskeletal organisation. Cell Stress and Chaperones, 14:23-31, Jan 2009. URL: https://doi.org/10.1007/s12192-008-0057-x, doi:10.1007/s12192-008-0057-x. This article has 215 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ghozlan2022thetrickybusiness pages 1-2): Heba Ghozlan, Amanda Cox, Daniel Nierenberg, Stephen King, and Annette R. Khaled. The tricky business of protein folding in health and disease. Frontiers in Cell and Developmental Biology, May 2022. URL: https://doi.org/10.3389/fcell.2022.906530, doi:10.3389/fcell.2022.906530. This article has 35 citations.</p>
+</li>
+<li>
+<p>(monkemeyer2019structuralandfunctional pages 42-42): Leonie Mönkemeyer. Structural and functional studies on the eukaryotic chaperonin tric/cct and its cooperating chaperone hgh1. Dissertation, Jan 2019. URL: https://doi.org/10.5282/edoc.23750, doi:10.5282/edoc.23750. This article has 0 citations.</p>
+</li>
+<li>
+<p>(noormohammadi2016somaticincreaseof pages 1-2): Alireza Noormohammadi, Amirabbas Khodakarami, Ricardo Gutierrez-Garcia, Hyun Ju Lee, Seda Koyuncu, Tim König, Christina Schindler, Isabel Saez, Azra Fatima, Christoph Dieterich, and David Vilchez. Somatic increase of cct8 mimics proteostasis of human pluripotent stem cells and extends c. elegans lifespan. Nature Communications, Nov 2016. URL: https://doi.org/10.1038/ncomms13649, doi:10.1038/ncomms13649. This article has 96 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(brackley2009activitiesofthe pages 2-4): Karen I. Brackley and Julie Grantham. Activities of the chaperonin containing tcp-1 (cct): implications for cell cycle progression and cytoskeletal organisation. Cell Stress and Chaperones, 14:23-31, Jan 2009. URL: https://doi.org/10.1007/s12192-008-0057-x, doi:10.1007/s12192-008-0057-x. This article has 215 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(monkemeyer2019structuralandfunctional pages 31-33): Leonie Mönkemeyer. Structural and functional studies on the eukaryotic chaperonin tric/cct and its cooperating chaperone hgh1. Dissertation, Jan 2019. URL: https://doi.org/10.5282/edoc.23750, doi:10.5282/edoc.23750. This article has 0 citations.</p>
+</li>
+<li>
+<p>(ghozlan2022thetrickybusiness pages 6-7): Heba Ghozlan, Amanda Cox, Daniel Nierenberg, Stephen King, and Annette R. Khaled. The tricky business of protein folding in health and disease. Frontiers in Cell and Developmental Biology, May 2022. URL: https://doi.org/10.3389/fcell.2022.906530, doi:10.3389/fcell.2022.906530. This article has 35 citations.</p>
+</li>
+<li>
+<p>(ghozlan2022thetrickybusiness pages 5-6): Heba Ghozlan, Amanda Cox, Daniel Nierenberg, Stephen King, and Annette R. Khaled. The tricky business of protein folding in health and disease. Frontiers in Cell and Developmental Biology, May 2022. URL: https://doi.org/10.3389/fcell.2022.906530, doi:10.3389/fcell.2022.906530. This article has 35 citations.</p>
+</li>
+<li>
+<p>(smith2022mechanisticinsightsinto pages 3-5): Theresa M. Smith and Barry M. Willardson. Mechanistic insights into protein folding by the eukaryotic chaperonin complex cct. Biochemical Society Transactions, 50:1403-1414, Oct 2022. URL: https://doi.org/10.1042/bst20220591, doi:10.1042/bst20220591. This article has 23 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(smith2022mechanisticinsightsinto pages 5-8): Theresa M. Smith and Barry M. Willardson. Mechanistic insights into protein folding by the eukaryotic chaperonin complex cct. Biochemical Society Transactions, 50:1403-1414, Oct 2022. URL: https://doi.org/10.1042/bst20220591, doi:10.1042/bst20220591. This article has 23 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ghozlan2022thetrickybusiness pages 4-5): Heba Ghozlan, Amanda Cox, Daniel Nierenberg, Stephen King, and Annette R. Khaled. The tricky business of protein folding in health and disease. Frontiers in Cell and Developmental Biology, May 2022. URL: https://doi.org/10.3389/fcell.2022.906530, doi:10.3389/fcell.2022.906530. This article has 35 citations.</p>
+</li>
+<li>
+<p>(zeng2024revisitingthechaperonin pages 1-4): Chenglong Zeng, Shenqi Han, Yonglong Pan, Zhao Huang, Binhao Zhang, and Bixiang Zhang. Revisiting the chaperonin t‐complex protein‐1 ring complex in human health and disease: a proteostasis modulator and beyond. Clinical and Translational Medicine, Feb 2024. URL: https://doi.org/10.1002/ctm2.1592, doi:10.1002/ctm2.1592. This article has 24 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(smith2022mechanisticinsightsinto pages 9-10): Theresa M. Smith and Barry M. Willardson. Mechanistic insights into protein folding by the eukaryotic chaperonin complex cct. Biochemical Society Transactions, 50:1403-1414, Oct 2022. URL: https://doi.org/10.1042/bst20220591, doi:10.1042/bst20220591. This article has 23 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(noormohammadi2016somaticincreaseof pages 7-8): Alireza Noormohammadi, Amirabbas Khodakarami, Ricardo Gutierrez-Garcia, Hyun Ju Lee, Seda Koyuncu, Tim König, Christina Schindler, Isabel Saez, Azra Fatima, Christoph Dieterich, and David Vilchez. Somatic increase of cct8 mimics proteostasis of human pluripotent stem cells and extends c. elegans lifespan. Nature Communications, Nov 2016. URL: https://doi.org/10.1038/ncomms13649, doi:10.1038/ncomms13649. This article has 96 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(noormohammadi2016somaticincreaseof pages 6-7): Alireza Noormohammadi, Amirabbas Khodakarami, Ricardo Gutierrez-Garcia, Hyun Ju Lee, Seda Koyuncu, Tim König, Christina Schindler, Isabel Saez, Azra Fatima, Christoph Dieterich, and David Vilchez. Somatic increase of cct8 mimics proteostasis of human pluripotent stem cells and extends c. elegans lifespan. Nature Communications, Nov 2016. URL: https://doi.org/10.1038/ncomms13649, doi:10.1038/ncomms13649. This article has 96 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(noormohammadi2016somaticincreaseof pages 8-9): Alireza Noormohammadi, Amirabbas Khodakarami, Ricardo Gutierrez-Garcia, Hyun Ju Lee, Seda Koyuncu, Tim König, Christina Schindler, Isabel Saez, Azra Fatima, Christoph Dieterich, and David Vilchez. Somatic increase of cct8 mimics proteostasis of human pluripotent stem cells and extends c. elegans lifespan. Nature Communications, Nov 2016. URL: https://doi.org/10.1038/ncomms13649, doi:10.1038/ncomms13649. This article has 96 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(calculli2021systemicregulationof pages 2-3): Giuseppe Calculli, Hyun Ju Lee, Koning Shen, Uyen Pham, Marija Herholz, Aleksandra Trifunovic, Andrew Dillin, and David Vilchez. Systemic regulation of mitochondria by germline proteostasis prevents protein aggregation in the soma of <i>c. elegans</i>. Jun 2021. URL: https://doi.org/10.1126/sciadv.abg3012, doi:10.1126/sciadv.abg3012. This article has 65 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(noormohammadi2016somaticincreaseof pages 6-6): Alireza Noormohammadi, Amirabbas Khodakarami, Ricardo Gutierrez-Garcia, Hyun Ju Lee, Seda Koyuncu, Tim König, Christina Schindler, Isabel Saez, Azra Fatima, Christoph Dieterich, and David Vilchez. Somatic increase of cct8 mimics proteostasis of human pluripotent stem cells and extends c. elegans lifespan. Nature Communications, Nov 2016. URL: https://doi.org/10.1038/ncomms13649, doi:10.1038/ncomms13649. This article has 96 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(noormohammadi2016somaticincreaseof pages 9-10): Alireza Noormohammadi, Amirabbas Khodakarami, Ricardo Gutierrez-Garcia, Hyun Ju Lee, Seda Koyuncu, Tim König, Christina Schindler, Isabel Saez, Azra Fatima, Christoph Dieterich, and David Vilchez. Somatic increase of cct8 mimics proteostasis of human pluripotent stem cells and extends c. elegans lifespan. Nature Communications, Nov 2016. URL: https://doi.org/10.1038/ncomms13649, doi:10.1038/ncomms13649. This article has 96 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(noormohammadi2016somaticincreaseof pages 10-11): Alireza Noormohammadi, Amirabbas Khodakarami, Ricardo Gutierrez-Garcia, Hyun Ju Lee, Seda Koyuncu, Tim König, Christina Schindler, Isabel Saez, Azra Fatima, Christoph Dieterich, and David Vilchez. Somatic increase of cct8 mimics proteostasis of human pluripotent stem cells and extends c. elegans lifespan. Nature Communications, Nov 2016. URL: https://doi.org/10.1038/ncomms13649, doi:10.1038/ncomms13649. This article has 96 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(monkemeyer2019structuralandfunctional pages 29-31): Leonie Mönkemeyer. Structural and functional studies on the eukaryotic chaperonin tric/cct and its cooperating chaperone hgh1. Dissertation, Jan 2019. URL: https://doi.org/10.5282/edoc.23750, doi:10.5282/edoc.23750. This article has 0 citations.</p>
+</li>
+<li>
+<p>(OpenTargets Search: -CCT8): Open Targets Query (-CCT8, 7 results). Buniello, A. et al. (2025). Open Targets Platform: facilitating therapeutic hypotheses building in drug discovery. Nucleic Acids Research.</p>
+</li>
+<li>
+<p>(zeng2024revisitingthechaperonin pages 6-8): Chenglong Zeng, Shenqi Han, Yonglong Pan, Zhao Huang, Binhao Zhang, and Bixiang Zhang. Revisiting the chaperonin t‐complex protein‐1 ring complex in human health and disease: a proteostasis modulator and beyond. Clinical and Translational Medicine, Feb 2024. URL: https://doi.org/10.1002/ctm2.1592, doi:10.1002/ctm2.1592. This article has 24 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="cct-8-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>brackley2009activitiesofthe pages 1-2</li>
+<li>ghozlan2022thetrickybusiness pages 6-7</li>
+<li>smith2022mechanisticinsightsinto pages 3-5</li>
+<li>ghozlan2022thetrickybusiness pages 5-6</li>
+<li>ghozlan2022thetrickybusiness pages 4-5</li>
+<li>smith2022mechanisticinsightsinto pages 9-10</li>
+<li>calculli2021systemicregulationof pages 2-3</li>
+<li>noormohammadi2016somaticincreaseof pages 6-6</li>
+<li>noormohammadi2016somaticincreaseof pages 9-10</li>
+<li>noormohammadi2016somaticincreaseof pages 8-9</li>
+<li>noormohammadi2016somaticincreaseof pages 6-7</li>
+<li>zeng2024revisitingthechaperonin pages 6-8</li>
+<li>smith2022mechanisticinsightsinto pages 1-3</li>
+<li>willison2018thesubstratespecificity pages 1-2</li>
+<li>ghozlan2022thetrickybusiness pages 1-2</li>
+<li>monkemeyer2019structuralandfunctional pages 42-42</li>
+<li>noormohammadi2016somaticincreaseof pages 1-2</li>
+<li>brackley2009activitiesofthe pages 2-4</li>
+<li>monkemeyer2019structuralandfunctional pages 31-33</li>
+<li>smith2022mechanisticinsightsinto pages 5-8</li>
+<li>zeng2024revisitingthechaperonin pages 1-4</li>
+<li>noormohammadi2016somaticincreaseof pages 7-8</li>
+<li>noormohammadi2016somaticincreaseof pages 10-11</li>
+<li>monkemeyer2019structuralandfunctional pages 29-31</li>
+<li>https://doi.org/10.1042/bst20220591,</li>
+<li>https://doi.org/10.1098/rstb.2017.0192,</li>
+<li>https://doi.org/10.1007/s12192-008-0057-x,</li>
+<li>https://doi.org/10.3389/fcell.2022.906530,</li>
+<li>https://doi.org/10.5282/edoc.23750,</li>
+<li>https://doi.org/10.1038/ncomms13649,</li>
+<li>https://doi.org/10.1002/ctm2.1592,</li>
+<li>https://doi.org/10.1126/sciadv.abg3012,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(cct-8-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9N358" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="cct-8-c-elegans-research-notes">cct-8 (C. elegans) — research notes</h1>
+<p>Gene: <code>cct-8</code> / ORF <code>Y55F3AR.3</code> / WormBase <code>WBGene00021934</code><br />
+UniProt: <code>Q9N358</code> (TCPQ_CAEEL), "T-complex protein 1 subunit theta" (CCT-theta / TCP-1-theta), 548 aa.<br />
+NCBI taxon: 6239.</p>
+<p>This is a research journal. Provenance is recorded inline as <code>[PMID:xxxx "verbatim quote"]</code><br />
+or <code>[file:... "quote"]</code>. KNOWN vs NOT-KNOWN are separated at the end.</p>
+<h2 id="identity-and-family">Identity and family</h2>
+<p>cct-8 encodes the theta (θ) subunit of the eukaryotic cytosolic chaperonin CCT<br />
+(chaperonin-containing TCP-1), also called TRiC (TCP-1 ring complex). UniProt:<br />
+"Belongs to the TCP-1 chaperonin family." InterPro domains identify it specifically as the<br />
+theta paralog: <code>IPR012721 Chap_CCT_theta</code>, plus the pan-family <code>IPR017998 Chaperone_TCP-1</code>,<br />
+<code>IPR002194 Chaperonin_TCP-1_CS</code>, and the Cpn60/GroEL/TCP-1 fold (<code>IPR002423</code>). PANTHER family<br />
+PTHR11353 (CHAPERONIN). NCBIfam TIGR02346 <code>chap_CCT_theta</code> and CDD <code>cd03341 TCP1_theta</code> are<br />
+theta-subunit-specific, so the subunit assignment is unambiguous.</p>
+<p>CCT/TRiC is a ~1 MDa double-ring machine; each ring is a hetero-octamer of eight distinct but<br />
+paralogous subunits (CCT1–CCT8 / alpha–theta), arranged in a fixed order. In C. elegans the<br />
+eight paralogs are cct-1..cct-8. The assembled complex, not any single subunit, is the folding<br />
+machine. <a href="https://pubmed.ncbi.nlm.nih.gov/15704212" title="Eukaryotic chaperonins, the Cct complexes, are assembled into two rings, each of which is composed of a stoichiometric array of eight different subunits, which are denoted Cct1p-Cct8p.">PMID:15704212</a></p>
+<h2 id="molecular-function-mechanism-general-ccttric-well-conserved">Molecular function / mechanism (general CCT/TRiC, well conserved)</h2>
+<p>CCT/TRiC is an ATP-dependent foldase. Each subunit is a member of the group II chaperonin<br />
+(GroEL/Cpn60-like) fold with an equatorial ATP-binding/hydrolysis domain, an intermediate<br />
+domain, and a substrate-binding apical domain. ATP binding and hydrolysis by the subunits drives<br />
+the folding cycle. <a href="https://pubmed.ncbi.nlm.nih.gov/16762366" title="The eukaryotic cytosolic chaperonin CCT is an essential ATP-dependent protein folding machine whose action is required for folding the cytoskeletal proteins actin and tubulin, and a small number of other substrates, including members of the WD40-propellor repeat-containing protein family.">PMID:16762366</a></p>
+<p>The complex acts as a genuine catalyst of folding. <a href="https://pubmed.ncbi.nlm.nih.gov/16762366" title="Yeast CCT catalyses the folding of yeast ACT1p and human beta-actin with nearly identical rate constants and yields.">PMID:16762366</a></p>
+<p>The eight subunits are functionally non-equivalent — they have distinct substrate contacts and<br />
+distinct roles despite the shared fold. <a href="https://pubmed.ncbi.nlm.nih.gov/15704212" title="These results provide evidence for functional differences among Cct subunits and for physiological properties of unassembled subunits.">PMID:15704212</a> The conserved equatorial ATP-binding motif is required for the subunit-specific<br />
+activities. <a href="https://pubmed.ncbi.nlm.nih.gov/15704212" title="the cct6-24 mutation, containing GDGTT --&gt; AAAAA replacements of the conserved ATP-binding motif, was unable to suppress any of these traits">PMID:15704212</a></p>
+<p>The GOA molecular-function annotations (ATP binding GO:0005524, ATP hydrolysis GO:0016887,<br />
+ATP-dependent protein folding chaperone GO:0140662) are all consistent with this conserved<br />
+mechanism and with the InterPro/PANTHER family assignment.</p>
+<h2 id="c-elegansspecific-biology">C. elegans–specific biology</h2>
+<p>UniProt curates a worm-specific in-vivo role from a genome-wide RNAi screen: cct-8 is required<br />
+for correct localization of the germ-granule (P-granule) protein PGL-1.<br />
+[file:worm/cct-8/cct-8-uniprot.txt "Required for correct subcellular localization of pgl-1."]<br />
+Disruption phenotype: [file:worm/cct-8/cct-8-uniprot.txt "Low and diffuse subcellular<br />
+localization of pgl-1 in embryos rather than confined to granules in somatic cells."] The source<br />
+is the Updike &amp; Strome genome-wide RNAi screen for P-granule genes; cct-8 was among 173 hits.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/19805813" title="we report on a genomewide RNAi screen in C. elegans, which identified 173 genes that affect the stability, localization, and function of P granules">PMID:19805813</a> NOTE: the cached<br />
+PMID:19805813 record is abstract-only (<code>full_text_available: false</code>); the abstract does not name<br />
+cct-8 or pgl-1, so the specific pgl-1 phenotype is taken from the UniProt curation (which read<br />
+the full text), not quoted from the abstract.</p>
+<p>The pgl-1 phenotype is most parsimoniously explained by cct-8's canonical chaperonin role: PGL-1<br />
+condensation into P granules likely depends on CCT/TRiC-assisted folding of PGL-1 itself or of a<br />
+partner. Whether PGL-1 (or actin, which scaffolds germ granules) is the direct CCT substrate has<br />
+not been established.</p>
+<p>Protein-level evidence: the mature protein was directly sequenced by Edman/MS (UniProt<br />
+"Direct protein sequencing" keyword; PE:1 evidence at protein level), confirming expression.</p>
+<p>Subcellular location: cytoplasm (UniProt SUBCELLULAR LOCATION "Cytoplasm"; by similarity to<br />
+human CCT-theta P50990). Consistent with the cytosolic role of CCT/TRiC. GOA has GO:0005737<br />
+cytoplasm (IEA). The more precise term would be cytosol (GO:0005829), but cytoplasm is not wrong.</p>
+<h2 id="existing-goa-annotations-7-all-iba-or-iea-none-experimental">Existing GOA annotations (7) — all IBA or IEA, none experimental</h2>
+<ol>
+<li>GO:0006457 protein folding — IBA (GO_REF:0000033, involved_in) — core, ACCEPT</li>
+<li>GO:0005832 chaperonin-containing T-complex — IBA (GO_REF:0000033, part_of) — core, ACCEPT</li>
+<li>GO:0005524 ATP binding — IEA (GO_REF:0000002, enables) — ACCEPT</li>
+<li>GO:0005737 cytoplasm — IEA (GO_REF:0000120, located_in) — ACCEPT (cytosol more precise)</li>
+<li>GO:0006457 protein folding — IEA (GO_REF:0000002, involved_in) — duplicate of #1, ACCEPT</li>
+<li>GO:0016887 ATP hydrolysis activity — IEA (GO_REF:0000002, enables) — ACCEPT</li>
+<li>GO:0140662 ATP-dependent protein folding chaperone — IEA (GO_REF:0000002, enables) — best MF, ACCEPT</li>
+</ol>
+<p>There is no <code>unfolded protein binding</code> (GO:0051082) annotation in the C. elegans GOA (unlike the<br />
+yeast/human orthologs), so no MODIFY is needed for that term here.</p>
+<h2 id="known">KNOWN</h2>
+<ul>
+<li>cct-8 is the theta subunit of the C. elegans cytosolic chaperonin CCT/TRiC (family assignment<br />
+  from InterPro/PANTHER/orthology; unambiguous theta-specific signatures).</li>
+<li>CCT/TRiC is an ATP-dependent foldase for actin, tubulin, and a subset of other cytosolic<br />
+  substrates (conserved; <a href="https://pubmed.ncbi.nlm.nih.gov/16762366">PMID:16762366</a>).</li>
+<li>The eight CCT subunits are functionally non-equivalent (<a href="https://pubmed.ncbi.nlm.nih.gov/15704212">PMID:15704212</a>).</li>
+<li>cct-8 is required for correct P-granule (pgl-1) localization in the C. elegans germline/embryo<br />
+  (<a href="https://pubmed.ncbi.nlm.nih.gov/19805813">PMID:19805813</a> full text via UniProt curation).</li>
+<li>Cytoplasmic localization.</li>
+</ul>
+<h2 id="update-after-falcon-deep-research-2026-07-03">Update after falcon deep research (2026-07-03)</h2>
+<p>Deep research (<code>cct-8-deep-research-falcon.md</code>, Edison, 32 citations) surfaced two key<br />
+C. elegans functional papers and subunit-level structural detail:</p>
+<ul>
+<li>
+<p><strong>Noormohammadi et al. 2016, Nat Commun</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/27892468">PMID:27892468</a>: cct-8/CCT8 is rate-limiting for<br />
+  TRiC/CCT assembly and its somatic increase boosts proteostasis and longevity.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/27892468" title="ectopic expression of a single subunit (CCT8) is sufficient to increase   TRiC/CCT assembly">PMID:27892468</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/27892468" title="increased expression of CCT8 in somatic tissues extends   Caenorhabditis elegans lifespan in a TRiC/CCT-dependent manner">PMID:27892468</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/27892468" title="increased   TRiC/CCT complex is required to avoid aggregation of mutant Huntingtin protein">PMID:27892468</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/27892468" title="ameliorates the age-associated demise of proteostasis and corrects proteostatic deficiencies   in worm models">PMID:27892468</a>. cct-8 is required for lifespan extension in daf-2, eat-2, and glp-1<br />
+  long-lived backgrounds (from the paper's body / deep-research synthesis), and its protective<br />
+  effect can be partly HSF-1-independent.</p>
+</li>
+<li>
+<p><strong>Calculli et al. 2021, Sci Adv</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/34172445">PMID:34172445</a>: cct-8 acts cell-autonomously in neurons to<br />
+  prevent polyglutamine aggregation. <a href="https://pubmed.ncbi.nlm.nih.gov/34172445" title="knockdown of cct-8 promotes neuronal polyQ67   aggregation">PMID:34172445</a>.</p>
+</li>
+<li>
+<p><strong>Subunit-specific properties</strong> (from CCT/TRiC structural reviews via deep research): the theta<br />
+  subunit is a LOW-ATPase subunit (the "CCT6 hemisphere": CCT1/3/6/8), retains bound ADP, and<br />
+  contributes to substrate binding, allostery, and complex assembly rather than bulk ATP<br />
+  consumption. [file:worm/cct-8/cct-8-deep-research-falcon.md "CCT-8 occupies a defined position<br />
+  in the low-ATPase hemisphere and plays a specialized role in substrate binding, allosteric<br />
+  regulation, and complex assembly"]; [file:worm/cct-8/cct-8-deep-research-falcon.md "Both actin<br />
+  and tubulin make specific contacts with CCT-8-containing apical domains during folding"].</p>
+</li>
+</ul>
+<p>Impact on the review:<br />
+- Core-function <code>molecular_function</code> set to GO:0005524 (ATP binding) rather than ATP hydrolysis,<br />
+  because theta is a low-ATPase subunit; <code>contributes_to_molecular_function</code> = GO:0140662.<br />
+- GO:0016887 (ATP hydrolysis) existing annotation kept as ACCEPT (family-level InterPro; theta<br />
+  retains the catalytic P-loop/aspartate) with the low-ATPase nuance recorded.<br />
+- Knowledge gap #1 reframed: theta substrate contacts ARE structurally characterized, so the gap<br />
+  is now primarily the ONTOLOGY gap (no MF term for a chaperonin substrate-binding subunit) plus<br />
+  the residual BIOLOGY gap of the native worm client set.</p>
+<h2 id="not-known-candidate-knowledge-gaps">NOT KNOWN (candidate knowledge gaps)</h2>
+<ul>
+<li>The subunit-specific substrate contacts / client repertoire of the theta subunit in<br />
+  C. elegans (or generally) are not defined. Which clients depend on the theta apical domain<br />
+  specifically is unknown.</li>
+<li>Whether PGL-1 is a direct CCT/TRiC substrate, or whether the pgl-1 mislocalization is an<br />
+  indirect consequence of impaired actin/tubulin folding, is undetermined.</li>
+<li>No dedicated GO molecular-function term expresses "structural/catalytic subunit of the CCT<br />
+  chaperonin" — the individual subunit's function is only expressible as the complex-level<br />
+  foldase activity (ontology gap).</li>
+<li>Non-canonical / moonlighting roles of free (unassembled) cct-8, if any, are unexplored in<br />
+  C. elegans (functional roles of unassembled Cct subunits are documented in yeast,<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/15704212">PMID:15704212</a>).<br />
+</content></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9N358
+gene_symbol: cct-8
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:6239
+  label: Caenorhabditis elegans
+description: &gt;-
+  cct-8 encodes the theta (CCT-theta / TCP-1-theta) subunit of the eukaryotic
+  cytosolic chaperonin CCT (chaperonin-containing TCP-1), also known as TRiC.
+  CCT/TRiC is an ATP-dependent, hetero-oligomeric double-ring chaperonin whose
+  two rings are each built from eight distinct but paralogous subunits
+  (CCT1-CCT8 / alpha-theta); cct-8 is the theta paralog. The assembled complex,
+  not any individual subunit, is the folding machine: it uses cycles of ATP
+  binding and hydrolysis by its subunits to fold roughly a tenth of the cytosolic
+  proteome, most notably the obligate cytoskeletal substrates actin and tubulin,
+  as well as WD40 beta-propeller proteins. The theta subunit contributes an
+  equatorial nucleotide-binding module and an apical substrate-binding surface;
+  it is one of the low-ATPase subunits and participates in substrate contacts and
+  in allosteric coordination of the folding cycle. In C. elegans, cct-8 acts in
+  the cytoplasm, is required for correct subcellular localization of the
+  germ-granule protein PGL-1, and is a limiting determinant of TRiC/CCT assembly:
+  raising CCT8 levels increases assembled chaperonin, suppresses aggregation of
+  polyglutamine and mutant Huntingtin proteins, and extends lifespan, so cct-8
+  supports cytosolic protein homeostasis during aging and in the germline.
+existing_annotations:
+  - term:
+      id: GO:0006457
+      label: protein folding
+    evidence_type: IBA
+    original_reference_id: GO_REF:0000033
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        cct-8 is the theta subunit of the cytosolic chaperonin CCT/TRiC, which
+        catalyzes ATP-dependent folding of cytoskeletal and other cytosolic
+        substrates. Protein folding is the core biological process for this
+        subunit.
+      action: ACCEPT
+      reason: &gt;-
+        The phylogenetic (IBA) inference is fully consistent with the conserved
+        chaperonin family assignment (PANTHER PTHR11353; InterPro theta-subunit
+        signatures) and with direct biochemical demonstration that purified CCT
+        catalyzes actin folding. In C. elegans, raising CCT8 levels increases
+        assembled TRiC/CCT and suppresses protein aggregation, confirming the
+        folding role in vivo.
+      supported_by:
+        - reference_id: PMID:16762366
+          supporting_text: &gt;-
+            The eukaryotic cytosolic chaperonin CCT is an essential ATP-dependent
+            protein folding machine whose action is required for folding the
+            cytoskeletal proteins actin and tubulin
+        - reference_id: PMID:27892468
+          supporting_text: &gt;-
+            increased TRiC/CCT complex is required to avoid aggregation of mutant
+            Huntingtin protein
+        - reference_id: file:interpro/panther/PTHR11353/PTHR11353-metadata.yaml
+          supporting_text: CHAPERONIN
+  - term:
+      id: GO:0005832
+      label: chaperonin-containing T-complex
+    evidence_type: IBA
+    original_reference_id: GO_REF:0000033
+    qualifier: part_of
+    review:
+      summary: &gt;-
+        cct-8 is an integral subunit of the chaperonin-containing T-complex
+        (CCT/TRiC), which is built from eight paralogous subunits per ring.
+      action: ACCEPT
+      reason: &gt;-
+        The CCT complex is assembled from a stoichiometric array of subunits
+        Cct1p-Cct8p; cct-8 is the theta subunit. In C. elegans, ectopic CCT8 is
+        rate-limiting for assembly of the complex. Complex membership is the most
+        important and best-supported annotation for this gene.
+      supported_by:
+        - reference_id: PMID:15704212
+          supporting_text: &gt;-
+            Eukaryotic chaperonins, the Cct complexes, are assembled into two
+            rings, each of which is composed of a stoichiometric array of eight
+            different subunits, which are denoted Cct1p-Cct8p.
+        - reference_id: PMID:27892468
+          supporting_text: &gt;-
+            ectopic expression of a single subunit (CCT8) is sufficient to
+            increase TRiC/CCT assembly
+  - term:
+      id: GO:0005524
+      label: ATP binding
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: enables
+    review:
+      summary: &gt;-
+        Each CCT subunit binds ATP/ADP through the conserved equatorial
+        nucleotide-binding site of the group II chaperonin fold; nucleotide
+        binding is integral to the folding cycle.
+      action: ACCEPT
+      reason: &gt;-
+        ATP binding is a conserved, well-established property of CCT/TRiC
+        subunits, consistent with the InterPro chaperonin domains and the
+        ATP-dependent mechanism of the complex. The theta subunit is a
+        low-ATPase subunit that binds and retains nucleotide, so ATP binding is
+        the most accurate concrete molecular-function annotation for it.
+      supported_by:
+        - reference_id: PMID:16762366
+          supporting_text: &gt;-
+            The eukaryotic cytosolic chaperonin CCT is an essential ATP-dependent
+            protein folding machine
+  - term:
+      id: GO:0005737
+      label: cytoplasm
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: located_in
+    review:
+      summary: &gt;-
+        CCT/TRiC is a cytosolic chaperonin; cct-8 acts in the cytoplasm on
+        cytosolic substrates.
+      action: ACCEPT
+      reason: &gt;-
+        Cytoplasmic localization is consistent with the known biology of the
+        cytosolic chaperonin and with the UniProt subcellular location. The more
+        specific term cytosol (GO:0005829) would be preferable, but the broader
+        cytoplasm annotation is not incorrect and is retained.
+      supported_by:
+        - reference_id: PMID:16762366
+          supporting_text: The eukaryotic cytosolic chaperonin CCT
+  - term:
+      id: GO:0006457
+      label: protein folding
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        InterPro domain-based annotation of protein folding, duplicating the IBA
+        protein-folding annotation.
+      action: ACCEPT
+      reason: &gt;-
+        Consistent electronic (InterPro) support for the core protein-folding
+        process, in agreement with the IBA annotation and the conserved
+        chaperonin mechanism.
+      supported_by:
+        - reference_id: PMID:16762366
+          supporting_text: &gt;-
+            Yeast CCT catalyses the folding of yeast ACT1p and human beta-actin
+            with nearly identical rate constants and yields.
+  - term:
+      id: GO:0016887
+      label: ATP hydrolysis activity
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: enables
+    review:
+      summary: &gt;-
+        The CCT subunits form ATPases; ATP hydrolysis around the ring powers the
+        substrate-folding cycle of the chaperonin.
+      action: ACCEPT
+      reason: &gt;-
+        ATP hydrolysis is a conserved catalytic activity of the CCT/TRiC family,
+        supported by the InterPro chaperonin domains. This is a family-level
+        electronic annotation; the theta subunit specifically is one of the
+        low-ATPase subunits that retains bound ADP, but it preserves the
+        catalytic P-loop and aspartate, so the term is retained rather than
+        removed.
+      supported_by:
+        - reference_id: PMID:16762366
+          supporting_text: &gt;-
+            The eukaryotic cytosolic chaperonin CCT is an essential ATP-dependent
+            protein folding machine
+        - reference_id: file:worm/cct-8/cct-8-deep-research-falcon.md
+          supporting_text: &gt;-
+            CCT-8 occupies a defined position in the low-ATPase hemisphere and
+            plays a specialized role in substrate binding, allosteric regulation,
+            and complex assembly
+  - term:
+      id: GO:0140662
+      label: ATP-dependent protein folding chaperone
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: enables
+    review:
+      summary: &gt;-
+        ATP-dependent protein folding chaperone is the most informative
+        molecular-function term for CCT/TRiC; cct-8 contributes to this activity
+        as a subunit of the complex.
+      action: ACCEPT
+      reason: &gt;-
+        This term precisely captures the activity of the CCT chaperonin. Strictly
+        it is a complex-level activity to which the theta subunit contributes
+        rather than one it enables alone, but the annotation is appropriate and
+        is the best available molecular-function descriptor for this gene.
+      supported_by:
+        - reference_id: PMID:16762366
+          supporting_text: &gt;-
+            The eukaryotic cytosolic chaperonin CCT is an essential ATP-dependent
+            protein folding machine
+core_functions:
+  - description: &gt;-
+      cct-8 is the theta subunit of the cytosolic chaperonin CCT/TRiC. As part of
+      the hetero-oligomeric complex it binds nucleotide through its equatorial
+      domain and presents an apical substrate-binding surface, contributing to the
+      ATP-dependent folding of actin, tubulin, and other cytosolic clients. The
+      foldase activity is a property of the assembled complex, to which the theta
+      subunit contributes; theta is a low-ATPase subunit whose distinctive
+      contribution is substrate binding and allosteric coordination rather than
+      bulk ATP consumption.
+    molecular_function:
+      id: GO:0005524
+      label: ATP binding
+    contributes_to_molecular_function:
+      id: GO:0140662
+      label: ATP-dependent protein folding chaperone
+    directly_involved_in:
+      - id: GO:0006457
+        label: protein folding
+    locations:
+      - id: GO:0005737
+        label: cytoplasm
+    in_complex:
+      id: GO:0005832
+      label: chaperonin-containing T-complex
+    supported_by:
+      - reference_id: PMID:16762366
+        supporting_text: &gt;-
+          The eukaryotic cytosolic chaperonin CCT is an essential ATP-dependent
+          protein folding machine whose action is required for folding the
+          cytoskeletal proteins actin and tubulin
+      - reference_id: PMID:15704212
+        supporting_text: &gt;-
+          Eukaryotic chaperonins, the Cct complexes, are assembled into two
+          rings, each of which is composed of a stoichiometric array of eight
+          different subunits, which are denoted Cct1p-Cct8p.
+      - reference_id: PMID:27892468
+        supporting_text: &gt;-
+          ectopic expression of a single subunit (CCT8) is sufficient to increase
+          TRiC/CCT assembly
+knowledge_gaps:
+  - gap_statement: &gt;-
+      The native C. elegans client repertoire that specifically depends on the
+      theta (CCT8) subunit is undefined, and there is no GO molecular-function
+      term that expresses &#34;substrate-binding subunit of the CCT chaperonin&#34;. The
+      theta subunit&#39;s own activity can therefore only be annotated as the
+      complex-level foldase (GO:0140662) or as generic ATP binding/hydrolysis,
+      leaving cct-8 molecular-function-dark at the subunit level.
+    boundary: &gt;-
+      It is firmly established that cct-8 is the theta subunit of the
+      eight-membered CCT/TRiC ring, that the assembled complex folds actin,
+      tubulin, WD40 proteins, and about 10% of the cytosolic proteome, and that
+      the eight subunits are functionally non-equivalent. Structural work in
+      CCT/TRiC further shows theta is a low-ATPase subunit that makes substrate
+      contacts (actin and tubulin contact CCT8-containing apical domains) and
+      contributes to allostery and assembly.
+    gap_kind:
+      - ONTOLOGY
+      - BIOLOGY
+    dark_aspect: MF_DARK
+    status: OPEN
+    significance: &gt;-
+      CCT subunits are individually essential and non-redundant, so
+      subunit-specific substrate engagement underlies the complex&#39;s client
+      selectivity. Because no ontology term names a chaperonin substrate-binding
+      subunit activity, the theta subunit&#39;s characterized structural/regulatory
+      role cannot be curated, and its native worm-specific clients remain
+      unmapped.
+    resolution: &gt;-
+      Affinity-proteomics of the C. elegans CCT/TRiC to define native theta
+      clients, plus crosslinking or cryo-EM mapping of theta apical-domain
+      contacts, would define the subunit contribution; a new GO
+      molecular-function term for a chaperonin substrate-binding subunit activity
+      would let the knowledge be expressed.
+    provenance:
+      - reference_id: PMID:15704212
+        supporting_text: &gt;-
+          These results provide evidence for functional differences among Cct
+          subunits and for physiological properties of unassembled subunits.
+      - reference_id: file:worm/cct-8/cct-8-deep-research-falcon.md
+        supporting_text: &gt;-
+          Both actin and tubulin make specific contacts with CCT-8-containing
+          apical domains during folding
+    proposed_terms:
+      - proposed_name: chaperonin substrate-binding subunit activity
+        proposed_definition: &gt;-
+          A molecular function of a single subunit of a group II chaperonin
+          (CCT/TRiC) that presents an apical-domain substrate-binding surface and
+          contributes subunit-specific contacts to the ATP-dependent folding of
+          client proteins by the assembled chaperonin, without itself folding a
+          substrate independently of the complex.
+        justification: &gt;-
+          Individual CCT subunits such as cct-8/theta have no adequate GO
+          molecular-function term: they can currently be annotated only with the
+          complex-level foldase activity (GO:0140662) or a generic catalytic term,
+          neither of which captures the subunit-specific substrate-binding
+          contribution that distinguishes the eight paralogous subunits.
+        proposed_parent:
+          id: GO:0003674
+          label: molecular_function
+  - gap_statement: &gt;-
+      It is unknown whether the germ-granule protein PGL-1 is a direct CCT/TRiC
+      client of cct-8 or whether the pgl-1 mislocalization seen on cct-8 depletion
+      is an indirect consequence of impaired folding of another substrate (for
+      example actin, which scaffolds germ granules).
+    boundary: &gt;-
+      cct-8 depletion causes low, diffuse PGL-1 localization in C. elegans embryos
+      rather than confinement to granules, and cct-8 knockdown promotes neuronal
+      polyglutamine aggregation, identifying cct-8 as required for correct protein
+      solubility/localization in vivo. Whether PGL-1 physically engages the
+      chaperonin has not been tested.
+    gap_kind:
+      - BIOLOGY
+    dark_aspect: RESIDUAL_SUBGAP
+    status: OPEN
+    significance: &gt;-
+      Distinguishing a direct chaperonin-client relationship from an indirect
+      cytoskeletal effect would clarify how the general folding machinery supports
+      germline biomolecular-condensate (P-granule) assembly.
+    resolution: &gt;-
+      Test whether PGL-1 physically engages CCT/TRiC (co-purification, in vitro
+      folding assays) and whether actin/tubulin folding defects alone reproduce
+      the P-granule phenotype.
+    provenance:
+      - reference_id: file:worm/cct-8/cct-8-uniprot.txt
+        supporting_text: Low and diffuse subcellular localization of pgl-1
+      - reference_id: PMID:34172445
+        supporting_text: knockdown of cct-8 promotes neuronal polyQ67 aggregation
+proposed_new_terms:
+  - proposed_name: chaperonin substrate-binding subunit activity
+    proposed_definition: &gt;-
+      A molecular function of a single subunit of a group II chaperonin (CCT/TRiC)
+      that presents an apical-domain substrate-binding surface and contributes
+      subunit-specific contacts to the ATP-dependent folding of client proteins by
+      the assembled chaperonin, without itself folding a substrate independently of
+      the complex.
+    justification: &gt;-
+      Individual CCT subunits have no adequate GO molecular-function term and can
+      only be annotated with the complex-level foldase activity or a generic
+      catalytic term, obscuring subunit-specific substrate selectivity.
+    proposed_parent:
+      id: GO:0003674
+      label: molecular_function
+suggested_questions:
+  - question: &gt;-
+      Which native C. elegans clients depend specifically on the theta (cct-8)
+      subunit contacts, as opposed to the CCT/TRiC complex as a whole?
+  - question: &gt;-
+      Is PGL-1 a direct CCT/TRiC substrate, or is its P-granule mislocalization on
+      cct-8 depletion an indirect consequence of impaired actin/tubulin folding?
+  - question: &gt;-
+      Is the low-ATPase, substrate-binding character of the theta subunit seen in
+      mammalian/yeast CCT structures conserved and functionally important in
+      C. elegans?
+suggested_experiments:
+  - description: &gt;-
+      Perform affinity purification/mass spectrometry of tagged cct-8 (or the
+      assembled CCT/TRiC) from C. elegans to identify native clients, and test
+      whether PGL-1 co-purifies with the chaperonin.
+    hypothesis: &gt;-
+      cct-8 engages a defined set of native C. elegans clients that includes
+      cytoskeletal proteins and may include germ-granule components.
+  - description: &gt;-
+      Map theta-subunit apical-domain substrate contacts by crosslinking mass
+      spectrometry or cryo-EM of CCT/TRiC caught with folding substrates, to define
+      the subunit-specific substrate-binding contribution.
+    hypothesis: &gt;-
+      The theta apical domain makes distinct substrate contacts that differ from
+      the other seven CCT subunits.
+references:
+  - id: GO_REF:0000002
+    title: Gene Ontology annotation through association of InterPro records with GO terms
+    findings: []
+  - id: GO_REF:0000033
+    title: Annotation inferences using phylogenetic trees
+    findings: []
+  - id: GO_REF:0000120
+    title: Combined Automated Annotation using Multiple IEA Methods
+    findings: []
+  - id: PMID:16762366
+    title: Quantitative actin folding reactions using yeast CCT purified via an internal tag in the CCT3/gamma subunit.
+    findings:
+      - statement: CCT/TRiC is an ATP-dependent folding machine for actin and tubulin.
+        supporting_text: &gt;-
+          The eukaryotic cytosolic chaperonin CCT is an essential ATP-dependent
+          protein folding machine whose action is required for folding the
+          cytoskeletal proteins actin and tubulin
+      - statement: Purified yeast CCT catalyzes actin folding.
+        supporting_text: &gt;-
+          Yeast CCT catalyses the folding of yeast ACT1p and human beta-actin with
+          nearly identical rate constants and yields.
+    reference_review:
+      relevance: HIGH
+      correctness: VERIFIED
+      review_notes: &gt;-
+        PubMed-verified. A yeast-based study, but it establishes the conserved
+        ATP-dependent foldase mechanism and actin/tubulin/WD40 substrate scope of
+        CCT/TRiC that applies to the C. elegans theta subunit. Used for mechanism,
+        not for a worm-specific claim.
+  - id: PMID:15704212
+    title: Physiological effects of unassembled chaperonin Cct subunits in the yeast Saccharomyces cerevisiae.
+    findings:
+      - statement: CCT is built from eight distinct subunits Cct1p-Cct8p per ring.
+        supporting_text: &gt;-
+          Eukaryotic chaperonins, the Cct complexes, are assembled into two rings,
+          each of which is composed of a stoichiometric array of eight different
+          subunits, which are denoted Cct1p-Cct8p.
+      - statement: The CCT subunits are functionally non-equivalent.
+        supporting_text: &gt;-
+          These results provide evidence for functional differences among Cct
+          subunits and for physiological properties of unassembled subunits.
+    reference_review:
+      relevance: MEDIUM
+      correctness: VERIFIED
+      review_notes: &gt;-
+        PubMed-verified. Yeast study establishing the eight-subunit composition of
+        CCT and functional differences among subunits, directly relevant to the
+        theta-subunit knowledge gap. Not a worm-specific source.
+  - id: PMID:27892468
+    title: Somatic increase of CCT8 mimics proteostasis of human pluripotent stem cells and extends C. elegans lifespan.
+    findings:
+      - statement: &gt;-
+          A single CCT8 subunit is rate-limiting for TRiC/CCT assembly, and
+          increased complex prevents mutant Huntingtin aggregation.
+        supporting_text: &gt;-
+          ectopic expression of a single subunit (CCT8) is sufficient to increase
+          TRiC/CCT assembly
+      - statement: Somatic CCT8 increase extends C. elegans lifespan TRiC/CCT-dependently.
+        supporting_text: &gt;-
+          increased expression of CCT8 in somatic tissues extends Caenorhabditis
+          elegans lifespan in a TRiC/CCT-dependent manner
+      - statement: CCT8 increase corrects age-associated proteostasis decline in worm HD models.
+        supporting_text: &gt;-
+          ameliorates the age-associated demise of proteostasis and corrects
+          proteostatic deficiencies in worm models
+    reference_review:
+      relevance: HIGH
+      correctness: VERIFIED
+      review_notes: &gt;-
+        PubMed-verified C. elegans primary paper (full text available). Direct
+        worm experimental evidence that cct-8/CCT8 is rate-limiting for TRiC/CCT
+        assembly and that raising it suppresses aggregation and extends lifespan.
+        Establishes the in-vivo proteostasis role of cct-8.
+  - id: PMID:34172445
+    title: Systemic regulation of mitochondria by germline proteostasis prevents protein aggregation in the soma of C. elegans.
+    findings:
+      - statement: Neuronal knockdown of cct-8 promotes polyQ67 aggregation in C. elegans neurons.
+        supporting_text: knockdown of cct-8 promotes neuronal polyQ67 aggregation
+    reference_review:
+      relevance: HIGH
+      correctness: VERIFIED
+      review_notes: &gt;-
+        PubMed-verified C. elegans primary paper (full text available). Shows
+        cct-8 is required cell-autonomously to prevent neuronal polyglutamine
+        aggregation, corroborating its in-vivo folding/anti-aggregation role.
+  - id: PMID:19805813
+    title: A genomewide RNAi screen for genes that affect the stability, distribution and function of P granules in Caenorhabditis elegans.
+    findings:
+      - statement: &gt;-
+          A genome-wide RNAi screen identified 173 P-granule genes; cct-8 was a hit,
+          and UniProt curates cct-8 as required for correct pgl-1 localization.
+        supporting_text: &gt;-
+          we report on a genomewide RNAi screen in C. elegans, which identified 173
+          genes that affect the stability, localization, and function of P granules
+    reference_review:
+      relevance: HIGH
+      correctness: VERIFIED
+      review_notes: &gt;-
+        PubMed-verified C. elegans primary paper (abstract-only in cache;
+        full_text_available:false). The abstract does not name cct-8 or pgl-1; the
+        specific pgl-1 localization requirement is from UniProt curation of the full
+        text (ECO:0000269 PubMed:19805813). Source of the worm-specific pgl-1 role.
+  - id: PMID:9851916
+    title: &#39;Genome sequence of the nematode C. elegans: a platform for investigating biology.&#39;
+    findings: []
+    reference_review:
+      relevance: LOW
+      correctness: VERIFIED
+      review_notes: &gt;-
+        Genome sequencing reference underlying the gene model (ORF Y55F3AR.3);
+        background only, does not address cct-8 function.
+  - id: file:interpro/panther/PTHR11353/PTHR11353-metadata.yaml
+    title: PANTHER family PTHR11353 (CHAPERONIN) metadata
+    findings:
+      - statement: cct-8 is classified in the PANTHER chaperonin family PTHR11353.
+        supporting_text: CHAPERONIN
+  - id: file:worm/cct-8/cct-8-uniprot.txt
+    title: UniProt record Q9N358 (TCPQ_CAEEL, T-complex protein 1 subunit theta)
+    findings:
+      - statement: cct-8 is required for correct subcellular localization of pgl-1.
+        supporting_text: Low and diffuse subcellular localization of pgl-1
+  - id: file:worm/cct-8/cct-8-deep-research-falcon.md
+    title: Falcon deep research synthesis for C. elegans cct-8
+    findings:
+      - statement: &gt;-
+          Theta is a low-ATPase subunit that contributes substrate binding,
+          allostery, and assembly rather than bulk ATP consumption.
+        supporting_text: &gt;-
+          CCT-8 occupies a defined position in the low-ATPase hemisphere and plays
+          a specialized role in substrate binding, allosteric regulation, and
+          complex assembly
+tags:
+  - caeel-proteostasis
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

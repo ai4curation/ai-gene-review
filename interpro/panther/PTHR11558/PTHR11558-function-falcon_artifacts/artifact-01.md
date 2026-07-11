@@ -1,0 +1,12 @@
+> PTHR11558 is functionally **heterogeneous**, so a single family-level molecular function term is **not** safe to propagate across all descendants. Characterized members share a Rossmann-like/AdoMet-dependent transferase fold, but they diverge in both cofactor usage and chemistry: classical aminopropyltransferases use **dcAdoMet** to transfer an aminopropyl group, whereas PMT uses **SAM** to transfer a methyl group (pqac-00000000, pqac-00000002, pqac-00000028, pqac-00000031).
+>
+> The currently propagated term **spermidine synthase activity (GO:0004766)** is therefore a **mis-annotation** for **PTHR11558:SF53 Putrescine N-methyltransferase 1**. PMT catalyzes **putrescine + SAM → N-methylputrescine + SAH** (EC 2.1.1.53), the first committed step in nicotine/tropane alkaloid biosynthesis, rather than aminopropyl transfer to form spermidine (pqac-00000018, pqac-00000019, pqac-00000026).
+>
+> For curation, the most defensible family-level statement is only a very broad **S-adenosylmethionine-dependent transferase activity**, but that term is too coarse to be biologically informative; **subfamily-level annotation is required** (pqac-00000000, pqac-00000032, pqac-00000035).
+>
+> Recommended correction for **SF53**: assign **putrescine N-methyltransferase activity (GO:0030737)**, **not** GO:0004766. This is supported by the established evolutionary neofunctionalization of PMT from spermidine synthase, with altered cofactor-binding residues that permit SAM binding instead of dcAdoMet (pqac-00000002, pqac-00000019, pqac-00000028, pqac-00000031).
+>
+> Over-annotation risk extends beyond SF53: even the aminopropyltransferase branches are not uniform in acceptor specificity or product. Distinct subfamilies catalyze **putrescine → spermidine (SpdSyn)**, **spermidine → spermine (SpmSyn)**, or **spermidine → thermospermine (TspSyn/ACL5)**, so GO terms should track these branch-specific reactions rather than collapse them to a single family-wide MF (pqac-00000004, pqac-00000005, pqac-00000007, pqac-00000014).
+
+
+*Blockquote: This blockquote summarizes the curator-facing conclusion for PTHR11558. It highlights why family-wide propagation of spermidine synthase activity is unsafe and specifies the correct GO direction for the PMT subfamily SF53.*

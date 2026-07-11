@@ -1,0 +1,2275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FbaB - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>FbaB</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q8G9G1" target="_blank" class="term-link">
+                        Q8G9G1
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Streptococcus pyogenes</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "FbaB";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q8G9G1" data-a="DESCRIPTION: FbaB (gene fba2) is a cell-wall-anchored fibronect..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>FbaB (gene fba2) is a cell-wall-anchored fibronectin-binding surface protein of group A Streptococcus (Streptococcus pyogenes), found predominantly in invasive M3/M18 serotypes and acting as a major virulence factor in host colonization and invasion. It is a large (733 aa) multidomain LPXTG surface protein: a C-terminal LPXTG sortase-anchor motif covalently attaches it to peptidoglycan; C-terminal fibronectin-binding repeats mediate strong binding to host fibronectin, promoting bacterial adhesion to and invasion of host epithelial cells; an N-terminal thioester domain (TED) of the type that, in related streptococcal adhesins, forms covalent &#34;chemical-harpoon&#34; bonds to host proteins such as fibrinogen; and a CnaB2/SpaA-like prealbumin-fold (Cna protein B-type) domain that autocatalytically forms an intramolecular Lys-Asp isopeptide bond, conferring high mechanical, thermal and chemical stability suited to bearing force while the bacterium engages host fibronectin during invasion. Loss of FbaB reduces adhesion, host-cell invasion, and virulence. The CnaB2 isopeptide-bond domain of FbaB is the natural scaffold from which the widely used SpyTag/SpyCatcher covalent protein-conjugation system was engineered by splitting the domain into a reactive peptide (SpyTag, bearing the Asp) and its protein partner (SpyCatcher, bearing the Lys).</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001968" target="_blank" class="term-link">
+                                    GO:0001968
+                                </a>
+                            </span>
+                            <span class="term-label">fibronectin binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12359713" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12359713
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular characterization of a novel fibronectin-binding pr...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q8G9G1" data-a="GO:0001968" data-r="PMID:12359713" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Recombinant FbaB binds host fibronectin strongly (ELISA and ligand blotting), the molecular basis of its adhesin activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> No GO annotation exists for this protein, but fibronectin binding is directly demonstrated for FbaB and is its defining molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12359713" target="_blank" class="term-link">
+                                        PMID:12359713
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">recombinant FbaB exhibits a strong Fn-binding ability</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044650" target="_blank" class="term-link">
+                                    GO:0044650
+                                </a>
+                            </span>
+                            <span class="term-label">adhesion of symbiont to host cell</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12359713" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12359713
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular characterization of a novel fibronectin-binding pr...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q8G9G1" data-a="GO:0044650" data-r="PMID:12359713" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FbaB mediates adhesion to (and invasion of) host epithelial cells; an FbaB-deficient mutant has ~6-fold lower HEp-2 adhesion/invasion.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Loss-of-function (mutant) phenotype directly supports FbaB&#39;s role in adhesion of the pathogen to host cells.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12359713" target="_blank" class="term-link">
+                                        PMID:12359713
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">An FbaB-deficient mutant strain showed 6-fold lower adhesion and invasion</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009986" target="_blank" class="term-link">
+                                    GO:0009986
+                                </a>
+                            </span>
+                            <span class="term-label">cell surface</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12359713" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12359713
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular characterization of a novel fibronectin-binding pr...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q8G9G1" data-a="GO:0009986" data-r="PMID:12359713" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FbaB is displayed on the streptococcal cell surface (detected on TSLS-strain cells), where it engages host fibronectin.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct detection of FbaB on the bacterial cell surface supports this localization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12359713" target="_blank" class="term-link">
+                                        PMID:12359713
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">FbaB protein was expressed on the cell surface of TSLS</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005618" target="_blank" class="term-link">
+                                    GO:0005618
+                                </a>
+                            </span>
+                            <span class="term-label">cell wall</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12359713" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12359713
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular characterization of a novel fibronectin-binding pr...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q8G9G1" data-a="GO:0005618" data-r="PMID:12359713" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FbaB carries a C-terminal LPXTG sortase-anchor motif, indicating covalent attachment to the peptidoglycan cell wall (the canonical fate of LPXTG surface proteins in Gram-positive bacteria).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Inferred from the LPXTG anchor motif (sequence/structural evidence) rather than a direct localization assay.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12359713" target="_blank" class="term-link">
+                                        PMID:12359713
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">an LPXTG motif and Fn-binding repeat domains in the C-terminal region</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>FbaB binds host fibronectin via its C-terminal fibronectin-binding repeats (shown by ELISA and ligand blotting with recombinant FbaB), the molecular basis of its adhesin function. As a fibronectin-bridging surface adhesin it promotes adhesion to and invasion of host epithelial cells; an FbaB-deficient mutant has ~6-fold lower HEp-2 adhesion/invasion and reduced virulence in mice. The CnaB2 isopeptide-bond domain provides the mechanical stability inferred to be needed for this force-bearing host engagement.</h3>
+                <span class="vote-buttons" data-g="Q8G9G1" data-a="FUNCTION: FbaB binds host fibronectin via its C-terminal fib..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001968" target="_blank" class="term-link">
+                            fibronectin binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044650" target="_blank" class="term-link">
+                                adhesion of symbiont to host cell
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009986" target="_blank" class="term-link">
+                                cell surface
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005618" target="_blank" class="term-link">
+                                cell wall
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12359713" target="_blank" class="term-link">
+                                PMID:12359713
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">recombinant FbaB exhibits a strong Fn-binding ability</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12359713" target="_blank" class="term-link">
+                                PMID:12359713
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">An FbaB-deficient mutant strain showed 6-fold lower adhesion and invasion</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22366317" target="_blank" class="term-link">
+                                PMID:22366317
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">the CnaB2 domain may be exposed to high force in bridging S. pyogenes to fibronectin during cell invasion</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12359713" target="_blank" class="term-link">
+                            PMID:12359713
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Molecular characterization of a novel fibronectin-binding protein of Streptococcus pyogenes strains isolated from toxic shock-like syndrome patients.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">FbaB is a surface-located fibronectin-binding protein of GAS M3/M18 strains, carries an LPXTG motif and C-terminal Fn-binding repeats, binds fibronectin strongly, and its loss reduces HEp-2 cell adhesion/invasion ~6-fold and decreases mouse mortality.</div>
+
+                        <div class="finding-text">"recombinant FbaB exhibits a strong Fn-binding ability"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22366317" target="_blank" class="term-link">
+                            PMID:22366317
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Peptide tag forming a rapid covalent bond to a protein, through engineering a bacterial adhesin.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The FbaB CnaB2 domain contains a spontaneous Lys-Asp isopeptide bond; splitting it yielded SpyTag/SpyCatcher. The authors note this domain may bear high force in bridging S. pyogenes to fibronectin during cell invasion.</div>
+
+                        <div class="finding-text">"The resilience of SpyTag:SpyCatcher to pulling forces after isopeptide bond formation suggests that the CnaB2 domain may be exposed to high force in bridging S. pyogenes to fibronectin during cell invasion"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24161952" target="_blank" class="term-link">
+                            PMID:24161952
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Structural analysis and optimization of the covalent association between SpyCatcher and a peptide Tag.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Crystal structures (PDB 4MLI/4MLS) of the SpyCatcher:SpyTag covalent complex, derived from the FbaB CnaB2 domain, with optimization of SpyCatcher.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31822621" target="_blank" class="term-link">
+                            PMID:31822621
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Approaching infinite affinity through engineering of peptide-protein interaction.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Engineering of third-generation SpyTag003/SpyCatcher003 (the variant crystallized in PDB 9OJ3) with greatly accelerated covalent reaction.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/40531663" target="_blank" class="term-link">
+                            PMID:40531663
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">ALS-ENABLE: creating synergy and opportunity at the Advanced Light Source synchrotron structural biology beamlines.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Reports a case study characterizing the SpyCatcher-SpyTag protein system; the associated structure is PDB 9OJ3 (SpyTag003-SpyCatcher003, 1.43 A).</div>
+
+                        <div class="finding-text">"A case study showcasing the main technologies of the resource applied to the characterization of the SpyCatcher-SpyTag protein system is presented"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26032562" target="_blank" class="term-link">
+                            PMID:26032562
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">An internal thioester in a pathogen surface protein mediates covalent host binding.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Streptococcal surface protein SfbI uses an internal thioester bond as a covalent &#34;chemical harpoon&#34; to bind host fibrinogen; thioester-containing domains of this type are present in pathogen adhesins including FbaB.</div>
+
+                        <div class="finding-text">"the streptococcal surface protein SfbI mediates covalent interaction with the host protein fibrinogen using an unusual internal thioester bond"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        UniProtKB:Q8G9G1
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProt entry for Streptococcus pyogenes fibronectin binding protein FbaB (fba2)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">733-aa surface protein with an N-terminal thioester domain (PF08341/TED), three fibronectin-binding repeats (PF02986), a CnaB2/SpaA-like prealbumin-fold domain (PF17802; SSF49478 Cna protein B-type), and an LPXTG anchor (TIGR01167).</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does the FbaB N-terminal thioester (TED) domain form a covalent bond to a host protein (e.g. fibrinogen), analogously to SfbI/Cpa, and does this contribute to adhesion or immune evasion?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q8G9G1" data-a="Q: Does the FbaB N-terminal thioester (TED) domain fo..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is the intramolecular CnaB2 isopeptide bond required for FbaB-mediated host-cell invasion under physiological shear/force, as the mechanical-stability hypothesis predicts?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q8G9G1" data-a="Q: Is the intramolecular CnaB2 isopeptide bond requir..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Mass-spectrometry / SDS-PAGE crosslinking assay of recombinant FbaB TED domain with host fibrinogen to test for covalent (thioester-mediated) host capture.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The FbaB TED domain covalently captures a host plasma/matrix protein, as seen for other streptococcal thioester-domain adhesins.</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q8G9G1" data-a="EXPERIMENT: Mass-spectrometry / SDS-PAGE crosslinking assay of..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Site-directed mutagenesis of the CnaB2 isopeptide-forming Lys/Asp/Glu residues in full-length FbaB, then quantify HEp-2 adhesion/invasion under flow.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Disrupting the CnaB2 isopeptide bond reduces the mechanical resilience of FbaB and lowers force-dependent host-cell invasion.</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q8G9G1" data-a="EXPERIMENT: Site-directed mutagenesis of the CnaB2 isopeptide-..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(FbaB-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q8G9G1" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="fbab-fba2-streptococcus-pyogenes-research-notes">FbaB (fba2) — <em>Streptococcus pyogenes</em> — research notes</h1>
+<p>UniProt: <strong>Q8G9G1</strong> (Q8G9G1_STRPY, TrEMBL/unreviewed), gene <strong>fba2</strong> / <strong>FbaB</strong><br />
+("Fn-binding protein of group A streptococci type B"); also annotated as<br />
+"Thioester-forming surface-anchored protein". 733 aa. NCBI taxon 1314<br />
+(<em>Streptococcus pyogenes</em>).</p>
+<p>This gene is the entry point for PDB <strong>9OJ3</strong> (<code>pdb_00009oj3</code>), the 1.43 Å crystal<br />
+structure of the engineered <strong>SpyTag003–SpyCatcher003</strong> complex. SpyTag/SpyCatcher<br />
+are <em>not</em> separate genes — they are split/engineered fragments of the <strong>CnaB2 domain</strong><br />
+of FbaB (the C-terminal "SpaA-like prealbumin fold" / Cna protein B-type domain,<br />
+roughly residues 462–541, which is exactly the region crystallized in 9OJ3 and the<br />
+earlier FbaB-CnaB2 structures 2X5P/4MLI/4MLS/5TTH/6XG6). So the natural biology to be<br />
+reviewed is the FbaB adhesin, and the SpyTag/SpyCatcher "module" is the engineered<br />
+derivative of one of its domains.</p>
+<h2 id="domain-architecture-uniprotkbq8g9g1">Domain architecture (UniProtKB:Q8G9G1)</h2>
+<ul>
+<li><strong>N-terminal thioester domain (TED)</strong> — FT DOMAIN 92..212, Pfam PF08341 (TED),<br />
+  InterPro IPR013552, Gene3D "Thioester domain" (2.30.30.670). Internal<br />
+  Cys–Gln thioester bond; in related streptococcal adhesins this forms covalent<br />
+  "chemical-harpoon" bonds to host proteins (see PMID:26032562).</li>
+<li><strong>Fibronectin-binding repeats</strong> — Pfam PF02986 (Fn_bind, x3), InterPro IPR004237;<br />
+  the C-terminal Fn-binding repeat region that mediates fibronectin binding<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/12359713">PMID:12359713</a>.</li>
+<li><strong>CnaB2 / SpaA-like prealbumin-fold domain</strong> — FT DOMAIN 465..544, Pfam PF17802<br />
+  (SpaA), InterPro IPR041033, SUPFAM SSF49478 "Cna protein B-type domain". Forms a<br />
+  spontaneous <strong>intramolecular Lys–Asp isopeptide bond</strong> (Glu-assisted) that gives<br />
+  the domain extreme mechanical/thermal/chemical stability. This is the domain split<br />
+  into SpyTag (C-terminal β-strand bearing the reactive Asp) and SpyCatcher (the rest,<br />
+  bearing the reactive Lys) <a href="https://pubmed.ncbi.nlm.nih.gov/22366317">PMID:22366317</a>.</li>
+<li><strong>LPXTG cell-wall anchor</strong> — NCBIfam TIGR01167 (LPXTG_anchor) / TIGR03934 (TQXA);<br />
+  C-terminal sortase substrate motif anchoring FbaB to peptidoglycan<br />
+  [PMID:12359713, abstract: "an LPXTG motif and Fn-binding repeat domains in the<br />
+  C-terminal region"].</li>
+</ul>
+<p>No GO annotations exist in UniProtKB/GOA for Q8G9G1 (TrEMBL, unreviewed) — the GOA<br />
+file fetched is empty. The review therefore proposes core functions de novo rather<br />
+than adjudicating existing annotations.</p>
+<h2 id="native-function-and-virulence-fbab">Native function and virulence (FbaB)</h2>
+<ul>
+<li>FbaB is a <strong>surface-located fibronectin (Fn)-binding protein</strong> and <strong>major virulence<br />
+  factor</strong> of group A <em>Streptococcus</em> (GAS), serotypes M3/M18, originally found in<br />
+  strains from toxic-shock-like syndrome (TSLS) patients<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/12359713" title="Group A Streptococcus pyogenes has surface-located fibronectin   (Fn)-binding proteins known to be a major virulence factor, which adheres to and   invades host cells">PMID:12359713</a>.</li>
+<li>Designated FbaB; possesses an LPXTG motif and Fn-binding repeat domains; expressed<br />
+  on the cell surface of TSLS strains <a href="https://pubmed.ncbi.nlm.nih.gov/12359713" title="designated as FbaB (Fn-binding protein of group A streptococci type B)">PMID:12359713</a>.</li>
+<li><strong>Strong fibronectin binding</strong> by recombinant FbaB (ELISA + ligand blotting)<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/12359713" title="recombinant FbaB exhibits a strong Fn-binding ability">PMID:12359713</a>.</li>
+<li><strong>Adhesion/invasion</strong>: an FbaB-deficient mutant showed ~6-fold lower adhesion and<br />
+  invasion of HEp-2 cells, and reduced mouse mortality <a href="https://pubmed.ncbi.nlm.nih.gov/12359713" title="An FbaB-deficient mutant strain showed 6-fold lower adhesion and invasion   efficiencies to HEp-2 cells than the wild type">PMID:12359713</a>, i.e. FbaB mediates adhesion to,<br />
+  and invasion of, host cells and contributes to invasive disease.</li>
+<li><strong>Thioester domain / covalent host binding</strong>: streptococcal surface proteins with<br />
+  TED domains (e.g. SfbI/Cpa) covalently capture host proteins (fibrinogen) via an<br />
+  internal thioester acting as a "chemical harpoon"<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/26032562" title="the streptococcal surface protein SfbI mediates covalent interaction   with the host protein fibrinogen using an unusual internal thioester bond as a   'chemical harpoon'">PMID:26032562</a>. FbaB carries the same TED domain; this is supportive<br />
+  background for FbaB's covalent host-binding capacity rather than direct FbaB data.</li>
+</ul>
+<h2 id="cnab2-isopeptide-bond-and-the-spytagspycatcher-engineering-lineage">CnaB2 isopeptide bond and the SpyTag/SpyCatcher engineering lineage</h2>
+<ul>
+<li>Native rationale: the spontaneous isopeptide bond in the CnaB2 domain gives the<br />
+  adhesin mechanical resilience, plausibly needed to <strong>bridge S. pyogenes to<br />
+  fibronectin during host-cell invasion under force</strong><br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/22366317" title="The resilience of SpyTag:SpyCatcher to pulling forces after   isopeptide bond formation suggests that the CnaB2 domain may be exposed to high   force in bridging S. pyogenes to fibronectin during cell invasion">PMID:22366317</a>.</li>
+<li>Engineering (Zakeri et al. 2012, PNAS): splitting the CnaB2 domain and engineering<br />
+  the fragments gave <strong>SpyTag</strong> (15-aa peptide) + <strong>SpyCatcher</strong> (protein), which<br />
+  reconstitute the <strong>covalent isopeptide (amide) bond</strong> spontaneously on mixing, in<br />
+  minutes, irreversibly (not broken by boiling/competition; resists &gt;1 nN force)<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/22366317" title="By splitting this domain and rational engineering of the fragments,   we obtained a peptide (SpyTag) which formed an amide bond to its protein partner   (SpyCatcher) in minutes">PMID:22366317</a>. Reactive residues: SpyCatcher Lys, SpyTag Asp, catalytic<br />
+  Glu.</li>
+<li>Optimization: Li et al. 2014 (JMB; PDB 4MLI/4MLS) solved the SpyCatcher:SpyTag<br />
+  structure and trimmed/optimized SpyCatcher <a href="https://pubmed.ncbi.nlm.nih.gov/24161952">PMID:24161952</a>.</li>
+<li>3rd generation: Keeble et al. 2019 (PNAS) engineered <strong>SpyTag003/SpyCatcher003</strong> for<br />
+  much faster reaction ("approaching infinite affinity") <a href="https://pubmed.ncbi.nlm.nih.gov/31822621">PMID:31822621</a>.</li>
+<li>PDB 9OJ3 (this entry): 1.43 Å crystal structure of SpyTag003–SpyCatcher003, reported<br />
+  as a case study by the ALS-ENABLE synchrotron resource<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/40531663" title="A case study showcasing the main technologies of the resource   applied to the characterization of the SpyCatcher-SpyTag protein system is   presented">PMID:40531663</a>.</li>
+</ul>
+<h2 id="curation-decisions">Curation decisions</h2>
+<ul>
+<li>One underlying gene only: <strong>FbaB (Q8G9G1)</strong>. The PDB "complex" is a homo-pairing of<br />
+  two engineered fragments of this single protein, so there is exactly one gene review.</li>
+<li>Core functions asserted from literature + domain evidence (no GOA to adjudicate):<br />
+  fibronectin binding (GO:0001968) driving adhesion to / invasion of host cells<br />
+  (GO:0044650), at the bacterial cell surface / cell wall (GO:0009986 / GO:0005618).<br />
+  The TED covalent-host-binding and CnaB2 isopeptide mechanical-stability roles are<br />
+  described but only the fibronectin/adhesion axis is asserted as an experimentally<br />
+  supported core function for <em>this</em> protein.</li>
+<li>The SpyTag/SpyCatcher engineering lineage is captured in the companion module<br />
+<code>modules/spytag_spycatcher.yaml</code>, not as separate gene reviews.</li>
+</ul>
+<h2 id="key-references">Key references</h2>
+<ul>
+<li>PMID:12359713 — Terao et al. 2002, J Biol Chem. Original FbaB characterization<br />
+  (Fn binding; adhesion/invasion; LPXTG; virulence). Abstract-only in cache.</li>
+<li>PMID:22366317 — Zakeri et al. 2012, PNAS. SpyTag/SpyCatcher from the CnaB2 domain.</li>
+<li>PMID:24161952 — Li et al. 2014, J Mol Biol. SpyCatcher:SpyTag structure/optimization.</li>
+<li>PMID:31822621 — Keeble et al. 2019, PNAS. SpyTag003/SpyCatcher003.</li>
+<li>PMID:40531663 — Ralston et al. 2025, J Synchrotron Radiat. ALS-ENABLE; 9OJ3 case study.</li>
+<li>PMID:26032562 — Walden et al. 2015, eLife. Internal thioester (SfbI) covalent host<br />
+  binding — background for the FbaB TED domain.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q8G9G1
+gene_symbol: FbaB
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:1314
+  label: Streptococcus pyogenes
+description: &gt;-
+  FbaB (gene fba2) is a cell-wall-anchored fibronectin-binding surface protein of
+  group A Streptococcus (Streptococcus pyogenes), found predominantly in invasive
+  M3/M18 serotypes and acting as a major virulence factor in host colonization and
+  invasion. It is a large (733 aa) multidomain LPXTG surface protein: a C-terminal
+  LPXTG sortase-anchor motif covalently attaches it to peptidoglycan; C-terminal
+  fibronectin-binding repeats mediate strong binding to host fibronectin, promoting
+  bacterial adhesion to and invasion of host epithelial cells; an N-terminal
+  thioester domain (TED) of the type that, in related streptococcal adhesins, forms
+  covalent &#34;chemical-harpoon&#34; bonds to host proteins such as fibrinogen; and a
+  CnaB2/SpaA-like prealbumin-fold (Cna protein B-type) domain that autocatalytically
+  forms an intramolecular Lys-Asp isopeptide bond, conferring high mechanical, thermal
+  and chemical stability suited to bearing force while the bacterium engages host
+  fibronectin during invasion. Loss of FbaB reduces adhesion, host-cell invasion, and
+  virulence. The CnaB2 isopeptide-bond domain of FbaB is the natural scaffold from
+  which the widely used SpyTag/SpyCatcher covalent protein-conjugation system was
+  engineered by splitting the domain into a reactive peptide (SpyTag, bearing the Asp)
+  and its protein partner (SpyCatcher, bearing the Lys).
+references:
+  - id: PMID:12359713
+    title: &#34;Molecular characterization of a novel fibronectin-binding protein of Streptococcus pyogenes strains isolated from toxic shock-like syndrome patients.&#34;
+    findings:
+      - statement: &gt;-
+          FbaB is a surface-located fibronectin-binding protein of GAS M3/M18 strains,
+          carries an LPXTG motif and C-terminal Fn-binding repeats, binds fibronectin
+          strongly, and its loss reduces HEp-2 cell adhesion/invasion ~6-fold and
+          decreases mouse mortality.
+        supporting_text: &gt;-
+          recombinant FbaB exhibits a strong Fn-binding ability
+    full_text_unavailable: true
+    reference_review:
+      relevance: HIGH
+      correctness: VERIFIED
+      review_notes: &gt;-
+        PubMed-verified original characterization of FbaB; abstract-only in cache but
+        directly establishes the fibronectin-binding, adhesion/invasion, and virulence
+        functions asserted here.
+  - id: PMID:22366317
+    title: &#34;Peptide tag forming a rapid covalent bond to a protein, through engineering a bacterial adhesin.&#34;
+    findings:
+      - statement: &gt;-
+          The FbaB CnaB2 domain contains a spontaneous Lys-Asp isopeptide bond; splitting
+          it yielded SpyTag/SpyCatcher. The authors note this domain may bear high force
+          in bridging S. pyogenes to fibronectin during cell invasion.
+        supporting_text: &gt;-
+          The resilience of SpyTag:SpyCatcher to pulling forces after isopeptide bond formation suggests that the CnaB2 domain may be exposed to high force in bridging S. pyogenes to fibronectin during cell invasion
+    reference_review:
+      relevance: HIGH
+      correctness: VERIFIED
+      review_notes: &gt;-
+        Defines the FbaB CnaB2 isopeptide-bond domain and its split into SpyTag/SpyCatcher;
+        directly supports the mechanical-stability role of the CnaB2 domain.
+  - id: PMID:24161952
+    title: &#34;Structural analysis and optimization of the covalent association between SpyCatcher and a peptide Tag.&#34;
+    findings:
+      - statement: &gt;-
+          Crystal structures (PDB 4MLI/4MLS) of the SpyCatcher:SpyTag covalent complex,
+          derived from the FbaB CnaB2 domain, with optimization of SpyCatcher.
+    reference_review:
+      relevance: MEDIUM
+      correctness: VERIFIED
+      review_notes: &gt;-
+        Structural confirmation of the CnaB2-derived covalent complex; corroborating for
+        the engineered-derivative context rather than native FbaB function.
+  - id: PMID:31822621
+    title: &#34;Approaching infinite affinity through engineering of peptide-protein interaction.&#34;
+    findings:
+      - statement: &gt;-
+          Engineering of third-generation SpyTag003/SpyCatcher003 (the variant crystallized
+          in PDB 9OJ3) with greatly accelerated covalent reaction.
+    reference_review:
+      relevance: MEDIUM
+      correctness: VERIFIED
+      review_notes: &gt;-
+        Source of the SpyTag003/SpyCatcher003 variant in PDB 9OJ3; engineered-derivative
+        context.
+  - id: PMID:40531663
+    title: &#34;ALS-ENABLE: creating synergy and opportunity at the Advanced Light Source synchrotron structural biology beamlines.&#34;
+    findings:
+      - statement: &gt;-
+          Reports a case study characterizing the SpyCatcher-SpyTag protein system; the
+          associated structure is PDB 9OJ3 (SpyTag003-SpyCatcher003, 1.43 A).
+        supporting_text: &gt;-
+          A case study showcasing the main technologies of the resource applied to the characterization of the SpyCatcher-SpyTag protein system is presented
+    reference_review:
+      relevance: LOW
+      correctness: VERIFIED
+      review_notes: &gt;-
+        Publication associated with PDB 9OJ3; a beamline/resource paper, relevant only as
+        the structural-methods context for the engineered complex.
+  - id: PMID:26032562
+    title: &#34;An internal thioester in a pathogen surface protein mediates covalent host binding.&#34;
+    findings:
+      - statement: &gt;-
+          Streptococcal surface protein SfbI uses an internal thioester bond as a covalent
+          &#34;chemical harpoon&#34; to bind host fibrinogen; thioester-containing domains of this
+          type are present in pathogen adhesins including FbaB.
+        supporting_text: &gt;-
+          the streptococcal surface protein SfbI mediates covalent interaction with the host protein fibrinogen using an unusual internal thioester bond
+    reference_review:
+      relevance: MEDIUM
+      correctness: VERIFIED
+      review_notes: &gt;-
+        Background for the FbaB N-terminal thioester (TED) domain covalent-host-binding
+        capacity; the experiments are on SfbI/related proteins, not FbaB directly.
+  - id: UniProtKB:Q8G9G1
+    title: &#34;UniProt entry for Streptococcus pyogenes fibronectin binding protein FbaB (fba2)&#34;
+    findings:
+      - statement: &gt;-
+          733-aa surface protein with an N-terminal thioester domain (PF08341/TED), three
+          fibronectin-binding repeats (PF02986), a CnaB2/SpaA-like prealbumin-fold domain
+          (PF17802; SSF49478 Cna protein B-type), and an LPXTG anchor (TIGR01167).
+    reference_review:
+      relevance: HIGH
+      correctness: VERIFIED
+      review_notes: &gt;-
+        Domain architecture used to ground the molecular-function and localization calls;
+        TrEMBL/unreviewed, no GO annotations present.
+existing_annotations:
+  # No GOA/UniProt GO annotations exist for Q8G9G1 (TrEMBL, unreviewed). The
+  # entries below are proposed NEW annotations grounded in the primary literature
+  # and domain architecture; they mirror the asserted core_functions.
+  - term:
+      id: GO:0001968
+      label: fibronectin binding
+    evidence_type: IDA
+    original_reference_id: PMID:12359713
+    review:
+      summary: &gt;-
+        Recombinant FbaB binds host fibronectin strongly (ELISA and ligand blotting),
+        the molecular basis of its adhesin activity.
+      action: NEW
+      reason: &gt;-
+        No GO annotation exists for this protein, but fibronectin binding is directly
+        demonstrated for FbaB and is its defining molecular function.
+      supported_by:
+        - reference_id: PMID:12359713
+          supporting_text: &#34;recombinant FbaB exhibits a strong Fn-binding ability&#34;
+  - term:
+      id: GO:0044650
+      label: adhesion of symbiont to host cell
+    evidence_type: IMP
+    original_reference_id: PMID:12359713
+    review:
+      summary: &gt;-
+        FbaB mediates adhesion to (and invasion of) host epithelial cells; an
+        FbaB-deficient mutant has ~6-fold lower HEp-2 adhesion/invasion.
+      action: NEW
+      reason: &gt;-
+        Loss-of-function (mutant) phenotype directly supports FbaB&#39;s role in adhesion
+        of the pathogen to host cells.
+      supported_by:
+        - reference_id: PMID:12359713
+          supporting_text: &#34;An FbaB-deficient mutant strain showed 6-fold lower adhesion and invasion&#34;
+  - term:
+      id: GO:0009986
+      label: cell surface
+    evidence_type: IDA
+    original_reference_id: PMID:12359713
+    review:
+      summary: &gt;-
+        FbaB is displayed on the streptococcal cell surface (detected on TSLS-strain
+        cells), where it engages host fibronectin.
+      action: NEW
+      reason: &gt;-
+        Direct detection of FbaB on the bacterial cell surface supports this localization.
+      supported_by:
+        - reference_id: PMID:12359713
+          supporting_text: &#34;FbaB protein was expressed on the cell surface of TSLS&#34;
+  - term:
+      id: GO:0005618
+      label: cell wall
+    evidence_type: ISS
+    original_reference_id: PMID:12359713
+    review:
+      summary: &gt;-
+        FbaB carries a C-terminal LPXTG sortase-anchor motif, indicating covalent
+        attachment to the peptidoglycan cell wall (the canonical fate of LPXTG surface
+        proteins in Gram-positive bacteria).
+      action: NEW
+      reason: &gt;-
+        Inferred from the LPXTG anchor motif (sequence/structural evidence) rather than
+        a direct localization assay.
+      supported_by:
+        - reference_id: PMID:12359713
+          supporting_text: &#34;an LPXTG motif and Fn-binding repeat domains in the C-terminal region&#34;
+core_functions:
+  - description: &gt;-
+      FbaB binds host fibronectin via its C-terminal fibronectin-binding repeats
+      (shown by ELISA and ligand blotting with recombinant FbaB), the molecular basis
+      of its adhesin function. As a fibronectin-bridging surface adhesin it promotes
+      adhesion to and invasion of host epithelial cells; an FbaB-deficient mutant has
+      ~6-fold lower HEp-2 adhesion/invasion and reduced virulence in mice. The CnaB2
+      isopeptide-bond domain provides the mechanical stability inferred to be needed for
+      this force-bearing host engagement.
+    molecular_function:
+      id: GO:0001968
+      label: fibronectin binding
+    directly_involved_in:
+      - id: GO:0044650
+        label: adhesion of symbiont to host cell
+    locations:
+      - id: GO:0009986
+        label: cell surface
+      - id: GO:0005618
+        label: cell wall
+    supported_by:
+      - reference_id: PMID:12359713
+        supporting_text: &gt;-
+          recombinant FbaB exhibits a strong Fn-binding ability
+      - reference_id: PMID:12359713
+        supporting_text: &gt;-
+          An FbaB-deficient mutant strain showed 6-fold lower adhesion and invasion
+      - reference_id: PMID:22366317
+        supporting_text: &gt;-
+          the CnaB2 domain may be exposed to high force in bridging S. pyogenes to fibronectin during cell invasion
+proposed_new_terms: []
+suggested_questions:
+  - question: &gt;-
+      Does the FbaB N-terminal thioester (TED) domain form a covalent bond to a host
+      protein (e.g. fibrinogen), analogously to SfbI/Cpa, and does this contribute to
+      adhesion or immune evasion?
+  - question: &gt;-
+      Is the intramolecular CnaB2 isopeptide bond required for FbaB-mediated host-cell
+      invasion under physiological shear/force, as the mechanical-stability hypothesis
+      predicts?
+suggested_experiments:
+  - description: &gt;-
+      Mass-spectrometry / SDS-PAGE crosslinking assay of recombinant FbaB TED domain with
+      host fibrinogen to test for covalent (thioester-mediated) host capture.
+    hypothesis: &gt;-
+      The FbaB TED domain covalently captures a host plasma/matrix protein, as seen for
+      other streptococcal thioester-domain adhesins.
+  - description: &gt;-
+      Site-directed mutagenesis of the CnaB2 isopeptide-forming Lys/Asp/Glu residues in
+      full-length FbaB, then quantify HEp-2 adhesion/invasion under flow.
+    hypothesis: &gt;-
+      Disrupting the CnaB2 isopeptide bond reduces the mechanical resilience of FbaB and
+      lowers force-dependent host-cell invasion.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

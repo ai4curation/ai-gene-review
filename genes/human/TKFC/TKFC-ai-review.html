@@ -1,0 +1,4858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TKFC - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>TKFC</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q3LXA3" target="_blank" class="term-link">
+                        Q3LXA3
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "TKFC";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q3LXA3" data-a="DESCRIPTION: TKFC (triokinase/FMN cyclase; also called DAK) is ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>TKFC (triokinase/FMN cyclase; also called DAK) is a cytosolic, homodimeric bifunctional enzyme of the dihydroxyacetone kinase (DAK) family, built from an N-terminal DhaK domain and a C-terminal DhaL domain. Its first activity is an ATP-dependent triokinase / dihydroxyacetone kinase that phosphorylates D-glyceraldehyde to D-glyceraldehyde 3-phosphate (EC 2.7.1.28) and dihydroxyacetone to dihydroxyacetone phosphate (EC 2.7.1.29). By phosphorylating the D-glyceraldehyde generated by aldolase B during hepatic fructolysis, it returns fructose-derived carbon to glycolysis, and it likewise salvages free dihydroxyacetone; both triose phosphate products feed central carbohydrate metabolism. Its second activity is an FAD-AMP lyase (cyclizing), or FMN cyclase (EC 4.6.1.15), which splits FAD into riboflavin 4&#39;,5&#39;-cyclic phosphate (cyclic FMN) plus AMP and is the only known enzymatic source of this unusual flavin nucleotide; the FMN-cyclase activity requires Mn2+ or Co2+, and the kinase and cyclase activities are each inhibited by the substrate(s) of the other, consistent with shared/overlapping catalytic chemistry across the two domains. Beyond metabolism, TKFC has a moonlighting regulatory role in innate immunity: it binds the cytoplasmic viral RNA sensor MDA5 (IFIH1) via its CARD domains and negatively regulates MDA5- (but not RIG-I-) mediated type I interferon signaling, an interaction relieved upon viral infection. In humans, bi-allelic loss-of-function variants cause an autosomal recessive multisystem disorder (TKFC deficiency) characterized by cataracts and developmental delay, variably with cerebellar hypoplasia, liver dysfunction, microcytic anemia, and lactic acidosis with cardiomyopathy.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004371" target="_blank" class="term-link">
+                                    GO:0004371
+                                </a>
+                            </span>
+                            <span class="term-label">glycerone kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q3LXA3" data-a="GO:0004371" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) assertion of glycerone (dihydroxyacetone) kinase activity, the defining catalytic activity of the DAK family. This is directly demonstrated for human TKFC and is a core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Human TKFC phosphorylates dihydroxyacetone (glycerone) using ATP; this activity is biochemically established and consistent with the DAK-family phylogeny.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32004446" target="_blank" class="term-link">
+                                        PMID:32004446
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">TKFC encodes a bifunctional enzyme involved in fructose metabolism through its glyceraldehyde kinase activity and in the generation of riboflavin cyclic 4&#39;,5&#39;-phosphate</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TKFC/TKFC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=dihydroxyacetone + ATP = dihydroxyacetone phosphate + ADP +</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019563" target="_blank" class="term-link">
+                                    GO:0019563
+                                </a>
+                            </span>
+                            <span class="term-label">glycerol catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q3LXA3" data-a="GO:0019563" data-r="GO_REF:0000033" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA transfer of a glycerol catabolic role from DAK-family orthologs. In several bacteria the DAK reaction operates within glycerol degradation, but the human enzyme&#39;s physiological triose substrates are the dihydroxyacetone and D-glyceraldehyde of fructose metabolism, not glycerol.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The human enzyme acts on triose (DHA/glyceraldehyde) intermediates of fructose metabolism; a glycerol catabolic process assignment is an over-generalization inherited from bacterial/yeast orthologs. A fructose catabolic process term better reflects the human biology.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">TERM SCOPING PROBLEM</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">FUNCTIONAL DIVERGENCE</span>
+
+                            </div>
+
+
+                        </div>
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061624" target="_blank" class="term-link">
+                                    fructose catabolic process to hydroxyacetone phosphate and glyceraldehyde-3-phosphate
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32004446" target="_blank" class="term-link">
+                                        PMID:32004446
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">TKFC encodes a bifunctional enzyme involved in fructose metabolism through its</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TKFC/TKFC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=D-glyceraldehyde + ATP = D-glyceraldehyde 3-phosphate + ADP +</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q3LXA3" data-a="GO:0005829" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic assignment of cytosolic localization, consistent with the soluble cytosolic nature of DAK-family triokinases and with the cytosolic fructolysis pathway.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> TKFC is a soluble cytosolic enzyme; cytosol is corroborated by Reactome curation and is the compartment where fructolysis and triose phosphorylation occur.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TKFC/TKFC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">GO:0005829; C:cytosol; IBA:GO_Central.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004371" target="_blank" class="term-link">
+                                    GO:0004371
+                                </a>
+                            </span>
+                            <span class="term-label">glycerone kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q3LXA3" data-a="GO:0004371" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (InterPro/RHEA/EC) assertion of glycerone kinase activity (EC 2.7.1.29). Redundant with the experimental IDA and IBA glycerone kinase annotations and correctly mapped.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the demonstrated dihydroxyacetone kinase activity (EC 2.7.1.29) and DAK-family domain content.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TKFC/TKFC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">EC=2.7.1.29; Evidence={ECO:0000269|PubMed:32004446,</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q3LXA3" data-a="GO:0005524" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ATP binding is required for the ATP-dependent triokinase/DHA kinase reactions and is supported by defined ATP-binding residues in the DhaL domain of UniProt.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> TKFC is an ATP-dependent kinase with mapped ATP-binding sites; ATP binding is a well-supported supporting molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TKFC/TKFC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">/ligand=&#34;ATP&#34;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006071" target="_blank" class="term-link">
+                                    GO:0006071
+                                </a>
+                            </span>
+                            <span class="term-label">glycerol metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q3LXA3" data-a="GO:0006071" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro-based electronic transfer of a glycerol metabolic process. As with the IBA glycerol catabolic term, this reflects the ancestral DAK family context rather than the human enzyme&#39;s role, which centers on triose intermediates of fructose metabolism.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The human enzyme&#39;s physiological substrates are dihydroxyacetone and D-glyceraldehyde in fructose metabolism; a generic glycerol metabolic process assignment over-extends the DAK family signature to a pathway not established for human TKFC.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32004446" target="_blank" class="term-link">
+                                        PMID:32004446
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">TKFC encodes a bifunctional enzyme involved in fructose metabolism through its</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034012" target="_blank" class="term-link">
+                                    GO:0034012
+                                </a>
+                            </span>
+                            <span class="term-label">FAD-AMP lyase (cyclizing) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q3LXA3" data-a="GO:0034012" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (RHEA/EC 4.6.1.15) assertion of FAD-AMP lyase (cyclizing) / FMN cyclase activity. This is a core molecular function directly demonstrated for the human enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The human protein splits FAD to riboflavin 4&#39;,5&#39;-cyclic phosphate plus AMP (EC 4.6.1.15), an activity biochemically demonstrated and correctly captured by this IEA.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TKFC/TKFC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=FAD = riboflavin cyclic-4&#39;,5&#39;-phosphate + AMP + H(+);</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16289032" target="_blank" class="term-link">
+                                        PMID:16289032
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">yielded a protein active both as FMN cyclase and ATP-dependent Dha kinase</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050354" target="_blank" class="term-link">
+                                    GO:0050354
+                                </a>
+                            </span>
+                            <span class="term-label">triokinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q3LXA3" data-a="GO:0050354" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (RHEA/EC 2.7.1.28, plus mouse ortholog) assertion of triokinase activity, phosphorylation of D-glyceraldehyde to D-glyceraldehyde 3-phosphate. Core molecular function, redundant with the experimental IDA annotations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Human TKFC phosphorylates D-glyceraldehyde (EC 2.7.1.28); this IEA is correctly mapped.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TKFC/TKFC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">EC=2.7.1.28; Evidence={ECO:0000269|PubMed:32004446,</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17600090" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17600090
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Negative regulation of MDA5- but not RIG-I-mediated innate a...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q3LXA3" data-a="GO:0005515" data-r="PMID:17600090" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IntAct-derived protein binding capturing the physical interaction with MDA5 (IFIH1, Q9BYX4). The bare protein binding term is uninformative; the biologically meaningful consequence is already captured by the negative regulation of MDA-5 signaling annotation from the same paper.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Bare protein binding is not an informative molecular function. The specific IFIH1 interaction and its functional consequence are better represented by GO:0039534.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17600090" target="_blank" class="term-link">
+                                        PMID:17600090
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">we identified DAK, a functionally unknown dihydroacetone kinase, as a specific MDA5-interacting protein</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25416956
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A proteome-scale map of the human interactome network.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q3LXA3" data-a="GO:0005515" data-r="PMID:25416956" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IntAct/interactome-map protein binding annotation (interaction with SDCBP/syntenin-1, O00560) from a proteome-scale binary interaction screen. Bare protein binding is uninformative and the SDCBP interaction has no established functional interpretation for TKFC.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> High-throughput binary interaction; the uninformative protein binding term does not describe a molecular function and lacks functional context for this gene.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link">
+                                        PMID:25416956
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">A proteome-scale map of the human interactome network.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006001" target="_blank" class="term-link">
+                                    GO:0006001
+                                </a>
+                            </span>
+                            <span class="term-label">fructose catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q3LXA3" data-a="GO:0006001" data-r="GO_REF:0000107" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ensembl-Compara transfer (from mouse ortholog) of a fructose catabolic role. This is the physiologically correct process for human TKFC, and a more specific child term describing the triose-phosphate products is available.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The role is correct but can be made more precise: TKFC&#39;s triokinase activity operates in the terminal step of fructolysis producing glyceraldehyde 3-phosphate (and DHAP). The more specific term better captures the biochemistry.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061624" target="_blank" class="term-link">
+                                    fructose catabolic process to hydroxyacetone phosphate and glyceraldehyde-3-phosphate
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32004446" target="_blank" class="term-link">
+                                        PMID:32004446
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">TKFC encodes a bifunctional enzyme involved in fructose metabolism through its</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TKFC/TKFC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">fructose catabolic process to hydroxyacetone phosphate and glyceraldehyde-3-phosphate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004371" target="_blank" class="term-link">
+                                    GO:0004371
+                                </a>
+                            </span>
+                            <span class="term-label">glycerone kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32004446" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32004446
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Bi-allelic Variants in TKFC Encoding Triokinase/FMN Cyclase ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q3LXA3" data-a="GO:0004371" data-r="PMID:32004446" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay (IDA) of glycerone/dihydroxyacetone kinase activity for human TKFC; patient variants in the FMN lyase domain severely decrease glycerone kinase activity. Core function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimentally demonstrated dihydroxyacetone (glycerone) kinase activity of the human enzyme.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32004446" target="_blank" class="term-link">
+                                        PMID:32004446
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">TKFC encodes a bifunctional enzyme involved in fructose metabolism through its glyceraldehyde kinase activity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TKFC/TKFC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">very severe decrease of triokinase
+                   and glycerone kinase activities</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050354" target="_blank" class="term-link">
+                                    GO:0050354
+                                </a>
+                            </span>
+                            <span class="term-label">triokinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32004446" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32004446
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Bi-allelic Variants in TKFC Encoding Triokinase/FMN Cyclase ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q3LXA3" data-a="GO:0050354" data-r="PMID:32004446" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay (IDA) of triokinase activity (D-glyceraldehyde phosphorylation) for human TKFC; TKFCD patient variants very severely decrease triokinase activity. Core function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimentally demonstrated triokinase activity; loss of this activity underlies the human TKFC deficiency phenotype.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32004446" target="_blank" class="term-link">
+                                        PMID:32004446
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We report an inborn error of metabolism caused by TKFC deficiency</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TKFC/TKFC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">very severe decrease of triokinase
+                   and glycerone kinase activities</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-70349
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q3LXA3" data-a="GO:0005829" data-r="Reactome:R-HSA-70349" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome-curated cytosolic localization associated with the fructose-catabolism reaction in which the DAK dimer phosphorylates D-glyceraldehyde to glyceraldehyde 3-phosphate.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the cytosolic localization of TKFC and its role in cytosolic fructolysis.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TKFC/TKFC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">GO:0005829; C:cytosol; IBA:GO_Central.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-913725
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q3LXA3" data-a="GO:0005829" data-r="Reactome:R-HSA-913725" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome-curated cytosolic localization associated with the IFIH1:TKFC / viral dsRNA sensing context; consistent with cytosolic TKFC.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> TKFC is cytosolic; the MDA5 (IFIH1) interaction occurs in the cytoplasm.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TKFC/TKFC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">GO:0005829; C:cytosol; IBA:GO_Central.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9754745
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q3LXA3" data-a="GO:0005829" data-r="Reactome:R-HSA-9754745" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome-curated cytosolic localization in the SARS-CoV-2 innate-immune module (IFIH1:TKFC binding dsRNA intermediates); consistent with cytosolic TKFC.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Cytosolic localization corroborated across multiple Reactome curations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TKFC/TKFC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">GO:0005829; C:cytosol; IBA:GO_Central.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9755244
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q3LXA3" data-a="GO:0005829" data-r="Reactome:R-HSA-9755244" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome-curated cytosolic localization in a SARS-CoV-2 innate-immune deISGylation module; consistent with cytosolic TKFC.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Cytosolic localization corroborated across multiple Reactome curations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TKFC/TKFC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">GO:0005829; C:cytosol; IBA:GO_Central.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0039534" target="_blank" class="term-link">
+                                    GO:0039534
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of MDA-5 signaling pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17600090" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17600090
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Negative regulation of MDA5- but not RIG-I-mediated innate a...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q3LXA3" data-a="GO:0039534" data-r="PMID:17600090" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental demonstration that DAK/TKFC specifically suppresses MDA5- (IFIH1) but not RIG-I-mediated innate antiviral signaling: overexpression inhibits, and knockdown activates, MDA5-dependent IFN-beta induction. This moonlighting regulatory role is well supported.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Precisely matches the experimental findings of PMID:17600090; TKFC binds MDA5 and negatively regulates its signaling.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17600090" target="_blank" class="term-link">
+                                        PMID:17600090
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">These findings suggest that DAK is a physiological suppressor of MDA5 and specifically inhibits MDA5- but not RIG-I-mediated innate antiviral signaling.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070062" target="_blank" class="term-link">
+                                    GO:0070062
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular exosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23533145
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    In-depth proteomic analyses of exosomes isolated from expres...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q3LXA3" data-a="GO:0070062" data-r="PMID:23533145" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput mass-spectrometry detection in urinary/prostatic exosome preparations. For a cytosolic metabolic enzyme this represents incidental detection in bulk exosome proteomics rather than a functional localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Abundant cytosolic enzymes are common background in exosome proteomics; there is no functional evidence for an extracellular-exosome role for TKFC.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link">
+                                        PMID:23533145
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In pooled EPS-urine exosome
+ samples, ~900 proteins were detected.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21630459" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21630459
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Proteomic characterization of the human sperm nucleus.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q3LXA3" data-a="GO:0005634" data-r="PMID:21630459" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput detection in a human sperm nucleus proteome. TKFC is an established cytosolic enzyme; detection in a purified sperm-nucleus preparation likely reflects contamination or non-functional presence rather than a curated nuclear function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> No functional evidence supports a nuclear role; the sole support is bulk proteomic detection in one specialized cell type, inconsistent with the cytosolic biology.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21630459" target="_blank" class="term-link">
+                                        PMID:21630459
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">403
+ different proteins have been identified from the isolated sperm nuclei.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070062" target="_blank" class="term-link">
+                                    GO:0070062
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular exosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19056867
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Large-scale proteomics and phosphoproteomics of urinary exos...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q3LXA3" data-a="GO:0070062" data-r="PMID:19056867" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput mass-spectrometry detection in urinary exosomes (1132 proteins identified). As with the other exosome dataset, this is incidental detection of a cytosolic enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Bulk urinary-exosome proteomics; no functional evidence for an extracellular-exosome role.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link">
+                                        PMID:19056867
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the
+ analysis identified 1132 proteins unambiguously</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005975" target="_blank" class="term-link">
+                                    GO:0005975
+                                </a>
+                            </span>
+                            <span class="term-label">carbohydrate metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16289032" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16289032
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification of human and rat FAD-AMP lyase (cyclic FMN fo...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q3LXA3" data-a="GO:0005975" data-r="PMID:16289032" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> General carbohydrate metabolic process annotation supported by the demonstration of ATP- dependent dihydroxyacetone kinase activity. Correct but a high-level parent of the specific fructose/triose metabolic role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The essence is correct but the term is a broad parent; the specific triokinase/fructose catabolic role is the informative core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16289032" target="_blank" class="term-link">
+                                        PMID:16289032
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">yielded a protein active both as FMN cyclase and ATP-dependent Dha kinase</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005975" target="_blank" class="term-link">
+                                    GO:0005975
+                                </a>
+                            </span>
+                            <span class="term-label">carbohydrate metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/4688871" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:4688871
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dihydroxyacetone metabolism by human erythrocytes: demonstra...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q3LXA3" data-a="GO:0005975" data-r="PMID:4688871" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> General carbohydrate metabolic process annotation from the erythrocyte triokinase characterization. Correct but high-level relative to the specific triokinase function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Broad parent term; retained as non-core with the specific triokinase MF representing the core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/4688871" target="_blank" class="term-link">
+                                        PMID:4688871
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">demonstration of triokinase
+ activity and its characterization.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045088" target="_blank" class="term-link">
+                                    GO:0045088
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of innate immune response</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16289032" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16289032
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification of human and rat FAD-AMP lyase (cyclic FMN fo...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q3LXA3" data-a="GO:0045088" data-r="PMID:16289032" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> General innate-immune regulation term. The specific, well-supported innate-immune role of TKFC is negative regulation of MDA5 signaling (GO:0039534, PMID:17600090); this broad parent is here attributed to the FAD-AMP lyase biochemistry paper (PMID:16289032).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The direction is correct but the term is a high-level parent of the specific MDA5 role; retained as non-core. The specific function is captured by GO:0039534.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17600090" target="_blank" class="term-link">
+                                        PMID:17600090
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">DAK is a physiological suppressor of MDA5 and specifically inhibits MDA5- but not RIG-I-mediated innate antiviral signaling.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046835" target="_blank" class="term-link">
+                                    GO:0046835
+                                </a>
+                            </span>
+                            <span class="term-label">carbohydrate phosphorylation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/4688871" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:4688871
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dihydroxyacetone metabolism by human erythrocytes: demonstra...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q3LXA3" data-a="GO:0046835" data-r="PMID:4688871" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Carbohydrate phosphorylation process supported by the erythrocyte triokinase characterization (ATP-dependent phosphorylation of trioses). Accurately describes the biological process of the kinase activity, at an appropriate level of generality.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct process directly reflecting TKFC&#39;s ATP-dependent triose phosphorylation; kept as non-core alongside the specific triokinase MF and fructose catabolic process.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/4688871" target="_blank" class="term-link">
+                                        PMID:4688871
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">demonstration of triokinase
+ activity and its characterization.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004371" target="_blank" class="term-link">
+                                    GO:0004371
+                                </a>
+                            </span>
+                            <span class="term-label">glycerone kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16289032" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16289032
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification of human and rat FAD-AMP lyase (cyclic FMN fo...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q3LXA3" data-a="GO:0004371" data-r="PMID:16289032" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct demonstration that the heterologously expressed human protein is active as an ATP- dependent dihydroxyacetone (glycerone) kinase. Core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimentally established dihydroxyacetone kinase activity of human TKFC.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16289032" target="_blank" class="term-link">
+                                        PMID:16289032
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">yielded a protein active both as FMN cyclase and ATP-dependent Dha kinase</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004371" target="_blank" class="term-link">
+                                    GO:0004371
+                                </a>
+                            </span>
+                            <span class="term-label">glycerone kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/4688871" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:4688871
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dihydroxyacetone metabolism by human erythrocytes: demonstra...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q3LXA3" data-a="GO:0004371" data-r="PMID:4688871" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct demonstration of triokinase (dihydroxyacetone/glycerone kinase) activity in human erythrocytes with kinetic characterization. Core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Classic biochemical demonstration of the human triokinase/DHA kinase activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/4688871" target="_blank" class="term-link">
+                                        PMID:4688871
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">demonstration of triokinase
+ activity and its characterization.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034012" target="_blank" class="term-link">
+                                    GO:0034012
+                                </a>
+                            </span>
+                            <span class="term-label">FAD-AMP lyase (cyclizing) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16289032" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16289032
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification of human and rat FAD-AMP lyase (cyclic FMN fo...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q3LXA3" data-a="GO:0034012" data-r="PMID:16289032" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct demonstration that the human protein possesses FMN cyclase / FAD-AMP lyase (cyclizing) activity, copurifying with the DHA kinase activity and sustained by a single protein. Core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimentally established FAD-AMP lyase (cyclizing)/FMN cyclase activity of human TKFC.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16289032" target="_blank" class="term-link">
+                                        PMID:16289032
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">yielded a protein active both as FMN cyclase and ATP-dependent Dha kinase, each activity being inhibited by the substrate(s) of the other.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050354" target="_blank" class="term-link">
+                                    GO:0050354
+                                </a>
+                            </span>
+                            <span class="term-label">triokinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/4688871" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:4688871
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dihydroxyacetone metabolism by human erythrocytes: demonstra...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q3LXA3" data-a="GO:0050354" data-r="PMID:4688871" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct demonstration of triokinase activity in human erythrocytes (phosphorylation of D-glyceraldehyde) with kinetic characterization. Core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Classic biochemical demonstration of human triokinase activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/4688871" target="_blank" class="term-link">
+                                        PMID:4688871
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">demonstration of triokinase
+ activity and its characterization.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>ATP-dependent triokinase / dihydroxyacetone kinase that phosphorylates D-glyceraldehyde (and dihydroxyacetone) to the triose phosphates glyceraldehyde 3-phosphate and dihydroxyacetone phosphate, acting in the cytosol during hepatic fructose catabolism to return fructose-derived carbon to glycolysis.</h3>
+                <span class="vote-buttons" data-g="Q3LXA3" data-a="FUNCTION: ATP-dependent triokinase / dihydroxyacetone kinase..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050354" target="_blank" class="term-link">
+                            triokinase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061624" target="_blank" class="term-link">
+                                fructose catabolic process to hydroxyacetone phosphate and glyceraldehyde-3-phosphate
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32004446" target="_blank" class="term-link">
+                                PMID:32004446
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">TKFC encodes a bifunctional enzyme involved in fructose metabolism through its</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/4688871" target="_blank" class="term-link">
+                                PMID:4688871
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">demonstration of triokinase
+ activity and its characterization.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Glycerone (dihydroxyacetone) kinase activity phosphorylating dihydroxyacetone to dihydroxyacetone phosphate using ATP, feeding trioses into central carbohydrate metabolism in the cytosol.</h3>
+                <span class="vote-buttons" data-g="Q3LXA3" data-a="FUNCTION: Glycerone (dihydroxyacetone) kinase activity phosp..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004371" target="_blank" class="term-link">
+                            glycerone kinase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046835" target="_blank" class="term-link">
+                                carbohydrate phosphorylation
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16289032" target="_blank" class="term-link">
+                                PMID:16289032
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">yielded a protein active both as FMN cyclase and ATP-dependent Dha kinase</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>FAD-AMP lyase (cyclizing), or FMN cyclase, activity that splits FAD into riboflavin 4&#39;,5&#39;-cyclic phosphate (cyclic FMN) plus AMP; TKFC is the only known enzymatic source of cyclic FMN and this activity requires Mn2+ or Co2+.</h3>
+                <span class="vote-buttons" data-g="Q3LXA3" data-a="FUNCTION: FAD-AMP lyase (cyclizing), or FMN cyclase, activit..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034012" target="_blank" class="term-link">
+                            FAD-AMP lyase (cyclizing) activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16289032" target="_blank" class="term-link">
+                                PMID:16289032
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">yielded a protein active both as FMN cyclase and ATP-dependent Dha kinase</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/TKFC/TKFC-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Reaction=FAD = riboflavin cyclic-4&#39;,5&#39;-phosphate + AMP + H(+);</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16289032" target="_blank" class="term-link">
+                            PMID:16289032
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Identification of human and rat FAD-AMP lyase (cyclic FMN forming) as ATP-dependent dihydroxyacetone kinases.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17600090" target="_blank" class="term-link">
+                            PMID:17600090
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Negative regulation of MDA5- but not RIG-I-mediated innate antiviral signaling by the dihydroxyacetone kinase.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link">
+                            PMID:19056867
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Large-scale proteomics and phosphoproteomics of urinary exosomes.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21630459" target="_blank" class="term-link">
+                            PMID:21630459
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Proteomic characterization of the human sperm nucleus.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link">
+                            PMID:23533145
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">In-depth proteomic analyses of exosomes isolated from expressed prostatic secretions in urine.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link">
+                            PMID:25416956
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A proteome-scale map of the human interactome network.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32004446" target="_blank" class="term-link">
+                            PMID:32004446
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Bi-allelic Variants in TKFC Encoding Triokinase/FMN Cyclase Are Associated with Cataracts and Multisystem Disease.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/4688871" target="_blank" class="term-link">
+                            PMID:4688871
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Dihydroxyacetone metabolism by human erythrocytes: demonstration of triokinase activity and its characterization.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-70349
+
+                    </span>
+                </div>
+
+                <div class="reference-title">DAK dimer phosphorylates D-glyceraldehyde to form D-glyceraldehyde 3-phosphate</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-913725
+
+                    </span>
+                </div>
+
+                <div class="reference-title">viral dsRNA binds IFIH1:TKFC</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9754745
+
+                    </span>
+                </div>
+
+                <div class="reference-title">IFIH1:TKFC binds SARS-CoV-2 dsRNA intermediates </div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9755244
+
+                    </span>
+                </div>
+
+                <div class="reference-title">SARS-CoV-2 nsp3 deISGylates ISGylated IFIH1</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(TKFC-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q3LXA3" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="tkfc-triokinasefmn-cyclase-q3lxa3-review-notes">TKFC (Triokinase/FMN cyclase, Q3LXA3) — review notes</h1>
+<p>Deep research: <code>just deep-research human TKFC --provider falcon</code> was attempted twice; both<br />
+runs exited non-zero and produced no <code>-deep-research-falcon.md</code>. Review is therefore grounded<br />
+in the UniProt record (<code>TKFC-uniprot.txt</code>), the seeded GOA, and cached <code>publications/PMID_*.md</code>.<br />
+Did NOT fabricate a <code>-deep-research-*.md</code> file.</p>
+<h2 id="core-biology-verified">Core biology (verified)</h2>
+<p>TKFC is a cytosolic, homodimeric <strong>bifunctional</strong> enzyme (UniProt Q3LXA3; DAK family). Two domains:<br />
+DhaK (aa 9-336) and DhaL (aa 372-571). Individually DhaK is inactive and DhaL shows cyclase but not<br />
+kinase activity [file:TKFC-uniprot.txt DOMAIN; PMID:24569995].</p>
+<p>Activity 1 — <strong>ATP-dependent dihydroxyacetone / triokinase (DHA kinase)</strong> (EC 2.7.1.29 and 2.7.1.28):<br />
+- dihydroxyacetone + ATP = dihydroxyacetone phosphate + ADP + H+ (RHEA:15773, EC 2.7.1.29)<br />
+- D-glyceraldehyde + ATP = D-glyceraldehyde 3-phosphate + ADP + H+ (RHEA:13941, EC 2.7.1.28)<br />
+- Phosphorylates the D-glyceraldehyde produced by ALDOB in fructolysis, returning fructose carbon<br />
+  to glycolysis; also phosphorylates DHA. [PMID:32004446, PMID:4688871]</p>
+<p>Activity 2 — <strong>FAD-AMP lyase (cyclizing) / FMN cyclase</strong> (EC 4.6.1.15):<br />
+- FAD = riboflavin cyclic-4',5'-phosphate + AMP + H+ (RHEA:13729). Only known enzymatic source of<br />
+  riboflavin 4',5'-cyclic phosphate (cyclic FMN). Requires Mn2+ or Co2+. [PMID:16289032, PMID:4688871]<br />
+- Each activity inhibited by the substrate(s) of the other (single/overlapping active center). <a href="https://pubmed.ncbi.nlm.nih.gov/16289032">PMID:16289032</a></p>
+<p>Activity 3 (regulatory, moonlighting) — <strong>negative regulation of MDA5 (IFIH1) antiviral signaling</strong>:<br />
+- DAK is a specific MDA5-interacting protein; overexpression inhibits MDA5- (not RIG-I-) mediated<br />
+  IFN-beta induction; knockdown activates it. Interacts via IFIH1 CARD domains; interaction inhibited<br />
+  by viral infection. <a href="https://pubmed.ncbi.nlm.nih.gov/17600090">PMID:17600090</a></p>
+<p>Disease: <strong>TKFC deficiency (TKFCD, MIM:618805)</strong> — autosomal recessive; cataracts + developmental<br />
+delay ± cerebellar hypoplasia, liver dysfunction, microcytic anemia, fatal cardiomyopathy with lactic<br />
+acidosis after febrile illness. Bi-allelic variants in FMN lyase domain (G445S, R543I). <a href="https://pubmed.ncbi.nlm.nih.gov/32004446">PMID:32004446</a></p>
+<h2 id="annotation-decisions-summary">Annotation decisions (summary)</h2>
+<ul>
+<li>Catalytic MF terms glycerone kinase (GO:0004371), triokinase (GO:0050354), FAD-AMP lyase<br />
+  (GO:0034012): ACCEPT — directly demonstrated (IDA) and phylogenetically supported (IBA).</li>
+<li>ATP binding (GO:0005524): ACCEPT — required for kinase; matches ATP-binding residues in UniProt.</li>
+<li>Glycerol catabolic/metabolic (GO:0019563 IBA, GO:0006071 IEA): the human enzyme's physiological<br />
+  triose substrates are DHA and glyceraldehyde in fructose metabolism, not glycerol. These are<br />
+  DAK-family phylogenetic/InterPro over-generalizations (some bacterial DAK orthologs act in glycerol<br />
+  catabolism). MODIFY IBA glycerol catabolic -&gt; fructose catabolic; MARK_AS_OVER_ANNOTATED the IEA<br />
+  glycerol metabolic.</li>
+<li>Fructose catabolic (GO:0006001 IEA, Ensembl): MODIFY to the more specific GO:0061624 (which the<br />
+  UniProt DR line and Ensembl actually assert).</li>
+<li>Cytosol (GO:0005829 IBA + 4 Reactome TAS): ACCEPT — bona fide cytosolic localization.</li>
+<li>protein binding (GO:0005515 IPI x2, IFIH1/Q9BYX4 and SDCBP/O00560): MARK_AS_OVER_ANNOTATED<br />
+  (uninformative bare term; IFIH1 interaction better captured by GO:0039534).</li>
+<li>neg reg MDA-5 signaling (GO:0039534 IDA, PMID:17600090): ACCEPT.</li>
+<li>regulation of innate immune response (GO:0045088 IDA, PMID:16289032): general parent of the MDA5<br />
+  role but attributed here to the FAD-AMP-lyase paper; KEEP_AS_NON_CORE.</li>
+<li>carbohydrate metabolic process (GO:0005975 IDA x2), carbohydrate phosphorylation (GO:0046835 IDA):<br />
+  correct but general; KEEP_AS_NON_CORE.</li>
+<li>extracellular exosome (GO:0070062 HDA x2), nucleus (GO:0005634 HDA): mass-spec bulk-proteomics<br />
+  localizations for a cytosolic enzyme; MARK_AS_OVER_ANNOTATED.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q3LXA3
+gene_symbol: TKFC
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  TKFC (triokinase/FMN cyclase; also called DAK) is a cytosolic, homodimeric bifunctional
+  enzyme of the dihydroxyacetone kinase (DAK) family, built from an N-terminal DhaK domain and a
+  C-terminal DhaL domain. Its first activity is an ATP-dependent triokinase / dihydroxyacetone
+  kinase that phosphorylates D-glyceraldehyde to D-glyceraldehyde 3-phosphate (EC 2.7.1.28) and
+  dihydroxyacetone to dihydroxyacetone phosphate (EC 2.7.1.29). By phosphorylating the
+  D-glyceraldehyde generated by aldolase B during hepatic fructolysis, it returns fructose-derived
+  carbon to glycolysis, and it likewise salvages free dihydroxyacetone; both triose phosphate
+  products feed central carbohydrate metabolism. Its second activity is an FAD-AMP lyase
+  (cyclizing), or FMN cyclase (EC 4.6.1.15), which splits FAD into riboflavin 4&#39;,5&#39;-cyclic phosphate
+  (cyclic FMN) plus AMP and is the only known enzymatic source of this unusual flavin nucleotide;
+  the FMN-cyclase activity requires Mn2+ or Co2+, and the kinase and cyclase activities are each
+  inhibited by the substrate(s) of the other, consistent with shared/overlapping catalytic
+  chemistry across the two domains. Beyond metabolism, TKFC has a moonlighting regulatory role in
+  innate immunity: it binds the cytoplasmic viral RNA sensor MDA5 (IFIH1) via its CARD domains and
+  negatively regulates MDA5- (but not RIG-I-) mediated type I interferon signaling, an interaction
+  relieved upon viral infection. In humans, bi-allelic loss-of-function variants cause an autosomal
+  recessive multisystem disorder (TKFC deficiency) characterized by cataracts and developmental
+  delay, variably with cerebellar hypoplasia, liver dysfunction, microcytic anemia, and lactic
+  acidosis with cardiomyopathy.
+alternative_products:
+- name: &#39;1&#39;
+  id: Q3LXA3-1
+- name: &#39;2&#39;
+  id: Q3LXA3-2
+  sequence_note: VSP_057181
+existing_annotations:
+- term:
+    id: GO:0004371
+    label: glycerone kinase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) assertion of glycerone (dihydroxyacetone) kinase activity, the defining
+      catalytic activity of the DAK family. This is directly demonstrated for human TKFC and is a
+      core molecular function.
+    action: ACCEPT
+    reason: &gt;-
+      Human TKFC phosphorylates dihydroxyacetone (glycerone) using ATP; this activity is
+      biochemically established and consistent with the DAK-family phylogeny.
+    supported_by:
+    - reference_id: PMID:32004446
+      supporting_text: &gt;-
+        TKFC encodes a bifunctional enzyme involved in fructose metabolism through its
+        glyceraldehyde kinase activity and in the generation of riboflavin cyclic 4&#39;,5&#39;-phosphate
+    - reference_id: file:human/TKFC/TKFC-uniprot.txt
+      supporting_text: &#34;Reaction=dihydroxyacetone + ATP = dihydroxyacetone phosphate + ADP +&#34;
+- term:
+    id: GO:0019563
+    label: glycerol catabolic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      IBA transfer of a glycerol catabolic role from DAK-family orthologs. In several bacteria the
+      DAK reaction operates within glycerol degradation, but the human enzyme&#39;s physiological triose
+      substrates are the dihydroxyacetone and D-glyceraldehyde of fructose metabolism, not glycerol.
+    action: MODIFY
+    reason: &gt;-
+      The human enzyme acts on triose (DHA/glyceraldehyde) intermediates of fructose metabolism; a
+      glycerol catabolic process assignment is an over-generalization inherited from bacterial/yeast
+      orthologs. A fructose catabolic process term better reflects the human biology.
+    proposed_replacement_terms:
+    - id: GO:0061624
+      label: fructose catabolic process to hydroxyacetone phosphate and glyceraldehyde-3-phosphate
+    propagation_review:
+      root_cause: TERM_SCOPING_PROBLEM
+      failure_modes:
+      - FUNCTIONAL_DIVERGENCE
+    supported_by:
+    - reference_id: PMID:32004446
+      supporting_text: &#34;TKFC encodes a bifunctional enzyme involved in fructose metabolism through its&#34;
+    - reference_id: file:human/TKFC/TKFC-uniprot.txt
+      supporting_text: &gt;-
+        Reaction=D-glyceraldehyde + ATP = D-glyceraldehyde 3-phosphate + ADP +
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic assignment of cytosolic localization, consistent with the soluble cytosolic
+      nature of DAK-family triokinases and with the cytosolic fructolysis pathway.
+    action: ACCEPT
+    reason: &gt;-
+      TKFC is a soluble cytosolic enzyme; cytosol is corroborated by Reactome curation and is the
+      compartment where fructolysis and triose phosphorylation occur.
+    supported_by:
+    - reference_id: file:human/TKFC/TKFC-uniprot.txt
+      supporting_text: &#34;GO:0005829; C:cytosol; IBA:GO_Central.&#34;
+- term:
+    id: GO:0004371
+    label: glycerone kinase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic (InterPro/RHEA/EC) assertion of glycerone kinase activity (EC 2.7.1.29). Redundant
+      with the experimental IDA and IBA glycerone kinase annotations and correctly mapped.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with the demonstrated dihydroxyacetone kinase activity (EC 2.7.1.29) and DAK-family
+      domain content.
+    supported_by:
+    - reference_id: file:human/TKFC/TKFC-uniprot.txt
+      supporting_text: &#34;EC=2.7.1.29; Evidence={ECO:0000269|PubMed:32004446,&#34;
+- term:
+    id: GO:0005524
+    label: ATP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      ATP binding is required for the ATP-dependent triokinase/DHA kinase reactions and is supported
+      by defined ATP-binding residues in the DhaL domain of UniProt.
+    action: ACCEPT
+    reason: &gt;-
+      TKFC is an ATP-dependent kinase with mapped ATP-binding sites; ATP binding is a well-supported
+      supporting molecular function.
+    supported_by:
+    - reference_id: file:human/TKFC/TKFC-uniprot.txt
+      supporting_text: &#34;/ligand=\&#34;ATP\&#34;&#34;
+- term:
+    id: GO:0006071
+    label: glycerol metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      InterPro-based electronic transfer of a glycerol metabolic process. As with the IBA glycerol
+      catabolic term, this reflects the ancestral DAK family context rather than the human enzyme&#39;s
+      role, which centers on triose intermediates of fructose metabolism.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The human enzyme&#39;s physiological substrates are dihydroxyacetone and D-glyceraldehyde in
+      fructose metabolism; a generic glycerol metabolic process assignment over-extends the DAK
+      family signature to a pathway not established for human TKFC.
+    supported_by:
+    - reference_id: PMID:32004446
+      supporting_text: &#34;TKFC encodes a bifunctional enzyme involved in fructose metabolism through its&#34;
+- term:
+    id: GO:0034012
+    label: FAD-AMP lyase (cyclizing) activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic (RHEA/EC 4.6.1.15) assertion of FAD-AMP lyase (cyclizing) / FMN cyclase activity.
+      This is a core molecular function directly demonstrated for the human enzyme.
+    action: ACCEPT
+    reason: &gt;-
+      The human protein splits FAD to riboflavin 4&#39;,5&#39;-cyclic phosphate plus AMP (EC 4.6.1.15), an
+      activity biochemically demonstrated and correctly captured by this IEA.
+    supported_by:
+    - reference_id: file:human/TKFC/TKFC-uniprot.txt
+      supporting_text: &#34;Reaction=FAD = riboflavin cyclic-4&#39;,5&#39;-phosphate + AMP + H(+);&#34;
+    - reference_id: PMID:16289032
+      supporting_text: &gt;-
+        yielded a protein active both as FMN cyclase and ATP-dependent Dha kinase
+- term:
+    id: GO:0050354
+    label: triokinase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic (RHEA/EC 2.7.1.28, plus mouse ortholog) assertion of triokinase activity,
+      phosphorylation of D-glyceraldehyde to D-glyceraldehyde 3-phosphate. Core molecular function,
+      redundant with the experimental IDA annotations.
+    action: ACCEPT
+    reason: &gt;-
+      Human TKFC phosphorylates D-glyceraldehyde (EC 2.7.1.28); this IEA is correctly mapped.
+    supported_by:
+    - reference_id: file:human/TKFC/TKFC-uniprot.txt
+      supporting_text: &#34;EC=2.7.1.28; Evidence={ECO:0000269|PubMed:32004446,&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:17600090
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IntAct-derived protein binding capturing the physical interaction with MDA5 (IFIH1, Q9BYX4).
+      The bare protein binding term is uninformative; the biologically meaningful consequence is
+      already captured by the negative regulation of MDA-5 signaling annotation from the same paper.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Bare protein binding is not an informative molecular function. The specific IFIH1 interaction
+      and its functional consequence are better represented by GO:0039534.
+    supported_by:
+    - reference_id: PMID:17600090
+      supporting_text: &gt;-
+        we identified DAK, a functionally unknown
+        dihydroacetone kinase, as a specific MDA5-interacting protein
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25416956
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IntAct/interactome-map protein binding annotation (interaction with SDCBP/syntenin-1, O00560)
+      from a proteome-scale binary interaction screen. Bare protein binding is uninformative and the
+      SDCBP interaction has no established functional interpretation for TKFC.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      High-throughput binary interaction; the uninformative protein binding term does not describe a
+      molecular function and lacks functional context for this gene.
+    supported_by:
+    - reference_id: PMID:25416956
+      supporting_text: A proteome-scale map of the human interactome network.
+- term:
+    id: GO:0006001
+    label: fructose catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Ensembl-Compara transfer (from mouse ortholog) of a fructose catabolic role. This is the
+      physiologically correct process for human TKFC, and a more specific child term describing the
+      triose-phosphate products is available.
+    action: MODIFY
+    reason: &gt;-
+      The role is correct but can be made more precise: TKFC&#39;s triokinase activity operates in the
+      terminal step of fructolysis producing glyceraldehyde 3-phosphate (and DHAP). The more
+      specific term better captures the biochemistry.
+    proposed_replacement_terms:
+    - id: GO:0061624
+      label: fructose catabolic process to hydroxyacetone phosphate and glyceraldehyde-3-phosphate
+    supported_by:
+    - reference_id: PMID:32004446
+      supporting_text: &#34;TKFC encodes a bifunctional enzyme involved in fructose metabolism through its&#34;
+    - reference_id: file:human/TKFC/TKFC-uniprot.txt
+      supporting_text: &#34;fructose catabolic process to hydroxyacetone phosphate and glyceraldehyde-3-phosphate&#34;
+- term:
+    id: GO:0004371
+    label: glycerone kinase activity
+  evidence_type: IDA
+  original_reference_id: PMID:32004446
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct assay (IDA) of glycerone/dihydroxyacetone kinase activity for human TKFC; patient
+      variants in the FMN lyase domain severely decrease glycerone kinase activity. Core function.
+    action: ACCEPT
+    reason: &gt;-
+      Experimentally demonstrated dihydroxyacetone (glycerone) kinase activity of the human enzyme.
+    supported_by:
+    - reference_id: PMID:32004446
+      supporting_text: &gt;-
+        TKFC encodes a
+        bifunctional enzyme involved in fructose metabolism through its glyceraldehyde
+        kinase activity
+    - reference_id: file:human/TKFC/TKFC-uniprot.txt
+      supporting_text: &#34;very severe decrease of triokinase\n                   and glycerone kinase activities&#34;
+- term:
+    id: GO:0050354
+    label: triokinase activity
+  evidence_type: IDA
+  original_reference_id: PMID:32004446
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct assay (IDA) of triokinase activity (D-glyceraldehyde phosphorylation) for human TKFC;
+      TKFCD patient variants very severely decrease triokinase activity. Core function.
+    action: ACCEPT
+    reason: &gt;-
+      Experimentally demonstrated triokinase activity; loss of this activity underlies the human
+      TKFC deficiency phenotype.
+    supported_by:
+    - reference_id: PMID:32004446
+      supporting_text: &gt;-
+        We report an inborn error of metabolism caused by TKFC deficiency
+    - reference_id: file:human/TKFC/TKFC-uniprot.txt
+      supporting_text: &#34;very severe decrease of triokinase\n                   and glycerone kinase activities&#34;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-70349
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome-curated cytosolic localization associated with the fructose-catabolism reaction in
+      which the DAK dimer phosphorylates D-glyceraldehyde to glyceraldehyde 3-phosphate.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with the cytosolic localization of TKFC and its role in cytosolic fructolysis.
+    supported_by:
+    - reference_id: file:human/TKFC/TKFC-uniprot.txt
+      supporting_text: &#34;GO:0005829; C:cytosol; IBA:GO_Central.&#34;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-913725
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome-curated cytosolic localization associated with the IFIH1:TKFC / viral dsRNA sensing
+      context; consistent with cytosolic TKFC.
+    action: ACCEPT
+    reason: &gt;-
+      TKFC is cytosolic; the MDA5 (IFIH1) interaction occurs in the cytoplasm.
+    supported_by:
+    - reference_id: file:human/TKFC/TKFC-uniprot.txt
+      supporting_text: &#34;GO:0005829; C:cytosol; IBA:GO_Central.&#34;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9754745
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome-curated cytosolic localization in the SARS-CoV-2 innate-immune module (IFIH1:TKFC
+      binding dsRNA intermediates); consistent with cytosolic TKFC.
+    action: ACCEPT
+    reason: &gt;-
+      Cytosolic localization corroborated across multiple Reactome curations.
+    supported_by:
+    - reference_id: file:human/TKFC/TKFC-uniprot.txt
+      supporting_text: &#34;GO:0005829; C:cytosol; IBA:GO_Central.&#34;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9755244
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome-curated cytosolic localization in a SARS-CoV-2 innate-immune deISGylation module;
+      consistent with cytosolic TKFC.
+    action: ACCEPT
+    reason: &gt;-
+      Cytosolic localization corroborated across multiple Reactome curations.
+    supported_by:
+    - reference_id: file:human/TKFC/TKFC-uniprot.txt
+      supporting_text: &#34;GO:0005829; C:cytosol; IBA:GO_Central.&#34;
+- term:
+    id: GO:0039534
+    label: negative regulation of MDA-5 signaling pathway
+  evidence_type: IDA
+  original_reference_id: PMID:17600090
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Direct experimental demonstration that DAK/TKFC specifically suppresses MDA5- (IFIH1) but not
+      RIG-I-mediated innate antiviral signaling: overexpression inhibits, and knockdown activates,
+      MDA5-dependent IFN-beta induction. This moonlighting regulatory role is well supported.
+    action: ACCEPT
+    reason: &gt;-
+      Precisely matches the experimental findings of PMID:17600090; TKFC binds MDA5 and negatively
+      regulates its signaling.
+    supported_by:
+    - reference_id: PMID:17600090
+      supporting_text: &gt;-
+        These findings
+        suggest that DAK is a physiological suppressor of MDA5 and specifically inhibits
+        MDA5- but not RIG-I-mediated innate antiviral signaling.
+- term:
+    id: GO:0070062
+    label: extracellular exosome
+  evidence_type: HDA
+  original_reference_id: PMID:23533145
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput mass-spectrometry detection in urinary/prostatic exosome preparations. For a
+      cytosolic metabolic enzyme this represents incidental detection in bulk exosome proteomics
+      rather than a functional localization.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Abundant cytosolic enzymes are common background in exosome proteomics; there is no functional
+      evidence for an extracellular-exosome role for TKFC.
+    supported_by:
+    - reference_id: PMID:23533145
+      supporting_text: &#34;In pooled EPS-urine exosome \n samples, ~900 proteins were detected.&#34;
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: HDA
+  original_reference_id: PMID:21630459
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput detection in a human sperm nucleus proteome. TKFC is an established cytosolic
+      enzyme; detection in a purified sperm-nucleus preparation likely reflects contamination or
+      non-functional presence rather than a curated nuclear function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      No functional evidence supports a nuclear role; the sole support is bulk proteomic detection
+      in one specialized cell type, inconsistent with the cytosolic biology.
+    supported_by:
+    - reference_id: PMID:21630459
+      supporting_text: &#34;403 \n different proteins have been identified from the isolated sperm nuclei.&#34;
+- term:
+    id: GO:0070062
+    label: extracellular exosome
+  evidence_type: HDA
+  original_reference_id: PMID:19056867
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput mass-spectrometry detection in urinary exosomes (1132 proteins identified). As
+      with the other exosome dataset, this is incidental detection of a cytosolic enzyme.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Bulk urinary-exosome proteomics; no functional evidence for an extracellular-exosome role.
+    supported_by:
+    - reference_id: PMID:19056867
+      supporting_text: &#34;the \n analysis identified 1132 proteins unambiguously&#34;
+- term:
+    id: GO:0005975
+    label: carbohydrate metabolic process
+  evidence_type: IDA
+  original_reference_id: PMID:16289032
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      General carbohydrate metabolic process annotation supported by the demonstration of ATP-
+      dependent dihydroxyacetone kinase activity. Correct but a high-level parent of the specific
+      fructose/triose metabolic role.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The essence is correct but the term is a broad parent; the specific triokinase/fructose
+      catabolic role is the informative core function.
+    supported_by:
+    - reference_id: PMID:16289032
+      supporting_text: &gt;-
+        yielded a protein active both as FMN cyclase and ATP-dependent Dha kinase
+- term:
+    id: GO:0005975
+    label: carbohydrate metabolic process
+  evidence_type: IDA
+  original_reference_id: PMID:4688871
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      General carbohydrate metabolic process annotation from the erythrocyte triokinase
+      characterization. Correct but high-level relative to the specific triokinase function.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Broad parent term; retained as non-core with the specific triokinase MF representing the core
+      function.
+    supported_by:
+    - reference_id: PMID:4688871
+      supporting_text: &#34;demonstration of triokinase \n activity and its characterization.&#34;
+- term:
+    id: GO:0045088
+    label: regulation of innate immune response
+  evidence_type: IDA
+  original_reference_id: PMID:16289032
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      General innate-immune regulation term. The specific, well-supported innate-immune role of TKFC
+      is negative regulation of MDA5 signaling (GO:0039534, PMID:17600090); this broad parent is
+      here attributed to the FAD-AMP lyase biochemistry paper (PMID:16289032).
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The direction is correct but the term is a high-level parent of the specific MDA5 role;
+      retained as non-core. The specific function is captured by GO:0039534.
+    supported_by:
+    - reference_id: PMID:17600090
+      supporting_text: &gt;-
+        DAK is a physiological suppressor of MDA5 and specifically inhibits
+        MDA5- but not RIG-I-mediated innate antiviral signaling.
+- term:
+    id: GO:0046835
+    label: carbohydrate phosphorylation
+  evidence_type: IDA
+  original_reference_id: PMID:4688871
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Carbohydrate phosphorylation process supported by the erythrocyte triokinase characterization
+      (ATP-dependent phosphorylation of trioses). Accurately describes the biological process of the
+      kinase activity, at an appropriate level of generality.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct process directly reflecting TKFC&#39;s ATP-dependent triose phosphorylation; kept as
+      non-core alongside the specific triokinase MF and fructose catabolic process.
+    supported_by:
+    - reference_id: PMID:4688871
+      supporting_text: &#34;demonstration of triokinase \n activity and its characterization.&#34;
+- term:
+    id: GO:0004371
+    label: glycerone kinase activity
+  evidence_type: IDA
+  original_reference_id: PMID:16289032
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct demonstration that the heterologously expressed human protein is active as an ATP-
+      dependent dihydroxyacetone (glycerone) kinase. Core molecular function.
+    action: ACCEPT
+    reason: &gt;-
+      Experimentally established dihydroxyacetone kinase activity of human TKFC.
+    supported_by:
+    - reference_id: PMID:16289032
+      supporting_text: &gt;-
+        yielded a protein active both as FMN cyclase and ATP-dependent Dha kinase
+- term:
+    id: GO:0004371
+    label: glycerone kinase activity
+  evidence_type: IDA
+  original_reference_id: PMID:4688871
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct demonstration of triokinase (dihydroxyacetone/glycerone kinase) activity in human
+      erythrocytes with kinetic characterization. Core molecular function.
+    action: ACCEPT
+    reason: &gt;-
+      Classic biochemical demonstration of the human triokinase/DHA kinase activity.
+    supported_by:
+    - reference_id: PMID:4688871
+      supporting_text: &#34;demonstration of triokinase \n activity and its characterization.&#34;
+- term:
+    id: GO:0034012
+    label: FAD-AMP lyase (cyclizing) activity
+  evidence_type: IDA
+  original_reference_id: PMID:16289032
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct demonstration that the human protein possesses FMN cyclase / FAD-AMP lyase (cyclizing)
+      activity, copurifying with the DHA kinase activity and sustained by a single protein. Core
+      molecular function.
+    action: ACCEPT
+    reason: &gt;-
+      Experimentally established FAD-AMP lyase (cyclizing)/FMN cyclase activity of human TKFC.
+    supported_by:
+    - reference_id: PMID:16289032
+      supporting_text: &gt;-
+        yielded a protein active both as FMN cyclase and ATP-dependent Dha kinase, each
+        activity being inhibited by the substrate(s) of the other.
+- term:
+    id: GO:0050354
+    label: triokinase activity
+  evidence_type: IDA
+  original_reference_id: PMID:4688871
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct demonstration of triokinase activity in human erythrocytes (phosphorylation of
+      D-glyceraldehyde) with kinetic characterization. Core molecular function.
+    action: ACCEPT
+    reason: &gt;-
+      Classic biochemical demonstration of human triokinase activity.
+    supported_by:
+    - reference_id: PMID:4688871
+      supporting_text: &#34;demonstration of triokinase \n activity and its characterization.&#34;
+core_functions:
+- description: &gt;-
+    ATP-dependent triokinase / dihydroxyacetone kinase that phosphorylates D-glyceraldehyde (and
+    dihydroxyacetone) to the triose phosphates glyceraldehyde 3-phosphate and dihydroxyacetone
+    phosphate, acting in the cytosol during hepatic fructose catabolism to return fructose-derived
+    carbon to glycolysis.
+  molecular_function:
+    id: GO:0050354
+    label: triokinase activity
+  directly_involved_in:
+  - id: GO:0061624
+    label: fructose catabolic process to hydroxyacetone phosphate and glyceraldehyde-3-phosphate
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: PMID:32004446
+    supporting_text: &#34;TKFC encodes a bifunctional enzyme involved in fructose metabolism through its&#34;
+  - reference_id: PMID:4688871
+    supporting_text: &#34;demonstration of triokinase \n activity and its characterization.&#34;
+- description: &gt;-
+    Glycerone (dihydroxyacetone) kinase activity phosphorylating dihydroxyacetone to
+    dihydroxyacetone phosphate using ATP, feeding trioses into central carbohydrate metabolism in
+    the cytosol.
+  molecular_function:
+    id: GO:0004371
+    label: glycerone kinase activity
+  directly_involved_in:
+  - id: GO:0046835
+    label: carbohydrate phosphorylation
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: PMID:16289032
+    supporting_text: &gt;-
+      yielded a protein active both as FMN cyclase and ATP-dependent Dha kinase
+- description: &gt;-
+    FAD-AMP lyase (cyclizing), or FMN cyclase, activity that splits FAD into riboflavin
+    4&#39;,5&#39;-cyclic phosphate (cyclic FMN) plus AMP; TKFC is the only known enzymatic source of cyclic
+    FMN and this activity requires Mn2+ or Co2+.
+  molecular_function:
+    id: GO:0034012
+    label: FAD-AMP lyase (cyclizing) activity
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: PMID:16289032
+    supporting_text: &gt;-
+      yielded a protein active both as FMN cyclase and ATP-dependent Dha kinase
+  - reference_id: file:human/TKFC/TKFC-uniprot.txt
+    supporting_text: &#34;Reaction=FAD = riboflavin cyclic-4&#39;,5&#39;-phosphate + AMP + H(+);&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:16289032
+  title: Identification of human and rat FAD-AMP lyase (cyclic FMN forming) as ATP-dependent
+    dihydroxyacetone kinases.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. Establishes that a single human protein (LOC26007 cDNA, i.e. TKFC)
+      possesses both FMN cyclase (FAD-AMP lyase) and ATP-dependent dihydroxyacetone kinase
+      activities, each inhibited by the substrate(s) of the other. Supports the FAD-AMP lyase and
+      glycerone kinase MF annotations.
+- id: PMID:17600090
+  title: Negative regulation of MDA5- but not RIG-I-mediated innate antiviral signaling
+    by the dihydroxyacetone kinase.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. Identifies DAK/TKFC as a specific MDA5 (IFIH1)-interacting protein and a
+      physiological suppressor of MDA5- but not RIG-I-mediated antiviral signaling. Supports
+      GO:0039534 and the moonlighting immune core function.
+- id: PMID:19056867
+  title: Large-scale proteomics and phosphoproteomics of urinary exosomes.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Bulk urinary-exosome proteomics (1132 proteins); TKFC detection is incidental for a cytosolic
+      enzyme. Supports only the (over-annotated) extracellular exosome localization.
+- id: PMID:21630459
+  title: Proteomic characterization of the human sperm nucleus.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Sperm-nucleus proteome (403 proteins). Detection of a cytosolic enzyme likely reflects
+      contamination/non-functional presence; supports only the over-annotated nuclear localization.
+- id: PMID:23533145
+  title: In-depth proteomic analyses of exosomes isolated from expressed prostatic
+    secretions in urine.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Prostatic/urinary exosome proteomics (~900 proteins). Incidental detection of a cytosolic
+      enzyme; supports only the over-annotated extracellular exosome localization.
+- id: PMID:25416956
+  title: A proteome-scale map of the human interactome network.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Proteome-scale binary interactome map; source of the SDCBP (O00560) protein binding IPI. No
+      established functional interpretation for TKFC; supports only the uninformative protein
+      binding term.
+- id: PMID:32004446
+  title: Bi-allelic Variants in TKFC Encoding Triokinase/FMN Cyclase Are Associated
+    with Cataracts and Multisystem Disease.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. Defines human TKFC deficiency (TKFCD); confirms the bifunctional enzyme
+      (glyceraldehyde kinase in fructose metabolism plus FMN lyase generating cyclic FMN); FMN-lyase
+      domain variants (G445S, R543I) severely reduce triokinase and glycerone kinase activities.
+- id: PMID:4688871
+  title: &#39;Dihydroxyacetone metabolism by human erythrocytes: demonstration of triokinase
+    activity and its characterization.&#39;
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. Classic biochemical demonstration and kinetic characterization of human
+      triokinase (dihydroxyacetone/glyceraldehyde kinase) activity in erythrocytes. Supports the
+      triokinase and glycerone kinase MF annotations.
+- id: Reactome:R-HSA-70349
+  title: DAK dimer phosphorylates D-glyceraldehyde to form D-glyceraldehyde 3-phosphate
+  findings: []
+- id: Reactome:R-HSA-913725
+  title: viral dsRNA binds IFIH1:TKFC
+  findings: []
+- id: Reactome:R-HSA-9754745
+  title: &#39;IFIH1:TKFC binds SARS-CoV-2 dsRNA intermediates &#39;
+  findings: []
+- id: Reactome:R-HSA-9755244
+  title: SARS-CoV-2 nsp3 deISGylates ISGylated IFIH1
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

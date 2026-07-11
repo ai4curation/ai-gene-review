@@ -25,6 +25,26 @@ The TCA cycle and OXPHOS are tightly coordinated. Complex II (SDH) uniquely brid
 pathways: the succinate → fumarate reaction (TCA step 6) simultaneously feeds electrons
 into the ETC via FAD → FADH₂ → Fe-S → ubiquinone.*
 
+## Generic OXPHOS module
+
+This project began as a gene-by-gene annotation review (below), which predates
+the Module KB. A taxon-neutral, recursively decomposable module for the whole
+pathway now lives at [`modules/oxphos.yaml`](../modules/oxphos.yaml). It models
+OXPHOS as a coupled ETC + ATP-synthesis process, represents each respiratory
+complex as a `PROTEIN_COMPLEX` node carrying its complex-level catalytic
+activity (subunits as `active_units`, not separate annotons), recursively
+decomposes the modular complexes (Complex I N/Q/P arms; ATP synthase F1/Fo), and
+captures lineage variants (type-II NADH dehydrogenase, alternative oxidase,
+bacterial bd-oxidase) as `variant_sets`. The gene-by-gene reviews remain the
+source of concrete subunit grounding that a future organism-specific module can
+specialize from.
+
+Validate with:
+
+```bash
+uv run linkml-validate -s src/ai_gene_review/schema/gene_review.yaml -C ModuleReview modules/oxphos.yaml
+```
+
 ## Model Species
 
 **Primary: Homo sapiens (human)**
@@ -274,6 +294,21 @@ mtDNA-encoded genes have limited GO annotations and are lower priority.
 - [ ] HCCS
 
 # NOTES
+
+## 2026-06-20
+
+Added a generic, taxon-neutral OXPHOS module at `modules/oxphos.yaml`
+(`ModuleReview`, validates cleanly). Key modelling decision ("how we put in
+complexes"): each respiratory complex is one `PROTEIN_COMPLEX` node whose
+emergent catalytic activity is a single complex-level annoton, with subunits as
+`active_units` (mirroring GO `contributes_to`) rather than per-subunit annotons;
+Complex I and the ATP synthase are additionally decomposed into functional
+sub-modules (N/Q/P arms; F1 head + Fo turbine). Mobile carriers (quinone pool,
+cytochrome c) are `MOLECULAR_FUNCTION` carrier nodes; auxiliary quinone-reducing
+dehydrogenases (ETF-QO, mGPDH, DHODH) feed the pool. Lineage alternatives
+(NDH-2, AOX, bd-oxidase) are `variant_sets`; supercomplex/respirasome
+organization and complex biogenesis are optional sub-modules. ETC -> ATP
+synthase is a chemiosmotic `PRECEDES` coupling, not a metabolite hand-off.
 
 ## 2026-05-18
 

@@ -61,3 +61,28 @@ Over-annotation — the paper uses V-ATPase disruption as a tool. Does not speci
 ## Summary
 
 ATP6V0E1 is a small dual-transmembrane V0 subunit whose primary function is structural: it is a required component of the V0 proton-translocating domain. The N-glycan at Asn70 (experimentally confirmed by cryo-EM) contributes to V-ATPase assembly, localization, and stability (consistent with the glycan coat described in PMID:33065002). The protein is ubiquitously expressed and localizes to lysosomal and endosomal membranes as part of the assembled V-ATPase.
+
+## Falcon deep research synthesis (2026-06-21)
+
+Falcon deep research has now completed (`file:human/ATP6V0E1/ATP6V0E1-deep-research-falcon.md`,
+27 citations). It corroborates the e1-subunit biology documented above and adds a
+few structural specifics; it does not change any annotation call.
+
+- **Structural contact / assembly role.** Cryo-EM places subunit e (with f/RNaseK)
+  binding the **C-terminal domain of subunit a**, organizing the membrane proton
+  channel — e1 is a structural Vo component, **not** a catalytic/ATP-hydrolyzing
+  subunit (Wang 2020 PMID:33065002; Wang 2023). Stoichiometry is 1 copy/complex.
+- **N70 glycosylation.** The luminal N-linked glycan at Asn70 is experimentally
+  confirmed and is discussed as important for folding/trafficking/stability of the
+  V-ATPase — supports the existing glycosylation feature, not a standalone MF.
+- **e1/e2 paralogs both essential** (yeast complementation), e1 ubiquitous — as
+  already noted; reinforces keeping e1 as a core V0 structural subunit.
+- **Disease.** No ATP6V0E1-specific disease variant is reported; the report's
+  disease section is generic V-ATPase (Alzheimer's/PD/ALS lysosomal-acidification
+  context, and other-subunit disorders a3/a4/ATP6AP1). These remain **non-core**
+  context, not e1 annotations.
+- **Vo assembly factors** (mammalian TMEM199/VMA21/CCDC115) prevent premature V1
+  binding so the ER is not acidified — useful pathway context; not an e1 function.
+
+Net: no change to calls — e1 is a small, ubiquitous, essential structural subunit
+of the V0 proton-translocation domain mediating organellar acidification.

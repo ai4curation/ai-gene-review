@@ -1,0 +1,4584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQLE - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>SQLE</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q14534" target="_blank" class="term-link">
+                        Q14534
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "SQLE";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q14534" data-a="DESCRIPTION: SQLE encodes squalene monooxygenase (squalene epox..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>SQLE encodes squalene monooxygenase (squalene epoxidase; EC 1.14.14.17), an FAD-dependent flavoprotein monooxygenase that catalyzes the stereospecific oxidation of squalene to (S)-2,3-epoxysqualene (2,3-oxidosqualene), consuming molecular oxygen and using reducing equivalents supplied by NADPH via NADPH-cytochrome P450 reductase. This is the first oxygenation step of sterol biosynthesis and the second rate-limiting step of the cholesterol biosynthetic pathway, acting downstream of HMG-CoA reductase and between squalene synthase (FDFT1) and lanosterol synthase (LSS). The enzyme is an endoplasmic reticulum (microsome) membrane protein associated peripherally with the membrane through N-terminal and C-terminal hydrophobic regions rather than transmembrane helices. Its N-terminal regulatory domain senses cholesterol and mediates cholesterol-accelerated, MARCHF6-dependent ubiquitin- proteasome degradation, providing feedback control of flux through the pathway. SQLE is a validated antifungal and anticancer drug target.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q14534" data-a="GO:0005783" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically inferred endoplasmic reticulum localization. SQLE is a well-established ER/microsome membrane enzyme, so this is correct but broader than the specific ER membrane location captured by the IDA/IEA annotations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> IBA localization consistent with all experimental evidence. ER is a correct compartment; the more specific and preferred CC term is endoplasmic reticulum membrane (GO:0005789), captured elsewhere in this record.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/SQLE/SQLE-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-191299
+
+                                </span>
+
+                                <div class="support-text">Squalene monooxygenase (squalene epoxidase, SE) is located on the endoplamic reticulum.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004506" target="_blank" class="term-link">
+                                    GO:0004506
+                                </a>
+                            </span>
+                            <span class="term-label">squalene monooxygenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q14534" data-a="GO:0004506" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically inferred squalene monooxygenase activity. This is the core, defining molecular function of SQLE across eukaryotes and is directly supported by human enzymology and crystal structures.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> IBA correctly identifies the core catalytic function. Human recombinant enzyme was purified and kinetically characterized (PMID:10666321), and the catalytic domain structure with FAD was solved (PMID:30626872). Represents the core function of the gene.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30626872" target="_blank" class="term-link">
+                                        PMID:30626872
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">SQLE is a flavin adenosine dinucleotide (FAD)–dependent epoxidase that catalyzes stereospecific conversion of non-sterol intermediate squalene to 2,3(S)-oxidosqualene</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/SQLE/SQLE-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Catalyzes the stereospecific oxidation of squalene to</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016126" target="_blank" class="term-link">
+                                    GO:0016126
+                                </a>
+                            </span>
+                            <span class="term-label">sterol biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q14534" data-a="GO:0016126" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically inferred involvement in sterol biosynthesis. SQLE catalyzes the first oxygenation step of the sterol pathway, so this BP annotation is correct.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct and well-supported. In humans the specific downstream product pathway is cholesterol biosynthesis (GO:0006695); sterol biosynthetic process is the conserved, broader biological process appropriate for the pan-eukaryotic IBA. Core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30626872" target="_blank" class="term-link">
+                                        PMID:30626872
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the first oxygenation step in cholesterol synthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004506" target="_blank" class="term-link">
+                                    GO:0004506
+                                </a>
+                            </span>
+                            <span class="term-label">squalene monooxygenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q14534" data-a="GO:0004506" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic assignment of squalene monooxygenase activity (ARBA/RHEA:25282/EC:1.14.14.17). Matches the experimentally established core function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The IEA mapping (RHEA:25282, EC 1.14.14.17) corresponds exactly to the reaction catalyzed by human SQLE and is corroborated by experimental evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/SQLE/SQLE-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">EC=1.14.14.17</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q14534" data-a="GO:0005789" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic CC annotation from UniProt Subcellular Location mapping (SL-0097). Matches the experimentally determined ER membrane localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct and specific. SQLE is a peripheral ER/microsome membrane protein; supported by experimental topology work and by the IDA annotation from PMID:26434806.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/SQLE/SQLE-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q14534" data-a="GO:0016020" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO electronic annotation to the generic term membrane. Correct but far less informative than the specific ER membrane location.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Not wrong (SQLE is membrane-associated), but membrane is an uninformative parent of the specific and preferred endoplasmic reticulum membrane (GO:0005789) already annotated.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/SQLE/SQLE-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016126" target="_blank" class="term-link">
+                                    GO:0016126
+                                </a>
+                            </span>
+                            <span class="term-label">sterol biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q14534" data-a="GO:0016126" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO electronic annotation to sterol biosynthetic process, matching the enzyme family&#39;s conserved role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct BP for the squalene monooxygenase family; consistent with the IBA and experimental IDA annotations to the same term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30626872" target="_blank" class="term-link">
+                                        PMID:30626872
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the first oxygenation step in cholesterol synthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050660" target="_blank" class="term-link">
+                                    GO:0050660
+                                </a>
+                            </span>
+                            <span class="term-label">flavin adenine dinucleotide binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q14534" data-a="GO:0050660" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO electronic annotation for FAD binding. SQLE is an FAD-dependent flavoprotein; FAD is a required, structurally resolved cofactor.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct cofactor-binding MF (equivalent to the IDA FAD binding annotation GO:0071949). FAD binding is a supporting molecular function of the catalytic activity rather than the core function itself.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/SQLE/SQLE-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Name=FAD; Xref=ChEBI:CHEBI:57692;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q14534" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Binary-interactome (HuRI) protein-protein interactions. UniProt records the corresponding partners as CREB3L1 (Q96BA8), REEP4 (Q9H6H4) and TMEM14B (Q9NUH8). The bare protein binding term is uninformative about SQLE&#39;s function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Per curation guidelines, the generic protein binding (GO:0005515) term does not convey a specific molecular function. These high-throughput two-hybrid interactions (CREB3L1, REEP4, TMEM14B) are retained as recorded but flagged as over-annotation; they should not be treated as a core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/SQLE/SQLE-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Q14534; Q96BA8: CREB3L1; NbExp=3; IntAct=EBI-3905171, EBI-6942903;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008203" target="_blank" class="term-link">
+                                    GO:0008203
+                                </a>
+                            </span>
+                            <span class="term-label">cholesterol metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q14534" data-a="GO:0008203" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation (ARBA) to the broad cholesterol metabolic process. SQLE participates in cholesterol metabolism via its role in cholesterol biosynthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct but general. The specific role is cholesterol biosynthetic process (GO:0006695), of which this is a parent; retained as accurate non-core context.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33791309" target="_blank" class="term-link">
+                                        PMID:33791309
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">two rate-limiting enzymes, 3-hydroxy-3-methylglutarylcoenzyme A reductase (HMGCR) and squalene monooxygenase (SQLE)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1904614" target="_blank" class="term-link">
+                                    GO:1904614
+                                </a>
+                            </span>
+                            <span class="term-label">response to biphenyl</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q14534" data-a="GO:1904614" data-r="GO_REF:0000107" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic ortholog transfer (Ensembl Compara, from rat Sqle P52020) of a narrow &#34;response to biphenyl&#34; phenotype. There is no human evidence and no clear connection to SQLE&#39;s core enzymatic function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Over-propagated ortholog-transferred response term based solely on a single rodent dataset; it does not represent a core or well-supported human function. Retained but flagged as over-annotation rather than removed, as it is an electronic ortholog inference.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    GO_REF:0000107
+
+                                </span>
+
+                                <div class="support-text">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006695" target="_blank" class="term-link">
+                                    GO:0006695
+                                </a>
+                            </span>
+                            <span class="term-label">cholesterol biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IC</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30626872" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:30626872
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structure and inhibition mechanism of the catalytic domain o...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q14534" data-a="GO:0006695" data-r="PMID:30626872" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Curator inference (from the squalene monooxygenase activity, GO:0004506) that SQLE is involved in cholesterol biosynthesis. This is the specific human pathway role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> SQLE catalyzes the first oxygenation (epoxidation) step of the cholesterol biosynthetic pathway; the IC from the catalytic activity is sound and represents a core biological process for this gene.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30626872" target="_blank" class="term-link">
+                                        PMID:30626872
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the first oxygenation step in cholesterol synthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26434806" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26434806
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The Regulatory Domain of Squalene Monooxygenase Contains a R...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q14534" data-a="GO:0005789" data-r="PMID:26434806" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental determination that the sterol-responsive N-terminal domain of SQLE is integrally associated with the ER membrane, localizing the active enzyme to the ER membrane.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Topology mapping of SM N100-GFP by cysteine-accessibility placed SQLE in the ER membrane; the enzyme functions at this location. Core cellular location for the protein.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26434806" target="_blank" class="term-link">
+                                        PMID:26434806
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We have identified a region integrally associated with the endoplasmic reticulum
+membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006695" target="_blank" class="term-link">
+                                    GO:0006695
+                                </a>
+                            </span>
+                            <span class="term-label">cholesterol biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33791309" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33791309
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    MYC Enhances Cholesterol Biosynthesis and Supports Cell Prol...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q14534" data-a="GO:0006695" data-r="PMID:33791309" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence that SQLE controls cellular cholesterol levels: SQLE knockdown lowers cholesterol and SQLE overexpression raises it, and SQLE is required for MYC-driven cholesterol production.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Functional genetic manipulation (siRNA/overexpression, cholesterol quantification) directly implicates SQLE in cholesterol biosynthesis. Core biological process.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33791309" target="_blank" class="term-link">
+                                        PMID:33791309
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Through transcriptional upregulation of SQLE, a rate-limiting enzyme in
+cholesterol synthesis pathway, MYC increases cholesterol production and promotes
+tumor cell growth.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004506" target="_blank" class="term-link">
+                                    GO:0004506
+                                </a>
+                            </span>
+                            <span class="term-label">squalene monooxygenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10666321" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10666321
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cloning, heterologous expression, and enzymological characte...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q14534" data-a="GO:0004506" data-r="PMID:10666321" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental enzymology: human squalene monooxygenase was cloned, expressed in E. coli, purified, and kinetically characterized, confirming squalene monooxygenase activity with FAD and NADPH-cytochrome P450 reductase as partners.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Gold-standard biochemical demonstration of the core catalytic activity (Km squalene 7.7 uM, Km FAD 0.3 uM). Core molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10666321" target="_blank" class="term-link">
+                                        PMID:10666321
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The cDNA for human squalene monooxygenase, a key enzyme in the committed pathway
+for cholesterol biosynthesis, was amplified from a human liver cDNA library and
+cloned, and the protein was expressed in Escherichia coli and purified.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29765154" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29765154
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The cancer-associated microprotein CASIMO1 controls cell pro...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q14534" data-a="GO:0005515" data-r="PMID:29765154" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Physical interaction of SQLE with the cancer-associated microprotein CASIMO1/SMIM22 (isoform K7EJ46). The interaction modulates SQLE protein accumulation and lipid droplet formation, but the bare protein binding term is uninformative.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Genuine, experimentally supported interaction with CASIMO1 (SMIM22), but per curation guidelines protein binding (GO:0005515) is too generic to be a molecular function. Retained as recorded and flagged; the functional consequences are captured by the associated lipid droplet / proliferation BP annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29765154" target="_blank" class="term-link">
+                                        PMID:29765154
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">CASIMO1 microprotein interacts with squalene epoxidase (SQLE), a key enzyme in
+cholesterol synthesis and a known oncogene in breast cancer.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/SQLE/SQLE-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SMIM22; this interaction modulates lipid droplet formation</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042127" target="_blank" class="term-link">
+                                    GO:0042127
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of cell population proliferation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29765154" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29765154
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The cancer-associated microprotein CASIMO1 controls cell pro...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q14534" data-a="GO:0042127" data-r="PMID:29765154" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SQLE knockdown mimics the CASIMO1 knockdown proliferation phenotype and SQLE overexpression rescues it, implicating SQLE in the control of cell proliferation in breast cancer cells.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimentally supported but a downstream, cell-context (cancer) consequence of altered cholesterol/lipid metabolism rather than the core molecular function of the enzyme. Keep as a valid non-core process annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29765154" target="_blank" class="term-link">
+                                        PMID:29765154
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">SQLE
+knockdown mimicked the CASIMO1 knockdown phenotype and in turn SQLE
+overexpression fully rescued the effect of CASIMO1 knockdown.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140042" target="_blank" class="term-link">
+                                    GO:0140042
+                                </a>
+                            </span>
+                            <span class="term-label">lipid droplet formation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29765154" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29765154
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The cancer-associated microprotein CASIMO1 controls cell pro...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q14534" data-a="GO:0140042" data-r="PMID:29765154" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Modulation of CASIMO1 (which interacts with SQLE) alters lipid droplet clustering, and the SQLE-CASIMO1 interaction is reported to modulate lipid droplet formation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Supported by the CASIMO1/SQLE study, but a peripheral, context-specific role linked to the interaction with SMIM22 rather than the core sterol-biosynthetic enzyme activity. Retain as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/SQLE/SQLE-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SMIM22; this interaction modulates lipid droplet formation</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29765154" target="_blank" class="term-link">
+                                        PMID:29765154
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">increased lipid droplet clustering</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004506" target="_blank" class="term-link">
+                                    GO:0004506
+                                </a>
+                            </span>
+                            <span class="term-label">squalene monooxygenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30626872" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:30626872
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structure and inhibition mechanism of the catalytic domain o...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q14534" data-a="GO:0004506" data-r="PMID:30626872" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay of squalene monooxygenase activity across recombinant catalytic domain, full-length baculosome, and human liver microsome systems, with FAD/squalene kinetics and an LC-MS 2,3-oxidosqualene product assay.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> High-quality direct biochemical demonstration of the core catalytic function alongside crystal structures. Core molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30626872" target="_blank" class="term-link">
+                                        PMID:30626872
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">SQLE is a flavin adenosine dinucleotide (FAD)–dependent epoxidase that catalyzes stereospecific conversion of non-sterol intermediate squalene to 2,3(S)-oxidosqualene</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30626872" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:30626872
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structure and inhibition mechanism of the catalytic domain o...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q14534" data-a="GO:0016020" data-r="PMID:30626872" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Membrane association observed for SQLE, consistent with its C-terminal hydrophobic membrane-binding helices. Generic membrane term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct but uninformative; the specific location is the endoplasmic reticulum membrane (GO:0005789), and SQLE is a peripheral membrane protein without transmembrane helices.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/SQLE/SQLE-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">mediate interaction with membranes</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016126" target="_blank" class="term-link">
+                                    GO:0016126
+                                </a>
+                            </span>
+                            <span class="term-label">sterol biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30626872" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:30626872
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structure and inhibition mechanism of the catalytic domain o...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q14534" data-a="GO:0016126" data-r="PMID:30626872" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct evidence linking SQLE catalytic activity to sterol (cholesterol) biosynthesis via production of 2,3-oxidosqualene, the first oxygenation intermediate.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Well-supported core BP; the enzyme&#39;s catalytic step is committed to sterol/cholesterol biosynthesis.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30626872" target="_blank" class="term-link">
+                                        PMID:30626872
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the first oxygenation step in cholesterol synthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043231" target="_blank" class="term-link">
+                                    GO:0043231
+                                </a>
+                            </span>
+                            <span class="term-label">intracellular membrane-bounded organelle</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30626872" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:30626872
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structure and inhibition mechanism of the catalytic domain o...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q14534" data-a="GO:0043231" data-r="PMID:30626872" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic organelle localization consistent with ER (a membrane-bounded organelle) localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct but very general parent of the specific endoplasmic reticulum membrane location; uninformative as an independent annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/SQLE/SQLE-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071949" target="_blank" class="term-link">
+                                    GO:0071949
+                                </a>
+                            </span>
+                            <span class="term-label">FAD binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30626872" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:30626872
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structure and inhibition mechanism of the catalytic domain o...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q14534" data-a="GO:0071949" data-r="PMID:30626872" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Crystal structures of the SQLE catalytic domain were solved in complex with FAD, with multiple defined FAD-binding residues, directly demonstrating FAD binding.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct structural evidence of the FAD cofactor and its binding pocket. FAD binding is a supporting molecular function enabling the core squalene monooxygenase catalysis.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/SQLE/SQLE-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">X-RAY CRYSTALLOGRAPHY (2.30 ANGSTROMS) OF 118-574 IN COMPLEXES WITH FAD AND</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-1655844
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q14534" data-a="GO:0005789" data-r="Reactome:R-HSA-1655844" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author-statement placing SQLE at the ER membrane (Expression of Squalene Monooxygenase module). Consistent with all other evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct and specific ER membrane localization, corroborated by IDA and IEA annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-191299
+
+                                </span>
+
+                                <div class="support-text">Squalene monooxygenase (squalene epoxidase, SE) is located on the endoplamic reticulum.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-191299
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q14534" data-a="GO:0005789" data-r="Reactome:R-HSA-191299" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome TAS for the reaction &#34;Squalene is oxidized to its epoxide&#34;, placing squalene monooxygenase at the ER membrane.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct ER membrane localization tied to the catalytic reaction module; consistent with experimental evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-191299
+
+                                </span>
+
+                                <div class="support-text">It catalyzes the oxidation of squalene (SQNE) to squalene 2,3-epoxide (SQNX)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004506" target="_blank" class="term-link">
+                                    GO:0004506
+                                </a>
+                            </span>
+                            <span class="term-label">squalene monooxygenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9286711" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9286711
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Localization of the squalene epoxidase gene (SQLE) to human ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q14534" data-a="GO:0004506" data-r="PMID:9286711" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Non-traceable author statement (gene-mapping paper) asserting the squalene epoxidase function. The catalytic function is independently confirmed experimentally.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Although only NAS in this reference, the core squalene monooxygenase activity is firmly established by EXP/IDA evidence (PMID:10666321, PMID:30626872). Accept as consistent.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9286711" target="_blank" class="term-link">
+                                        PMID:9286711
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Squalene epoxidase (EC 1.14.99.7) catalyzes the first oxygenation step in sterol
+biosynthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016126" target="_blank" class="term-link">
+                                    GO:0016126
+                                </a>
+                            </span>
+                            <span class="term-label">sterol biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9286711" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9286711
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Localization of the squalene epoxidase gene (SQLE) to human ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q14534" data-a="GO:0016126" data-r="PMID:9286711" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Non-traceable author statement that squalene epoxidase acts in sterol biosynthesis. This is correct and supported by experimental evidence elsewhere.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the established role of SQLE in sterol/cholesterol biosynthesis; corroborated by IBA and experimental IDA annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9286711" target="_blank" class="term-link">
+                                        PMID:9286711
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">catalyzes the first oxygenation step in sterol
+biosynthesis and is suggested to be one of the rate-limiting enzymes in this
+pathway</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>FAD-dependent squalene monooxygenase (squalene epoxidase) activity: stereospecific epoxidation of squalene with molecular oxygen and NADPH-derived reducing equivalents to yield (S)-2,3-epoxysqualene, the first oxygenation step of sterol/cholesterol biosynthesis, at the endoplasmic reticulum membrane.</h3>
+                <span class="vote-buttons" data-g="Q14534" data-a="FUNCTION: FAD-dependent squalene monooxygenase (squalene epo..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004506" target="_blank" class="term-link">
+                            squalene monooxygenase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006695" target="_blank" class="term-link">
+                                cholesterol biosynthetic process
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016126" target="_blank" class="term-link">
+                                sterol biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                endoplasmic reticulum membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30626872" target="_blank" class="term-link">
+                                PMID:30626872
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">SQLE is a flavin adenosine dinucleotide (FAD)–dependent epoxidase that catalyzes stereospecific conversion of non-sterol intermediate squalene to 2,3(S)-oxidosqualene</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10666321" target="_blank" class="term-link">
+                                PMID:10666321
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">The cDNA for human squalene monooxygenase, a key enzyme in the committed pathway
+for cholesterol biosynthesis, was amplified from a human liver cDNA library and
+cloned, and the protein was expressed in Escherichia coli and purified.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/SQLE/SQLE-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Endoplasmic reticulum membrane</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>FAD cofactor binding that enables the flavoprotein monooxygenase catalysis; a required supporting molecular function of the squalene monooxygenase activity.</h3>
+                <span class="vote-buttons" data-g="Q14534" data-a="FUNCTION: FAD cofactor binding that enables the flavoprotein..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071949" target="_blank" class="term-link">
+                            FAD binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/SQLE/SQLE-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Name=FAD; Xref=ChEBI:CHEBI:57692;</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30626872" target="_blank" class="term-link">
+                                PMID:30626872
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">SQLE is a flavin adenosine dinucleotide (FAD)–dependent epoxidase</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10666321" target="_blank" class="term-link">
+                            PMID:10666321
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Cloning, heterologous expression, and enzymological characterization of human squalene monooxygenase.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26434806" target="_blank" class="term-link">
+                            PMID:26434806
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The Regulatory Domain of Squalene Monooxygenase Contains a Re-entrant Loop and Senses Cholesterol via a Conformational Change.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/29765154" target="_blank" class="term-link">
+                            PMID:29765154
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The cancer-associated microprotein CASIMO1 controls cell proliferation and interacts with squalene epoxidase modulating lipid droplet formation.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/30626872" target="_blank" class="term-link">
+                            PMID:30626872
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Structure and inhibition mechanism of the catalytic domain of human squalene epoxidase.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33791309" target="_blank" class="term-link">
+                            PMID:33791309
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">MYC Enhances Cholesterol Biosynthesis and Supports Cell Proliferation Through SQLE.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9286711" target="_blank" class="term-link">
+                            PMID:9286711
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Localization of the squalene epoxidase gene (SQLE) to human chromosome region 8q24.1.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-1655844
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Expression of Squalene Monooxygenase (SQLE)</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-191299
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Squalene is oxidized to its epoxide</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/SQLE/SQLE-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProt entry Q14534 (ERG1_HUMAN), Squalene monooxygenase</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Beyond MARCHF6-mediated cholesterol-dependent degradation, what other post-translational inputs (e.g. unsaturated fatty acids, ERAD partners) tune SQLE stability in vivo?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q14534" data-a="Q: Beyond MARCHF6-mediated cholesterol-dependent degr..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is the SQLE-CASIMO1 (SMIM22) interaction relevant to normal (non-cancer) lipid droplet biology, or is it specific to tumor cell contexts?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q14534" data-a="Q: Is the SQLE-CASIMO1 (SMIM22) interaction relevant ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Reconstitute human SQLE with NADPH-cytochrome P450 reductase and measure epoxidation of squalene to (S)-2,3-epoxysqualene to formally confirm the physiological electron-donor coupling and stoichiometry.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: in vitro enzymatic reconstitution</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q14534" data-a="EXPERIMENT: Reconstitute human SQLE with NADPH-cytochrome P450..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Structure-guided mutagenesis of the N-terminal cholesterol-sensing degron (residues 62-73) combined with degradation assays to map the cholesterol-responsive turnover mechanism.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: mutagenesis and protein degradation assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q14534" data-a="EXPERIMENT: Structure-guided mutagenesis of the N-terminal cho..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(SQLE-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q14534" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="sqle-q14534-review-notes">SQLE (Q14534) review notes</h1>
+<p>Human squalene monooxygenase / squalene epoxidase. UniProt entry name ERG1_HUMAN. 574 aa.<br />
+EC 1.14.14.17. Gene on 8q24.1 <a href="https://pubmed.ncbi.nlm.nih.gov/9286711" title="human SQLE to 8q24.1">PMID:9286711</a>.</p>
+<h2 id="core-biology-verified">Core biology (verified)</h2>
+<ul>
+<li>FAD-dependent flavoprotein monooxygenase (epoxidase) that catalyzes the stereospecific<br />
+  oxidation of squalene to (S)-2,3-epoxysqualene (2,3-oxidosqualene), the first oxygenation<br />
+  step of sterol/cholesterol biosynthesis.</li>
+<li>UniProt CATALYTIC ACTIVITY: squalene + reduced [NADPH--hemoprotein reductase] + O2 =<br />
+    (S)-2,3-epoxysqualene + oxidized [NADPH--hemoprotein reductase] + H2O + H(+);<br />
+    Rhea:RHEA:25282; EC=1.14.14.17.</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/30626872" title="SQLE is a flavin adenosine dinucleotide (FAD)–dependent epoxidase that     catalyzes stereospecific conversion of non-sterol intermediate squalene to     2,3(S)-oxidosqualene">PMID:30626872</a> and "the first oxygenation step in cholesterol synthesis".</li>
+<li>Second rate-limiting enzyme of cholesterol biosynthesis, downstream of HMGCR.</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/30626872" title="SQLE is proposed to be the second rate-limiting enzyme of the cholesterol     biosynthesis downstream of HMGCR">PMID:30626872</a>.</li>
+<li>Requires external NADPH-cytochrome P450 reductase as electron donor (Group E FAD<br />
+  monooxygenase). <a href="https://pubmed.ncbi.nlm.nih.gov/30626872" title="requires external NADPH-cytochrome P450 reductase (P450R)   as an electron donor for squalene epoxidation">PMID:30626872</a>. Also confirmed biochemically in<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/10666321">PMID:10666321</a> (Km squalene 7.7 uM; Km FAD 0.3 uM; NADPH-cytochrome P450 reductase is the<br />
+  requisite electron transfer partner).</li>
+<li>Cofactor: FAD (loosely bound). UniProt COFACTOR Name=FAD; ChEBI:57692. Structural FAD<br />
+  binding sites resolved in PDB 6C6N/6C6P/6C6R <a href="https://pubmed.ncbi.nlm.nih.gov/30626872">PMID:30626872</a>.</li>
+</ul>
+<h2 id="localization">Localization</h2>
+<ul>
+<li>Endoplasmic reticulum / microsome membrane. Peripheral membrane protein — despite an<br />
+  N-terminal hydrophobic INTRAMEM region (21-41) and C-terminal hydrophobic helices, it has<br />
+  NO transmembrane helices (contrary to predictions).</li>
+<li>UniProt SUBCELLULAR LOCATION: Microsome membrane; Endoplasmic reticulum membrane;<br />
+    Peripheral membrane protein.</li>
+<li>Topology/membrane association shown in <a href="https://pubmed.ncbi.nlm.nih.gov/26434806">PMID:26434806</a> (N100-GFP topology in ER membrane).</li>
+<li>GO annotations to <code>membrane</code> (GO:0016020) and <code>intracellular membrane-bounded organelle</code><br />
+  (GO:0043231) from PMID:30626872 are correct but non-specific parents of ER membrane.</li>
+</ul>
+<h2 id="regulation-feedback-not-core-catalysis">Regulation (feedback, not core catalysis)</h2>
+<ul>
+<li>N-terminal regulatory domain (first ~100 aa) senses cholesterol and mediates<br />
+  cholesterol-accelerated proteasomal degradation via the E3 ligase MARCHF6 (MARCH6).<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/26434806">PMID:26434806</a> cholesterol induces a conformational change in SM N100-GFP leading to<br />
+  ubiquitin-proteasome degradation. A 62-73 amphipathic degron is required<br />
+  (UniProt REGION 62-73; PMID:28972164, cited in UniProt but not in GOA).</li>
+<li>Transcriptionally a direct SREBP2 target; also transcriptionally upregulated by MYC<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/33791309" title="Through transcriptional upregulation of SQLE ... MYC increases cholesterol   production and promotes tumor cell growth">PMID:33791309</a>.</li>
+</ul>
+<h2 id="cancer-interactions-non-core">Cancer / interactions (non-core)</h2>
+<ul>
+<li>SQLE is a known oncogene / drug target in multiple cancers; SQLE knockdown decreases<br />
+  proliferation (MYC axis, CASIMO1 axis).</li>
+<li>Interacts with the microprotein CASIMO1 (SMIM22); this interaction modulates lipid droplet<br />
+  formation and SQLE protein accumulation <a href="https://pubmed.ncbi.nlm.nih.gov/29765154">PMID:29765154</a>. This underlies the IMP annotations<br />
+  GO:0042127 (regulation of cell population proliferation) and GO:0140042 (lipid droplet<br />
+  formation) — these are downstream/contextual (cancer cell biology), not the core sterol<br />
+  enzyme function; treat as KEEP_AS_NON_CORE.</li>
+<li>Binary-interactome IPIs (GO:0005515 protein binding): HuRI <a href="https://pubmed.ncbi.nlm.nih.gov/32296183">PMID:32296183</a> hits CREB3L1<br />
+  (Q96BA8), REEP4 (Q9H6H4), TMEM14B (Q9NUH8) — all in UniProt INTERACTION block; and<br />
+  K7EJ46 (SMIM22/CASIMO1 isoform) from <a href="https://pubmed.ncbi.nlm.nih.gov/29765154">PMID:29765154</a>. Bare <code>protein binding</code> is<br />
+  uninformative per curation policy -&gt; MARK_AS_OVER_ANNOTATED (not REMOVE, per policy on IPIs).</li>
+</ul>
+<h2 id="annotation-specific-judgments">Annotation-specific judgments</h2>
+<ul>
+<li>GO:0004506 squalene monooxygenase activity: core MF. Multiple lines (EXP PMID:10666321,<br />
+  IDA PMID:30626872, IBA, IEA, NAS PMID:9286711). ACCEPT the experimental/IBA ones as core.</li>
+<li>GO:0006695 cholesterol biosynthetic process (IDA PMID:33791309; IC PMID:30626872) and<br />
+  GO:0016126 sterol biosynthetic process (IDA/IBA/IEA/NAS): both correct; sterol biosynthetic<br />
+  process is the broader classic BP, cholesterol biosynthetic process is the specific human<br />
+  pathway. Both ACCEPT (BP), core = cholesterol/sterol biosynthesis.</li>
+<li>GO:0071949 FAD binding (IDA PMID:30626872) and GO:0050660 flavin adenine dinucleotide<br />
+  binding (IEA): cofactor binding, real (structural FAD sites). Keep as non-core cofactor<br />
+  binding (the catalytic MF GO:0004506 is the core).</li>
+<li>GO:0005783 endoplasmic reticulum (IBA is_active_in) and GO:0005789 ER membrane<br />
+  (IDA PMID:26434806, IEA SubCell, TAS Reactome): correct CC; ER membrane is the specific<br />
+  location. ACCEPT.</li>
+<li>GO:0008203 cholesterol metabolic process (IEA ARBA): correct broad parent of cholesterol<br />
+  biosynthetic process; ACCEPT as non-core (biosynthesis is the specific role).</li>
+<li>GO:1904614 response to biphenyl (IEA GO_REF:0000107, Ensembl ortholog transfer from rat<br />
+  P52020): This is an ortholog-transferred "response to chemical" term based on rat data.<br />
+  It is a peripheral/response phenotype, not a core function; but it is an electronic ortholog<br />
+  transfer (not experimental). Given it is a narrow response term transferred by Ensembl from<br />
+  a single rat dataset with no human evidence and no obvious biological relevance to the core<br />
+  enzyme, MARK_AS_OVER_ANNOTATED (keep, flag as over-annotation), do not assert core.</li>
+</ul>
+<h2 id="core-function-synthesis">Core function synthesis</h2>
+<ul>
+<li>MF: GO:0004506 squalene monooxygenase activity (FAD flavoprotein; squalene + O2 + NADPH -&gt;<br />
+  (S)-2,3-epoxysqualene).</li>
+<li>BP: cholesterol biosynthetic process (GO:0006695) / sterol biosynthetic process (GO:0016126).</li>
+<li>CC: endoplasmic reticulum membrane (GO:0005789), peripheral membrane protein.</li>
+<li>Cofactor: FAD binding (GO:0071949).</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q14534
+gene_symbol: SQLE
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  SQLE encodes squalene monooxygenase (squalene epoxidase; EC 1.14.14.17), an FAD-dependent
+  flavoprotein monooxygenase that catalyzes the stereospecific oxidation of squalene to
+  (S)-2,3-epoxysqualene (2,3-oxidosqualene), consuming molecular oxygen and using reducing
+  equivalents supplied by NADPH via NADPH-cytochrome P450 reductase. This is the first
+  oxygenation step of sterol biosynthesis and the second rate-limiting step of the cholesterol
+  biosynthetic pathway, acting downstream of HMG-CoA reductase and between squalene synthase
+  (FDFT1) and lanosterol synthase (LSS). The enzyme is an endoplasmic reticulum (microsome)
+  membrane protein associated peripherally with the membrane through N-terminal and C-terminal
+  hydrophobic regions rather than transmembrane helices. Its N-terminal regulatory domain
+  senses cholesterol and mediates cholesterol-accelerated, MARCHF6-dependent ubiquitin-
+  proteasome degradation, providing feedback control of flux through the pathway. SQLE is a
+  validated antifungal and anticancer drug target.
+existing_annotations:
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetically inferred endoplasmic reticulum localization. SQLE is a well-established
+      ER/microsome membrane enzyme, so this is correct but broader than the specific ER membrane
+      location captured by the IDA/IEA annotations.
+    action: ACCEPT
+    reason: &gt;-
+      IBA localization consistent with all experimental evidence. ER is a correct compartment;
+      the more specific and preferred CC term is endoplasmic reticulum membrane (GO:0005789),
+      captured elsewhere in this record.
+    supported_by:
+    - reference_id: file:human/SQLE/SQLE-uniprot.txt
+      supporting_text: &#34;Endoplasmic reticulum membrane&#34;
+    - reference_id: Reactome:R-HSA-191299
+      supporting_text: &#34;Squalene monooxygenase (squalene epoxidase, SE) is located on the endoplamic reticulum.&#34;
+- term:
+    id: GO:0004506
+    label: squalene monooxygenase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetically inferred squalene monooxygenase activity. This is the core, defining
+      molecular function of SQLE across eukaryotes and is directly supported by human
+      enzymology and crystal structures.
+    action: ACCEPT
+    reason: &gt;-
+      IBA correctly identifies the core catalytic function. Human recombinant enzyme was
+      purified and kinetically characterized (PMID:10666321), and the catalytic domain
+      structure with FAD was solved (PMID:30626872). Represents the core function of the gene.
+    supported_by:
+    - reference_id: PMID:30626872
+      supporting_text: &#34;SQLE is a flavin adenosine dinucleotide (FAD)–dependent epoxidase that catalyzes stereospecific conversion of non-sterol intermediate squalene to 2,3(S)-oxidosqualene&#34;
+    - reference_id: file:human/SQLE/SQLE-uniprot.txt
+      supporting_text: &#34;Catalyzes the stereospecific oxidation of squalene to&#34;
+- term:
+    id: GO:0016126
+    label: sterol biosynthetic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetically inferred involvement in sterol biosynthesis. SQLE catalyzes the first
+      oxygenation step of the sterol pathway, so this BP annotation is correct.
+    action: ACCEPT
+    reason: &gt;-
+      Correct and well-supported. In humans the specific downstream product pathway is
+      cholesterol biosynthesis (GO:0006695); sterol biosynthetic process is the conserved,
+      broader biological process appropriate for the pan-eukaryotic IBA. Core function.
+    supported_by:
+    - reference_id: PMID:30626872
+      supporting_text: &#34;the first oxygenation step in cholesterol synthesis&#34;
+- term:
+    id: GO:0004506
+    label: squalene monooxygenase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic assignment of squalene monooxygenase activity (ARBA/RHEA:25282/EC:1.14.14.17).
+      Matches the experimentally established core function.
+    action: ACCEPT
+    reason: &gt;-
+      The IEA mapping (RHEA:25282, EC 1.14.14.17) corresponds exactly to the reaction catalyzed
+      by human SQLE and is corroborated by experimental evidence.
+    supported_by:
+    - reference_id: file:human/SQLE/SQLE-uniprot.txt
+      supporting_text: &#34;EC=1.14.14.17&#34;
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic CC annotation from UniProt Subcellular Location mapping (SL-0097). Matches the
+      experimentally determined ER membrane localization.
+    action: ACCEPT
+    reason: &gt;-
+      Correct and specific. SQLE is a peripheral ER/microsome membrane protein; supported by
+      experimental topology work and by the IDA annotation from PMID:26434806.
+    supported_by:
+    - reference_id: file:human/SQLE/SQLE-uniprot.txt
+      supporting_text: &#34;Endoplasmic reticulum membrane&#34;
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      InterPro2GO electronic annotation to the generic term membrane. Correct but far less
+      informative than the specific ER membrane location.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Not wrong (SQLE is membrane-associated), but membrane is an uninformative parent of the
+      specific and preferred endoplasmic reticulum membrane (GO:0005789) already annotated.
+    supported_by:
+    - reference_id: file:human/SQLE/SQLE-uniprot.txt
+      supporting_text: &#34;Endoplasmic reticulum membrane&#34;
+- term:
+    id: GO:0016126
+    label: sterol biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      InterPro2GO electronic annotation to sterol biosynthetic process, matching the enzyme
+      family&#39;s conserved role.
+    action: ACCEPT
+    reason: &gt;-
+      Correct BP for the squalene monooxygenase family; consistent with the IBA and
+      experimental IDA annotations to the same term.
+    supported_by:
+    - reference_id: PMID:30626872
+      supporting_text: &#34;the first oxygenation step in cholesterol synthesis&#34;
+- term:
+    id: GO:0050660
+    label: flavin adenine dinucleotide binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      InterPro2GO electronic annotation for FAD binding. SQLE is an FAD-dependent flavoprotein;
+      FAD is a required, structurally resolved cofactor.
+    action: ACCEPT
+    reason: &gt;-
+      Correct cofactor-binding MF (equivalent to the IDA FAD binding annotation GO:0071949).
+      FAD binding is a supporting molecular function of the catalytic activity rather than the
+      core function itself.
+    supported_by:
+    - reference_id: file:human/SQLE/SQLE-uniprot.txt
+      supporting_text: &#34;Name=FAD; Xref=ChEBI:CHEBI:57692;&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Binary-interactome (HuRI) protein-protein interactions. UniProt records the corresponding
+      partners as CREB3L1 (Q96BA8), REEP4 (Q9H6H4) and TMEM14B (Q9NUH8). The bare protein
+      binding term is uninformative about SQLE&#39;s function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Per curation guidelines, the generic protein binding (GO:0005515) term does not convey a
+      specific molecular function. These high-throughput two-hybrid interactions (CREB3L1,
+      REEP4, TMEM14B) are retained as recorded but flagged as over-annotation; they should not
+      be treated as a core function.
+    supported_by:
+    - reference_id: file:human/SQLE/SQLE-uniprot.txt
+      supporting_text: &#34;Q14534; Q96BA8: CREB3L1; NbExp=3; IntAct=EBI-3905171, EBI-6942903;&#34;
+- term:
+    id: GO:0008203
+    label: cholesterol metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic annotation (ARBA) to the broad cholesterol metabolic process. SQLE participates
+      in cholesterol metabolism via its role in cholesterol biosynthesis.
+    action: ACCEPT
+    reason: &gt;-
+      Correct but general. The specific role is cholesterol biosynthetic process (GO:0006695),
+      of which this is a parent; retained as accurate non-core context.
+    supported_by:
+    - reference_id: PMID:33791309
+      supporting_text: &#34;two rate-limiting enzymes, 3-hydroxy-3-methylglutarylcoenzyme A reductase (HMGCR) and squalene monooxygenase (SQLE)&#34;
+- term:
+    id: GO:1904614
+    label: response to biphenyl
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic ortholog transfer (Ensembl Compara, from rat Sqle P52020) of a narrow
+      &#34;response to biphenyl&#34; phenotype. There is no human evidence and no clear connection to
+      SQLE&#39;s core enzymatic function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Over-propagated ortholog-transferred response term based solely on a single rodent
+      dataset; it does not represent a core or well-supported human function. Retained but
+      flagged as over-annotation rather than removed, as it is an electronic ortholog inference.
+    supported_by:
+    - reference_id: GO_REF:0000107
+      supporting_text: &#34;Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara&#34;
+- term:
+    id: GO:0006695
+    label: cholesterol biosynthetic process
+  evidence_type: IC
+  original_reference_id: PMID:30626872
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Curator inference (from the squalene monooxygenase activity, GO:0004506) that SQLE is
+      involved in cholesterol biosynthesis. This is the specific human pathway role.
+    action: ACCEPT
+    reason: &gt;-
+      SQLE catalyzes the first oxygenation (epoxidation) step of the cholesterol biosynthetic
+      pathway; the IC from the catalytic activity is sound and represents a core biological
+      process for this gene.
+    supported_by:
+    - reference_id: PMID:30626872
+      supporting_text: &#34;the first oxygenation step in cholesterol synthesis&#34;
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: IDA
+  original_reference_id: PMID:26434806
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Direct experimental determination that the sterol-responsive N-terminal domain of SQLE is
+      integrally associated with the ER membrane, localizing the active enzyme to the ER membrane.
+    action: ACCEPT
+    reason: &gt;-
+      Topology mapping of SM N100-GFP by cysteine-accessibility placed SQLE in the ER membrane;
+      the enzyme functions at this location. Core cellular location for the protein.
+    supported_by:
+    - reference_id: PMID:26434806
+      supporting_text: &#34;We have identified a region integrally associated with the endoplasmic reticulum \nmembrane&#34;
+- term:
+    id: GO:0006695
+    label: cholesterol biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:33791309
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Direct experimental evidence that SQLE controls cellular cholesterol levels: SQLE
+      knockdown lowers cholesterol and SQLE overexpression raises it, and SQLE is required for
+      MYC-driven cholesterol production.
+    action: ACCEPT
+    reason: &gt;-
+      Functional genetic manipulation (siRNA/overexpression, cholesterol quantification)
+      directly implicates SQLE in cholesterol biosynthesis. Core biological process.
+    supported_by:
+    - reference_id: PMID:33791309
+      supporting_text: &#34;Through transcriptional upregulation of SQLE, a rate-limiting enzyme in \ncholesterol synthesis pathway, MYC increases cholesterol production and promotes \ntumor cell growth.&#34;
+- term:
+    id: GO:0004506
+    label: squalene monooxygenase activity
+  evidence_type: EXP
+  original_reference_id: PMID:10666321
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental enzymology: human squalene monooxygenase was cloned, expressed in E. coli,
+      purified, and kinetically characterized, confirming squalene monooxygenase activity with
+      FAD and NADPH-cytochrome P450 reductase as partners.
+    action: ACCEPT
+    reason: &gt;-
+      Gold-standard biochemical demonstration of the core catalytic activity (Km squalene
+      7.7 uM, Km FAD 0.3 uM). Core molecular function.
+    supported_by:
+    - reference_id: PMID:10666321
+      supporting_text: &#34;The cDNA for human squalene monooxygenase, a key enzyme in the committed pathway \nfor cholesterol biosynthesis, was amplified from a human liver cDNA library and \ncloned, and the protein was expressed in Escherichia coli and purified.&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:29765154
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Physical interaction of SQLE with the cancer-associated microprotein CASIMO1/SMIM22
+      (isoform K7EJ46). The interaction modulates SQLE protein accumulation and lipid droplet
+      formation, but the bare protein binding term is uninformative.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Genuine, experimentally supported interaction with CASIMO1 (SMIM22), but per curation
+      guidelines protein binding (GO:0005515) is too generic to be a molecular function.
+      Retained as recorded and flagged; the functional consequences are captured by the
+      associated lipid droplet / proliferation BP annotations.
+    supported_by:
+    - reference_id: PMID:29765154
+      supporting_text: &#34;CASIMO1 microprotein interacts with squalene epoxidase (SQLE), a key enzyme in \ncholesterol synthesis and a known oncogene in breast cancer.&#34;
+    - reference_id: file:human/SQLE/SQLE-uniprot.txt
+      supporting_text: &#34;SMIM22; this interaction modulates lipid droplet formation&#34;
+- term:
+    id: GO:0042127
+    label: regulation of cell population proliferation
+  evidence_type: IMP
+  original_reference_id: PMID:29765154
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      SQLE knockdown mimics the CASIMO1 knockdown proliferation phenotype and SQLE
+      overexpression rescues it, implicating SQLE in the control of cell proliferation in breast
+      cancer cells.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Experimentally supported but a downstream, cell-context (cancer) consequence of altered
+      cholesterol/lipid metabolism rather than the core molecular function of the enzyme. Keep
+      as a valid non-core process annotation.
+    supported_by:
+    - reference_id: PMID:29765154
+      supporting_text: &#34;SQLE \nknockdown mimicked the CASIMO1 knockdown phenotype and in turn SQLE \noverexpression fully rescued the effect of CASIMO1 knockdown.&#34;
+- term:
+    id: GO:0140042
+    label: lipid droplet formation
+  evidence_type: IMP
+  original_reference_id: PMID:29765154
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Modulation of CASIMO1 (which interacts with SQLE) alters lipid droplet clustering, and the
+      SQLE-CASIMO1 interaction is reported to modulate lipid droplet formation.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Supported by the CASIMO1/SQLE study, but a peripheral, context-specific role linked to
+      the interaction with SMIM22 rather than the core sterol-biosynthetic enzyme activity.
+      Retain as non-core.
+    supported_by:
+    - reference_id: file:human/SQLE/SQLE-uniprot.txt
+      supporting_text: &#34;SMIM22; this interaction modulates lipid droplet formation&#34;
+    - reference_id: PMID:29765154
+      supporting_text: &#34;increased lipid droplet clustering&#34;
+- term:
+    id: GO:0004506
+    label: squalene monooxygenase activity
+  evidence_type: IDA
+  original_reference_id: PMID:30626872
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct assay of squalene monooxygenase activity across recombinant catalytic domain,
+      full-length baculosome, and human liver microsome systems, with FAD/squalene kinetics and
+      an LC-MS 2,3-oxidosqualene product assay.
+    action: ACCEPT
+    reason: &gt;-
+      High-quality direct biochemical demonstration of the core catalytic function alongside
+      crystal structures. Core molecular function.
+    supported_by:
+    - reference_id: PMID:30626872
+      supporting_text: &#34;SQLE is a flavin adenosine dinucleotide (FAD)–dependent epoxidase that catalyzes stereospecific conversion of non-sterol intermediate squalene to 2,3(S)-oxidosqualene&#34;
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IDA
+  original_reference_id: PMID:30626872
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Membrane association observed for SQLE, consistent with its C-terminal hydrophobic
+      membrane-binding helices. Generic membrane term.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Correct but uninformative; the specific location is the endoplasmic reticulum membrane
+      (GO:0005789), and SQLE is a peripheral membrane protein without transmembrane helices.
+    supported_by:
+    - reference_id: file:human/SQLE/SQLE-uniprot.txt
+      supporting_text: &#34;mediate interaction with membranes&#34;
+- term:
+    id: GO:0016126
+    label: sterol biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:30626872
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Direct evidence linking SQLE catalytic activity to sterol (cholesterol) biosynthesis via
+      production of 2,3-oxidosqualene, the first oxygenation intermediate.
+    action: ACCEPT
+    reason: &gt;-
+      Well-supported core BP; the enzyme&#39;s catalytic step is committed to sterol/cholesterol
+      biosynthesis.
+    supported_by:
+    - reference_id: PMID:30626872
+      supporting_text: &#34;the first oxygenation step in cholesterol synthesis&#34;
+- term:
+    id: GO:0043231
+    label: intracellular membrane-bounded organelle
+  evidence_type: IDA
+  original_reference_id: PMID:30626872
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Generic organelle localization consistent with ER (a membrane-bounded organelle)
+      localization.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Correct but very general parent of the specific endoplasmic reticulum membrane location;
+      uninformative as an independent annotation.
+    supported_by:
+    - reference_id: file:human/SQLE/SQLE-uniprot.txt
+      supporting_text: &#34;Endoplasmic reticulum membrane&#34;
+- term:
+    id: GO:0071949
+    label: FAD binding
+  evidence_type: IDA
+  original_reference_id: PMID:30626872
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Crystal structures of the SQLE catalytic domain were solved in complex with FAD, with
+      multiple defined FAD-binding residues, directly demonstrating FAD binding.
+    action: ACCEPT
+    reason: &gt;-
+      Direct structural evidence of the FAD cofactor and its binding pocket. FAD binding is a
+      supporting molecular function enabling the core squalene monooxygenase catalysis.
+    supported_by:
+    - reference_id: file:human/SQLE/SQLE-uniprot.txt
+      supporting_text: &#34;X-RAY CRYSTALLOGRAPHY (2.30 ANGSTROMS) OF 118-574 IN COMPLEXES WITH FAD AND&#34;
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-1655844
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome traceable-author-statement placing SQLE at the ER membrane (Expression of
+      Squalene Monooxygenase module). Consistent with all other evidence.
+    action: ACCEPT
+    reason: &gt;-
+      Correct and specific ER membrane localization, corroborated by IDA and IEA annotations.
+    supported_by:
+    - reference_id: Reactome:R-HSA-191299
+      supporting_text: &#34;Squalene monooxygenase (squalene epoxidase, SE) is located on the endoplamic reticulum.&#34;
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-191299
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome TAS for the reaction &#34;Squalene is oxidized to its epoxide&#34;, placing squalene
+      monooxygenase at the ER membrane.
+    action: ACCEPT
+    reason: &gt;-
+      Correct ER membrane localization tied to the catalytic reaction module; consistent with
+      experimental evidence.
+    supported_by:
+    - reference_id: Reactome:R-HSA-191299
+      supporting_text: &#34;It catalyzes the oxidation of squalene (SQNE) to squalene 2,3-epoxide (SQNX)&#34;
+- term:
+    id: GO:0004506
+    label: squalene monooxygenase activity
+  evidence_type: NAS
+  original_reference_id: PMID:9286711
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Non-traceable author statement (gene-mapping paper) asserting the squalene epoxidase
+      function. The catalytic function is independently confirmed experimentally.
+    action: ACCEPT
+    reason: &gt;-
+      Although only NAS in this reference, the core squalene monooxygenase activity is firmly
+      established by EXP/IDA evidence (PMID:10666321, PMID:30626872). Accept as consistent.
+    supported_by:
+    - reference_id: PMID:9286711
+      supporting_text: &#34;Squalene epoxidase (EC 1.14.99.7) catalyzes the first oxygenation step in sterol \nbiosynthesis&#34;
+- term:
+    id: GO:0016126
+    label: sterol biosynthetic process
+  evidence_type: NAS
+  original_reference_id: PMID:9286711
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Non-traceable author statement that squalene epoxidase acts in sterol biosynthesis. This
+      is correct and supported by experimental evidence elsewhere.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with the established role of SQLE in sterol/cholesterol biosynthesis; corroborated
+      by IBA and experimental IDA annotations.
+    supported_by:
+    - reference_id: PMID:9286711
+      supporting_text: &#34;catalyzes the first oxygenation step in sterol \nbiosynthesis and is suggested to be one of the rate-limiting enzymes in this \npathway&#34;
+core_functions:
+- description: &gt;-
+    FAD-dependent squalene monooxygenase (squalene epoxidase) activity: stereospecific
+    epoxidation of squalene with molecular oxygen and NADPH-derived reducing equivalents to
+    yield (S)-2,3-epoxysqualene, the first oxygenation step of sterol/cholesterol biosynthesis,
+    at the endoplasmic reticulum membrane.
+  molecular_function:
+    id: GO:0004506
+    label: squalene monooxygenase activity
+  directly_involved_in:
+  - id: GO:0006695
+    label: cholesterol biosynthetic process
+  - id: GO:0016126
+    label: sterol biosynthetic process
+  locations:
+  - id: GO:0005789
+    label: endoplasmic reticulum membrane
+  supported_by:
+  - reference_id: PMID:30626872
+    supporting_text: &#34;SQLE is a flavin adenosine dinucleotide (FAD)–dependent epoxidase that catalyzes stereospecific conversion of non-sterol intermediate squalene to 2,3(S)-oxidosqualene&#34;
+  - reference_id: PMID:10666321
+    supporting_text: &#34;The cDNA for human squalene monooxygenase, a key enzyme in the committed pathway \nfor cholesterol biosynthesis, was amplified from a human liver cDNA library and \ncloned, and the protein was expressed in Escherichia coli and purified.&#34;
+  - reference_id: file:human/SQLE/SQLE-uniprot.txt
+    supporting_text: &#34;Endoplasmic reticulum membrane&#34;
+- description: &gt;-
+    FAD cofactor binding that enables the flavoprotein monooxygenase catalysis; a required
+    supporting molecular function of the squalene monooxygenase activity.
+  molecular_function:
+    id: GO:0071949
+    label: FAD binding
+  supported_by:
+  - reference_id: file:human/SQLE/SQLE-uniprot.txt
+    supporting_text: &#34;Name=FAD; Xref=ChEBI:CHEBI:57692;&#34;
+  - reference_id: PMID:30626872
+    supporting_text: &#34;SQLE is a flavin adenosine dinucleotide (FAD)–dependent epoxidase&#34;
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Beyond MARCHF6-mediated cholesterol-dependent degradation, what other post-translational
+    inputs (e.g. unsaturated fatty acids, ERAD partners) tune SQLE stability in vivo?
+- question: &gt;-
+    Is the SQLE-CASIMO1 (SMIM22) interaction relevant to normal (non-cancer) lipid droplet
+    biology, or is it specific to tumor cell contexts?
+suggested_experiments:
+- description: &gt;-
+    Reconstitute human SQLE with NADPH-cytochrome P450 reductase and measure epoxidation of
+    squalene to (S)-2,3-epoxysqualene to formally confirm the physiological electron-donor
+    coupling and stoichiometry.
+  experiment_type: in vitro enzymatic reconstitution
+- description: &gt;-
+    Structure-guided mutagenesis of the N-terminal cholesterol-sensing degron (residues 62-73)
+    combined with degradation assays to map the cholesterol-responsive turnover mechanism.
+  experiment_type: mutagenesis and protein degradation assay
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:10666321
+  title: Cloning, heterologous expression, and enzymological characterization of human
+    squalene monooxygenase.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. Cloning, expression, purification and kinetics of human SQLE; establishes
+      the core squalene monooxygenase activity with FAD and NADPH-cytochrome P450 reductase.
+- id: PMID:26434806
+  title: The Regulatory Domain of Squalene Monooxygenase Contains a Re-entrant Loop
+    and Senses Cholesterol via a Conformational Change.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. Maps SQLE N-terminal topology to the ER membrane and shows
+      cholesterol-induced conformational change driving proteasomal degradation.
+- id: PMID:29765154
+  title: The cancer-associated microprotein CASIMO1 controls cell proliferation and
+    interacts with squalene epoxidase modulating lipid droplet formation.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. Establishes SQLE-CASIMO1 (SMIM22) interaction and its effects on lipid
+      droplet formation and proliferation; supports the non-core proliferation/lipid-droplet
+      annotations.
+- id: PMID:30626872
+  title: Structure and inhibition mechanism of the catalytic domain of human squalene
+    epoxidase.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified; full text available. Crystal structures (PDB 6C6N/6C6P/6C6R) with FAD,
+      kinetics, and mechanism; the definitive structural/biochemical reference for the core
+      catalytic function.
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified (HuRI). Source of high-throughput binary protein-binding interactions
+      (CREB3L1, REEP4, TMEM14B); interactions are recorded in UniProt but yield only the generic
+      protein binding term.
+- id: PMID:33791309
+  title: MYC Enhances Cholesterol Biosynthesis and Supports Cell Proliferation Through
+    SQLE.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified; full text available. Shows SQLE is required for MYC-driven cholesterol
+      biosynthesis (knockdown/overexpression, cholesterol quantification); supports the
+      cholesterol biosynthetic process IDA.
+- id: PMID:9286711
+  title: Localization of the squalene epoxidase gene (SQLE) to human chromosome region
+    8q24.1.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. Chromosomal mapping paper (8q24.1); asserts the squalene epoxidase
+      function only as an NAS-level statement.
+- id: Reactome:R-HSA-1655844
+  title: Expression of Squalene Monooxygenase (SQLE)
+  findings: []
+- id: Reactome:R-HSA-191299
+  title: Squalene is oxidized to its epoxide
+  findings: []
+- id: file:human/SQLE/SQLE-uniprot.txt
+  title: UniProt entry Q14534 (ERG1_HUMAN), Squalene monooxygenase
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

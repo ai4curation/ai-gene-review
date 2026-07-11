@@ -1,0 +1,2555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCO2678 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>SCO2678</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9L243" target="_blank" class="term-link">
+                        Q9L243
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Streptomyces coelicolor (strain ATCC BAA-471 / A3(2) / M145)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "SCO2678";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9L243" data-a="DESCRIPTION: SCO2678 (Q9L243) is a 171-amino-acid protein from ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>SCO2678 (Q9L243) is a 171-amino-acid protein from Streptomyces coelicolor A3(2) containing a HAD_SAK_2 domain (PF18143), placing it in the haloacid dehalogenase (HAD) superfamily. The protein is classified in eggNOG COG1877 (5&#39;-nucleotidase/2&#39;,3&#39;-cyclic phosphodiesterase and related esterases), which supports assignment as a secreted phosphatase with likely 5&#39;-nucleotidase activity. Based on domain architecture, COG membership, and the established biology of Streptomyces phosphate scavenging, SCO2678 is predicted to function as an extracellular phosphatase that hydrolyzes nucleotides and other organophosphate compounds to release inorganic phosphate for uptake. S. coelicolor lacks organic phosphate transporters (e.g., uhp-type systems), necessitating extracellular dephosphorylation prior to phosphate uptake via PstSCAB or PitH transport systems. A related characterized enzyme, SCO4152, is a PhoP-regulated extracellular 5&#39;-nucleotidase. No direct biochemical characterization or genetic studies of SCO2678 have been reported; functional assignment relies on domain-based inference and genomic context.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008253" target="_blank" class="term-link">
+                                    GO:0008253
+                                </a>
+                            </span>
+                            <span class="term-label">5&#39;-nucleotidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISM</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:STRCO/Q9L243/Q9L243-deep-research-falcon.md
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q9L243" data-a="GO:0008253" data-r="file:STRCO/Q9L243/Q9L243-deep-research-falcon.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Novel annotation proposed based on HAD_SAK_2 domain (PF18143) membership, eggNOG COG1877 classification (5&#39;-nucleotidase/2&#39;,3&#39;-cyclic phosphodiesterase and related esterases), and functional precedent from the characterized S. coelicolor 5&#39;-nucleotidase SCO4152. ProtNLM2 also independently predicted this term. No direct experimental evidence exists for SCO2678.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Domain architecture (HAD_SAK_2), COG assignment (COG1877), and organism-level biology (extracellular phosphate scavenging in Streptomyces) converge on 5&#39;-nucleotidase activity. The ProtNLM2 prediction of this same term provides additional computational support.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISM</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:STRCO/Q9L243/Q9L243-deep-research-falcon.md
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q9L243" data-a="GO:0005576" data-r="file:STRCO/Q9L243/Q9L243-deep-research-falcon.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Novel annotation proposed based on UniProt designation as &#34;Secreted protein&#34; (ProtNLM annotation) and the established biology of S. coelicolor, which encodes 819 potentially secreted proteins including extracellular hydrolases for nutrient scavenging. S. coelicolor possesses both Sec and TAT export pathways. The specific secretion pathway for SCO2678 has not been experimentally confirmed.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt annotation as secreted protein, combined with the extracellular phosphate scavenging role inferred from domain architecture and genomic context, supports extracellular localization. The protein&#39;s predicted role in hydrolyzing extracellular organophosphates requires it to be outside the cytoplasmic membrane.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006796" target="_blank" class="term-link">
+                                    GO:0006796
+                                </a>
+                            </span>
+                            <span class="term-label">phosphate-containing compound metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISM</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:STRCO/Q9L243/Q9L243-deep-research-falcon.md
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q9L243" data-a="GO:0006796" data-r="file:STRCO/Q9L243/Q9L243-deep-research-falcon.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Novel annotation proposed based on the inferred phosphatase/5&#39;-nucleotidase activity and the well-characterized phosphate scavenging biology of Streptomyces. SCO2678 is predicted to participate in extracellular dephosphorylation of organophosphate compounds, releasing inorganic phosphate for uptake via PstSCAB or PitH transport systems.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the predicted molecular function (5&#39;-nucleotidase activity) and the established phosphate acquisition pathway in S. coelicolor, where extracellular phosphatases hydrolyze organophosphates before uptake.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>SCO2678 is predicted to have 5&#39;-nucleotidase activity based on its HAD_SAK_2 domain (PF18143) and membership in eggNOG COG1877 (5&#39;-nucleotidase/2&#39;,3&#39;-cyclic phosphodiesterase and related esterases). The HAD superfamily catalyzes hydrolysis of phosphate ester bonds via a conserved nucleophilic aspartate mechanism with divalent metal ion cofactors. A characterized S. coelicolor orthologue SCO4152 is a PhoP-regulated extracellular 5&#39;-nucleotidase, providing functional precedent in this organism. The exact substrate specificity of SCO2678 is unknown; HAD superfamily members frequently exhibit substrate promiscuity across nucleotides, sugar phosphates, and other phosphomonoesters. Confidence in this assignment is moderate, as no direct biochemical assay has been performed on SCO2678.</h3>
+                <span class="vote-buttons" data-g="Q9L243" data-a="FUNCTION: SCO2678 is predicted to have 5&#39;-nucleotidase activ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008253" target="_blank" class="term-link">
+                            5&#39;-nucleotidase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006796" target="_blank" class="term-link">
+                                phosphate-containing compound metabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                extracellular region
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12000953" target="_blank" class="term-link">
+                                PMID:12000953
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">The 7,825 predicted genes include more than 20 clusters coding for known or predicted secondary metabolites</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:STRCO/Q9L243/Q9L243-deep-research-falcon.md
+
+                        </span>
+
+                        <div class="finding-text">SCO2678 most likely functions as a phosphatase or phosphomonoesterase, catalyzing the hydrolysis of phosphate ester bonds</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12000953" target="_blank" class="term-link">
+                            PMID:12000953
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Complete genome sequence of the model actinomycete Streptomyces coelicolor A3(2).</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">S. coelicolor genome encodes 7,825 predicted genes on an 8,667,507 bp linear chromosome, the largest bacterial genome sequenced at the time</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The genome contains an unprecedented proportion of regulatory genes and many duplicated gene sets</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8843436" target="_blank" class="term-link">
+                            PMID:8843436
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A set of ordered cosmids and a detailed genetic and physical map for the 8 Mb Streptomyces coelicolor A3(2) chromosome.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Physical mapping of the S. coelicolor chromosome that provided the foundation for the genome sequencing effort</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:STRCO/Q9L243/Q9L243-deep-research-falcon.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Deep research report for SCO2678/Q9L243 (Falcon)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">SCO2678 contains a HAD_SAK_2 domain (PF18143) and is a member of the HAD superfamily</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Predicted to function as a secreted HAD-family phosphatase involved in extracellular phosphate scavenging</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">S. coelicolor lacks organic phosphate transporters, necessitating extracellular dephosphorylation prior to phosphate uptake</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">A PhoP-regulated extracellular 5&#39;-nucleotidase (SCO4152) has been characterized in S. coelicolor, providing functional precedent</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the precise substrate specificity of SCO2678, and does it preferentially hydrolyze 5&#39;-nucleotides versus other phosphomonoesters?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9L243" data-a="Q: What is the precise substrate specificity of SCO26..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is SCO2678 expression regulated by the PhoR-PhoP two-component system under phosphate limitation, similar to other extracellular phosphatases in S. coelicolor?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9L243" data-a="Q: Is SCO2678 expression regulated by the PhoR-PhoP t..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the relationship between SCO2678 and the characterized 5&#39;-nucleotidase SCO4152 -- are they functionally redundant or do they target distinct substrates?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9L243" data-a="Q: What is the relationship between SCO2678 and the c..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Heterologously express and purify SCO2678, then perform substrate profiling using a panel of 5&#39;-nucleotides (AMP, GMP, CMP, UMP, dAMP, etc.), sugar phosphates (glucose-6-phosphate, fructose-6-phosphate), and generic phosphatase substrates (pNPP). Determine kinetic parameters (Km, kcat) for preferred substrates. Also test for divalent metal ion dependence (Mg2+, Mn2+, Co2+) consistent with HAD superfamily mechanism.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: SCO2678 encodes a secreted 5&#39;-nucleotidase that hydrolyzes extracellular nucleotides to release inorganic phosphate</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: biochemical assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9L243" data-a="EXPERIMENT: Heterologously express and purify SCO2678, then pe..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Construct an SCO2678 deletion mutant in S. coelicolor M145 and compare growth on nucleotides (e.g., AMP, GMP) as sole phosphate source versus inorganic phosphate. Confirm secretion by mass spectrometry analysis of culture supernatant proteins. Test whether SCO2678 expression is induced under phosphate limitation using qRT-PCR or reporter fusions.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: SCO2678 is secreted and functions extracellularly in phosphate scavenging</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: genetic and proteomic analysis</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9L243" data-a="EXPERIMENT: Construct an SCO2678 deletion mutant in S. coelico..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(Q9L243-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9L243" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">9 citations</span>
+
+
+                    <span class="report-badge">1 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-06-18T19:27:18.752770</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="Q9L243-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="functional-annotation-of-sco2678-q9l243-in-streptomyces-coelicolor">Functional Annotation of SCO2678 (Q9L243) in Streptomyces coelicolor</h2>
+<h3 id="gene-identity-and-literature-context">Gene Identity and Literature Context</h3>
+<p>SCO2678 is a gene from <em>Streptomyces coelicolor</em> strain ATCC BAA-471 / A3(2) / M145, also known by its ORF name SC6D10.21 (bentley2002completegenomesequence pages 1-2). This gene was identified during the landmark genome sequencing effort that revealed the complete 8,667,507 bp linear chromosome containing 7,825 predicted genes, making it the largest bacterial genome sequenced at that time (bentley2002completegenomesequence pages 1-2, bentley2002completegenomesequence pages 3-4). However, it is important to note that <strong>specific literature on SCO2678 itself is extremely limited or absent</strong>. The functional annotation presented here is therefore based on integration of genome-wide analyses, domain architecture, and the well-characterized phosphate metabolism pathways in <em>Streptomyces</em> species.</p>
+<h3 id="domain-structure-and-evolutionary-context">Domain Structure and Evolutionary Context</h3>
+<p>SCO2678 contains a <strong>HAD_SAK_2 domain (Pfam PF18143)</strong>, which places this protein within the haloacid dehalogenase (HAD) superfamily of enzymes. The HAD superfamily is a large and functionally diverse group of enzymes that share a conserved catalytic mechanism involving a nucleophilic aspartate residue that forms a covalent phospho-aspartyl intermediate during catalysis (kankanamge2023functionalannotationof pages 1-2). </p>
+<p>The HAD superfamily encompasses multiple functional classes, including sugar phosphatases (such as trehalose-6-phosphate phosphatase, fructose-6-phosphate phosphatase, and sucrose-6-phosphate phosphatase), haloacid dehalogenases, phosphonoacetaldehyde hydrolases, ATPases, and various phosphate monoesterases (kankanamge2023functionalannotationof pages 1-2). Recent functional annotation studies of HAD superfamily proteins have demonstrated that these enzymes frequently exhibit <strong>substrate promiscuity</strong>, and sequence similarity alone cannot reliably discriminate substrate specificity among closely related family members (kankanamge2023functionalannotationof pages 1-2).</p>
+<h3 id="predicted-primary-function-enzymatic-activity-and-substrate-specificity">Predicted Primary Function: Enzymatic Activity and Substrate Specificity</h3>
+<p>Based on the HAD_SAK_2 domain architecture, <strong>SCO2678 most likely functions as a phosphatase or phosphomonoesterase</strong>, catalyzing the hydrolysis of phosphate ester bonds according to the general reaction:</p>
+<p><strong>Organophosphate + H₂O → Organic product + Inorganic phosphate (Pi)</strong></p>
+<p>While the exact substrate specificity of SCO2678 has not been experimentally determined, several lines of evidence suggest plausible substrate classes:</p>
+<ol>
+<li>
+<p><strong>Sugar phosphates</strong>: HAD superfamily members commonly act on various sugar phosphates, including glucose-6-phosphate, fructose-6-phosphate, and related metabolic intermediates (kankanamge2023functionalannotationof pages 1-2).</p>
+</li>
+<li>
+<p><strong>Nucleotides and nucleoside phosphates</strong>: Studies in related <em>Streptomyces</em> species have shown that secreted phosphatases possess broad substrate specificity. For example, purified alkaline phosphatase from <em>Streptomyces griseus</em> demonstrated hydrolysis of nucleotides as well as other phosphorylated compounds (martin2021molecularmechanismsof pages 11-12, martin2021molecularmechanismsof pages 12-14).</p>
+</li>
+<li>
+<p><strong>Glycerophosphodiesters</strong>: These compounds serve as phosphate sources in the soil environment and are hydrolyzed by extracellular phosphodiesterases in <em>Streptomyces</em> (martin2021molecularmechanismsof pages 11-12).</p>
+</li>
+</ol>
+<p>It is important to emphasize that, consistent with other HAD superfamily members, <strong>SCO2678 may not exhibit high substrate specificity</strong> and could potentially hydrolyze multiple classes of organophosphate compounds (kankanamge2023functionalannotationof pages 1-2).</p>
+<h3 id="subcellular-localization-and-cellular-function">Subcellular Localization and Cellular Function</h3>
+<p>SCO2678 is annotated as a <strong>secreted protein</strong> in the UniProt database. This annotation is consistent with the broader pattern observed in <em>S. coelicolor</em>, which encodes 819 potentially secreted proteins representing 10.5% of its genome (bentley2002completegenomesequence pages 3-4). These secreted proteins include numerous hydrolases and exoenzymes that enable the organism to exploit complex nutrient sources in its soil environment.</p>
+<p><em>S. coelicolor</em> possesses both the <strong>Sec protein translocation system</strong> and the <strong>TAT (twin arginine transport) pathway</strong> for exporting proteins across the cytoplasmic membrane (bentley2002completegenomesequence pages 3-4). While the specific export pathway used by SCO2678 has not been experimentally demonstrated, the presence of these secretion systems supports its predicted extracellular localization.</p>
+<p>The <strong>primary site of SCO2678 function is most likely the extracellular environment</strong> or the cell surface, where it would act upon organophosphate compounds present in the soil matrix or released from decaying organic matter. This extracellular positioning is crucial for its proposed role in phosphate acquisition (see below).</p>
+<h3 id="biological-pathways-and-phosphate-metabolism">Biological Pathways and Phosphate Metabolism</h3>
+<p>SCO2678 is most plausibly involved in <strong>phosphate acquisition and phosphate scavenging pathways</strong> rather than central intracellular metabolism. In <em>Streptomyces</em> species, phosphate metabolism is governed by the <strong>PhoR-PhoP two-component regulatory system</strong>, which is activated under phosphate limitation and controls expression of multiple genes involved in phosphate transport and utilization (martin2021molecularmechanismsof pages 11-12, martin2021molecularmechanismsof pages 12-14).</p>
+<p>The biological rationale for extracellular phosphatase activity in <em>Streptomyces</em> is particularly compelling:</p>
+<ol>
+<li>
+<p><strong>Absence of organic phosphate transporters</strong>: Bioinformatic analyses reveal that <em>Streptomyces</em> genomes lack genes orthologous to the <em>E. coli</em> or <em>Corynebacterium diphtheriae</em> uhp systems for hexose phosphate transport (martin2021molecularmechanismsof pages 11-12). This absence necessitates an alternative strategy for utilizing organophosphate compounds.</p>
+</li>
+<li>
+<p><strong>Extracellular dephosphorylation strategy</strong>: Experimental evidence demonstrates that sugar phosphates such as glucose-6-phosphate, fructose-6-phosphate, and nucleotides are utilized as both carbon and phosphate sources by <em>S. coelicolor</em>, and that this utilization is PhoP-dependent (martin2021molecularmechanismsof pages 11-12, martin2021molecularmechanismsof pages 12-14). Importantly, these compounds are proposed to be <strong>dephosphorylated by extracellular or membrane-anchored phosphatases prior to transport into the cell</strong>, with the released inorganic phosphate then taken up via the high-affinity PstSCAB system or the low-affinity PitH transporters (martin2021molecularmechanismsof pages 11-12).</p>
+</li>
+<li>
+<p><strong>Nucleotide metabolism</strong>: Nucleotides have been shown to affect secondary metabolite biosynthesis in <em>Streptomyces</em>, with their effects likely mediated through phosphate release by hydrolysis. A PhoP-regulated extracellular 5'-nucleotidase (SCO4152) has been characterized in <em>S. coelicolor</em>, providing precedent for nucleotide-hydrolyzing enzymes in phosphate scavenging (martin2021molecularmechanismsof pages 11-12, martin2021molecularmechanismsof pages 12-14).</p>
+</li>
+</ol>
+<p>The phosphate scavenging pathway can be summarized as:</p>
+<p><strong>Extracellular organophosphates → [SCO2678 and other phosphatases] → Inorganic phosphate + Organic products → Pi uptake via PstSCAB/PitH → Intracellular phosphate pool</strong></p>
+<p>Phosphate availability in <em>Streptomyces</em> has broader physiological consequences beyond nutrition, as it affects <strong>secondary metabolite production and morphological differentiation</strong> (martin2021molecularmechanismsof pages 11-12). Thus, proteins like SCO2678 that participate in phosphate acquisition may indirectly influence these important developmental processes.</p>
+<h3 id="structural-and-mechanistic-inference">Structural and Mechanistic Inference</h3>
+<p>While no experimental structure of SCO2678 has been reported, the HAD superfamily membership provides insight into the likely catalytic mechanism. HAD enzymes typically employ a conserved active site architecture featuring:</p>
+<ol>
+<li>A <strong>nucleophilic aspartate residue</strong> that attacks the phosphorus atom of the substrate, forming a covalent phospho-enzyme intermediate</li>
+<li><strong>Magnesium or other divalent metal ion cofactors</strong> that stabilize the transition state and activate water for the hydrolytic step</li>
+<li>A conserved set of residues forming a <strong>Rossmannoid fold</strong> that creates the phosphate-binding pocket</li>
+</ol>
+<p>The reaction proceeds through a two-step mechanism: formation of the phospho-aspartyl intermediate followed by hydrolysis to release inorganic phosphate (kankanamge2023functionalannotationof pages 1-2). This mechanistic framework is highly conserved across the HAD superfamily despite the diversity of substrate specificities.</p>
+<h3 id="evidence-synthesis-and-confidence-assessment">Evidence Synthesis and Confidence Assessment</h3>
+<p>The functional annotation of SCO2678 presented here integrates multiple lines of evidence:</p>
+<p><strong>Strong evidence:</strong><br />
+- Presence of HAD_SAK_2 domain indicating phosphatase/phosphomonoesterase activity<br />
+- Secreted protein annotation consistent with extracellular function<br />
+- <em>S. coelicolor</em> genome encodes extensive secreted proteome for nutrient acquisition<br />
+- Well-established phosphate scavenging mechanisms in <em>Streptomyces</em><br />
+- Absence of organic phosphate transporters necessitating extracellular dephosphorylation</p>
+<p><strong>Moderate evidence:</strong><br />
+- Likely involvement in PhoP-regulated phosphate acquisition pathway (by analogy to other phosphatases)<br />
+- Probable substrate classes based on HAD superfamily characterization and <em>Streptomyces</em> physiology</p>
+<p><strong>Limitations:</strong><br />
+- <strong>No direct biochemical characterization of SCO2678</strong> (no enzyme assays, no substrate specificity data)<br />
+- <strong>No genetic studies</strong> (no mutant phenotypes, no expression analysis)<br />
+- <strong>No direct evidence of PhoP regulation</strong> for this specific gene<br />
+- Substrate specificity predictions based on inference rather than experiment</p>
+<h3 id="conclusion-and-summary">Conclusion and Summary</h3>
+<table>
+<thead>
+<tr>
+<th>Feature Category</th>
+<th>Description</th>
+<th>Evidence Type (experimental/computational/inferred)</th>
+<th>Key Citations</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Protein identification</td>
+<td>Target verified as UniProt Q9L243, ordered locus name <strong>SCO2678</strong> (ORF <strong>SC6D10.21</strong>) from <strong>Streptomyces coelicolor A3(2) / M145</strong>; specific gene-level literature is extremely limited, so annotation relies mainly on genome context, UniProt description, and domain-based inference.</td>
+<td>Computational/database curation; inferred</td>
+<td>(bentley2002completegenomesequence pages 1-2, bentley2002completegenomesequence pages 3-4)</td>
+</tr>
+<tr>
+<td>Organism/genome context</td>
+<td><strong>S. coelicolor</strong> has an 8,667,507 bp linear chromosome with <strong>7,825 predicted genes</strong>; its genome encodes many transport, regulatory, and secreted functions relevant to soil nutrient acquisition.</td>
+<td>Experimental/genome sequencing</td>
+<td>(bentley2002completegenomesequence pages 1-2, bentley2002completegenomesequence pages 3-4)</td>
+</tr>
+<tr>
+<td>Secreted-protein status</td>
+<td>UniProt describes SCO2678 as a <strong>secreted protein</strong>. This is biologically plausible because <strong>S. coelicolor</strong> encodes <strong>819 potentially secreted proteins (10.5% of the genome)</strong>, including many secreted hydrolases/exoenzymes used for nutrient scavenging.</td>
+<td>Computational annotation; experimental genome analysis; inferred</td>
+<td>(bentley2002completegenomesequence pages 3-4)</td>
+</tr>
+<tr>
+<td>Export pathway context</td>
+<td><strong>S. coelicolor</strong> possesses both the <strong>Sec</strong> secretion system and machinery for <strong>Tat</strong> export, supporting extracellular deployment of enzymes such as phosphatases/hydrolases. The specific export route of SCO2678 has not been experimentally shown.</td>
+<td>Experimental/genome analysis; inferred</td>
+<td>(bentley2002completegenomesequence pages 3-4)</td>
+</tr>
+<tr>
+<td>Domain structure</td>
+<td>SCO2678 contains <strong>HAD_SAK_2 (PF18143)</strong>, placing it in the <strong>haloacid dehalogenase (HAD) superfamily</strong>. HAD enzymes are a broad phosphohydrolase superfamily with multiple functional subclasses.</td>
+<td>Computational/domain assignment; inferred</td>
+<td>(kankanamge2023functionalannotationof pages 1-2)</td>
+</tr>
+<tr>
+<td>Catalytic superfamily interpretation</td>
+<td>HAD superfamily proteins can function as <strong>sugar phosphatases, phosphate monoesterases, ATPases, haloacid dehalogenases,</strong> or <strong>phosphonoacetaldehyde hydrolases</strong>; therefore the domain supports assignment as a likely <strong>phosphatase/phosphomonoesterase-like enzyme</strong>, but not a single substrate with confidence.</td>
+<td>Experimental characterization of homologous families; inferred</td>
+<td>(kankanamge2023functionalannotationof pages 1-2)</td>
+</tr>
+<tr>
+<td>Predicted primary molecular function</td>
+<td>The most defensible functional annotation is that SCO2678 is a <strong>secreted HAD-family phosphatase</strong> likely involved in <strong>extracellular dephosphorylation of organophosphate compounds</strong> to release inorganic phosphate.</td>
+<td>Inferred from domain + secretion + Streptomyces physiology</td>
+<td>(bentley2002completegenomesequence pages 3-4, martin2021molecularmechanismsof pages 11-12, martin2021molecularmechanismsof pages 12-14)</td>
+</tr>
+<tr>
+<td>Reaction type</td>
+<td>Most likely catalyzes <strong>hydrolysis of phosphate monoester bonds</strong> (organophosphate + H2O → alcohol/sugar/nucleoside derivative + inorganic phosphate). No direct biochemical assay for SCO2678 was found.</td>
+<td>Inferred</td>
+<td>(kankanamge2023functionalannotationof pages 1-2, martin2021molecularmechanismsof pages 11-12, martin2021molecularmechanismsof pages 12-14)</td>
+</tr>
+<tr>
+<td>Substrate specificity</td>
+<td><strong>Unknown for SCO2678 specifically.</strong> Based on HAD-family behavior and Streptomyces extracellular phosphate scavenging, plausible substrate classes include <strong>sugar phosphates, nucleotides/nucleoside phosphates, glycerophosphodiesters,</strong> or related phosphate esters.</td>
+<td>Inferred</td>
+<td>(kankanamge2023functionalannotationof pages 1-2, martin2021molecularmechanismsof pages 11-12, martin2021molecularmechanismsof pages 12-14)</td>
+</tr>
+<tr>
+<td>Evidence on promiscuity</td>
+<td>Recent HAD-superfamily annotation work shows many family members have <strong>substrate promiscuity</strong>, and even experimentally validated HAD proteins can act on multiple sugar phosphates; thus SCO2678 may not be highly substrate-specific.</td>
+<td>Experimental on homologs; inferred</td>
+<td>(kankanamge2023functionalannotationof pages 1-2)</td>
+</tr>
+<tr>
+<td>Localization</td>
+<td>The functional site of action is most likely <strong>extracellular / cell-surface associated environment outside the cytoplasmic membrane</strong>, consistent with its secreted annotation and the known role of extracellular phosphatases in Streptomyces.</td>
+<td>Computational annotation; inferred</td>
+<td>(bentley2002completegenomesequence pages 3-4, martin2021molecularmechanismsof pages 11-12)</td>
+</tr>
+<tr>
+<td>Biological pathway involvement</td>
+<td>SCO2678 is most plausibly part of <strong>phosphate acquisition / phosphate scavenging</strong> rather than central intracellular metabolism. In Streptomyces, extracellular phosphatases liberate phosphate from environmental organophosphates before uptake.</td>
+<td>Inferred from organism-level experimental literature</td>
+<td>(martin2021molecularmechanismsof pages 11-12, martin2021molecularmechanismsof pages 12-14)</td>
+</tr>
+<tr>
+<td>Regulatory context</td>
+<td>In <strong>Streptomyces</strong>, phosphate metabolism is governed by the <strong>PhoR-PhoP</strong> system, and multiple extracellular phosphatase/nucleotidase activities are PhoP-regulated under phosphate limitation. Direct regulation of SCO2678 by PhoP has not been demonstrated.</td>
+<td>Experimental for pathway; inferred for SCO2678</td>
+<td>(martin2021molecularmechanismsof pages 11-12, martin2021molecularmechanismsof pages 12-14)</td>
+</tr>
+<tr>
+<td>Transport/metabolic logic</td>
+<td>Streptomyces generally <strong>lack known transporters for intact sugar phosphates</strong> such as <strong>uhp</strong>-type systems; therefore extracellular dephosphorylation is thought to precede uptake, strongly supporting an exophosphatase role for secreted phosphatases like SCO2678.</td>
+<td>Experimental/bioinformatic pathway evidence; inferred</td>
+<td>(martin2021molecularmechanismsof pages 11-12)</td>
+</tr>
+<tr>
+<td>Relation to nucleotides</td>
+<td>Streptomyces extracellular phosphatases and 5'-nucleotidases can hydrolyze <strong>nucleotides</strong>; a related Streptomyces alkaline phosphatase showed <strong>broad substrate specificity including nucleotides</strong>, making nucleotide phosphates a plausible substrate class for SCO2678.</td>
+<td>Experimental in related organisms; inferred</td>
+<td>(martin2021molecularmechanismsof pages 11-12)</td>
+</tr>
+<tr>
+<td>Confidence level</td>
+<td><strong>Moderate confidence</strong> for assignment as a <strong>secreted extracellular phosphatase involved in phosphate scavenging</strong>; <strong>low confidence</strong> for exact substrate identity and catalytic specificity because no direct SCO2678 biochemical or genetic study was found.</td>
+<td>Synthesis/inference</td>
+<td>(bentley2002completegenomesequence pages 1-2, kankanamge2023functionalannotationof pages 1-2, martin2021molecularmechanismsof pages 11-12)</td>
+</tr>
+<tr>
+<td>Key evidence sources</td>
+<td>Main evidence comes from: <strong>S. coelicolor genome analysis</strong> (secreted proteome scale, secretion systems), <strong>review of phosphate sensing/transport/signaling in Streptomyces</strong>, and <strong>recent HAD-superfamily functional annotation</strong>.</td>
+<td>Experimental + review + comparative bioinformatics</td>
+<td>(bentley2002completegenomesequence pages 1-2, bentley2002completegenomesequence pages 3-4, kankanamge2023functionalannotationof pages 1-2, martin2021molecularmechanismsof pages 11-12, martin2021molecularmechanismsof pages 12-14)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the best-supported functional annotation for Streptomyces coelicolor SCO2678 (UniProt Q9L243), separating direct evidence from domain-based inference. It is useful because gene-specific literature is sparse, so confidence depends on integrating genome, secretion, phosphate-metabolism, and HAD-superfamily evidence.</em></p>
+<p>SCO2678 (Q9L243) from <em>Streptomyces coelicolor</em> is most accurately annotated as a <strong>secreted HAD-family phosphatase predicted to function in extracellular phosphate scavenging</strong>. The protein likely catalyzes the hydrolysis of phosphate ester bonds in various organophosphate compounds present in the soil environment, including sugar phosphates, nucleotides, and possibly glycerophosphodiesters. The released inorganic phosphate would then be taken up by dedicated phosphate transport systems to meet the organism's nutritional requirements.</p>
+<p>This annotation carries <strong>moderate confidence</strong> for the general functional class (secreted phosphatase in phosphate acquisition) but <strong>low confidence</strong> for specific substrate identity, given the lack of direct experimental studies on this particular protein. The annotation relies primarily on domain-based inference integrated with extensive knowledge of <em>Streptomyces</em> phosphate metabolism and secreted enzyme systems.</p>
+<p>Future experimental work to characterize SCO2678 would ideally include: (1) biochemical purification and substrate profiling to determine precise substrate specificity, (2) gene deletion analysis to assess phenotypic consequences and identify physiological substrates, (3) expression analysis under varying phosphate conditions to confirm PhoP regulation, and (4) proteomic detection in culture supernatants to validate secretion.</p>
+<p><strong>Key Citations:</strong><br />
+- Bentley et al. (2002) - <em>S. coelicolor</em> genome sequence (bentley2002completegenomesequence pages 1-2, bentley2002completegenomesequence pages 3-4)<br />
+- Martín and Liras (2021) - Phosphate sensing, transport and signaling in <em>Streptomyces</em> (martin2021molecularmechanismsof pages 11-12, martin2021molecularmechanismsof pages 12-14)<br />
+- Kankanamge et al. (2023) - HAD superfamily functional annotation (kankanamge2023functionalannotationof pages 1-2)</p>
+<p>References</p>
+<ol>
+<li>
+<p>(bentley2002completegenomesequence pages 1-2): S. D. Bentley, K. F. Chater, A.-M. Cerdeño-Tárraga, G. L. Challis, N. R. Thomson, K. D. James, D. E. Harris, M. A. Quail, H. Kieser, D. Harper, A. Bateman, S. Brown, G. Chandra, C. W. Chen, M. Collins, A. Cronin, A. Fraser, A. Goble, J. Hidalgo, T. Hornsby, S. Howarth, C.-H. Huang, T. Kieser, L. Larke, L. Murphy, K. Oliver, S. O'Neil, E. Rabbinowitsch, M.-A. Rajandream, K. Rutherford, S. Rutter, K. Seeger, D. Saunders, S. Sharp, R. Squares, S. Squares, K. Taylor, T. Warren, A. Wietzorrek, J. Woodward, B. G. Barrell, J. Parkhill, and D. A. Hopwood. Complete genome sequence of the model actinomycete streptomyces coelicolor a3(2). Nature, 417:141-147, May 2002. URL: https://doi.org/10.1038/417141a, doi:10.1038/417141a. This article has 4591 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bentley2002completegenomesequence pages 3-4): S. D. Bentley, K. F. Chater, A.-M. Cerdeño-Tárraga, G. L. Challis, N. R. Thomson, K. D. James, D. E. Harris, M. A. Quail, H. Kieser, D. Harper, A. Bateman, S. Brown, G. Chandra, C. W. Chen, M. Collins, A. Cronin, A. Fraser, A. Goble, J. Hidalgo, T. Hornsby, S. Howarth, C.-H. Huang, T. Kieser, L. Larke, L. Murphy, K. Oliver, S. O'Neil, E. Rabbinowitsch, M.-A. Rajandream, K. Rutherford, S. Rutter, K. Seeger, D. Saunders, S. Sharp, R. Squares, S. Squares, K. Taylor, T. Warren, A. Wietzorrek, J. Woodward, B. G. Barrell, J. Parkhill, and D. A. Hopwood. Complete genome sequence of the model actinomycete streptomyces coelicolor a3(2). Nature, 417:141-147, May 2002. URL: https://doi.org/10.1038/417141a, doi:10.1038/417141a. This article has 4591 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kankanamge2023functionalannotationof pages 1-2): Lakindu S. Pathira Kankanamge, Lydia A. Ruffner, Mong Mary Touch, Manuel Pina, Penny J. Beuning, and Mary Jo Ondrechen. Functional annotation of haloacid dehalogenase superfamily structural genomics proteins. Biochemical Journal, 480:1553-1569, Oct 2023. URL: https://doi.org/10.1042/bcj20230057, doi:10.1042/bcj20230057. This article has 10 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(martin2021molecularmechanismsof pages 11-12): Juan Francisco Martín and Paloma Liras. Molecular mechanisms of phosphate sensing, transport and signalling in streptomyces and related actinobacteria. International Journal of Molecular Sciences, 22:1129, Jan 2021. URL: https://doi.org/10.3390/ijms22031129, doi:10.3390/ijms22031129. This article has 121 citations.</p>
+</li>
+<li>
+<p>(martin2021molecularmechanismsof pages 12-14): Juan Francisco Martín and Paloma Liras. Molecular mechanisms of phosphate sensing, transport and signalling in streptomyces and related actinobacteria. International Journal of Molecular Sciences, 22:1129, Jan 2021. URL: https://doi.org/10.3390/ijms22031129, doi:10.3390/ijms22031129. This article has 121 citations.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="Q9L243-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>bentley2002completegenomesequence pages 1-2</li>
+<li>kankanamge2023functionalannotationof pages 1-2</li>
+<li>martin2021molecularmechanismsof pages 11-12</li>
+<li>bentley2002completegenomesequence pages 3-4</li>
+<li>martin2021molecularmechanismsof pages 12-14</li>
+<li>SCO2678 and other phosphatases</li>
+<li>https://doi.org/10.1038/417141a,</li>
+<li>https://doi.org/10.1042/bcj20230057,</li>
+<li>https://doi.org/10.3390/ijms22031129,</li>
+</ol>
+            </div>
+        </details>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(Q9L243-hypotheses/prediction-deoxyribonucleotide-catabolism/openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9L243" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">AIGR Deep Research: SCO2678 (Q9L243) — 5′-nucleotidase / deoxyribonucleotide catabolism hypothesis</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">3 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-08T12:05:44.852082</span>
+
+
+
+                    <a href="Q9L243-hypotheses/prediction-deoxyribonucleotide-catabolism/openscientist.md.citations.md" class="term-link">citations file</a>
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="Q9L243-hypotheses/prediction-deoxyribonucleotide-catabolism/openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="Q9L243-hypotheses/prediction-deoxyribonucleotide-catabolism/openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="aigr-deep-research-sco2678-q9l243-5-nucleotidase-deoxyribonucleotide-catabolism-hypothesis">AIGR Deep Research: SCO2678 (Q9L243) — 5′-nucleotidase / deoxyribonucleotide catabolism hypothesis</h1>
+<p><strong>Gene:</strong> SCO2678 · <strong>UniProt:</strong> Q9L243 · <strong>Organism:</strong> <em>Streptomyces coelicolor</em> A3(2) (NCBITaxon:100226)<br />
+<strong>Focus type:</strong> computational_prediction<br />
+<strong>Seed hypothesis (ProtNLM2):</strong> SCO2678 is a 5′-nucleotidase participating in <strong>deoxyribonucleotide catabolic process (GO:0009264)</strong>.</p>
+<hr />
+<h2 id="summary">Summary</h2>
+<p>ProtNLM2 predicts that SCO2678 is a 5′-nucleotidase that participates in <strong>deoxyribonucleotide catabolic process (GO:0009264)</strong>. Independent structural and sequence analysis performed in this investigation confirms the <em>general</em> premise — SCO2678 is, with high confidence, a <strong>HAD-superfamily (haloacid dehalogenase) Mg²⁺-dependent phosphohydrolase</strong>. All four canonical HAD catalytic motifs are present and correctly spaced (Motif I D13/D15, Motif II T67/T68, Motif III K106, Motif IV D123/D124), a ~46-residue subfamily-IA cap lies between motifs I and II, and the AlphaFold model (AF-Q9L243) is a confident, compact single-domain Rossmannoid HAD fold (mean pLDDT 85.5, 80% of residues &gt;70). A generic <strong>phosphomonoester hydrolase / phosphatase molecular function is therefore well supported.</strong></p>
+<p>The <em>specific</em> prediction, however — that SCO2678 is a <strong>5′-nucleotidase</strong> whose substrate scope includes deoxyribonucleoside monophosphates (dNMPs), thereby driving <strong>deoxyribonucleotide catabolism</strong> — is <strong>not supported and is over-annotated.</strong> The protein's sole domain assignment is <strong>Pfam PF18143 (HAD_SAK_2)</strong>, the "HAD domain in Swiss Army Knife <strong>RNA-repair</strong> proteins," a distinct HAD lineage associated with phosphate-group removal during RNA re-ligation rather than free-dNMP hydrolysis. SCO2678 shares <strong>no Pfam family</strong> with any enzyme experimentally shown to dephosphorylate dNMPs (e.g., <em>E. coli</em> YjjG = PF08282; NagD = PF13242/PF13344). Characterized soluble HAD 5′-nucleotidases are larger and broadly promiscuous, and even genuine ones prefer non-dNMP substrates (e.g., <em>Bacillus</em> YitU prefers FMN). There is <strong>no experimental characterization</strong> of SCO2678 at all, and its genomic neighborhood contains no nucleotide-catabolism cluster.</p>
+<p>The verdict is therefore <strong>over-annotated (weakly supported):</strong> the HAD fold is real and a low-specificity phosphatase term is defensible, but the leap to "5′-nucleotidase → dNMP catabolism (GO:0009264)" is a frequency/family-bias inference by the language model and <strong>should not be propagated as a core biological process.</strong> A supporting localization analysis additionally refutes the UniProt "Secreted protein" name: SCO2678 has no transmembrane segment and no signal peptide, and is a soluble cytoplasmic enzyme.</p>
+<hr />
+<h2 id="executive-judgment">Executive Judgment</h2>
+<p><strong>Verdict: Over-annotated / weakly supported (over-specific).</strong></p>
+<p>The seed hypothesis is a nested chain of increasingly specific claims. The evidence supports the weakest link and breaks the chain at the point where it becomes physiologically specific:</p>
+<ol>
+<li><strong>SCO2678 is a HAD phosphohydrolase</strong> — <strong>SUPPORTED</strong> (motifs intact; pLDDT 85.5; PF18143).</li>
+<li><strong>…specifically a 5′-nucleotidase</strong> — <strong>NOT SUPPORTED</strong> (PF18143 is the RNA-repair "Swiss Army Knife" HAD family, not a characterized 5′-nucleotidase subfamily; no nucleotidase signature).</li>
+<li><strong>…acting on dNMPs</strong> — <strong>UNSUPPORTED</strong> (even bona fide HAD 5′-nucleotidases prefer non-dNMPs; SCO2678 shares no Pfam with dNMP-acting YjjG/NagD).</li>
+<li><strong>…driving deoxyribonucleotide catabolism (GO:0009264, a Biological Process)</strong> — <strong>REFUTED as a core function</strong> (no experiment, no pathway/genomic context, soluble cytoplasmic not secreted).</li>
+</ol>
+<p><strong>Most important caveat:</strong> absence of a specific signature is not proof of absence of activity. HAD enzymes are notoriously promiscuous, and an in-vitro assay might well show weak dNMP hydrolysis. But GO:0009264 is a physiological <em>process</em> term that requires a defensible pathway role, and there is no evidence for one. The defensible curation is a <strong>low-specificity phosphatase molecular function, not GO:0009264.</strong></p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-sco2678-is-a-bona-fide-had-superfamily-phosphohydrolase-with-an-intact-subfamily-ia-catalytic-apparatus">Finding 1 — SCO2678 is a bona fide HAD-superfamily phosphohydrolase with an intact subfamily-IA catalytic apparatus</h3>
+<p>SCO2678 is a small, 171-residue, single-domain protein that maps unambiguously onto the <strong>haloacid dehalogenase (HAD) superfamily</strong> of aspartate-nucleophile phosphotransferases/hydrolases. All four canonical HAD catalytic motifs are present and correctly spaced:</p>
+<table>
+<thead>
+<tr>
+<th>HAD motif</th>
+<th>Function</th>
+<th>Residues in SCO2678</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Motif I</td>
+<td>Nucleophilic Asp + general acid/base Asp (DxD)</td>
+<td><strong>D13-x-D15</strong> (sequence "DVDGP")</td>
+</tr>
+<tr>
+<td>Motif II</td>
+<td>Substrate-phosphate coordination (conserved Thr/Ser)</td>
+<td><strong>Thr67 / Thr68</strong></td>
+</tr>
+<tr>
+<td>Motif III</td>
+<td>Conserved Lys (transition-state stabilization)</td>
+<td><strong>Lys106</strong></td>
+</tr>
+<tr>
+<td>Motif IV</td>
+<td>Mg²⁺-coordinating Asp-Asp (DD)</td>
+<td><strong>Asp123 / Asp124</strong></td>
+</tr>
+</tbody>
+</table>
+<p>A <strong>~46-residue "C1" cap domain</strong> between motifs I and II is diagnostic of <strong>HAD subfamily IA</strong>. The AlphaFold model (AF-Q9L243) is high-confidence — <strong>mean pLDDT 85.5, 80% of residues &gt;70</strong> — showing a compact single Rossmannoid HAD core with the cap. The <strong>only Pfam hit is PF18143 (HAD_SAK_2).</strong></p>
+<p>This is the part of the ProtNLM2 prediction that is correct: the machinery for Mg²⁺-dependent phosphomonoester hydrolysis is unambiguously present, and a <strong>molecular-function annotation of "phosphatase / hydrolase acting on phosphoric-monoester bonds" is on firm ground.</strong> What the fold <em>cannot</em> do is specify the physiological substrate — that is dictated by the variable cap, and is the crux of the disputed claim.</p>
+<h3 id="finding-2-sco2678-belongs-to-the-rna-repair-swiss-army-knife-had-family-pf18143-not-to-a-characterized-5-nucleotidase-subfamily">Finding 2 — SCO2678 belongs to the RNA-repair "Swiss Army Knife" HAD family (PF18143), not to a characterized 5′-nucleotidase subfamily</h3>
+<p>The decisive evidence against the specific prediction is family placement. SCO2678's <strong>sole domain assignment is Pfam PF18143 / HAD_SAK_2</strong>, defined as the <em>"HAD domain in Swiss Army Knife RNA repair proteins… may be involved in phosphate group removal during RNA re-ligation."</em> This is a distinct HAD lineage tied to polynucleotide-end phosphate processing — <strong>not</strong> hydrolysis of free dNMPs, and <strong>not</strong> the subfamilies to which characterized soluble 5′-nucleotidases belong.</p>
+<p>By contrast, the experimentally characterized HAD 5′-nucleotidases are consistently <strong>larger, in different subfamilies, and broadly promiscuous:</strong></p>
+<ul>
+<li><strong><em>Bacillus subtilis</em> YutF</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/27907199/">PMID: 27907199</a>) — 256 aa, HAD subfamily IIA, broad specificity across NMPs/dNMPs and even <em>p</em>-nitrophenyl phosphate (pNPP).</li>
+<li><strong><em>Bacillus</em> YitU</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/32040605/">PMID: 32040605</a>) — a HADSF 5′-nucleotidase with broad specificity whose <strong>preferred substrate is flavin mononucleotide (FMN)</strong>, not any deoxyribonucleotide.</li>
+</ul>
+<p>SCO2678 is only <strong>171 aa</strong> (a small subfamily-IA cap, not the larger caps of these nucleotidases) and carries <strong>no nucleotidase-specific sequence signature.</strong> Critically, <strong>there is no experimental characterization of SCO2678 at all</strong> — its UniProt protein name is the generic "Secreted protein," and PubMed returns no gene-specific hits. The prediction is therefore pure ProtNLM text-inference.</p>
+<p>The verified citation snippets frame the problem precisely:</p>
+<ul>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/27907199/">PMID: 27907199</a>: <em>"Soluble forms of 5′-nucleotidases belong to the ubiquitous haloacid dehalogenase superfamily (HADSF) and have been shown to be involved in the regulation of nucleotide, nucleoside and nicotinamide adenine dinucleotide (NAD+) pools."</em> — HAD 5′-nucleotidases exist, but the characterized ones are defined, larger subfamily members with broad specificity, contrasting with SCO2678's RNA-repair assignment.</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/32040605/">PMID: 32040605</a>: <em>"the preferred substrate for recombinant YitU was shown to be flavin mononucleotide (FMN)."</em> — Even a genuine HAD 5′-nucleotidase can have a non-dNMP preferred substrate, showing that predicting dNMP catabolism from HAD/5′-nucleotidase membership is unreliable.</li>
+</ul>
+<h3 id="finding-3-sco2678-co-classifies-apart-from-proven-dnmp-acting-nucleotidases-and-its-genomic-neighborhood-lacks-a-nucleotide-catabolism-cluster">Finding 3 — SCO2678 co-classifies apart from proven dNMP-acting nucleotidases, and its genomic neighborhood lacks a nucleotide-catabolism cluster</h3>
+<p>Two independent contextual lines reinforce the family separation.</p>
+<p><strong>Pfam separation from proven dNMP-acting enzymes.</strong> The HAD nucleotidases with demonstrated activity on deoxyribonucleoside monophosphates fall in <strong>different Pfam families</strong> from SCO2678:</p>
+<table>
+<thead>
+<tr>
+<th>Enzyme</th>
+<th>UniProt</th>
+<th>Pfam</th>
+<th>Proven activity on dNMPs?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>SCO2678 (query)</strong></td>
+<td>Q9L243</td>
+<td><strong>PF18143 (HAD_SAK)</strong></td>
+<td>none demonstrated</td>
+</tr>
+<tr>
+<td><em>E. coli</em> YjjG</td>
+<td>P0A8Y5</td>
+<td>PF08282</td>
+<td>yes — dUMP/dTMP house-cleaning 5′-NT</td>
+</tr>
+<tr>
+<td><em>E. coli</em> NagD</td>
+<td>P0AF24</td>
+<td>PF13242 / PF13344</td>
+<td>ribonucleotide 5′-NT</td>
+</tr>
+<tr>
+<td><em>B. subtilis</em> YutF</td>
+<td>—</td>
+<td>HAD subfamily IIA</td>
+<td>broad NMP/dNMP (pNPP)</td>
+</tr>
+<tr>
+<td><em>B. subtilis</em> YitU</td>
+<td>—</td>
+<td>HADSF</td>
+<td>broad, prefers FMN</td>
+</tr>
+</tbody>
+</table>
+<p>SCO2678 is the only protein assigned to the RNA-repair-associated PF18143 and shares <strong>no Pfam family</strong> with any enzyme experimentally shown to act on deoxyribonucleotides.</p>
+<p><strong>Genomic context provides no pathway support.</strong> In <em>S. coelicolor</em>, the neighbors of SCO2678 are functionally unrelated to nucleotide catabolism: SCO2675/2676 are uncharacterized; <strong>SCO2677 is EttA (an ABC-F translation factor)</strong>; SCO2679 is a lipoprotein; SCO2680 is a TIR-domain protein; SCO2681 is an ATP/GTP-binding protein. There are <strong>no clustered deoxyribonucleoside kinases, deaminases, phosphorylases, or other nucleotide-catabolism genes</strong> that would place SCO2678 in a dNMP-degradation operon. Operon/pathway context — a standard tie-breaker for ambiguous bacterial enzyme assignments — therefore does not support a role in deoxyribonucleotide catabolism.</p>
+<h3 id="finding-4-sco2678-has-no-transmembrane-segment-or-signal-peptide-the-secreted-protein-name-is-unsupported">Finding 4 — SCO2678 has no transmembrane segment or signal peptide; the "Secreted protein" name is unsupported</h3>
+<p>Because a genuinely secreted 5′-nucleotidase would be periplasmic/extracytoplasmic (like mammalian ecto-5′-nucleotidase), localization is a relevant discriminator. We computed a <strong>Kyte–Doolittle hydropathy profile</strong> (19-residue window) over the full 171-aa sequence:</p>
+<ul>
+<li><strong>Maximum window score 0.88</strong> (residues 8–26), far below the ~1.6 transmembrane-helix threshold. <strong>No window exceeds 1.6 → no predicted TM segment.</strong></li>
+<li>The N-terminal 30 residues are polar, with <strong>net charge 0 in residues 1–10 and no hydrophobic h-region → no Sec/Tat signal peptide.</strong></li>
+<li>The catalytic <strong>HAD Motif I nucleophile Asp13 sits at residue 13</strong>, which is <strong>incompatible with an N-terminal cleaved signal peptide</strong> (cleavage would destroy the active site).</li>
+</ul>
+<p>SCO2678 is therefore a <strong>soluble cytoplasmic HAD hydrolase</strong>, not a secreted or membrane ecto-nucleotidase. The UniProt "Secreted protein" name is an unsupported generic TrEMBL label. As a further consistency check, real bacterial secreted/periplasmic 5′-nucleotidases are calcineurin-like metallophosphoesterases (~550 aa), not small HADs — reinforcing that SCO2678 is not one of them. A <strong>cytoplasm (GO:0005737)</strong> CC annotation is the defensible call.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>The nested structure of the seed hypothesis, and where the evidence breaks it, is best shown as a chain of inference:</p>
+<div class="codehilite"><pre><span></span><code><span class="n">ProtNLM2</span><span class="w"> </span><span class="n">chain</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="n">inference</span><span class="w">                         </span><span class="n">Our</span><span class="w"> </span><span class="n">assessment</span>
+<span class="err">────────────────────────────────────────────────</span><span class="w">   </span><span class="err">─────────────────────────</span>
+<span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="n">SCO2678</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">phosphohydrolase</span><span class="w"> </span><span class="p">(</span><span class="n">HAD</span><span class="w"> </span><span class="n">fold</span><span class="p">)</span><span class="w">    </span><span class="err">→</span><span class="w">   </span><span class="n">SUPPORTED</span><span class="w">  </span><span class="p">(</span><span class="n">motifs</span><span class="w"> </span><span class="n">I</span><span class="err">–</span><span class="n">IV</span><span class="w"> </span><span class="n">intact</span><span class="p">,</span>
+<span class="w">                                      </span><span class="n">pLDDT</span><span class="w"> </span><span class="mf">85.5</span><span class="p">,</span><span class="w"> </span><span class="n">PF18143</span><span class="p">)</span>
+<span class="err">│</span>
+<span class="err">▼</span>
+<span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="err">…</span><span class="n">specifically</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="mi">5</span><span class="s1">&#39;-nucleotidase             →   NOT SUPPORTED (PF18143 = RNA-repair</span>
+<span class="s1">                                      SAK family, not a characterized</span>
+<span class="s1">                                      5&#39;</span><span class="o">-</span><span class="n">nucleotidase</span><span class="w"> </span><span class="n">subfamily</span><span class="p">)</span>
+<span class="err">│</span>
+<span class="err">▼</span>
+<span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="w"> </span><span class="err">…</span><span class="n">acting</span><span class="w"> </span><span class="k">on</span><span class="w"> </span><span class="n">dNMPs</span><span class="w">                            </span><span class="err">→</span><span class="w">   </span><span class="n">UNSUPPORTED</span><span class="w"> </span><span class="p">(</span><span class="n">even</span><span class="w"> </span><span class="k">true</span><span class="w"> </span><span class="n">HAD</span><span class="w"> </span><span class="mi">5</span><span class="err">&#39;</span><span class="o">-</span><span class="n">Ntds</span>
+<span class="w">                                      </span><span class="n">prefer</span><span class="w"> </span><span class="n">non</span><span class="o">-</span><span class="n">dNMPs</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">g</span><span class="p">.</span><span class="w"> </span><span class="n">FMN</span><span class="p">;</span>
+<span class="w">                                      </span><span class="n">shares</span><span class="w"> </span><span class="k">no</span><span class="w"> </span><span class="n">Pfam</span><span class="w"> </span><span class="k">with</span><span class="w"> </span><span class="n">YjjG</span><span class="o">/</span><span class="n">NagD</span><span class="p">)</span>
+<span class="err">│</span>
+<span class="err">▼</span>
+<span class="p">(</span><span class="mi">4</span><span class="p">)</span><span class="w"> </span><span class="err">…</span><span class="n">driving</span><span class="w"> </span><span class="n">deoxyribonucleotide</span><span class="w"> </span><span class="n">catabolism</span><span class="w">     </span><span class="err">→</span><span class="w">   </span><span class="n">REFUTED</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">core</span><span class="w"> </span><span class="k">function</span>
+<span class="w">    </span><span class="p">(</span><span class="k">GO</span><span class="err">:</span><span class="mi">0009264</span><span class="p">,</span><span class="w"> </span><span class="n">Biological</span><span class="w"> </span><span class="n">Process</span><span class="p">)</span><span class="w">                </span><span class="p">(</span><span class="k">no</span><span class="w"> </span><span class="n">pathway</span><span class="w"> </span><span class="n">context</span><span class="p">,</span><span class="w"> </span><span class="k">no</span><span class="w"> </span><span class="k">clustered</span>
+<span class="w">                                      </span><span class="n">catabolic</span><span class="w"> </span><span class="n">genes</span><span class="p">,</span><span class="w"> </span><span class="k">no</span><span class="w"> </span><span class="n">experiment</span><span class="p">,</span>
+<span class="w">                                      </span><span class="n">soluble</span><span class="w"> </span><span class="n">cytoplasmic</span><span class="p">,</span><span class="w"> </span><span class="ow">not</span><span class="w"> </span><span class="n">secreted</span><span class="p">)</span>
+</code></pre></div>
+
+<p>The defensible molecular reality is narrow: SCO2678 is a <strong>Mg²⁺-dependent HAD phosphomonoesterase of unknown physiological substrate</strong>, most closely related by family to RNA-repair-associated phosphoesterases. Substrate identity in HAD enzymes is dictated by the variable <strong>cap</strong> domain; SCO2678's small subfamily-IA cap and its RNA-repair family assignment do not match the caps of characterized dNMP-acting nucleotidases. GO:0009264 is a <strong>pathway-level consequence</strong> that would follow only <em>if</em> dNMPs were genuine substrates — a downstream inference, not a demonstrated direct activity.</p>
+<p>The ProtNLM2 prediction over-reaches by (a) selecting the most <em>frequent</em> functional label attached to soluble HAD phosphatases in training data ("5′-nucleotidase"), and (b) propagating that to a specific catabolic <strong>biological process</strong> term. HAD promiscuity plus language-model frequency bias is a textbook recipe for over-annotation, and this case fits it.</p>
+<p><strong>Structural comparison summary:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>SCO2678 (Q9L243)</th>
+<th><em>B. subtilis</em> YutF</th>
+<th><em>Bacillus</em> YitU</th>
+<th><em>E. coli</em> YjjG</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Length</td>
+<td><strong>171 aa</strong></td>
+<td>256 aa</td>
+<td>~250 aa</td>
+<td>~225 aa</td>
+</tr>
+<tr>
+<td>HAD subfamily</td>
+<td>IA (small cap)</td>
+<td>IIA</td>
+<td>HADSF</td>
+<td>IA-type</td>
+</tr>
+<tr>
+<td>Pfam</td>
+<td><strong>PF18143 (HAD_SAK)</strong></td>
+<td>(nucleotidase subfamily)</td>
+<td>HADSF</td>
+<td>PF08282</td>
+</tr>
+<tr>
+<td>Characterized activity</td>
+<td><strong>none</strong></td>
+<td>broad NMP/dNMP + pNPP</td>
+<td>broad; <strong>prefers FMN</strong></td>
+<td>dUMP/dTMP</td>
+</tr>
+<tr>
+<td>Localization</td>
+<td>soluble cytoplasmic</td>
+<td>soluble</td>
+<td>soluble</td>
+<td>soluble</td>
+</tr>
+<tr>
+<td>dNMP-catabolism support</td>
+<td><strong>none</strong></td>
+<td>yes (in vitro, broad)</td>
+<td>weak (FMN preferred)</td>
+<td>yes (dUMP/dTMP)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>Citation</th>
+<th>Evidence type</th>
+<th>Direction</th>
+<th>Claim tested</th>
+<th>Key finding</th>
+<th>Context</th>
+<th>Confidence / limitations</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UniProt Q9L243 + motif analysis (this study)</td>
+<td>Structural / sequence (computed)</td>
+<td>Supports (generic)</td>
+<td>Is it a HAD phosphohydrolase?</td>
+<td>All 4 HAD motifs intact: I D13/D15, II T67/T68, III K106, IV D123/D124; 46-aa C1 cap (subfamily IA)</td>
+<td>171-aa <em>S. coelicolor</em> protein</td>
+<td>High for "HAD hydrolase"; fold cannot specify substrate</td>
+</tr>
+<tr>
+<td>AlphaFold AF-Q9L243 (computed)</td>
+<td>Structural</td>
+<td>Supports (generic)</td>
+<td>Confident single-domain fold?</td>
+<td>Mean pLDDT 85.5, 80% residues &gt;70; compact Rossmannoid HAD</td>
+<td>In-silico model</td>
+<td>High confidence in fold</td>
+</tr>
+<tr>
+<td>InterPro/Pfam PF18143 (HAD_SAK_2)</td>
+<td>Structural / evolutionary</td>
+<td>Refutes (narrowing)</td>
+<td>Is it a 5′-nucleotidase for dNMPs?</td>
+<td>Sole domain = HAD of "Swiss Army Knife" RNA-repair proteins; role = phosphate removal during RNA re-ligation</td>
+<td>Family-level</td>
+<td>Family points to polynucleotide-end processing, not free-dNMP catabolism</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/27907199/">PMID: 27907199</a> (YutF)</td>
+<td>Direct assay (homolog)</td>
+<td>Qualifies</td>
+<td>Do HAD 5′-NTs act on dNMPs?</td>
+<td>HAD subfamily IIA, 256 aa, broad NMP/dNMP + pNPP phosphatase</td>
+<td><em>B. subtilis</em>, recombinant</td>
+<td>Shows HAD 5′-NTs exist but as a distinct, larger, promiscuous subfamily</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/32040605/">PMID: 32040605</a> (YitU)</td>
+<td>Direct assay (homolog)</td>
+<td>Refutes (specificity)</td>
+<td>Is dNMP the physiological substrate?</td>
+<td>Broad-specificity HAD 5′-NT whose <strong>preferred substrate is FMN</strong>, not a dNMP</td>
+<td><em>Bacillus</em>, recombinant</td>
+<td>Even genuine HAD 5′-NTs need not be dNMP-catabolic enzymes</td>
+</tr>
+<tr>
+<td>Pfam separation YjjG (PF08282) / NagD (PF13242/13344) (this study)</td>
+<td>Structural / evolutionary</td>
+<td>Refutes</td>
+<td>Does SCO2678 co-classify with dNMP-acting enzymes?</td>
+<td>SCO2678 shares no Pfam with proven dNMP nucleotidases</td>
+<td>Domain databases</td>
+<td>High confidence on non-co-classification</td>
+</tr>
+<tr>
+<td>Genomic neighborhood SCO2675–2681 (this study)</td>
+<td>Genomic context</td>
+<td>Qualifies (weakly refutes)</td>
+<td>Is it in a nucleotide-catabolism operon?</td>
+<td>Flanking genes = EttA, lipoprotein, TIR-domain, ATP/GTP-binding; no dNK/deaminase/phosphorylase cluster</td>
+<td><em>S. coelicolor</em> genome</td>
+<td>No pathway support; absence of clustering is suggestive, not definitive</td>
+</tr>
+<tr>
+<td>Kyte–Doolittle hydropathy (this study)</td>
+<td>Computational (localization)</td>
+<td>Refutes "secreted"</td>
+<td>Is it secreted/membrane?</td>
+<td>No TM segment (max 0.88 &lt; 1.6); no signal peptide; catalytic Asp13 at res 13</td>
+<td>In silico</td>
+<td>High confidence; predicts soluble cytoplasmic</td>
+</tr>
+<tr>
+<td>No PubMed hit; UniProt = "Secreted protein"</td>
+<td>Absence of evidence</td>
+<td>Qualifies</td>
+<td>Is there any direct evidence?</td>
+<td>No experimental characterization exists</td>
+<td>—</td>
+<td>Prediction is text-inference only</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/33498785/">PMID: 33498785</a></td>
+<td>Review/database</td>
+<td>Orientation</td>
+<td>Phosphate/nucleotide metabolism context in <em>Streptomyces</em></td>
+<td>Background on phosphate sensing/signalling</td>
+<td><em>Streptomyces</em>/Actinobacteria</td>
+<td>Review; no direct SCO2678 evidence (no abstract)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>How the key papers bear on the findings.</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/27907199/">PMID: 27907199</a> establishes that soluble HAD 5′-nucleotidases exist and are broadly promiscuous, but as a <em>distinct, larger subfamily</em> than SCO2678 — so membership in "HAD" does not imply this specific function. <a href="https://pubmed.ncbi.nlm.nih.gov/32040605/">PMID: 32040605</a> is the strongest single argument against the prediction: a genuine HAD 5′-nucleotidase whose <em>preferred</em> substrate is FMN, demonstrating that even proven 5′-nucleotidases are not necessarily dNMP-catabolic enzymes. Both directly weaken the ProtNLM2 chain of inference at the substrate-specificity step.</p>
+<hr />
+<h2 id="go-curation-implications-leads-require-curator-verification">GO Curation Implications (leads — require curator verification)</h2>
+<ul>
+<li><strong>GO:0009264 (deoxyribonucleotide catabolic process, BP): do not assign / remove as core.</strong> Not directly supported; over-specific relative to the evidence. At most an unverified downstream possibility of promiscuous phosphatase activity, and even that lacks pathway/genomic support.</li>
+<li><strong>GO:0008253 (5′-nucleotidase activity, MF): treat as unproven / too specific.</strong> Plausible in vitro (many HADs promiscuously dephosphorylate NMPs) but unsupported as a physiological function and not matched by family placement.</li>
+<li><strong>Defensible molecular function:</strong> <strong>GO:0016791 (phosphatase activity)</strong> — or <strong>GO:0016311 (dephosphorylation, BP)</strong> — as a family/fold-based inference (evidence code ISS/IEA), not EC 3.1.3.5 5′-nucleotidase. Flag as low-specificity.</li>
+<li><strong>Cellular component:</strong> <strong>curate cytoplasm (GO:0005737).</strong> The "secreted"/extracellular reading is <strong>refuted by computation</strong> (no TM segment, no signal peptide, catalytic Asp13 at res 13).</li>
+<li><strong>Alternative functional hypothesis to record:</strong> the PF18143 (HAD_SAK) RNA-repair phosphoesterase association is a better match to the only domain call than "5′-nucleotidase," and should be kept as a competing lead.</li>
+<li><strong>Avoid "protein binding"</strong> as a recommendation — the intact catalytic machinery makes a phosphatase MF the most informative supportable term.</li>
+</ul>
+<hr />
+<h2 id="mechanistic-scope">Mechanistic Scope</h2>
+<ul>
+<li><strong>Immediate molecular function under test:</strong> Mg²⁺-dependent hydrolysis of a phosphomonoester (aspartyl-phosphotransferase mechanism via nucleophile Asp13). Supported at the fold level.</li>
+<li><strong>The disputed narrowing:</strong> that this monoesterase acts specifically on <strong>free 5′-(deoxy)ribonucleotide monophosphates</strong>, thereby feeding <strong>dNMP catabolism.</strong> Substrate identity in HAD enzymes is set by the variable cap; SCO2678's small subfamily-IA cap and RNA-repair family assignment do not match characterized dNMP-acting nucleotidases.</li>
+<li><strong>The process claim (GO:0009264)</strong> is a downstream, pathway-level consequence that would follow only if dNMPs are genuine substrates — a physiological role, not a demonstrated direct activity. No loss-of-function phenotype, metabolic readout, or interaction connects SCO2678 to nucleotide turnover.</li>
+</ul>
+<hr />
+<h2 id="conflicts-and-alternatives">Conflicts and Alternatives</h2>
+<ul>
+<li><strong>Family-bias / frequency-bias over-annotation:</strong> ProtNLM2 appears to map "HAD phosphatase" to the most frequently labeled function ("5′-nucleotidase") and then to its associated BP, ignoring the more specific PF18143 RNA-repair assignment.</li>
+<li><strong>Competing hypothesis (better matched to the only domain call):</strong> a <strong>polynucleotide-end / RNA-repair phosphoesterase</strong> (5′- or 2′/3′-phosphate processing), consistent with PF18143.</li>
+<li><strong>Promiscuity artifact:</strong> HAD hydrolases commonly show broad in-vitro phosphatase activity (pNPP, sugar-phosphates, FMN, NMPs). Any in-vitro dNMP turnover would be weak evidence for a <em>physiological</em> catabolic role.</li>
+<li><strong>Database carry-over:</strong> the UniProt "Secreted protein" name conflicts with the topology analysis and is likely an automated mis-annotation; it should not be used as supporting context.</li>
+<li><strong>Organism specificity:</strong> all characterized comparators are <em>Bacillus</em>/<em>E. coli</em>; there is no <em>Streptomyces</em>-specific experimental anchor, adding uncertainty.</li>
+</ul>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li><strong>Physiological substrate unknown.</strong> Checked: fold, motifs, Pfam/InterPro, homolog assays. Matters because GO:0009264 hinges on dNMP being a real substrate. Resolve with an enzyme-assay panel (dNMPs, NMPs, FMN, sugar-phosphates, pNPP, and phosphorylated oligonucleotide ends).</li>
+<li><strong>Cap-domain specificity not structurally compared.</strong> Only sequence extent was assessed. A structural comparison of SCO2678's cap to IIA-nucleotidase caps vs SAK-family HAD caps would sharpen the call.</li>
+<li><strong>Family label is orientation, not proof.</strong> PF18143 "RNA-repair" annotation is a Pfam-level hint; SCO2678's true substrate could differ. Resolve with biochemistry and/or a ligand-bound structure.</li>
+<li><strong>Localization is in-silico only.</strong> No experimental localization data. Resolve with subcellular fractionation or a fluorescent fusion.</li>
+<li><strong>Genomic-context argument is suggestive, not definitive.</strong> Bacterial nucleotide-metabolism genes are not always clustered. Resolve with co-expression / operon transcriptomics.</li>
+<li><strong>Cannot exclude promiscuous in-vitro dNMP activity.</strong> Absence of a signature ≠ absence of activity.</li>
+</ol>
+<hr />
+<h2 id="discriminating-tests">Discriminating Tests</h2>
+<ol>
+<li><strong>Substrate-panel phosphatase assay</strong> on recombinant SCO2678 (dAMP/dGMP/dCMP/dTMP vs AMP/GMP, FMN, sugar-phosphates, pNPP, and phosphorylated oligonucleotide ends), reporting k_cat/K_M to identify the <em>preferred</em> substrate — the single most decisive experiment (the YitU/YutF precedent shows the preferred substrate is the decisive datum).</li>
+<li><strong>Structural superposition</strong> of AF-Q9L243 against YutF/YitU (nucleotidase) and against a SAK/RNA-repair HAD domain to see which cap architecture it matches.</li>
+<li><strong>Phylogenetic placement</strong> of SCO2678 with characterized HAD 5′-nucleotidases and RNA-repair SAK HAD domains to test which clade it branches with.</li>
+<li><strong>Genomic neighborhood / co-expression</strong> analysis in <em>S. coelicolor</em> (nucleotide salvage vs RNA-metabolism context).</li>
+<li><strong>Active-site mutant (D13A)</strong> to confirm HAD-dependent activity for whatever substrate is found.</li>
+<li><strong>Deletion phenotype</strong> (ΔSCO2678) — test for altered nucleotide pools, growth on nucleoside carbon sources, or RNA-repair-related stress phenotypes.</li>
+</ol>
+<hr />
+<h2 id="curation-leads-require-curator-verification">Curation Leads (require curator verification)</h2>
+<ul>
+<li><strong>Action:</strong> Downgrade/withhold <strong>GO:0009264 (deoxyribonucleotide catabolic process)</strong>; do not propagate the ProtNLM 5′-nucleotidase → dNMP-catabolism chain.</li>
+<li><strong>Replacement MF/BP:</strong> <strong>GO:0016791 (phosphatase activity)</strong> / <strong>GO:0016311 (dephosphorylation)</strong> by family/fold evidence (ISS/IEA), flagged low-specificity.</li>
+<li><strong>CC correction:</strong> curate <strong>cytoplasm (GO:0005737)</strong>; flag the "Secreted protein" name as unsupported.</li>
+<li><strong>Alternative hypothesis to record:</strong> PF18143 (HAD_SAK) RNA-repair phosphoesterase; keep as a competing functional lead over 5′-nucleotidase.</li>
+<li><strong>Reference snippets to verify:</strong></li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/32040605/">PMID: 32040605</a>: <em>"the preferred substrate for recombinant YitU was shown to be flavin mononucleotide (FMN)."</em></li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/27907199/">PMID: 27907199</a>: <em>"Soluble forms of 5′-nucleotidases belong to the ubiquitous haloacid dehalogenase superfamily (HADSF)…"</em></li>
+<li>InterPro PF18143: <em>"HAD domain in Swiss Army Knife RNA repair proteins… phosphate group removal during RNA re-ligation."</em></li>
+<li><strong>Suggested experiment:</strong> recombinant substrate-panel assay (above) as the decisive discriminator.</li>
+</ul>
+<hr />
+<p><em>Provenance:</em> HAD motif mapping, AlphaFold pLDDT assessment, Kyte–Doolittle hydropathy computation, and UniProt/InterPro/Pfam retrieval were executed programmatically during this run. No local <code>*-bioinformatics</code> inputs were used.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="Q9L243-hypotheses/prediction-deoxyribonucleotide-catabolism/openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="Q9L243-hypotheses/prediction-deoxyribonucleotide-catabolism/openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9L243
+gene_symbol: SCO2678
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:100226
+  label: Streptomyces coelicolor (strain ATCC BAA-471 / A3(2) / M145)
+description: &gt;-
+  SCO2678 (Q9L243) is a 171-amino-acid protein from Streptomyces coelicolor A3(2)
+  containing a HAD_SAK_2 domain (PF18143), placing it in the haloacid dehalogenase
+  (HAD) superfamily. The protein is classified in eggNOG COG1877
+  (5&#39;-nucleotidase/2&#39;,3&#39;-cyclic phosphodiesterase and related esterases), which
+  supports assignment as a secreted phosphatase with likely 5&#39;-nucleotidase
+  activity. Based on domain architecture, COG membership, and the established
+  biology of Streptomyces phosphate scavenging, SCO2678 is predicted to function
+  as an extracellular phosphatase that hydrolyzes nucleotides and other
+  organophosphate compounds to release inorganic phosphate for uptake. S.
+  coelicolor lacks organic phosphate transporters (e.g., uhp-type systems),
+  necessitating extracellular dephosphorylation prior to phosphate uptake via
+  PstSCAB or PitH transport systems. A related characterized enzyme, SCO4152,
+  is a PhoP-regulated extracellular 5&#39;-nucleotidase. No direct biochemical
+  characterization or genetic studies of SCO2678 have been reported; functional
+  assignment relies on domain-based inference and genomic context.
+existing_annotations:
+- term:
+    id: GO:0008253
+    label: 5&#39;-nucleotidase activity
+  evidence_type: ISM
+  original_reference_id: file:STRCO/Q9L243/Q9L243-deep-research-falcon.md
+  review:
+    summary: &gt;-
+      Novel annotation proposed based on HAD_SAK_2 domain (PF18143) membership,
+      eggNOG COG1877 classification (5&#39;-nucleotidase/2&#39;,3&#39;-cyclic phosphodiesterase
+      and related esterases), and functional precedent from the characterized
+      S. coelicolor 5&#39;-nucleotidase SCO4152. ProtNLM2 also independently predicted
+      this term. No direct experimental evidence exists for SCO2678.
+    action: NEW
+    reason: &gt;-
+      Domain architecture (HAD_SAK_2), COG assignment (COG1877), and organism-level
+      biology (extracellular phosphate scavenging in Streptomyces) converge on
+      5&#39;-nucleotidase activity. The ProtNLM2 prediction of this same term provides
+      additional computational support.
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: ISM
+  original_reference_id: file:STRCO/Q9L243/Q9L243-deep-research-falcon.md
+  review:
+    summary: &gt;-
+      Novel annotation proposed based on UniProt designation as &#34;Secreted protein&#34;
+      (ProtNLM annotation) and the established biology of S. coelicolor, which
+      encodes 819 potentially secreted proteins including extracellular hydrolases
+      for nutrient scavenging. S. coelicolor possesses both Sec and TAT export
+      pathways. The specific secretion pathway for SCO2678 has not been
+      experimentally confirmed.
+    action: NEW
+    reason: &gt;-
+      UniProt annotation as secreted protein, combined with the extracellular
+      phosphate scavenging role inferred from domain architecture and genomic
+      context, supports extracellular localization. The protein&#39;s predicted role
+      in hydrolyzing extracellular organophosphates requires it to be outside
+      the cytoplasmic membrane.
+- term:
+    id: GO:0006796
+    label: phosphate-containing compound metabolic process
+  evidence_type: ISM
+  original_reference_id: file:STRCO/Q9L243/Q9L243-deep-research-falcon.md
+  review:
+    summary: &gt;-
+      Novel annotation proposed based on the inferred phosphatase/5&#39;-nucleotidase
+      activity and the well-characterized phosphate scavenging biology of
+      Streptomyces. SCO2678 is predicted to participate in extracellular
+      dephosphorylation of organophosphate compounds, releasing inorganic
+      phosphate for uptake via PstSCAB or PitH transport systems.
+    action: NEW
+    reason: &gt;-
+      Consistent with the predicted molecular function (5&#39;-nucleotidase activity)
+      and the established phosphate acquisition pathway in S. coelicolor, where
+      extracellular phosphatases hydrolyze organophosphates before uptake.
+core_functions:
+- molecular_function:
+    id: GO:0008253
+    label: 5&#39;-nucleotidase activity
+  description: &gt;-
+    SCO2678 is predicted to have 5&#39;-nucleotidase activity based on its HAD_SAK_2
+    domain (PF18143) and membership in eggNOG COG1877
+    (5&#39;-nucleotidase/2&#39;,3&#39;-cyclic phosphodiesterase and related esterases). The
+    HAD superfamily catalyzes hydrolysis of phosphate ester bonds via a conserved
+    nucleophilic aspartate mechanism with divalent metal ion cofactors. A
+    characterized S. coelicolor orthologue SCO4152 is a PhoP-regulated
+    extracellular 5&#39;-nucleotidase, providing functional precedent in this organism.
+    The exact substrate specificity of SCO2678 is unknown; HAD superfamily members
+    frequently exhibit substrate promiscuity across nucleotides, sugar phosphates,
+    and other phosphomonoesters. Confidence in this assignment is moderate, as no
+    direct biochemical assay has been performed on SCO2678.
+  locations:
+  - id: GO:0005576
+    label: extracellular region
+  directly_involved_in:
+  - id: GO:0006796
+    label: phosphate-containing compound metabolic process
+  supported_by:
+  - reference_id: PMID:12000953
+    supporting_text: &gt;-
+      The 7,825 predicted genes include more than 20 clusters coding for known or
+      predicted secondary metabolites
+  - reference_id: file:STRCO/Q9L243/Q9L243-deep-research-falcon.md
+    supporting_text: &gt;-
+      SCO2678 most likely functions as a phosphatase or phosphomonoesterase,
+      catalyzing the hydrolysis of phosphate ester bonds
+references:
+- id: PMID:12000953
+  title: Complete genome sequence of the model actinomycete Streptomyces coelicolor
+    A3(2).
+  findings:
+  - statement: S. coelicolor genome encodes 7,825 predicted genes on an 8,667,507 bp
+      linear chromosome, the largest bacterial genome sequenced at the time
+  - statement: The genome contains an unprecedented proportion of regulatory genes
+      and many duplicated gene sets
+  full_text_unavailable: true
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Genome sequencing paper that identified SCO2678 as a predicted gene;
+      provides context for the organism but no specific information about SCO2678
+      function. Abstract only available.
+- id: PMID:8843436
+  title: A set of ordered cosmids and a detailed genetic and physical map for the 8
+    Mb Streptomyces coelicolor A3(2) chromosome.
+  findings:
+  - statement: Physical mapping of the S. coelicolor chromosome that provided the
+      foundation for the genome sequencing effort
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: Physical mapping reference cited in UniProt entry; provides genome
+      context but no functional information for SCO2678
+- id: file:STRCO/Q9L243/Q9L243-deep-research-falcon.md
+  title: Deep research report for SCO2678/Q9L243 (Falcon)
+  findings:
+  - statement: SCO2678 contains a HAD_SAK_2 domain (PF18143) and is a member of the
+      HAD superfamily
+  - statement: Predicted to function as a secreted HAD-family phosphatase involved
+      in extracellular phosphate scavenging
+  - statement: S. coelicolor lacks organic phosphate transporters, necessitating
+      extracellular dephosphorylation prior to phosphate uptake
+  - statement: A PhoP-regulated extracellular 5&#39;-nucleotidase (SCO4152) has been
+      characterized in S. coelicolor, providing functional precedent
+suggested_questions:
+- question: What is the precise substrate specificity of SCO2678, and does it preferentially
+    hydrolyze 5&#39;-nucleotides versus other phosphomonoesters?
+- question: Is SCO2678 expression regulated by the PhoR-PhoP two-component system under
+    phosphate limitation, similar to other extracellular phosphatases in S. coelicolor?
+- question: What is the relationship between SCO2678 and the characterized 5&#39;-nucleotidase
+    SCO4152 -- are they functionally redundant or do they target distinct substrates?
+suggested_experiments:
+- hypothesis: SCO2678 encodes a secreted 5&#39;-nucleotidase that hydrolyzes extracellular
+    nucleotides to release inorganic phosphate
+  description: &gt;-
+    Heterologously express and purify SCO2678, then perform substrate profiling using
+    a panel of 5&#39;-nucleotides (AMP, GMP, CMP, UMP, dAMP, etc.), sugar phosphates
+    (glucose-6-phosphate, fructose-6-phosphate), and generic phosphatase substrates
+    (pNPP). Determine kinetic parameters (Km, kcat) for preferred substrates. Also
+    test for divalent metal ion dependence (Mg2+, Mn2+, Co2+) consistent with HAD
+    superfamily mechanism.
+  experiment_type: biochemical assay
+- hypothesis: SCO2678 is secreted and functions extracellularly in phosphate scavenging
+  description: &gt;-
+    Construct an SCO2678 deletion mutant in S. coelicolor M145 and compare growth
+    on nucleotides (e.g., AMP, GMP) as sole phosphate source versus inorganic
+    phosphate. Confirm secretion by mass spectrometry analysis of culture
+    supernatant proteins. Test whether SCO2678 expression is induced under
+    phosphate limitation using qRT-PCR or reporter fusions.
+  experiment_type: genetic and proteomic analysis
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

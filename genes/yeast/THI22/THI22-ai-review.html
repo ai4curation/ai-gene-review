@@ -1,0 +1,3419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THI22 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>THI22</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q06490" target="_blank" class="term-link">
+                        Q06490
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Saccharomyces cerevisiae</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "THI22";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q06490" data-a="DESCRIPTION: THI22 (YPR121W) is one of three paralogous members..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>THI22 (YPR121W) is one of three paralogous members of the yeast thiaminase-II / hydroxymethylpyrimidine (HMP/HMP-P) kinase gene family (with THI20 and THI21). Like its paralogs it is a two-domain protein arising from an ancestral gene fusion: an N-terminal ribokinase-fold HMP/HMP-P kinase domain (homologous to bacterial ThiD, catalyzing steps in de novo thiamine pyrophosphate biosynthesis) and a C-terminal TenA/thiaminase-II-like domain (homologous to bacterial TenA, associated with thiamine salvage). THI22 shares roughly three-quarters sequence identity with the biochemically characterized THI20 and retains the substrate-binding and catalytic residues of both domains. Its expression is induced under thiamine limitation, coordinately with THI20 and THI21. Despite this close homology, THI22 is dispensable for thiamine biosynthesis and no enzymatic (HMP-P kinase) activity has been demonstrated for the protein, so its individual in vivo role remains undetermined; the characterized biosynthetic and thiamine-degrading (thiaminase II) activities of the family have been established for the paralogs THI20/THI21 rather than for THI22 itself.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q06490" data-a="GO:0005829" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically inferred cytosolic localization, consistent with the thiamine-pathway biochemistry of the paralogs THI20/THI21, which act in the cytosolic HMP-P kinase steps. Plausible as a location but not a core function and not experimentally shown for THI22.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> IBA location annotation from the THI20-related PANTHER family. The de novo thiamine biosynthesis kinase steps occur in the cytosol, so cytosolic localization is the reasonable default for a family member. It conflicts with the InterPro/SubCell &#34;extracellular region&#34; prediction (see below); the cytosolic assignment is the more biologically defensible of the two but remains inferred, so it is retained as non-core.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008902" target="_blank" class="term-link">
+                                    GO:0008902
+                                </a>
+                            </span>
+                            <span class="term-label">hydroxymethylpyrimidine kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q06490" data-a="GO:0008902" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HMP kinase activity (HMP -&gt; HMP-P, EC 2.7.1.49) is a demonstrated activity of the family (THI20 is trifunctional). THI22 retains the N-terminal kinase domain and its HMP substrate-binding residue (Gln, conserved with THI20 Q64), so the activity is plausible on sequence grounds, but it is inferred by phylogeny and not demonstrated for THI22.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Domain-defensible family activity (N-terminal ThiD-like kinase domain; substrate-binding and Gly-rich phosphate-binding motifs conserved in THI22 per inline alignment to THI20). Kept as non-core because THI22-specific activity is unproven; the one direct enzymatic assay of the family that tested THI22 failed to detect the related HMP-P kinase activity (per UniProt CAUTION, ECO:0000305, and PMID:10383756, which demonstrated the activity only for THI20/THI21).
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008972" target="_blank" class="term-link">
+                                    GO:0008972
+                                </a>
+                            </span>
+                            <span class="term-label">phosphomethylpyrimidine kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q06490" data-a="GO:0008972" data-r="GO_REF:0000033" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HMP-P kinase activity (HMP-P -&gt; HMP-PP, EC 2.7.4.7) is exactly the activity that PMID:10383756 demonstrated for two of the three family members and could NOT demonstrate for the third (THI22). Retained by phylogenetic inference but flagged as over-annotated for THI22 because it is directly contradicted by the one experiment that tested it.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The IBA propagates the well-established HMP-P kinase activity of THI20/THI21 onto THI22, but the primary paper demonstrated this activity for only two of the three members and UniProt records (CAUTION, ECO:0000305) that no HMP-P kinase activity could be demonstrated for THI22 despite its high homology. The catalytic residues are conserved (so this is not a residue-dead pseudoenzyme and REMOVE is not justified), but calling this a THI22 function over-states the evidence: it is a family-level inference contradicted by the only direct THI22 assay.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">PROPAGATION BAD</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">FUNCTIONAL DIVERGENCE</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">SGD:S000005416</span>
+
+                                    &middot; THI20
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                    <div class="propagation-comment">THI20 has demonstrated HMP-P kinase activity, but the same primary work did not detect this activity for THI22, so transfer to THI22 is unsafe.</div>
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTN000466159</span>
+
+                                    &middot; PANTHER THI20-related node (PTHR20858:SF17)
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                    <div class="propagation-comment">Family node aggregates the paralog kinase activity; THI22-specific activity is unproven.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10383756" target="_blank" class="term-link">
+                                        PMID:10383756
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We demonstrate that two members are isofunctional and encode a hydroxymethylpyrimidine phosphate (HMP-P) kinase (EC 2.7.4.7), an activity required for the final steps of thiamine biosynthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009228" target="_blank" class="term-link">
+                                    GO:0009228
+                                </a>
+                            </span>
+                            <span class="term-label">thiamine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q06490" data-a="GO:0009228" data-r="GO_REF:0000033" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Thiamine biosynthetic process is the family process, but THI22 has been shown NOT to be required for thiamine biosynthesis. The phylogenetic propagation over-states THI22&#39;s role in de novo biosynthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt (from PMID:10383756) states THI22 &#34;is not required for thiamine biosynthesis&#34;. The IBA correctly captures the family process but over-annotates THI22, whose contribution to de novo biosynthesis is unproven and, on deletion evidence in the redundant family, dispensable. A broader thiamine metabolic-process framing is more defensible for THI22 (see GO:0006772).
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">PROPAGATION BAD</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">FUNCTIONAL DIVERGENCE</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">SGD:S000005416</span>
+
+                                    &middot; THI20
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                    <div class="propagation-comment">THI20/THI21 are required for thiamine biosynthesis; THI22 is explicitly not required, so the biosynthetic-process role should not propagate to it.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10383756" target="_blank" class="term-link">
+                                        PMID:10383756
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We demonstrate that two members are isofunctional and encode a hydroxymethylpyrimidine phosphate (HMP-P) kinase (EC 2.7.4.7), an activity required for the final steps of thiamine biosynthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q06490" data-a="GO:0005576" data-r="GO_REF:0000044" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This location is derived automatically from a predicted N-terminal signal peptide (UniProt SubCell &#34;Secreted&#34;, ECO:0000305). Secretion is biologically implausible for a cytosolic thiamine-metabolism enzyme and conflicts with the cytosol IBA and with the cytosolic biochemistry of the paralogs.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Pure prediction from a signal-peptide/SubCell mapping, not experimental. THI22&#39;s paralogs THI20/THI21 function in the cytosol, and there is no evidence THI22 is secreted or that a secreted thiamine-pathway enzyme would be functional. Whether the predicted N-terminal extension is a genuine targeting signal is itself a knowledge gap; the extracellular annotation should not be treated as established localization.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006772" target="_blank" class="term-link">
+                                    GO:0006772
+                                </a>
+                            </span>
+                            <span class="term-label">thiamine metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q06490" data-a="GO:0006772" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> General thiamine metabolic process (parent of both biosynthesis and salvage/degradation). Defensible at the family level: THI22 is thiamine-regulated and carries intact HMP-P kinase and thiaminase-II-like domains. This broad process term over-commits less than the specific biosynthesis term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> InterPro-based BP annotation. Appropriate as a broad, non-core framing given THI22&#39;s thiamine-responsive regulation and its two thiamine-metabolism domains, while avoiding the stronger and contradicted &#34;biosynthetic process&#34; claim.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008972" target="_blank" class="term-link">
+                                    GO:0008972
+                                </a>
+                            </span>
+                            <span class="term-label">phosphomethylpyrimidine kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q06490" data-a="GO:0008972" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro-derived duplicate of the HMP-P kinase MF annotation. Same assessment as the IBA HMP-P kinase annotation: family activity propagated to THI22 but directly not demonstrated for THI22.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> InterPro (IPR004399) maps the ThiD-like kinase domain to HMP-P kinase activity. The domain is present and its catalytic residues are conserved, but the specific HMP-P kinase activity was tested for THI22 and not detected (UniProt CAUTION, ECO:0000305; PMID:10383756 demonstrated the activity only for THI20/THI21), so this electronic annotation over-annotates THI22.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10383756" target="_blank" class="term-link">
+                                        PMID:10383756
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We demonstrate that two members are isofunctional and encode a hydroxymethylpyrimidine phosphate (HMP-P) kinase (EC 2.7.4.7), an activity required for the final steps of thiamine biosynthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009228" target="_blank" class="term-link">
+                                    GO:0009228
+                                </a>
+                            </span>
+                            <span class="term-label">thiamine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q06490" data-a="GO:0009228" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated (multi-method IEA) thiamine biosynthetic process annotation. Same over-annotation concern as the IBA biosynthesis annotation: THI22 is not required for thiamine biosynthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ARBA/InterPro electronic inference of de novo biosynthesis involvement, contradicted for THI22 by the functional characterization showing it is not required for thiamine biosynthesis. Broader thiamine metabolic process (GO:0006772) is the defensible level.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10383756" target="_blank" class="term-link">
+                                        PMID:10383756
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We demonstrate that two members are isofunctional and encode a hydroxymethylpyrimidine phosphate (HMP-P) kinase (EC 2.7.4.7), an activity required for the final steps of thiamine biosynthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050334" target="_blank" class="term-link">
+                                    GO:0050334
+                                </a>
+                            </span>
+                            <span class="term-label">thiaminase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q06490" data-a="GO:0050334" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Thiaminase II activity (thiamine hydrolysis to HMP + thiazole, EC 3.5.99.2) is a demonstrated activity of THI20 and maps to the C-terminal TenA/thiaminase-II-like domain (IPR027574). THI22 retains this domain and both catalytic residues (nucleophile Cys and proton-donor Glu, conserved with THI20 C468/E540), so the activity is domain-plausible but not demonstrated for THI22.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Domain-defensible family activity (C-terminal TenA/thiaminase-II domain with conserved catalytic Cys/Glu per inline alignment). Kept as non-core rather than accepted as a core function because no thiaminase activity has been directly demonstrated for THI22, and the 1999 paper noted the C-terminal domain&#39;s function was unresolved.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003674" target="_blank" class="term-link">
+                                    GO:0003674
+                                </a>
+                            </span>
+                            <span class="term-label">molecular_function</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q06490" data-a="GO:0003674" data-r="GO_REF:0000015" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root molecular_function placeholder (ND, no biological data).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ND root-term placeholder recording that no specific molecular function had been curated by SGD at annotation time. Standard practice; nothing to change.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005575" target="_blank" class="term-link">
+                                    GO:0005575
+                                </a>
+                            </span>
+                            <span class="term-label">cellular_component</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q06490" data-a="GO:0005575" data-r="GO_REF:0000015" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root cellular_component placeholder (ND, no biological data).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ND root-term placeholder recording that no specific localization had been curated by SGD at annotation time. Standard practice; nothing to change.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009228" target="_blank" class="term-link">
+                                    GO:0009228
+                                </a>
+                            </span>
+                            <span class="term-label">thiamine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10383756" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10383756
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Genetic redundancy and gene fusion in the genome of the Bake...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q06490" data-a="GO:0009228" data-r="PMID:10383756" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SGD experimental (IEP) annotation from the primary paper. The underlying evidence is that THI22 expression is induced under thiamine limitation, coordinately with THI20/THI21. This thiamine-responsive regulation is genuinely established; however, the same work shows THI22 is not required for de novo thiamine biosynthesis, so annotation of THI22 to the specific &#34;biosynthetic process&#34; term over-states its role — the co-regulation evidence supports thiamine-pathway involvement, not a demonstrated biosynthetic contribution.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> IEP (inferred from expression pattern) reflects real, curator-read experimental evidence of thiamine-dependent regulation, and per curation guidelines the experimental evidence itself is not discarded. But the specific target term (thiamine BIOSYNTHETIC process) over-states THI22&#39;s role: the same paper establishes THI22 is not required for thiamine biosynthesis. The regulation-based involvement is better captured by the broader thiamine metabolic process (GO:0006772). Marked over-annotated (not removed) to preserve the experimental co-regulation evidence while flagging the term as too specific for THI22.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10383756" target="_blank" class="term-link">
+                                        PMID:10383756
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Expression of all three genes is regulated in the same way</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>THI22 is a member of the thiamine-metabolism HMP/HMP-P kinase + thiaminase-II family and is transcriptionally induced under thiamine limitation, but no molecular activity has been demonstrated for the protein itself and it is dispensable for de novo thiamine biosynthesis. Its N-terminal ribokinase-fold kinase domain and C-terminal TenA/thiaminase-II-like domain retain their substrate-binding and catalytic residues (conserved with the biochemically characterized paralog THI20), so it is not an obviously residue-dead pseudoenzyme; however, which (if any) of the family activities THI22 actually performs in vivo is unknown. The most defensible statement of core function is therefore a broad, thiamine-responsive metabolic involvement rather than a specific catalytic activity.</h3>
+                <span class="vote-buttons" data-g="Q06490" data-a="FUNCTION: THI22 is a member of the thiamine-metabolism HMP/H..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006772" target="_blank" class="term-link">
+                                thiamine metabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10383756" target="_blank" class="term-link">
+                                PMID:10383756
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Expression of all three genes is regulated in the same way</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:yeast/THI22/THI22-bioinformatics/RESULTS.md
+
+                        </span>
+
+                        <div class="finding-text">All three THI20 functional residues are conserved in THI22</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000015.md" target="_blank" class="term-link">
+                            GO_REF:0000015
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Use of the ND evidence code for Gene Ontology (GO) terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10383756" target="_blank" class="term-link">
+                            PMID:10383756
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Genetic redundancy and gene fusion in the genome of the Baker&#39;s yeast Saccharomyces cerevisiae: functional characterization of a three-member gene family involved in the thiamine biosynthetic pathway.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Two of the three family members (THI20/YOL055c and THI21/YPL258c) are isofunctional and encode an HMP-P kinase (EC 2.7.4.7) required for the final steps of thiamine biosynthesis; by implication the third member (THI22/YPR121w) is the one for which this activity was not demonstrated.</div>
+
+                        <div class="finding-text">"We demonstrate that two members are isofunctional and encode a hydroxymethylpyrimidine phosphate (HMP-P) kinase (EC 2.7.4.7), an activity required for the final steps of thiamine biosynthesis"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Each of the three genes has two distinct domains that correspond to separate prokaryotic genes, consistent with an ancestral gene fusion; the C-terminal domain is not required for HMP-P kinase activity and its function was unresolved.</div>
+
+                        <div class="finding-text">"the three genes are each composed of two distinct domains, each corresponding to individual genes in prokaryotes, suggesting gene fusion during evolution. The function of the carboxy-terminal part of the proteins is not yet understood, but it is not required for HMP-P kinase activity"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">All three family genes are co-regulated (induced under thiamine limitation).</div>
+
+                        <div class="finding-text">"Expression of all three genes is regulated in the same way"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:yeast/THI22/THI22-bioinformatics/RESULTS.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">THI22 vs THI20 paralog alignment and catalytic-residue conservation (inline analysis)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">THI22 (Q06490) is ~76% identical to the characterized paralog THI20 (Q08224) and retains THI20&#39;s HMP substrate-binding Gln, the ribokinase Gly-rich phosphate-binding motif, and the thiaminase-II catalytic nucleophile Cys and proton-donor Glu, so it is not a residue-dead pseudoenzyme.</div>
+
+                        <div class="finding-text">"All three THI20 functional residues are conserved in THI22"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:yeast/THI22/THI22-deep-research-falcon.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">THI22 deep research report (falcon / Edison Scientific)</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does purified THI22 possess any of the family enzymatic activities (HMP kinase, HMP-P kinase, or thiaminase II), or is it catalytically inactive despite conserved active-site residues?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q06490" data-a="Q: Does purified THI22 possess any of the family enzy..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is THI22 actually secreted (as UniProt predicts) or cytosolic like THI20/THI21, and is the predicted N-terminal signal peptide functional?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q06490" data-a="Q: Is THI22 actually secreted (as UniProt predicts) o..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Under what physiological condition, if any, does THI22 provide a selectable function that THI20 and THI21 do not?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q06490" data-a="Q: Under what physiological condition, if any, does T..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Express and purify recombinant THI22 (with and without the predicted N-terminal peptide) and assay HMP kinase, HMP-P kinase, and thiaminase-II activities in vitro; in parallel test whether THI22 alone rescues growth of a thi20 thi21 double deletion under thiamine-limited conditions.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: THI22 encodes a functional but redundant thiamine-metabolism enzyme whose activity was missed by the original HMP-P-kinase-focused assay.</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q06490" data-a="EXPERIMENT: Express and purify recombinant THI22 (with and wit..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Determine THI22 localization by fluorescent tagging and subcellular fractionation, and test signal-peptide cleavage/secretion.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The predicted N-terminal signal peptide re-localizes THI22 away from the cytosolic paralogs.</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q06490" data-a="EXPERIMENT: Determine THI22 localization by fluorescent taggin..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(THI22-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q06490" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Comprehensive Research Report: THI22 (YPR121W) in *Saccharomyces cerevisiae*</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">21 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-05T02:25:58.959875</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="THI22-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="THI22-deep-research-falcon_artifacts/artifact-01.md" class="term-link">Edison artifact artifact-01</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="comprehensive-research-report-thi22-ypr121w-in-saccharomyces-cerevisiae">Comprehensive Research Report: THI22 (YPR121W) in <em>Saccharomyces cerevisiae</em></h1>
+<h2 id="1-gene-and-protein-identity">1. Gene and Protein Identity</h2>
+<p>THI22 (systematic name YPR121W; UniProt Q06490) encodes a thiamine biosynthesis protein in <em>Saccharomyces cerevisiae</em> (strain ATCC 204508 / S288c). The protein is classified as a member of the thiaminase-2 family and contains several conserved domains including a haem oxygenase-like multi-helical domain (IPR016084), an HMP/HMP-P kinase domain (IPR004399, IPR013749), a ribokinase-like fold (IPR029056), and a thiaminase-2/PQQC domain (IPR004305). The protein is annotated as a precursor (with a signal peptide), suggesting it may be targeted to a secretory compartment.</p>
+<h2 id="2-gene-family-context-the-thi20thi21thi22-family">2. Gene Family Context: The THI20/THI21/THI22 Family</h2>
+<p>THI22 is the third member of a three-gene family in <em>S. cerevisiae</em> that also includes THI20 and THI21 (kowalska2008thegenesand pages 4-8). The better-characterized family members, THI20 (YOL055C) and THI21 (YPL258C), encode trifunctional proteins with established roles in thiamine metabolism. The N-terminal domain of THI20 functions as both an HMP kinase (phosphorylating 4-amino-5-hydroxymethyl-2-methylpyrimidine, or HMP, to HMP-P) and an HMP-P kinase (phosphorylating HMP-P to HMP-PP) in ATP-dependent reactions (kowalska2008thegenesand pages 4-8, wronska2022engineeringbiotinsynthesis; pages 20-23, perli2020vitaminrequirementsand pages 7-8). The C-terminal domain of THI20 possesses thiaminase II activity, which degrades thiamine by hydrolyzing it to release HMP and a thiazole-derived product (kowalska2008thegenesand pages 4-8, wronska2022engineeringbiotinsynthesis; pages 20-23). This C-terminal domain exhibits high sequence similarity to the PET18 protein (kowalska2008thegenesand pages 4-8). THI20 is considered the major isoform, while THI21 is a paralog with likely similar activities (perli2020vitaminrequirementsand pages 7-8, wronska2022engineeringbiotinsynthesis; pages 20-23).</p>
+<p>Critically, the specific enzymatic function of THI22 remains unresolved. Kowalska and Kozik (2008) explicitly state: "The function of the third member of the same gene family, THI22, is unknown at present" (kowalska2008thegenesand pages 4-8). Despite sharing family membership and domain annotations with THI20 and THI21, no direct biochemical characterization of THI22 enzymatic activity has been reported in the available literature.</p>
+<p>The following table summarizes the key properties of the THI20/THI21/THI22 family:</p>
+<table>
+<thead>
+<tr>
+<th>Gene Name</th>
+<th>Systematic Name</th>
+<th>Domain Architecture (N-terminal / C-terminal)</th>
+<th>Known Enzymatic Activities</th>
+<th>Key Role in Pathway</th>
+<th>Evidence Level</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>THI20</td>
+<td>YOL055C</td>
+<td>N-terminal HMP/HMP-P kinase domain; C-terminal thiaminase II domain; trifunctional family member (kowalska2008thegenesand pages 4-8, wronska2022engineeringbiotinsynthesis; pages 20-23, perli2020vitaminrequirementsand pages 7-8)</td>
+<td>HMP kinase; HMP-P kinase; thiaminase II (thiamine-degrading) activity (kowalska2008thegenesand pages 4-8, wronska2022engineeringbiotinsynthesis; pages 20-23, perli2020vitaminrequirementsand pages 7-8)</td>
+<td>Major isoform generating HMP-PP for the pyrimidine branch of thiamine biosynthesis; also participates in HMP salvage and thiamine degradation (perli2020vitaminrequirementsand pages 7-8, wronska2022engineeringbiotinsynthesis; pages 20-23, kowalska2008thegenesand pages 4-8, sabelleck2025thiamineisa pages 3-4)</td>
+<td>Experimentally characterized for family activities; major isoform assignment and trifunctionality supported by reviews and cited primary work (kowalska2008thegenesand pages 8-11, wronska2022engineeringbiotinsynthesis; pages 20-23, perli2020vitaminrequirementsand pages 7-8)</td>
+</tr>
+<tr>
+<td>THI21</td>
+<td>YPL258C</td>
+<td>Inferred to share THI20-like architecture: N-terminal HMP/HMP-P kinase domain and C-terminal thiaminase II-related domain as a paralogous family member (kowalska2008thegenesand pages 4-8, perli2020vitaminrequirementsand pages 7-8)</td>
+<td>HMP-P kinase; likely HMP kinase and thiaminase II-associated functions by homology/family assignment (kowalska2008thegenesand pages 4-8, perli2020vitaminrequirementsand pages 7-8, sabelleck2025thiamineisa pages 3-4)</td>
+<td>Paralogue contributing to HMP-PP formation in the pyrimidine branch of thiamine biosynthesis; likely backup/secondary isoform relative to THI20 (perli2020vitaminrequirementsand pages 7-8, wronska2022engineeringbiotinsynthesis; pages 20-23, sabelleck2025thiamineisa pages 3-4)</td>
+<td>Partly experimentally supported at family level, but less directly characterized than THI20; substantial inference from paralogy and pathway reviews (kowalska2008thegenesand pages 4-8, perli2020vitaminrequirementsand pages 7-8)</td>
+</tr>
+<tr>
+<td>THI22</td>
+<td>YPR121W</td>
+<td>Third member of the THI20/THI21/THI22 family; shares family membership and thiaminase-2/domain annotation, but detailed domain-function assignment is inferred rather than directly demonstrated (kowalska2008thegenesand pages 4-8)</td>
+<td>Unknown specific enzymatic activity; possible relationship to HMP/HMP-P kinase/thiaminase family functions is inferred only from homology and annotation (kowalska2008thegenesand pages 4-8)</td>
+<td>Putative participant in thiamine metabolism/biosynthesis context, but precise biochemical step remains unresolved in the literature reviewed (kowalska2008thegenesand pages 4-8, li2010thiaminebiosynthesisin pages 1-2, li2020transcriptomeanalysisreveals pages 5-7)</td>
+<td>Inferred/uncharacterized: literature explicitly states THI22 function is unknown (kowalska2008thegenesand pages 4-8)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the Saccharomyces cerevisiae THI20/THI21/THI22 gene family, highlighting experimentally supported activities for THI20, likely paralogous functions for THI21, and the currently unresolved status of THI22. It is useful for distinguishing firm biochemical evidence from homology-based inference.</em></p>
+<h2 id="3-pathway-context-thiamine-biosynthesis-in-s-cerevisiae">3. Pathway Context: Thiamine Biosynthesis in <em>S. cerevisiae</em></h2>
+<p>Thiamine (vitamin B1) biosynthesis in <em>S. cerevisiae</em> involves the separate synthesis of two precursor moieties — the pyrimidine moiety (HMP-PP, 4-amino-2-methyl-5-hydroxymethylpyrimidine diphosphate) and the thiazole moiety (HET-P, 5-(2-hydroxyethyl)-4-methylthiazole phosphate) — followed by their condensation into thiamine monophosphate (TMP), which is ultimately converted to the biologically active cofactor thiamine diphosphate (TDP) (wronska2022engineeringbiotinsynthesis; pages 20-23, kowalska2008thegenesand pages 4-8, kowalska2008thegenesand pages 1-4).</p>
+<h3 id="31-pyrimidine-branch">3.1 Pyrimidine Branch</h3>
+<p>HMP-P is synthesized from pyridoxal-5-phosphate (PLP) and histidine by the HMP-P synthases encoded by THI5, THI11, THI12, and THI13, which function as suicide enzymes undergoing a single catalytic turnover (perli2020vitaminrequirementsand pages 7-8, perli2020vitaminrequirementsand pages 5-7). HMP-P is then phosphorylated to HMP-PP by HMP-P kinase in an ATP-dependent reaction catalyzed primarily by THI20 and THI21 (perli2020vitaminrequirementsand pages 7-8, wronska2022engineeringbiotinsynthesis; pages 20-23). In the salvage pathway, exogenous HMP can be taken up and phosphorylated to HMP-P by HMP kinase activity, also attributed to THI20/THI21 (kowalska2008thegenesand pages 4-8, kowalska2008thegenesand pages 1-4).</p>
+<h3 id="32-thiazole-branch">3.2 Thiazole Branch</h3>
+<p>The thiazole precursor HET-P is synthesized by THI4 from NAD+, glycine, and a sulfur atom donated from a conserved cysteine residue in a suicide reaction (perli2020vitaminrequirementsand pages 7-8, perli2020vitaminrequirementsand pages 5-7). In the salvage pathway, free HET is phosphorylated by the HET kinase activity of the bifunctional THI6 protein (kowalska2008thegenesand pages 4-8).</p>
+<h3 id="33-condensation-and-activation">3.3 Condensation and Activation</h3>
+<p>The condensation of HMP-PP and HET-P into TMP is catalyzed by the TMP diphosphorylase activity of the bifunctional THI6 enzyme (kowalska2008thegenesand pages 8-11, kowalska2008thegenesand pages 4-8). Unlike bacteria, yeasts cannot directly phosphorylate TMP to TDP; instead, TMP is first dephosphorylated to free thiamine by non-specific phosphatases, and then thiamine is diphosphorylated to TDP by thiamine diphosphokinase (THI80) (kowalska2008thegenesand pages 4-8).</p>
+<p>The following table summarizes the complete pathway:</p>
+<table>
+<thead>
+<tr>
+<th>Pathway step</th>
+<th>Reaction</th>
+<th>Gene(s) / enzyme</th>
+<th>Substrates</th>
+<th>Product(s)</th>
+<th>Enzyme class / note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1. HMP-P synthesis</td>
+<td>Pyridoxal-5-phosphate + histidine → HMP-P</td>
+<td><strong>THI5, THI11, THI12, THI13</strong></td>
+<td>Pyridoxal-5-phosphate, histidine</td>
+<td>HMP-P</td>
+<td>HMP-P synthase; suicide enzyme family in yeast (perli2020vitaminrequirementsand pages 7-8, perli2020vitaminrequirementsand pages 5-7)</td>
+</tr>
+<tr>
+<td>2. HMP-P phosphorylation</td>
+<td>HMP-P + ATP → HMP-PP</td>
+<td><strong>THI20, THI21</strong>; <strong>THI22</strong> possible by homology but unproven</td>
+<td>HMP-P, ATP</td>
+<td>HMP-PP</td>
+<td>HMP-P kinase; THI20 is the major isoform, THI21 is paralogous; THI22 remains uncharacterized (kowalska2008thegenesand pages 4-8, perli2020vitaminrequirementsand pages 7-8, wronska2022engineeringbiotinsynthesis; pages 20-23, sabelleck2025thiamineisa pages 3-4)</td>
+</tr>
+<tr>
+<td>3. HMP salvage phosphorylation</td>
+<td>HMP + ATP → HMP-P</td>
+<td><strong>THI20, THI21</strong></td>
+<td>HMP, ATP</td>
+<td>HMP-P</td>
+<td>HMP kinase activity in the salvage branch; assigned to the trifunctional THI20/THI21 family (kowalska2008thegenesand pages 4-8, perli2020vitaminrequirementsand pages 7-8)</td>
+</tr>
+<tr>
+<td>4. HET-P synthesis</td>
+<td>NAD+ + glycine + cysteine-derived sulfur → HET-P</td>
+<td><strong>THI4</strong></td>
+<td>NAD+, glycine, sulfur from conserved Cys in Thi4</td>
+<td>HET-P</td>
+<td>Thiazole synthase; suicide enzyme with single-turnover sulfur donation (perli2020vitaminrequirementsand pages 7-8, perli2020vitaminrequirementsand pages 5-7)</td>
+</tr>
+<tr>
+<td>5. HET salvage phosphorylation</td>
+<td>HET + ATP → HET-P</td>
+<td><strong>THI6</strong></td>
+<td>HET, ATP</td>
+<td>HET-P</td>
+<td>Hydroxyethylthiazole kinase; bifunctional THI6 protein (kowalska2008thegenesand pages 8-11, kowalska2008thegenesand pages 4-8, hohmann1998thiaminmetabolismand pages 1-3)</td>
+</tr>
+<tr>
+<td>6. TMP formation</td>
+<td>HMP-PP + HET-P → TMP</td>
+<td><strong>THI6</strong></td>
+<td>HMP-PP, HET-P</td>
+<td>TMP</td>
+<td>TMP diphosphorylase / thiamine-phosphate pyrophosphorylase; bifunctional THI6 enzyme (kowalska2008thegenesand pages 8-11, perli2020vitaminrequirementsand pages 7-8, wronska2022engineeringbiotinsynthesis; pages 20-23, kowalska2008thegenesand pages 4-8)</td>
+</tr>
+<tr>
+<td>7. Thiamine formation</td>
+<td>TMP → thiamine</td>
+<td>Unspecified phosphatase(s)</td>
+<td>TMP</td>
+<td>Thiamine</td>
+<td>Dephosphorylation step; likely carried out by nonspecific phosphatases in yeast (kowalska2008thegenesand pages 4-8, hohmann1998thiaminmetabolismand pages 3-5)</td>
+</tr>
+<tr>
+<td>8. TDP formation</td>
+<td>Thiamine + ATP → TDP</td>
+<td><strong>THI80</strong></td>
+<td>Thiamine, ATP</td>
+<td>TDP (ThDP)</td>
+<td>Thiamine diphosphokinase / thiamine pyrophosphokinase (kowalska2008thegenesand pages 8-11, perli2020vitaminrequirementsand pages 7-8, kowalska2008thegenesand pages 4-8)</td>
+</tr>
+<tr>
+<td>9. Thiamine degradation</td>
+<td>Thiamine → HMP + thiazole-derived product</td>
+<td><strong>THI20</strong></td>
+<td>Thiamine</td>
+<td>HMP + thiazole-related product(s)</td>
+<td>Thiaminase II activity in the C-terminal domain of Thi20; family-level evidence also implicates THI21-like proteins (kowalska2008thegenesand pages 4-8, wronska2022engineeringbiotinsynthesis; pages 20-23, perli2020vitaminrequirementsand pages 7-8)</td>
+</tr>
+<tr>
+<td>10. Thiamine uptake</td>
+<td>External thiamine → internal thiamine</td>
+<td><strong>THI7 / THI10</strong></td>
+<td>Extracellular thiamine</td>
+<td>Intracellular thiamine</td>
+<td>High-affinity plasma membrane thiamine transporter; uptake supports salvage and cofactor production (kowalska2008thegenesand pages 4-8, hohmann1998thiaminmetabolismand pages 6-8, perli2020vitaminrequirementsand pages 7-8)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the core thiamine biosynthesis, salvage, degradation, and uptake steps in Saccharomyces cerevisiae. It is useful for locating where THI22 fits relative to the better-characterized THI20/THI21 family members and the rest of the pathway.</em></p>
+<h2 id="4-inferred-function-of-thi22">4. Inferred Function of THI22</h2>
+<p>Although no direct biochemical evidence exists for THI22's enzymatic activity, several lines of evidence support its involvement in thiamine metabolism:</p>
+<p><strong>Domain architecture:</strong> THI22 contains the same InterPro domains as THI20/THI21, including the HMP/HMP-P kinase domain (IPR004399, IPR013749) and the thiaminase-2/PQQC domain (IPR004305). The presence of a ribokinase-like fold (IPR029056) is consistent with kinase activity on small-molecule substrates. This domain composition strongly suggests that THI22 may possess HMP/HMP-P kinase activity and/or thiaminase II activity, by analogy to its family members.</p>
+<p><strong>Thiaminase-2 family membership:</strong> UniProt classifies THI22 in the thiaminase-2 family. Thiaminase II enzymes catalyze the hydrolysis of thiamine to release the pyrimidine moiety (HMP) and a thiazole product. In THI20, this degradation activity is localized to the C-terminal domain (kowalska2008thegenesand pages 4-8, wronska2022engineeringbiotinsynthesis; pages 20-23).</p>
+<p><strong>Signal peptide / precursor status:</strong> The UniProt annotation identifies THI22 as a "Precursor" with a potential signal peptide. This is distinct from THI20, which is a cytoplasmic protein. The presence of a signal peptide suggests that THI22 may be targeted to the secretory pathway and could function in the periplasm or cell wall, potentially in a salvage or degradation role analogous to the periplasmic acid phosphatase PHO3, which dephosphorylates extracellular thiamine phosphates (kowalska2008thegenesand pages 4-8, hohmann1998thiaminmetabolismand pages 6-8).</p>
+<h2 id="5-transcriptional-regulation">5. Transcriptional Regulation</h2>
+<p>THI22 is part of the THI regulon, a group of genes whose expression is tightly regulated in response to intracellular thiamine diphosphate (TDP) levels. Under thiamine-replete conditions, the expression of all known THI structural genes (except THI80, which is constitutively expressed) is repressed (kowalska2008thegenesand pages 4-8, hohmann1998thiaminmetabolismand pages 5-6). Under thiamine-depleted conditions, a ternary complex of the positive transcriptional regulators Thi2p (a zinc finger transcription factor), Thi3p (a TDP-binding sensor protein), and Pdc2p activates transcription of THI genes (kowalska2008thegenesand pages 4-8, hohmann1998thiaminmetabolismand pages 8-9, brion2014decipheringregulatoryvariation pages 1-2). TDP itself serves as the intracellular negative signal: when TDP levels are sufficient, TDP binds Thi3p, preventing formation of the activator complex and silencing THI gene transcription (kowalska2008thegenesand pages 4-8, hohmann1998thiaminmetabolismand pages 8-9).</p>
+<p>An additional layer of regulation was demonstrated by Li et al. (2010), who showed that multiple THI genes are regulated by the NAD+-dependent histone deacetylase Hst1. Conditions that reduce intracellular NAD+ or increase nicotinamide lead to derepression of THI genes, establishing a regulatory link between thiamine and NAD+ homeostasis (li2010thiaminebiosynthesisin pages 1-2).</p>
+<p>Transcriptomic studies have confirmed that THI22 is co-expressed with other THI genes. For example, Li et al. (2020) reported that THI22 was upregulated in proanthocyanidin-treated yeast cells alongside other thiamine pathway genes including THI6, THI21, and THI80, consistent with its membership in the THI regulon.</p>
+<h2 id="6-subcellular-localization">6. Subcellular Localization</h2>
+<p>No direct experimental data on the subcellular localization of THI22 has been reported in the available literature. However, two important considerations inform predictions:</p>
+<ol>
+<li>
+<p>The UniProt annotation as a precursor with a signal peptide suggests targeting to the secretory pathway, potentially to the periplasm, cell wall, or extracellular space. This would be unusual for a thiamine biosynthetic enzyme, as de novo thiamine biosynthesis in yeast is generally considered to occur in the cytoplasm (kowalska2008thegenesand pages 4-8).</p>
+</li>
+<li>
+<p>By contrast, the characterized family member THI20 is a cytoplasmic enzyme. The high-throughput yeast GFP localization study by Huh et al. (2003) did not report a clear localization for THI22.</p>
+</li>
+</ol>
+<p>If THI22 is indeed targeted to the secretory pathway, this may suggest a specialized role distinct from the cytoplasmic HMP/HMP-P kinase function of THI20/THI21 — perhaps in extracellular thiamine salvage or degradation.</p>
+<h2 id="7-biological-significance-and-functional-redundancy">7. Biological Significance and Functional Redundancy</h2>
+<p>The presence of three paralogous genes (THI20, THI21, THI22) in this family represents a form of genetic redundancy that is a recurrent theme in the yeast thiamine biosynthesis pathway. The four THI5/THI11/THI12/THI13 genes encoding HMP-P synthase show a similar pattern of gene amplification, likely reflecting a selective advantage in thiamine-poor environments (hohmann1998thiaminmetabolismand pages 5-6, perli2020vitaminrequirementsand pages 7-8). In the case of the THI20/THI21/THI22 family, THI20 is clearly the major functional isoform, while THI21 and THI22 may serve as backup copies or specialized variants that contribute under particular environmental conditions (perli2020vitaminrequirementsand pages 7-8, wronska2022engineeringbiotinsynthesis; pages 20-23).</p>
+<p>The involvement of two suicide enzymes (THI4 for thiazole and THI5-family for pyrimidine synthesis) makes de novo thiamine biosynthesis energetically expensive in yeast — for each molecule of thiamine produced, two complete proteins must be synthesized and degraded (perli2020vitaminrequirementsand pages 7-8). This energetic cost underscores the importance of tight transcriptional regulation and the evolutionary rationale for maintaining redundant genes and efficient salvage pathways.</p>
+<h2 id="8-summary">8. Summary</h2>
+<p>THI22 (YPR121W) encodes a thiamine biosynthesis protein in <em>S. cerevisiae</em> that belongs to the thiaminase-2 family and the THI20/THI21/THI22 gene family. While its paralogs THI20 and THI21 have been characterized as trifunctional enzymes with HMP kinase, HMP-P kinase, and thiaminase II activities, the specific biochemical function of THI22 remains experimentally unresolved (kowalska2008thegenesand pages 4-8). Its domain architecture (HMP/HMP-P kinase domain plus thiaminase-2/PQQC domain) strongly suggests it participates in the pyrimidine branch of thiamine biosynthesis and/or thiamine salvage/degradation. The presence of a signal peptide distinguishes THI22 from the cytoplasmic THI20 and may indicate a role in extracellular or periplasmic thiamine metabolism. THI22 is a member of the THI regulon and is transcriptionally regulated by thiamine availability through the Thi2p/Thi3p/Pdc2p activator complex and by NAD+ levels through the histone deacetylase Hst1 (kowalska2008thegenesand pages 4-8, hohmann1998thiaminmetabolismand pages 8-9, li2010thiaminebiosynthesisin pages 1-2). Future biochemical characterization of the purified THI22 protein will be necessary to determine whether it possesses HMP/HMP-P kinase and/or thiaminase II activity, and to define its precise role in thiamine metabolism.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(kowalska2008thegenesand pages 4-8): Ewa Kowalska and Andrzej Kozik. The genes and enzymes involved in the biosynthesis of thiamin and thiamin diphosphate in yeasts. Cellular &amp; Molecular Biology Letters, 13:271-282, Apr 2008. URL: https://doi.org/10.2478/s11658-007-0055-5, doi:10.2478/s11658-007-0055-5. This article has 65 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wronska2022engineeringbiotinsynthesis; pages 20-23): Engineering biotin synthesis; towards vitamin independency of Saccharomyces cerevisiae This article has 0 citations.</p>
+</li>
+<li>
+<p>(perli2020vitaminrequirementsand pages 7-8): Thomas Perli, Anna K. Wronska, Raúl A. Ortiz‐Merino, Jack T. Pronk, and Jean‐Marc Daran. Vitamin requirements and biosynthesis in <i>saccharomyces cerevisiae</i>. Yeast, 37:283-304, Feb 2020. URL: https://doi.org/10.1002/yea.3461, doi:10.1002/yea.3461. This article has 173 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sabelleck2025thiamineisa pages 3-4): Björn Sabelleck, Matthias Freh, Meltem Lammertz, Jennifer Browatzki, Anna-Maria Vllaho, Mariola Piślewska-Bednarek, Paweł Bednarek, and Ralph Panstruga. Thiamine is a vitamin for plant-pathogenic powdery mildew fungi. Aug 2025. URL: https://doi.org/10.1016/j.isci.2025.113123, doi:10.1016/j.isci.2025.113123. This article has 3 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kowalska2008thegenesand pages 8-11): Ewa Kowalska and Andrzej Kozik. The genes and enzymes involved in the biosynthesis of thiamin and thiamin diphosphate in yeasts. Cellular &amp; Molecular Biology Letters, 13:271-282, Apr 2008. URL: https://doi.org/10.2478/s11658-007-0055-5, doi:10.2478/s11658-007-0055-5. This article has 65 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(li2010thiaminebiosynthesisin pages 1-2): Mingguang Li, Brian J. Petteys, Julie M. McClure, Veena Valsakumar, Stefan Bekiranov, Elizabeth L. Frank, and Jeffrey S. Smith. Thiamine biosynthesis in <i>saccharomyces cerevisiae</i> is regulated by the nad<sup>+</sup>-dependent histone deacetylase hst1. Jul 2010. URL: https://doi.org/10.1128/mcb.01590-09, doi:10.1128/mcb.01590-09. This article has 93 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(li2020transcriptomeanalysisreveals pages 5-7): Jingyuan Li, Kaili Zhu, and Hongwei Zhao. Transcriptome analysis reveals the protection mechanism of proanthocyanidins for saccharomyces cerevisiae during wine fermentation. Scientific Reports, Apr 2020. URL: https://doi.org/10.1038/s41598-020-63631-2, doi:10.1038/s41598-020-63631-2. This article has 20 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kowalska2008thegenesand pages 1-4): Ewa Kowalska and Andrzej Kozik. The genes and enzymes involved in the biosynthesis of thiamin and thiamin diphosphate in yeasts. Cellular &amp; Molecular Biology Letters, 13:271-282, Apr 2008. URL: https://doi.org/10.2478/s11658-007-0055-5, doi:10.2478/s11658-007-0055-5. This article has 65 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(perli2020vitaminrequirementsand pages 5-7): Thomas Perli, Anna K. Wronska, Raúl A. Ortiz‐Merino, Jack T. Pronk, and Jean‐Marc Daran. Vitamin requirements and biosynthesis in <i>saccharomyces cerevisiae</i>. Yeast, 37:283-304, Feb 2020. URL: https://doi.org/10.1002/yea.3461, doi:10.1002/yea.3461. This article has 173 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hohmann1998thiaminmetabolismand pages 1-3): Stefan Hohmann and Peter A Meacock. Thiamin metabolism and thiamin diphosphate-dependent enzymes in the yeast saccharomyces cerevisiae: genetic regulation. Biochimica et biophysica acta, 1385 2:201-19, Jun 1998. URL: https://doi.org/10.1016/s0167-4838(98)00069-7, doi:10.1016/s0167-4838(98)00069-7. This article has 252 citations.</p>
+</li>
+<li>
+<p>(hohmann1998thiaminmetabolismand pages 3-5): Stefan Hohmann and Peter A Meacock. Thiamin metabolism and thiamin diphosphate-dependent enzymes in the yeast saccharomyces cerevisiae: genetic regulation. Biochimica et biophysica acta, 1385 2:201-19, Jun 1998. URL: https://doi.org/10.1016/s0167-4838(98)00069-7, doi:10.1016/s0167-4838(98)00069-7. This article has 252 citations.</p>
+</li>
+<li>
+<p>(hohmann1998thiaminmetabolismand pages 6-8): Stefan Hohmann and Peter A Meacock. Thiamin metabolism and thiamin diphosphate-dependent enzymes in the yeast saccharomyces cerevisiae: genetic regulation. Biochimica et biophysica acta, 1385 2:201-19, Jun 1998. URL: https://doi.org/10.1016/s0167-4838(98)00069-7, doi:10.1016/s0167-4838(98)00069-7. This article has 252 citations.</p>
+</li>
+<li>
+<p>(hohmann1998thiaminmetabolismand pages 5-6): Stefan Hohmann and Peter A Meacock. Thiamin metabolism and thiamin diphosphate-dependent enzymes in the yeast saccharomyces cerevisiae: genetic regulation. Biochimica et biophysica acta, 1385 2:201-19, Jun 1998. URL: https://doi.org/10.1016/s0167-4838(98)00069-7, doi:10.1016/s0167-4838(98)00069-7. This article has 252 citations.</p>
+</li>
+<li>
+<p>(hohmann1998thiaminmetabolismand pages 8-9): Stefan Hohmann and Peter A Meacock. Thiamin metabolism and thiamin diphosphate-dependent enzymes in the yeast saccharomyces cerevisiae: genetic regulation. Biochimica et biophysica acta, 1385 2:201-19, Jun 1998. URL: https://doi.org/10.1016/s0167-4838(98)00069-7, doi:10.1016/s0167-4838(98)00069-7. This article has 252 citations.</p>
+</li>
+<li>
+<p>(brion2014decipheringregulatoryvariation pages 1-2): Christian Brion, Chloé Ambroset, Pierre Delobel, Isabelle Sanchez, and Bruno Blondin. Deciphering regulatory variation of thi genes in alcoholic fermentation indicate an impact of thi3p on pdc1 expression. BMC Genomics, Dec 2014. URL: https://doi.org/10.1186/1471-2164-15-1085, doi:10.1186/1471-2164-15-1085. This article has 22 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="THI22-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+<li><a href="THI22-deep-research-falcon_artifacts/artifact-01.md">Edison artifact artifact-01</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>kowalska2008thegenesand pages 4-8</li>
+<li>li2010thiaminebiosynthesisin pages 1-2</li>
+<li>perli2020vitaminrequirementsand pages 7-8</li>
+<li>sabelleck2025thiamineisa pages 3-4</li>
+<li>kowalska2008thegenesand pages 8-11</li>
+<li>li2020transcriptomeanalysisreveals pages 5-7</li>
+<li>kowalska2008thegenesand pages 1-4</li>
+<li>perli2020vitaminrequirementsand pages 5-7</li>
+<li>hohmann1998thiaminmetabolismand pages 1-3</li>
+<li>hohmann1998thiaminmetabolismand pages 3-5</li>
+<li>hohmann1998thiaminmetabolismand pages 6-8</li>
+<li>hohmann1998thiaminmetabolismand pages 5-6</li>
+<li>hohmann1998thiaminmetabolismand pages 8-9</li>
+<li>brion2014decipheringregulatoryvariation pages 1-2</li>
+<li>https://doi.org/10.2478/s11658-007-0055-5,</li>
+<li>https://doi.org/10.1002/yea.3461,</li>
+<li>https://doi.org/10.1016/j.isci.2025.113123,</li>
+<li>https://doi.org/10.1128/mcb.01590-09,</li>
+<li>https://doi.org/10.1038/s41598-020-63631-2,</li>
+<li>https://doi.org/10.1016/s0167-4838(98</li>
+<li>https://doi.org/10.1186/1471-2164-15-1085,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(THI22-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q06490" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="thi22-ypr121w-q06490-curation-notes">THI22 (YPR121W, Q06490) — curation notes</h1>
+<p>Journal of research for the AI GO-annotation review. THI22 is an understudied ("dark")<br />
+<em>S. cerevisiae</em> gene: a member of the three-gene thiaminase-2 / HMP-P-kinase family<br />
+(THI20/THI21/THI22). The central curation problem is that THI22 is highly homologous to<br />
+the biochemically characterized paralogs THI20 and THI21, yet no enzymatic activity has<br />
+been demonstrated for it, and it is dispensable for thiamine biosynthesis. All<br />
+THI22-specific claims must be separated carefully from what is known only for THI20/THI21.</p>
+<h2 id="identity-and-family-placement">Identity and family placement</h2>
+<ul>
+<li>UniProt: Q06490 (THI22_YEAST). Systematic name YPR121W. SGD:S000006325.</li>
+<li>572 aa. UniProt annotates a signal peptide (1-19) and chain (20-572); predicted<br />
+  Secreted (SL-0243) — this is a computational SubCell/SignalP prediction (ECO:0000255 /<br />
+  ECO:0000305), not experimentally demonstrated. [file:genes/yeast/THI22/THI22-uniprot.txt]</li>
+<li>Family: PANTHER PTHR20858 (PHOSPHOMETHYLPYRIMIDINE KINASE), subfamily PTHR20858:SF17<br />
+  ("HYDROXYMETHYLPYRIMIDINE/PHOSPHOMETHYLPYRIMIDINE KINASE THI20-RELATED"). All three<br />
+  yeast paralogs are in SF17: THI20 (Q08224, 551 aa), THI21 (Q08975, 551 aa), THI22<br />
+  (Q06490, 572 aa). [file:interpro/panther/PTHR20858/PTHR20858-entries.csv]</li>
+<li>Two-domain (fused) architecture, one gene fusion event ancestral to the family:</li>
+<li>N-terminal HMP/HMP-P kinase domain (ribokinase-like; Pfam PF08543 Phos_pyr_kin;<br />
+    CDD cd01169 HMPP_kinase; TIGR00097 HMP-P_kinase). Corresponds to bacterial ThiD.</li>
+<li>C-terminal TenA / thiaminase-II-like domain (Pfam PF03070 TENA_THI-4; CDD cd19367<br />
+    TenA_C_ScTHI20-like; TIGR04306 salvage_TenA; InterPro IPR027574 Thiaminase_II).<br />
+    Corresponds to bacterial TenA (thiamine-salvage thiaminase II).<br />
+  [file:genes/yeast/THI22/THI22-uniprot.txt]</li>
+</ul>
+<h2 id="known-experimentally-established-but-note-attribution">KNOWN (experimentally established) — but note attribution</h2>
+<p>For the FAMILY / paralogs (NOT necessarily THI22):<br />
+- Two of the three family members (THI20 = YOL055c and THI21 = YPL258c) are isofunctional<br />
+  and encode an HMP-P kinase (EC 2.7.4.7), an activity required for the final steps of<br />
+  thiamine biosynthesis in yeast.<br />
+  [PMID:10383756 abstract, "we demonstrate that two members are isofunctional and encode a<br />
+  hydroxymethylpyrimidine phosphate (HMP-P) kinase (EC 2.7.4.7), an activity required for<br />
+  the final steps of thiamine biosynthesis, whose genes were not previously known in yeast"]<br />
+- THI20 is a trifunctional enzyme: HMP kinase (EC 2.7.1.49) + HMP-P kinase (EC 2.7.4.7) +<br />
+  thiaminase II (EC 3.5.99.2), the last activity degrading thiamine to HMP for salvage.<br />
+  [UniProt Q08224, CATALYTIC ACTIVITY / FUNCTION; ECO:0000269|PubMed:15967475]<br />
+- The C-terminal domain of the family proteins is NOT required for HMP-P kinase activity;<br />
+  its function was unresolved at the time of the 1999 paper.<br />
+  [PMID:10383756 abstract, "The function of the carboxy-terminal part of the proteins is<br />
+  not yet understood, but it is not required for HMP-P kinase activity"]<br />
+- All three genes are co-regulated and induced by thiamine absence.<br />
+  [PMID:10383756 abstract, "Expression of all three genes is regulated in the same way";<br />
+  UniProt Q06490 INDUCTION "By absence of thiamine", ECO:0000269|PubMed:10383756]</p>
+<p>Specifically for THI22 (what the primary literature actually says):<br />
+- THI22 is NOT required for thiamine biosynthesis (dispensable; single deletion has no<br />
+  thiamine-auxotrophy phenotype in the redundant family context).<br />
+  [UniProt Q06490 FUNCTION "Is not required for thiamine biosynthesis",<br />
+  ECO:0000269|PubMed:10383756]<br />
+- No HMP-P kinase activity could be demonstrated for THI22, in contrast to THI20/THI21.<br />
+  [UniProt Q06490 CAUTION "Although highly homologous to the 2 other thiaminase-2 family<br />
+  members THI20 and THI21 in yeast, no hydroxymethylpyrimidine phosphate kinase activity<br />
+  could be demonstrated for this protein", ECO:0000305]<br />
+- THI22 expression is induced by absence of thiamine (like the paralogs).<br />
+  [UniProt Q06490 INDUCTION, ECO:0000269|PubMed:10383756]</p>
+<h2 id="not-known-open-thi22-specific-knowledge-gaps">NOT known / open (THI22-specific knowledge gaps)</h2>
+<ul>
+<li>Whether THI22 has ANY catalytic activity in vivo (HMP kinase, HMP-P kinase, or<br />
+  thiaminase II). The 1999 assay failed to detect HMP-P kinase; other activities untested.</li>
+<li>Whether the failure to detect activity reflects a genuinely inactive protein, a folding/<br />
+  expression problem in the assay system, a different substrate, or a regulatory/salvage<br />
+  role distinct from the biosynthetic kinase step.</li>
+<li>The true subcellular location. UniProt lists "Secreted" from a signal-peptide/SubCell<br />
+  prediction, but the paralogs THI20/THI21 act cytosolically in thiamine metabolism, and<br />
+  the phylogenetic (IBA) annotation places THI22 in the cytosol. The secretion claim is<br />
+  computational only and is biologically surprising for a thiamine-pathway enzyme.</li>
+<li>Why the cell retains a third, apparently redundant/inactive paralog: possible functions<br />
+  include a conditional/cryptic activity, a dosage or buffering role, a role under specific<br />
+  stress/nutrient conditions, or ongoing pseudogenization (evolutionary relic).</li>
+</ul>
+<h2 id="inline-domain-reasoning-done-in-this-review-not-from-an-external-tool">Inline domain reasoning (done in this review, not from an external tool)</h2>
+<p>Pairwise global alignment of THI22 (Q06490) vs THI20 (Q08224) computed here with Biopython<br />
+(globalms, match 2 / mismatch -1 / gap-open -5 / gap-extend -0.5):<br />
+- 76.4% identity over aligned positions — very high; THI22 is a bona fide close paralog.<br />
+- The THI20 experimentally/inferred functional residues are ALL conserved in THI22:<br />
+  - HMP substrate-binding Gln (THI20 Q64, N-terminal kinase domain) = THI22 Q86.<br />
+  - Thiaminase-II nucleophile Cys (THI20 ACT_SITE C468) = THI22 C489.<br />
+  - Thiaminase-II proton-donor Glu (THI20 ACT_SITE E540) = THI22 E561.<br />
+  (THI22 positions are offset by ~21-22 residues because of its N-terminal signal-peptide<br />
+  extension.)<br />
+- The ribokinase-family glycine-rich phosphate-binding motif is present in THI22<br />
+  (…IAGSDSSGGAGV…, ~res 52-63; THI20 has …AGTDPSGGAGIE…) and the GGHIP kinase motif is<br />
+  present (THI22 res ~222).</p>
+<p>Interpretation: THI22 is NOT a residue-dead pseudoenzyme — its catalytic and substrate-<br />
+binding residues are intact. This makes the observed lack of demonstrable HMP-P kinase<br />
+activity <a href="https://pubmed.ncbi.nlm.nih.gov/10383756">PMID:10383756</a> a genuine biological puzzle rather than an obvious consequence of<br />
+lost catalytic machinery. Because the catalytic residues are conserved, a domain-based<br />
+"pseudoenzyme" REMOVE of the kinase MF terms is NOT justified; but neither is a confident<br />
+ACCEPT of demonstrated activity, since the one direct assay failed for THI22. The honest<br />
+position is that the kinase/thiaminase MF terms are phylogenetically/InterPro-inferred<br />
+(IBA/IEA) and plausible on sequence grounds, but THI22-specific activity is unproven and<br />
+partially contradicted by the one experiment that tested it.</p>
+<h2 id="annotation-by-annotation-plan-see-yaml-for-final-actions">Annotation-by-annotation plan (see YAML for final actions)</h2>
+<p>GOA has 12 annotations:<br />
+1. GO:0005829 cytosol (IBA) — plausible for a thiamine-pathway enzyme; paralogs cytosolic.<br />
+   KEEP_AS_NON_CORE (location, phylogenetic).<br />
+2. GO:0008902 hydroxymethylpyrimidine kinase activity (IBA) — HMP→HMP-P (EC 2.7.1.49).<br />
+   Family activity; THI22-specific unproven. KEEP_AS_NON_CORE with caveat (not core, not<br />
+   demonstrated for THI22).<br />
+3. GO:0008972 phosphomethylpyrimidine kinase activity (IBA) — HMP-P→HMP-PP (EC 2.7.4.7);<br />
+   this is exactly the activity the 1999 paper FAILED to demonstrate for THI22.<br />
+   MARK_AS_OVER_ANNOTATED (directly tested and not detected for THI22).<br />
+4. GO:0009228 thiamine biosynthetic process (IBA) — THI22 shown NOT required for thiamine<br />
+   biosynthesis. MARK_AS_OVER_ANNOTATED.<br />
+5. GO:0005576 extracellular region (IEA, SubCell) — computational from signal peptide;<br />
+   biologically implausible for a thiamine-metabolism enzyme; conflicts with cytosol IBA.<br />
+   MARK_AS_OVER_ANNOTATED / KEEP_AS_NON_CORE with strong caveat.<br />
+6. GO:0006772 thiamine metabolic process (IEA, InterPro) — general BP; defensible at the<br />
+   family level. KEEP_AS_NON_CORE.<br />
+7. GO:0008972 phosphomethylpyrimidine kinase activity (IEA, InterPro) — duplicate MF from<br />
+   InterPro; same caveat as #3. MARK_AS_OVER_ANNOTATED.<br />
+8. GO:0009228 thiamine biosynthetic process (IEA) — same as #4. MARK_AS_OVER_ANNOTATED.<br />
+9. GO:0050334 thiaminase activity (IEA, InterPro, IPR027574 Thiaminase_II) — C-terminal<br />
+   TenA domain; catalytic Cys/Glu conserved in THI22. Plausible on sequence; unproven for<br />
+   THI22. KEEP_AS_NON_CORE (domain-supported family activity).<br />
+10. GO:0003674 molecular_function (ND) — root, no data. ACCEPT (ND placeholder).<br />
+11. GO:0005575 cellular_component (ND) — root, no data. ACCEPT (ND placeholder).<br />
+12. GO:0009228 thiamine biosynthetic process (IEP, PMID:10383756, SGD) — experimental<br />
+    annotation from the primary paper (induction by thiamine absence = IEP "expression<br />
+    pattern"). Per rules, do NOT REMOVE an experimental annotation. IEP reflects that the<br />
+    gene is thiamine-regulated, which is genuinely established; but the gene is not required<br />
+    for biosynthesis. KEEP_AS_NON_CORE (thiamine-regulated; involvement not core), defer to<br />
+    SGD curator on the experimental IEP.</p>
+<h2 id="update-review-completed-falcon-corroboration-and-final-actions">Update (review completed) — falcon corroboration and final actions</h2>
+<p>Falcon/Edison deep research completed (THI22-deep-research-falcon.md, 21 citations, ~1476s).<br />
+It independently corroborates the review's central conclusions:<br />
+- "The function of the third member of the same gene family, THI22, is unknown at present"<br />
+  (attributed to Kowalska &amp; Kozik 2008 in the report).<br />
+- THI20/THI21 are the characterized HMP/HMP-P kinase + thiaminase-II enzymes; THI22's specific<br />
+  biochemical function is unresolved and inferred only from homology/domain annotation.<br />
+- THI22's predicted signal peptide distinguishes it from cytoplasmic THI20 — falcon raises the<br />
+  same hypothesis captured in the localization knowledge gap (possible periplasmic/extracellular<br />
+  salvage or degradation role), and notes Huh et al. 2003 GFP screen did not give a clear THI22<br />
+  localization.<br />
+- THI22 is part of the thiamine (THI) regulon, thiamine-regulated — matches the IEP annotation.<br />
+Falcon citations use internal source keys (not PMIDs), so per project memory no verbatim<br />
+supporting_text from the falcon report is used to ground annotations; all annotation quotes are<br />
+anchored to PMID:10383756 (verbatim, whitespace/case verified) and the inline bioinformatics<br />
+RESULTS.md.</p>
+<p>Final action breakdown over 12 GOA annotations:<br />
+- ACCEPT: 2 (GO:0003674 root MF ND; GO:0005575 root CC ND)<br />
+- KEEP_AS_NON_CORE: 4 (GO:0005829 cytosol IBA; GO:0008902 HMP kinase IBA; GO:0006772 thiamine<br />
+  metabolic process IEA; GO:0050334 thiaminase activity IEA)<br />
+- MARK_AS_OVER_ANNOTATED: 6 (GO:0008972 HMP-P kinase IBA+IEA; GO:0009228 thiamine biosynthetic<br />
+  process IBA+IEA+IEP; GO:0005576 extracellular region IEA)<br />
+- REMOVE: 0 (catalytic residues intact per alignment; experimental IEP not removed per guidelines)</p>
+<p>Inline bioinformatics (THI22-bioinformatics/): reproducible Biopython alignment of THI22 vs THI20<br />
+confirms 76.4% identity and conservation of all THI20 functional residues (HMP-binding Q64-&gt;Q86,<br />
+thiaminase-II C468-&gt;C489, E540-&gt;E561) — THI22 is NOT a residue-dead pseudoenzyme, which is why<br />
+no domain/pseudoenzyme-based REMOVE was applied to the kinase/thiaminase MF terms.</p>
+            </div>
+        </details>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Bioinformatics Results</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(RESULTS.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q06490" data-a="DOC: Bioinformatics Results" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="thi22-vs-thi20-paralog-alignment-catalytic-residue-conservation">THI22 vs THI20 paralog alignment — catalytic-residue conservation</h1>
+<h2 id="purpose">Purpose</h2>
+<p>THI22 (Q06490, YPR121W) is one of three paralogous members of the <em>S. cerevisiae</em><br />
+thiaminase-II / HMP-P-kinase family (THI20, THI21, THI22). The primary literature<br />
+(PMID:10383756) demonstrated HMP-P kinase activity for only two of the three members, and<br />
+UniProt records a CAUTION that no HMP-P kinase activity could be demonstrated for THI22<br />
+despite its high homology. The curation question addressed here: is THI22's lack of<br />
+demonstrable activity explained by loss of catalytic residues (a residue-dead pseudoenzyme),<br />
+or does it retain an intact active site (sequence-intact but activity not demonstrated)?</p>
+<h2 id="method">Method</h2>
+<p>Pairwise global alignment of THI22 (Q06490) against the biochemically characterized paralog<br />
+THI20 (Q08224) using Biopython's <code>Align.PairwiseAligner</code> (global mode; match +2, mismatch -1,<br />
+gap-open -5, gap-extend -0.5). The three THI20 functional residues annotated in UniProt were<br />
+mapped through the alignment onto THI22:</p>
+<ul>
+<li>BINDING 64 — HMP substrate binding (N-terminal ThiD-like HMP/HMP-P kinase domain)</li>
+<li>ACT_SITE 468 — nucleophile (C-terminal TenA/thiaminase-II domain)</li>
+<li>ACT_SITE 540 — proton donor (C-terminal TenA/thiaminase-II domain)</li>
+</ul>
+<p>Reproduce with: <code>python align_paralogs.py</code> (requires biopython). The script prints its<br />
+findings and does not hardcode any conclusion.</p>
+<h2 id="results-from-align_paralogspy">Results (from <code>align_paralogs.py</code>)</h2>
+<div class="codehilite"><pre><span></span><code><span class="n">THI22</span><span class="w"> </span><span class="nl">length</span><span class="p">:</span><span class="w"> </span><span class="mi">572</span><span class="w">  </span><span class="n">THI20</span><span class="w"> </span><span class="nl">length</span><span class="p">:</span><span class="w"> </span><span class="mi">551</span>
+<span class="k">Identity</span><span class="err">:</span><span class="w"> </span><span class="mi">420</span><span class="o">/</span><span class="mi">550</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">76.4</span><span class="o">%</span><span class="w"> </span><span class="k">over</span><span class="w"> </span><span class="n">aligned</span><span class="w"> </span><span class="n">positions</span>
+
+<span class="n">THI20</span><span class="w"> </span><span class="mi">64</span><span class="w">  </span><span class="p">(</span><span class="n">BINDING</span><span class="w"> </span><span class="n">HMP</span><span class="w"> </span><span class="n">substrate</span><span class="p">,</span><span class="w"> </span><span class="n">N</span><span class="o">-</span><span class="n">term</span><span class="w"> </span><span class="n">kinase</span><span class="w"> </span><span class="k">domain</span><span class="p">)</span><span class="err">:</span><span class="w">        </span><span class="n">THI20</span><span class="o">=</span><span class="n">Q</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">THI22</span><span class="o">=</span><span class="n">Q</span><span class="w"> </span><span class="p">(</span><span class="n">THI22</span><span class="w"> </span><span class="n">pos</span><span class="w"> </span><span class="mi">86</span><span class="p">)</span><span class="w">  </span><span class="o">[</span><span class="n">CONSERVED</span><span class="o">]</span>
+<span class="n">THI20</span><span class="w"> </span><span class="mi">468</span><span class="w"> </span><span class="p">(</span><span class="n">ACT_SITE</span><span class="w"> </span><span class="n">nucleophile</span><span class="p">,</span><span class="w"> </span><span class="n">C</span><span class="o">-</span><span class="n">term</span><span class="w"> </span><span class="n">TenA</span><span class="o">/</span><span class="n">thiaminase</span><span class="o">-</span><span class="n">II</span><span class="p">)</span><span class="err">:</span><span class="w">    </span><span class="n">THI20</span><span class="o">=</span><span class="n">C</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">THI22</span><span class="o">=</span><span class="n">C</span><span class="w"> </span><span class="p">(</span><span class="n">THI22</span><span class="w"> </span><span class="n">pos</span><span class="w"> </span><span class="mi">489</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">CONSERVED</span><span class="o">]</span>
+<span class="n">THI20</span><span class="w"> </span><span class="mi">540</span><span class="w"> </span><span class="p">(</span><span class="n">ACT_SITE</span><span class="w"> </span><span class="n">proton</span><span class="w"> </span><span class="n">donor</span><span class="p">,</span><span class="w"> </span><span class="n">C</span><span class="o">-</span><span class="n">term</span><span class="w"> </span><span class="n">TenA</span><span class="o">/</span><span class="n">thiaminase</span><span class="o">-</span><span class="n">II</span><span class="p">)</span><span class="err">:</span><span class="w">   </span><span class="n">THI20</span><span class="o">=</span><span class="n">E</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">THI22</span><span class="o">=</span><span class="n">E</span><span class="w"> </span><span class="p">(</span><span class="n">THI22</span><span class="w"> </span><span class="n">pos</span><span class="w"> </span><span class="mi">561</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">CONSERVED</span><span class="o">]</span>
+
+<span class="ow">All</span><span class="w"> </span><span class="n">three</span><span class="w"> </span><span class="n">THI20</span><span class="w"> </span><span class="n">functional</span><span class="w"> </span><span class="n">residues</span><span class="w"> </span><span class="k">are</span><span class="w"> </span><span class="n">conserved</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">THI22</span>
+</code></pre></div>
+
+<p>Additional motif observations (from inline inspection of the sequences):</p>
+<ul>
+<li>The ribokinase-family glycine-rich phosphate-binding motif is present in THI22<br />
+  (<code>...IAGSDSSGGAGV...</code>, ~res 52-63; THI20 has <code>...AGTDPSGGAGIE...</code>).</li>
+<li>The <code>GGHIP</code> kinase motif is present in THI22 (~res 222).</li>
+<li>THI22 positions are offset from THI20 by ~21-22 residues because of THI22's N-terminal<br />
+  signal-peptide extension (residues 1-19), which THI20/THI21 lack.</li>
+</ul>
+<h2 id="interpretation">Interpretation</h2>
+<p>THI22 is a close paralog (~76% identity) that <strong>retains all annotated substrate-binding and<br />
+catalytic residues of both the kinase and the thiaminase-II domain</strong>. It is therefore <strong>not a<br />
+residue-dead pseudoenzyme</strong>. Consequently:</p>
+<ul>
+<li>A domain- or pseudoenzyme-based REMOVE of the kinase/thiaminase molecular-function terms is<br />
+<strong>not justified</strong> — the machinery is intact.</li>
+<li>Equally, the intact machinery does <strong>not</strong> demonstrate activity: the one direct enzymatic<br />
+  assay that tested THI22 (PMID:10383756) did not detect HMP-P kinase activity. The molecular<br />
+  function terms are best treated as domain-plausible but THI22-unproven (non-core /<br />
+  over-annotated as appropriate per evidence), and the lack of demonstrable activity is a<br />
+  genuine biological knowledge gap (possible cryptic/conditional activity, divergent<br />
+  substrate, or functional divergence toward pseudoenzyme status).</li>
+</ul>
+<h2 id="data-provenance">Data provenance</h2>
+<p>Sequences taken from the committed UniProt record for THI22<br />
+(<code>genes/yeast/THI22/THI22-uniprot.txt</code>, Q06490) and from UniProt Q08224 (THI20); THI20<br />
+functional-residue positions taken from the UniProt Q08224 feature table (ACT_SITE 468/540,<br />
+BINDING 64).</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q06490
+gene_symbol: THI22
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:559292
+  label: Saccharomyces cerevisiae
+description: &gt;-
+  THI22 (YPR121W) is one of three paralogous members of the yeast thiaminase-II /
+  hydroxymethylpyrimidine (HMP/HMP-P) kinase gene family (with THI20 and THI21). Like its
+  paralogs it is a two-domain protein arising from an ancestral gene fusion: an N-terminal
+  ribokinase-fold HMP/HMP-P kinase domain (homologous to bacterial ThiD, catalyzing steps in
+  de novo thiamine pyrophosphate biosynthesis) and a C-terminal TenA/thiaminase-II-like domain
+  (homologous to bacterial TenA, associated with thiamine salvage). THI22 shares roughly
+  three-quarters sequence identity with the biochemically characterized THI20 and retains the
+  substrate-binding and catalytic residues of both domains. Its expression is induced under
+  thiamine limitation, coordinately with THI20 and THI21. Despite this close homology, THI22 is
+  dispensable for thiamine biosynthesis and no enzymatic (HMP-P kinase) activity has been
+  demonstrated for the protein, so its individual in vivo role remains undetermined; the
+  characterized biosynthetic and thiamine-degrading (thiaminase II) activities of the family
+  have been established for the paralogs THI20/THI21 rather than for THI22 itself.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000015
+  title: Use of the ND evidence code for Gene Ontology (GO) terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary
+    mapping, accompanied by conservative changes to GO terms applied by UniProt
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:10383756
+  title: &#39;Genetic redundancy and gene fusion in the genome of the Baker&#39;&#39;s yeast Saccharomyces
+    cerevisiae: functional characterization of a three-member gene family involved in the thiamine
+    biosynthetic pathway.&#39;
+  findings:
+  - statement: &gt;-
+      Two of the three family members (THI20/YOL055c and THI21/YPL258c) are isofunctional and
+      encode an HMP-P kinase (EC 2.7.4.7) required for the final steps of thiamine biosynthesis;
+      by implication the third member (THI22/YPR121w) is the one for which this activity was not
+      demonstrated.
+    supporting_text: &gt;-
+      We demonstrate that two members are isofunctional and encode a hydroxymethylpyrimidine
+      phosphate (HMP-P) kinase (EC 2.7.4.7), an activity required for the final steps of thiamine
+      biosynthesis
+    full_text_unavailable: true
+  - statement: &gt;-
+      Each of the three genes has two distinct domains that correspond to separate prokaryotic
+      genes, consistent with an ancestral gene fusion; the C-terminal domain is not required for
+      HMP-P kinase activity and its function was unresolved.
+    supporting_text: &gt;-
+      the three genes are each composed of two distinct domains, each corresponding to individual
+      genes in prokaryotes, suggesting gene fusion during evolution. The function of the
+      carboxy-terminal part of the proteins is not yet understood, but it is not required for HMP-P
+      kinase activity
+    full_text_unavailable: true
+  - statement: All three family genes are co-regulated (induced under thiamine limitation).
+    supporting_text: Expression of all three genes is regulated in the same way
+    full_text_unavailable: true
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified primary paper (Llorente, Fairhead &amp; Dujon 1999) defining the
+      THI20/THI21/THI22 family. Abstract-only in cache (full_text_available: false). It
+      establishes HMP-P kinase activity for two of the three members and explicitly leaves the
+      third (THI22/YPR121w) uncharacterized enzymatically. UniProt (Q06490) attributes THI22&#39;s
+      &#34;not required for thiamine biosynthesis&#34; (FUNCTION, ECO:0000269|PubMed:10383756) and the
+      CAUTION that no HMP-P kinase activity could be demonstrated for it (ECO:0000305) to this
+      work.
+- id: file:yeast/THI22/THI22-bioinformatics/RESULTS.md
+  title: THI22 vs THI20 paralog alignment and catalytic-residue conservation (inline analysis)
+  findings:
+  - statement: &gt;-
+      THI22 (Q06490) is ~76% identical to the characterized paralog THI20 (Q08224) and retains
+      THI20&#39;s HMP substrate-binding Gln, the ribokinase Gly-rich phosphate-binding motif, and the
+      thiaminase-II catalytic nucleophile Cys and proton-donor Glu, so it is not a residue-dead
+      pseudoenzyme.
+    supporting_text: &gt;-
+      All three THI20 functional residues are conserved in THI22
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reproducible pairwise alignment computed for this review (Biopython global alignment, THI22
+      vs THI20); results and script recorded in the gene bioinformatics folder. Establishes that
+      THI22&#39;s catalytic machinery is intact, which is why domain-based pseudoenzyme REMOVE calls
+      are not justified.
+- id: file:yeast/THI22/THI22-deep-research-falcon.md
+  title: THI22 deep research report (falcon / Edison Scientific)
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Falcon/Edison deep-research report generated for this review. It independently corroborates
+      the review&#39;s central conclusions — that THI20/THI21 are the characterized HMP/HMP-P kinase +
+      thiaminase-II enzymes, that THI22&#39;s specific biochemical function is explicitly unresolved in
+      the literature (&#34;The function of the third member of the same gene family, THI22, is unknown
+      at present&#34;, per Kowalska &amp; Kozik 2008), and that THI22&#39;s signal peptide distinguishes it
+      from the cytoplasmic THI20. Its citations use internal source keys rather than PMIDs, so no
+      verbatim supporting_text from this report is used to ground annotations; the review&#39;s claims
+      are anchored to PMID:10383756 and the inline alignment instead.
+existing_annotations:
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetically inferred cytosolic localization, consistent with the thiamine-pathway
+      biochemistry of the paralogs THI20/THI21, which act in the cytosolic HMP-P kinase steps.
+      Plausible as a location but not a core function and not experimentally shown for THI22.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      IBA location annotation from the THI20-related PANTHER family. The de novo thiamine
+      biosynthesis kinase steps occur in the cytosol, so cytosolic localization is the reasonable
+      default for a family member. It conflicts with the InterPro/SubCell &#34;extracellular region&#34;
+      prediction (see below); the cytosolic assignment is the more biologically defensible of the
+      two but remains inferred, so it is retained as non-core.
+- term:
+    id: GO:0008902
+    label: hydroxymethylpyrimidine kinase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      HMP kinase activity (HMP -&gt; HMP-P, EC 2.7.1.49) is a demonstrated activity of the family
+      (THI20 is trifunctional). THI22 retains the N-terminal kinase domain and its HMP
+      substrate-binding residue (Gln, conserved with THI20 Q64), so the activity is plausible on
+      sequence grounds, but it is inferred by phylogeny and not demonstrated for THI22.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Domain-defensible family activity (N-terminal ThiD-like kinase domain; substrate-binding and
+      Gly-rich phosphate-binding motifs conserved in THI22 per inline alignment to THI20). Kept as
+      non-core because THI22-specific activity is unproven; the one direct enzymatic assay of the
+      family that tested THI22 failed to detect the related HMP-P kinase activity (per UniProt
+      CAUTION, ECO:0000305, and PMID:10383756, which demonstrated the activity only for THI20/THI21).
+- term:
+    id: GO:0008972
+    label: phosphomethylpyrimidine kinase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      HMP-P kinase activity (HMP-P -&gt; HMP-PP, EC 2.7.4.7) is exactly the activity that
+      PMID:10383756 demonstrated for two of the three family members and could NOT demonstrate for
+      the third (THI22). Retained by phylogenetic inference but flagged as over-annotated for THI22
+      because it is directly contradicted by the one experiment that tested it.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The IBA propagates the well-established HMP-P kinase activity of THI20/THI21 onto THI22, but
+      the primary paper demonstrated this activity for only two of the three members and UniProt
+      records (CAUTION, ECO:0000305) that no HMP-P kinase activity could be demonstrated for THI22
+      despite its high homology. The catalytic residues are conserved (so this is not a
+      residue-dead pseudoenzyme and REMOVE is not justified), but calling this a THI22 function
+      over-states the evidence: it is a family-level inference contradicted by the only direct
+      THI22 assay.
+    supported_by:
+    - reference_id: PMID:10383756
+      supporting_text: &gt;-
+        We demonstrate that two members are isofunctional and encode a hydroxymethylpyrimidine
+        phosphate (HMP-P) kinase (EC 2.7.4.7), an activity required for the final steps of thiamine
+        biosynthesis
+      full_text_unavailable: true
+    propagation_review:
+      root_cause: PROPAGATION_BAD
+      failure_modes:
+      - FUNCTIONAL_DIVERGENCE
+      source_entities:
+      - source_id: SGD:S000005416
+        source_label: THI20
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+        comment: &gt;-
+          THI20 has demonstrated HMP-P kinase activity, but the same primary work did not detect
+          this activity for THI22, so transfer to THI22 is unsafe.
+      - source_id: PANTHER:PTN000466159
+        source_label: PANTHER THI20-related node (PTHR20858:SF17)
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+        comment: Family node aggregates the paralog kinase activity; THI22-specific activity is unproven.
+- term:
+    id: GO:0009228
+    label: thiamine biosynthetic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Thiamine biosynthetic process is the family process, but THI22 has been shown NOT to be
+      required for thiamine biosynthesis. The phylogenetic propagation over-states THI22&#39;s role in
+      de novo biosynthesis.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      UniProt (from PMID:10383756) states THI22 &#34;is not required for thiamine biosynthesis&#34;. The
+      IBA correctly captures the family process but over-annotates THI22, whose contribution to de
+      novo biosynthesis is unproven and, on deletion evidence in the redundant family, dispensable.
+      A broader thiamine metabolic-process framing is more defensible for THI22 (see GO:0006772).
+    supported_by:
+    - reference_id: PMID:10383756
+      supporting_text: &gt;-
+        We demonstrate that two members are isofunctional and encode a hydroxymethylpyrimidine
+        phosphate (HMP-P) kinase (EC 2.7.4.7), an activity required for the final steps of thiamine
+        biosynthesis
+      full_text_unavailable: true
+    propagation_review:
+      root_cause: PROPAGATION_BAD
+      failure_modes:
+      - FUNCTIONAL_DIVERGENCE
+      source_entities:
+      - source_id: SGD:S000005416
+        source_label: THI20
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+        comment: &gt;-
+          THI20/THI21 are required for thiamine biosynthesis; THI22 is explicitly not required, so
+          the biosynthetic-process role should not propagate to it.
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      This location is derived automatically from a predicted N-terminal signal peptide
+      (UniProt SubCell &#34;Secreted&#34;, ECO:0000305). Secretion is biologically implausible for a
+      cytosolic thiamine-metabolism enzyme and conflicts with the cytosol IBA and with the
+      cytosolic biochemistry of the paralogs.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Pure prediction from a signal-peptide/SubCell mapping, not experimental. THI22&#39;s paralogs
+      THI20/THI21 function in the cytosol, and there is no evidence THI22 is secreted or that a
+      secreted thiamine-pathway enzyme would be functional. Whether the predicted N-terminal
+      extension is a genuine targeting signal is itself a knowledge gap; the extracellular
+      annotation should not be treated as established localization.
+- term:
+    id: GO:0006772
+    label: thiamine metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      General thiamine metabolic process (parent of both biosynthesis and salvage/degradation).
+      Defensible at the family level: THI22 is thiamine-regulated and carries intact HMP-P kinase
+      and thiaminase-II-like domains. This broad process term over-commits less than the specific
+      biosynthesis term.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      InterPro-based BP annotation. Appropriate as a broad, non-core framing given THI22&#39;s
+      thiamine-responsive regulation and its two thiamine-metabolism domains, while avoiding the
+      stronger and contradicted &#34;biosynthetic process&#34; claim.
+- term:
+    id: GO:0008972
+    label: phosphomethylpyrimidine kinase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      InterPro-derived duplicate of the HMP-P kinase MF annotation. Same assessment as the IBA
+      HMP-P kinase annotation: family activity propagated to THI22 but directly not demonstrated
+      for THI22.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      InterPro (IPR004399) maps the ThiD-like kinase domain to HMP-P kinase activity. The domain
+      is present and its catalytic residues are conserved, but the specific HMP-P kinase activity
+      was tested for THI22 and not detected (UniProt CAUTION, ECO:0000305; PMID:10383756
+      demonstrated the activity only for THI20/THI21), so this electronic annotation
+      over-annotates THI22.
+    supported_by:
+    - reference_id: PMID:10383756
+      supporting_text: &gt;-
+        We demonstrate that two members are isofunctional and encode a hydroxymethylpyrimidine
+        phosphate (HMP-P) kinase (EC 2.7.4.7), an activity required for the final steps of thiamine
+        biosynthesis
+      full_text_unavailable: true
+- term:
+    id: GO:0009228
+    label: thiamine biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Automated (multi-method IEA) thiamine biosynthetic process annotation. Same over-annotation
+      concern as the IBA biosynthesis annotation: THI22 is not required for thiamine biosynthesis.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      ARBA/InterPro electronic inference of de novo biosynthesis involvement, contradicted for
+      THI22 by the functional characterization showing it is not required for thiamine
+      biosynthesis. Broader thiamine metabolic process (GO:0006772) is the defensible level.
+    supported_by:
+    - reference_id: PMID:10383756
+      supporting_text: &gt;-
+        We demonstrate that two members are isofunctional and encode a hydroxymethylpyrimidine
+        phosphate (HMP-P) kinase (EC 2.7.4.7), an activity required for the final steps of thiamine
+        biosynthesis
+      full_text_unavailable: true
+- term:
+    id: GO:0050334
+    label: thiaminase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Thiaminase II activity (thiamine hydrolysis to HMP + thiazole, EC 3.5.99.2) is a
+      demonstrated activity of THI20 and maps to the C-terminal TenA/thiaminase-II-like domain
+      (IPR027574). THI22 retains this domain and both catalytic residues (nucleophile Cys and
+      proton-donor Glu, conserved with THI20 C468/E540), so the activity is domain-plausible but
+      not demonstrated for THI22.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Domain-defensible family activity (C-terminal TenA/thiaminase-II domain with conserved
+      catalytic Cys/Glu per inline alignment). Kept as non-core rather than accepted as a core
+      function because no thiaminase activity has been directly demonstrated for THI22, and the
+      1999 paper noted the C-terminal domain&#39;s function was unresolved.
+- term:
+    id: GO:0003674
+    label: molecular_function
+  evidence_type: ND
+  original_reference_id: GO_REF:0000015
+  qualifier: enables
+  review:
+    summary: Root molecular_function placeholder (ND, no biological data).
+    action: ACCEPT
+    reason: &gt;-
+      ND root-term placeholder recording that no specific molecular function had been curated by
+      SGD at annotation time. Standard practice; nothing to change.
+- term:
+    id: GO:0005575
+    label: cellular_component
+  evidence_type: ND
+  original_reference_id: GO_REF:0000015
+  qualifier: is_active_in
+  review:
+    summary: Root cellular_component placeholder (ND, no biological data).
+    action: ACCEPT
+    reason: &gt;-
+      ND root-term placeholder recording that no specific localization had been curated by SGD at
+      annotation time. Standard practice; nothing to change.
+- term:
+    id: GO:0009228
+    label: thiamine biosynthetic process
+  evidence_type: IEP
+  original_reference_id: PMID:10383756
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      SGD experimental (IEP) annotation from the primary paper. The underlying evidence is that
+      THI22 expression is induced under thiamine limitation, coordinately with THI20/THI21. This
+      thiamine-responsive regulation is genuinely established; however, the same work shows THI22
+      is not required for de novo thiamine biosynthesis, so annotation of THI22 to the specific
+      &#34;biosynthetic process&#34; term over-states its role — the co-regulation evidence supports
+      thiamine-pathway involvement, not a demonstrated biosynthetic contribution.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      IEP (inferred from expression pattern) reflects real, curator-read experimental evidence of
+      thiamine-dependent regulation, and per curation guidelines the experimental evidence itself
+      is not discarded. But the specific target term (thiamine BIOSYNTHETIC process) over-states
+      THI22&#39;s role: the same paper establishes THI22 is not required for thiamine biosynthesis.
+      The regulation-based involvement is better captured by the broader thiamine metabolic process
+      (GO:0006772). Marked over-annotated (not removed) to preserve the experimental co-regulation
+      evidence while flagging the term as too specific for THI22.
+    supported_by:
+    - reference_id: PMID:10383756
+      supporting_text: Expression of all three genes is regulated in the same way
+      full_text_unavailable: true
+core_functions:
+- description: &gt;-
+    THI22 is a member of the thiamine-metabolism HMP/HMP-P kinase + thiaminase-II family and is
+    transcriptionally induced under thiamine limitation, but no molecular activity has been
+    demonstrated for the protein itself and it is dispensable for de novo thiamine biosynthesis.
+    Its N-terminal ribokinase-fold kinase domain and C-terminal TenA/thiaminase-II-like domain
+    retain their substrate-binding and catalytic residues (conserved with the biochemically
+    characterized paralog THI20), so it is not an obviously residue-dead pseudoenzyme; however,
+    which (if any) of the family activities THI22 actually performs in vivo is unknown. The most
+    defensible statement of core function is therefore a broad, thiamine-responsive metabolic
+    involvement rather than a specific catalytic activity.
+  supported_by:
+  - reference_id: PMID:10383756
+    supporting_text: Expression of all three genes is regulated in the same way
+    full_text_unavailable: true
+  - reference_id: file:yeast/THI22/THI22-bioinformatics/RESULTS.md
+    supporting_text: &gt;-
+      All three THI20 functional residues are conserved in THI22
+  directly_involved_in:
+  - id: GO:0006772
+    label: thiamine metabolic process
+  knowledge_gaps:
+  - gap_statement: &gt;-
+      Whether THI22 has any catalytic activity in vivo — HMP kinase (EC 2.7.1.49), HMP-P kinase
+      (EC 2.7.4.7), or thiaminase II (EC 3.5.99.2) — is undetermined. The single direct enzymatic
+      test of the family that included THI22 detected no HMP-P kinase activity for it, and no other
+      activity or physiological substrate has been assayed.
+    boundary: &gt;-
+      Firmly established: the isofunctional paralogs THI20 and THI21 are HMP-P kinases required for
+      the final steps of thiamine biosynthesis, and THI20 additionally has HMP kinase and
+      thiaminase-II activity; THI22 is ~76% identical to THI20 and retains the substrate-binding
+      Gln, the Gly-rich phosphate-binding motif, and the thiaminase-II catalytic Cys and Glu.
+    gap_kind:
+    - BIOLOGY
+    dark_aspect: MF_DARK
+    status: OPEN
+    significance: &gt;-
+      A sequence-intact enzyme homolog with no demonstrable activity is a textbook candidate for a
+      cryptic/conditional activity, a divergent substrate, or an in-progress pseudoenzyme; resolving
+      it would clarify whether the third paralog is a functional but redundant enzyme or an
+      evolutionary relic.
+    resolution: &gt;-
+      Purify recombinant THI22 and assay HMP kinase, HMP-P kinase, and thiaminase-II activities
+      directly, and test complementation of thi20 thi21 double mutants under thiamine limitation.
+    provenance:
+    - reference_id: PMID:10383756
+      supporting_text: &gt;-
+        We demonstrate that two members are isofunctional and encode a hydroxymethylpyrimidine
+        phosphate (HMP-P) kinase (EC 2.7.4.7), an activity required for the final steps of thiamine
+        biosynthesis
+      full_text_unavailable: true
+    - reference_id: file:yeast/THI22/THI22-bioinformatics/RESULTS.md
+      supporting_text: &gt;-
+        All three THI20 functional residues are conserved in THI22
+  - gap_statement: &gt;-
+      The true subcellular localization of THI22 is unresolved. UniProt annotates it as Secreted
+      based on a predicted N-terminal signal peptide, whereas phylogenetic annotation and the
+      cytosolic biochemistry of the paralogs place the family in the cytosol; whether the
+      N-terminal extension is a genuine targeting signal is untested.
+    boundary: &gt;-
+      Established computationally: THI22 has a predicted N-terminal signal/targeting sequence
+      (residues 1-19) that the paralogs THI20/THI21 lack, and the family kinase reactions of de novo
+      thiamine biosynthesis occur in the cytosol.
+    gap_kind:
+    - BIOLOGY
+    dark_aspect: CC_DARK
+    status: OPEN
+    significance: &gt;-
+      A genuinely secreted thiamine-metabolism enzyme would be highly unusual and would imply a
+      distinct (e.g. extracellular thiamine salvage) role; distinguishing prediction artifact from
+      real re-localization is needed before the extracellular annotation can be trusted.
+    resolution: &gt;-
+      Determine THI22 localization experimentally (e.g. tagged-protein microscopy / fractionation)
+      and test whether the predicted N-terminal peptide is cleaved and directs secretion.
+  - gap_statement: &gt;-
+      Why S. cerevisiae retains a third, apparently redundant and enzymatically undemonstrated
+      paralog is unknown. Its selective advantage — conditional/stress-specific function, gene-dosage
+      buffering of thiamine metabolism, or ongoing pseudogenization — has not been established.
+    boundary: &gt;-
+      Established: all three paralogs are co-regulated and induced by thiamine limitation, THI20/THI21
+      provide the essential HMP-P kinase function, and single deletion of THI22 does not cause thiamine
+      auxotrophy in the redundant family context.
+    gap_kind:
+    - BIOLOGY
+    dark_aspect: BP_DARK
+    status: OPEN
+    significance: &gt;-
+      Understanding retention of the third paralog bears on how redundancy and dosage in essential
+      vitamin-biosynthesis pathways are maintained, and on whether THI22 has a condition-specific role
+      not captured by standard growth assays.
+    resolution: &gt;-
+      Test thi22 deletion (and thi20 thi21 thi22 triple-mutant, plus THI22-only rescue) phenotypes
+      across thiamine, HMP, and stress conditions, and examine conservation/selection of the THI22
+      lineage across Saccharomyces.
+    provenance:
+    - reference_id: PMID:10383756
+      supporting_text: Expression of all three genes is regulated in the same way
+      full_text_unavailable: true
+suggested_questions:
+- question: &gt;-
+    Does purified THI22 possess any of the family enzymatic activities (HMP kinase, HMP-P kinase,
+    or thiaminase II), or is it catalytically inactive despite conserved active-site residues?
+- question: &gt;-
+    Is THI22 actually secreted (as UniProt predicts) or cytosolic like THI20/THI21, and is the
+    predicted N-terminal signal peptide functional?
+- question: &gt;-
+    Under what physiological condition, if any, does THI22 provide a selectable function that
+    THI20 and THI21 do not?
+suggested_experiments:
+- hypothesis: &gt;-
+    THI22 encodes a functional but redundant thiamine-metabolism enzyme whose activity was missed
+    by the original HMP-P-kinase-focused assay.
+  description: &gt;-
+    Express and purify recombinant THI22 (with and without the predicted N-terminal peptide) and
+    assay HMP kinase, HMP-P kinase, and thiaminase-II activities in vitro; in parallel test whether
+    THI22 alone rescues growth of a thi20 thi21 double deletion under thiamine-limited conditions.
+- hypothesis: &gt;-
+    The predicted N-terminal signal peptide re-localizes THI22 away from the cytosolic paralogs.
+  description: &gt;-
+    Determine THI22 localization by fluorescent tagging and subcellular fractionation, and test
+    signal-peptide cleavage/secretion.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
