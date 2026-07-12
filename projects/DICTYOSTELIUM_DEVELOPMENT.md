@@ -206,21 +206,51 @@ Behavior of the multicellular slug and tip organizer.
   every annotation adjudicated (ACCEPT / KEEP_AS_NON_CORE / MODIFY / REMOVE /
   MARK_AS_OVER_ANNOTATED / UNDECIDED), with `description`, `core_functions`, and
   verbatim-quoted `supported_by` evidence; all pass `ai-gene-review validate`.
+- [x] **Reviewed all 32 priority genes (P1–P4)** — every annotation adjudicated
+  (ACCEPT / KEEP_AS_NON_CORE / MODIFY / REMOVE / MARK_AS_OVER_ANNOTATED /
+  UNDECIDED), with `description`, `core_functions`, and verbatim-quoted
+  `supported_by`; all pass `ai-gene-review validate`.
+- [x] **Reviewed the 8 direct functional paralogs** (carB/C/D, acgA, acrA, rasG,
+  pkaR, statC) — see [families table](#protein-families--paralog-coverage).
+- [x] **Closed the remaining module gaps (12 genes)** — second messengers,
+  DIF-1 biosynthesis, starvation, GRN, morphogenesis (see below). **All 14
+  enumerated modules now have reviewed representatives.**
 - [ ] Add per-gene `GENE-notes.md` deep-research journals where missing
 - [ ] Expert sign-off / second-pass QA of the reviews
-- [ ] Extend to remaining modules not yet in the priority list (e.g. cGMP
-  guanylyl cyclases gcA/sgcA, TF gtaC, tipA)
+- [ ] Deeper paralog families still open: wider *tgr* locus, other Ras/Rap,
+  dhk/grl family members, ecm/cot paralogs, statB/statD, additional atg genes
 
-### Reviewed genes (32, all validated)
+### Reviewed genes (52, all validated)
 
-| Priority | Genes |
-|----------|-------|
+| Batch | Genes |
+|-------|-------|
 | P1 — cAMP relay & chemotaxis | acaA, carA, gpaB, dagA, regA, pdsA, pkaC, rasC, pten, mhcA |
 | P2 — adhesion / DIF-1 / patterning | csaA, cadA, tgrB1, tgrC1, dmtA, dimB, cudA |
 | P3 — terminal differentiation & culmination | ecmA, ecmB, cotB, spiA, acbA, dhkA, tagC, grlE |
 | P4 — TFs / counting / autophagy | gbfA, statA, srfA, smlA, ctnA, atg1, yakA |
+| Paralogs (functional sisters) | carB, carC, carD, acgA, acrA, rasG, pkaR, statC |
+| Module-completion | gcA, sgcA, gbpC, gbpD, iplA (2nd messengers) · stlB, chlA, dimA (DIF-1 biosynthesis) · pufA, cmfA (starvation) · gtaC (GRN) · tipA (morphogenesis) |
 
 (`mlcD` was already reviewed prior to this project. `tgrC1` = `lagC`/`gp150`.)
+
+### Module coverage (all 14 represented)
+
+| # | Module | Reviewed representatives |
+|---|--------|--------------------------|
+| 1 | Starvation sensing & initiation | yakA, pufA, cmfA |
+| 2 | cAMP relay & oscillator | acaA, acgA, acrA, carA–D, gpaB, dagA, pkaC, pkaR, regA, pdsA |
+| 3 | Chemotaxis & actin motility | rasC, rasG, pten, mhcA, mlcD |
+| 4 | Adhesion & allorecognition | csaA, cadA, tgrB1, tgrC1 |
+| 5 | DIF-1 morphogen biosynthesis | stlB, chlA, dmtA |
+| 6 | Prestalk/prespore patterning | ecmA, cudA, dimA, dimB, cotB |
+| 7 | Stalk differentiation & death | ecmB, cudA, tagC |
+| 8 | Spore differentiation & encapsulation | cotB, spiA, acbA, srfA |
+| 9 | Culmination signaling | acbA, tagC, grlE, dhkA |
+| 10 | Autophagy | atg1 |
+| 11 | Cell counting / group size | smlA, ctnA |
+| 12 | Second messengers (cGMP/Ca²⁺) | gcA, sgcA, gbpC, gbpD, iplA |
+| 13 | Transcriptional GRN | gbfA, gtaC, statA, statC, srfA, dimA, dimB, cudA |
+| 14 | Morphogenesis / tip organizer | tipA |
 
 ## Protein families & paralog coverage
 
