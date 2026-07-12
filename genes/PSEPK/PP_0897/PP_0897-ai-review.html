@@ -1,0 +1,2312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PP_0897 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PP_0897</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88PF3" target="_blank" class="term-link">
+                        Q88PF3
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PP_0897";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88PF3" data-a="DESCRIPTION: Class-I, Fe-S-dependent fumarate hydratase of Pseu..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Class-I, Fe-S-dependent fumarate hydratase of Pseudomonas putida KT2440. PP_0897 catalyzes the reversible interconversion of fumarate and (S)-malate, providing one of the organism&#39;s three fumarase activities at the fumarate/malate step of the tricarboxylic acid cycle. Its class-I fumarase family assignment and [4Fe-4S] cofactor distinguish it from the two class-II, iron-independent fumarases in the same strain.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004333" target="_blank" class="term-link">
+                                    GO:0004333
+                                </a>
+                            </span>
+                            <span class="term-label">fumarate hydratase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88PF3" data-a="GO:0004333" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct core molecular function for this class-I fumarase.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt annotates Q88PF3 as fumarate hydratase class I with EC 4.2.1.2 and the reaction (S)-malate = fumarate + H2O. The PSEPK TCA-cycle pathway report identifies PP_0897 as the class-I fumarase covering the fumarate hydration step alongside two class-II fumarases.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_0897/PP_0897-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Catalyzes the reversible hydration of fumarate to (S)-malate.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:projects/P_PUTIDA/deep-research/PSEPK__tca_cycle__ppu00020-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">Triply redundant: one class-I fumarate hydratase (PP_0897, K01676) plus two class-II fumarases (K01679) (Finding F005).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006091" target="_blank" class="term-link">
+                                    GO:0006091
+                                </a>
+                            </span>
+                            <span class="term-label">generation of precursor metabolites and energy</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88PF3" data-a="GO:0006091" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Broad central-metabolism process term; the more specific TCA-cycle process is the appropriate context.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Fumarate hydration is part of energy-generating central carbon metabolism, but GO:0006091 is a broad parent-like process term. The pathway-specific role is the fumarate-to-malate step of the TCA cycle, so GO:0006099 should be used when a process annotation is needed.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006099" target="_blank" class="term-link">
+                                    tricarboxylic acid cycle
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:projects/P_PUTIDA/deep-research/PSEPK__tca_cycle__ppu00020-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">Step 7 is robustly covered.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016829" target="_blank" class="term-link">
+                                    GO:0016829
+                                </a>
+                            </span>
+                            <span class="term-label">lyase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88PF3" data-a="GO:0016829" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but too broad for a fumarase with a defined hydro-lyase activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Fumarate hydratase is a lyase, but this parent term lacks substrate and reaction specificity. GO:0004333 captures the core activity.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016836" target="_blank" class="term-link">
+                                    GO:0016836
+                                </a>
+                            </span>
+                            <span class="term-label">hydro-lyase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88PF3" data-a="GO:0016836" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct intermediate hydro-lyase class term, but less informative than fumarate hydratase activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PP_0897 catalyzes a hydro-lyase reaction, but the specific enzyme activity GO:0004333 should be treated as core.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046872" target="_blank" class="term-link">
+                                    GO:0046872
+                                </a>
+                            </span>
+                            <span class="term-label">metal ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88PF3" data-a="GO:0046872" data-r="GO_REF:0000104" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct broad cofactor-binding annotation for a class-I Fe-S fumarase.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt annotates a [4Fe-4S] cluster cofactor, so metal ion binding is biologically plausible, but it is a broad parent of the more informative iron-sulfur cluster binding annotation and is not the core catalytic role.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051539" target="_blank" class="term-link">
+                                    GO:0051539
+                                </a>
+                            </span>
+                            <span class="term-label">4 iron, 4 sulfur cluster binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88PF3" data-a="GO:0051539" data-r="GO_REF:0000104" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct cofactor feature for a class-I, Fe-S-dependent fumarase.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt annotates a [4Fe-4S] cluster for Q88PF3 and class-I fumarases are Fe-S hydro-lyases. This supports the enzyme mechanism but is not the primary molecular function to emphasize over fumarate hydratase activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_0897/PP_0897-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Name=[4Fe-4S] cluster; Xref=ChEBI:CHEBI:49883;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Class-I fumarate hydratase catalyzing the reversible hydration/dehydration between fumarate and (S)-malate at the TCA-cycle fumarate/malate step.</h3>
+                <span class="vote-buttons" data-g="Q88PF3" data-a="FUNCTION: Class-I fumarate hydratase catalyzing the reversib..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004333" target="_blank" class="term-link">
+                            fumarate hydratase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006099" target="_blank" class="term-link">
+                                tricarboxylic acid cycle
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_0897/PP_0897-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Catalyzes the reversible hydration of fumarate to (S)-malate.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:projects/P_PUTIDA/deep-research/PSEPK__tca_cycle__ppu00020-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">Triply redundant: one class-I fumarate hydratase (PP_0897, K01676) plus two class-II fumarases (K01679) (Finding F005).</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_0897/PP_0897-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry Q88PF3 for Pseudomonas putida KT2440 PP_0897</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt annotates PP_0897 as a class-I fumarate hydratase catalyzing reversible fumarate hydration to (S)-malate.</div>
+
+                        <div class="finding-text">"Catalyzes the reversible hydration of fumarate to (S)-malate."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt annotates PP_0897 as an Fe-S-dependent fumarase with a [4Fe-4S] cluster.</div>
+
+                        <div class="finding-text">"Name=[4Fe-4S] cluster; Xref=ChEBI:CHEBI:49883;"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:projects/P_PUTIDA/deep-research/PSEPK__tca_cycle__ppu00020-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist PSEPK TCA-cycle pathway report</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The PSEPK pathway report identifies PP_0897 as one of three fumarases covering the fumarate hydration step.</div>
+
+                        <div class="finding-text">"Triply redundant: one class-I fumarate hydratase (PP_0897, K01676) plus two class-II fumarases (K01679) (Finding F005)."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Under which growth or stress conditions is the Fe-S class-I fumarase PP_0897 used instead of the class-II fumarases FumC-I and FumC?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88PF3" data-a="Q: Under which growth or stress conditions is the Fe-..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Measure fumarase activity and growth phenotypes in PP_0897, fumC-I, and fumC single and combined mutants under aerobic, iron-limited, and oxidative-stress conditions to resolve isozyme specialization.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q88PF3" data-a="EXPERIMENT: Measure fumarase activity and growth phenotypes in..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PP_0897-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88PF3" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation of PP_0897 (UniProt Q88PF3): The Class I [4Fe-4S] Fumarate Hydratase of *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">7 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-11T18:05:14.246823</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="PP_0897-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="PP_0897-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-of-pp_0897-uniprot-q88pf3-the-class-i-4fe-4s-fumarate-hydratase-of-pseudomonas-putida-kt2440">Functional Annotation of PP_0897 (UniProt Q88PF3): The Class I [4Fe-4S] Fumarate Hydratase of <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="summary">Summary</h2>
+<p><strong>PP_0897 (UniProt Q88PF3) encodes the class I fumarate hydratase (fumarase; EC 4.2.1.2) of <em>Pseudomonas putida</em> KT2440.</strong> It is a soluble, cytoplasmic, iron–sulfur enzyme that uses a catalytic [4Fe-4S] cluster to catalyze the reversible hydration/dehydration reaction interconverting fumarate and (S)-malate (L-malate). This is the penultimate step of the oxidative branch of the tricarboxylic acid (TCA) cycle (succinate → fumarate → <strong>malate</strong> → oxaloacetate). The gene identity, organism, protein family, and domain architecture supplied by the UniProt record are all internally consistent and are corroborated by sequence, structural, and biochemical evidence drawn from well-characterized homologs, so this annotation is made with high confidence.</p>
+<p>Mechanistically, PP_0897 belongs to the <strong>class I fumarase family</strong>, which is biochemically and evolutionarily distinct from the more familiar iron-independent class II fumarases. Class I enzymes are single-chain (or two-subunit) proteins that carry a catalytic [4Fe-4S] cluster whose <strong>unique, non-cysteine-ligated iron</strong> binds substrate directly and acts as a Lewis acid during catalysis. This cofactor makes the enzyme heat-labile and oxygen-sensitive. PP_0897 is a FumA/FumB-type enzyme: global sequence alignment shows ~36% identity to <em>Escherichia coli</em> FumA (class I) versus only ~21–23% identity to class II fumarases (<em>E. coli</em> FumC, human FH), placing it unambiguously in the class I lineage. Three conserved cysteines — predicted here to be <strong>C66, C185, and C277</strong> — are positionally conserved with the <em>E. coli</em> FumA cluster ligands and are contributed by both of the protein's catalytic domains.</p>
+<p>Within <em>P. putida</em> KT2440, PP_0897 is the <strong>sole class I fumarase among three fumarase isozymes</strong>, the other two being class II enzymes (PP_0944 and PP_1755). This mirrors the <em>E. coli</em> arrangement of iron-dependent class I enzymes (FumA/FumB) coexisting with an iron-independent class II enzyme (FumC) that is specifically induced under iron limitation and oxidative (superoxide) stress. The implication is that PP_0897 provides the principal, iron-dependent fumarase activity of the aerobic TCA cycle under nutrient-replete conditions, while the class II isozymes offer a redundant, iron- and oxidative-stress-resistant backup — a division of labor with important consequences for metabolic robustness in this environmentally versatile, biotechnologically important soil bacterium.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="f001-pp_0897-is-a-class-i-4fe-4s-fumarate-hydratase-catalyzing-reversible-fumarate-s-malate-ec-4212">F001 — PP_0897 is a class I [4Fe-4S] fumarate hydratase catalyzing reversible fumarate ↔ (S)-malate (EC 4.2.1.2)</h3>
+<p>The primary function of PP_0897 is enzymatic: it catalyzes the <strong>reversible hydration of fumarate to (S)-malate</strong> (equivalently, the dehydration of (S)-malate to fumarate), classified as EC 4.2.1.2. The UniProt Q88PF3 record annotates the FUNCTION as "Catalyzes the reversible hydration of fumarate to (S)-malate," specifies the catalytic activity as (S)-malate = fumarate + H₂O (RHEA:12460), lists a [4Fe-4S] cluster cofactor (ChEBI:49883), and carries the keywords 4Fe-4S / Iron-sulfur / Lyase, with the family assignment "Belongs to the class-I fumarase family." The protein is a 507-amino-acid single polypeptide organized into two catalytic domains: an Fe-S hydro-lyase tartrate-dehydratase alpha-type domain (residues ~11–285) and a beta-type domain (residues ~289–488).</p>
+<p>This annotation is grounded in decades of biochemistry. Class I fumarases were biochemically defined in <em>E. coli</em>, which contains <strong>three biochemically distinct fumarases</strong>: the <em>fumA</em> and <em>fumB</em> gene products are heat-labile, iron-containing enzymes, while <em>fumC</em> encodes a heat-stable enzyme that does not require iron (<a href="https://pubmed.ncbi.nlm.nih.gov/7592392/">PMID: 7592392</a>). The mechanistic hallmark of the class I family is its cofactor: class I fumarate hydratases "use a [4Fe-4S] cluster to catalyze the reversible conversion of fumarate to" malate (<a href="https://pubmed.ncbi.nlm.nih.gov/31743022/">PMID: 31743022</a>). The reaction and enzyme classification are confirmed independently: "Fumarate hydratases (FHs; EC 4.2.1.2) are enzymes that catalyze the reversible hydration of fumarate to S-malate" (<a href="https://pubmed.ncbi.nlm.nih.gov/22569531/">PMID: 22569531</a>). Every element of the Q88PF3 annotation — the reaction, the EC number, the cofactor, and the family — is therefore consistent with the established biochemistry of class I fumarases.</p>
+<h3 id="f002-catalytic-mechanism-substrate-coordinates-the-unique-fe-of-the-4fe-4s-cluster-the-enzyme-is-oxygen-sensitive">F002 — Catalytic mechanism: substrate coordinates the unique Fe of the [4Fe-4S] cluster; the enzyme is oxygen-sensitive</h3>
+<p>The catalytic mechanism of PP_0897 can be inferred with confidence from crystal structures of its close structural/mechanistic homolog, the class I fumarate hydratase of <em>Leishmania major</em>. In these structures, "the substrate S-malate is bound bidentate to the unique iron of the [4Fe-4S] cluster" (<a href="https://pubmed.ncbi.nlm.nih.gov/27528683/">PMID: 27528683</a>). This unique iron — the one cluster iron <em>not</em> ligated by a protein cysteine — functions as a <strong>Lewis acid</strong>, polarizing the substrate and facilitating the <em>anti</em> addition/elimination of water across the C=C double bond of fumarate.</p>
+<p>The catalytic importance and class-specificity of this unique iron is demonstrated by inhibitor studies: the selectivity of the inhibitor 2-thiomalate for class I FHs "is due to direct coordination of the inhibitor to the unique Fe of the catalytic [4Fe-4S] cluster that is found in class I parasitic FHs but is absent from class II human FH" (<a href="https://pubmed.ncbi.nlm.nih.gov/30645090/">PMID: 30645090</a>). This is the defining biochemical difference between the two fumarase classes: class I enzymes contain the substrate-binding iron; class II enzymes do not.</p>
+<p>A direct physiological consequence of relying on a solvent-exposed [4Fe-4S] cluster is <strong>oxygen sensitivity</strong>. The catalytic efficiency of class I FHs "under aerobic and anaerobic environments suggests that they are both highly sensitive to oxidation and damaged by oxygen" (<a href="https://pubmed.ncbi.nlm.nih.gov/22569531/">PMID: 22569531</a>). Consistent with the redox chemistry of such clusters, the <em>E. coli</em> class I FumA/FumB [4Fe-4S] Lewis-acid active center has a reduction potential of approximately −290 mV (<a href="https://pubmed.ncbi.nlm.nih.gov/23405168/">PMID: 23405168</a>). PP_0897 is therefore predicted to be an oxygen-labile, iron-dependent enzyme whose activity can be compromised under oxidative stress — a property that rationalizes the existence of the oxidatively robust class II backups (see F005).</p>
+<h3 id="f003-sequenceevolutionary-evidence-pp_0897-is-a-fumafumb-type-single-chain-class-i-fumarase">F003 — Sequence/evolutionary evidence: PP_0897 is a FumA/FumB-type single-chain class I fumarase</h3>
+<p>A Needleman–Wunsch global alignment of Q88PF3 (507 aa) against reference fumarases places PP_0897 firmly in the class I lineage. It shares <strong>35.6% identity with <em>E. coli</em> FumA</strong> (P0AC33, aerobic class I) and <strong>33.4% with FumB</strong> (P14407, anaerobic class I), but only <strong>22.9% with <em>E. coli</em> FumC</strong> (P05042, class II) and <strong>20.6% with human FH</strong> (P07954, class II). The latter two values are at the level expected for unrelated proteins of similar length, so the sequence data cleanly separate PP_0897 (class I) from the class II fumarases.</p>
+<table>
+<thead>
+<tr>
+<th>Reference enzyme</th>
+<th>UniProt</th>
+<th>Class</th>
+<th>Identity to PP_0897</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>E. coli</em> FumA</td>
+<td>P0AC33</td>
+<td>I (aerobic)</td>
+<td>35.6%</td>
+</tr>
+<tr>
+<td><em>E. coli</em> FumB</td>
+<td>P14407</td>
+<td>I (anaerobic)</td>
+<td>33.4%</td>
+</tr>
+<tr>
+<td><em>E. coli</em> FumC</td>
+<td>P05042</td>
+<td>II</td>
+<td>22.9%</td>
+</tr>
+<tr>
+<td>Human FH</td>
+<td>P07954</td>
+<td>II</td>
+<td>20.6%</td>
+</tr>
+<tr>
+<td><em>E. coli</em> TtdA (α subunit only)</td>
+<td>P0AC35</td>
+<td>I (tartrate dehydratase α)</td>
+<td>21.9%</td>
+</tr>
+</tbody>
+</table>
+<p>The 21.9% identity to the standalone tartrate-dehydratase alpha subunit TtdA (201 aa) is consistent with PP_0897 being a <strong>fused single chain containing both the alpha and beta catalytic domains</strong> — in some organisms these are separate polypeptides (TtdA/TtdB), whereas here they are combined in one 507-residue protein. This matches the UniProt/InterPro domain architecture: a TtdA-type alpha-catalytic domain (IPR004646, res ~11–285) followed by a TtdB-type beta-catalytic domain (IPR004647, res ~289–488), assembling as a homodimer.</p>
+<p>The FumA/FumB enzymes to which PP_0897 is homologous are well characterized: "FumA and FumB are essentially identical in their Michaelis–Menten kinetics of the reversible fumarate to L-malate conversion; however, FumB has a significantly greater catalytic efficiency for the conversion of D-tartrate to oxaloacetate consistent with the requirement of the fumB gene for growth on D-tartrate" (<a href="https://pubmed.ncbi.nlm.nih.gov/23405168/">PMID: 23405168</a>). This establishes both the main reaction and a possible secondary D-tartrate activity that class I enzymes can support. Structurally, the class I fold is dimeric with "a dimeric architecture for this FH that resembles a heart, with each lobe comprised of two domains that are arranged around the active site" (<a href="https://pubmed.ncbi.nlm.nih.gov/27528683/">PMID: 27528683</a>) — matching PP_0897's fused alpha+beta domains and annotated homodimeric state.</p>
+<h3 id="f004-localization-and-pathway-a-cytoplasmic-soluble-enzyme-performing-the-fumarase-step-of-the-tca-cycle">F004 — Localization and pathway: a cytoplasmic soluble enzyme performing the fumarase step of the TCA cycle</h3>
+<p>PP_0897 is predicted to be a <strong>soluble cytoplasmic protein</strong>. The Q88PF3 record shows no signal peptide, no transmembrane segment, and no lipoprotein or secretion features — the profile of a cytosolic enzyme. Bacterial class I fumarases (<em>E. coli</em> FumA/FumB) are cytoplasmic TCA-cycle enzymes. In eukaryotes that possess class I FHs, the isoforms partition between organelles — "Intracellular localization studies located LmFH-1 in the mitochondrion, whereas LmFH-2 was found predominantly in the cytosol with possibly also some in glycosomes" (<a href="https://pubmed.ncbi.nlm.nih.gov/22569531/">PMID: 22569531</a>) — but prokaryotes such as <em>P. putida</em> lack these compartments, so PP_0897 necessarily acts in the cytoplasm.</p>
+<p>Functionally, the reaction fumarate + H₂O ⇌ (S)-malate is the <strong>penultimate step of the oxidative TCA cycle</strong> (succinate → fumarate → malate → oxaloacetate). Fumarase is a canonical TCA-cycle enzyme: "The tricarboxylic acid cycle enzyme fumarase catalyzes the interconversion of fumarate to L-malate" (<a href="https://pubmed.ncbi.nlm.nih.gov/7592392/">PMID: 7592392</a>). <em>P. putida</em> KT2440 is an obligate aerobe that operates a complete TCA cycle for energy generation and biosynthetic precursor supply, while routing sugar catabolism through the Entner–Doudoroff pathway. PP_0897 thus sits at the heart of central carbon and energy metabolism, supplying malate/oxaloacetate for respiration, anaplerosis, and gluconeogenesis.</p>
+<h3 id="f005-pp_0897-is-the-sole-class-i-fumarase-among-three-fumarase-isozymes-in-p-putida-kt2440">F005 — PP_0897 is the sole class I fumarase among three fumarase isozymes in <em>P. putida</em> KT2440</h3>
+<p>A UniProt survey of the KT2440 proteome (taxid 160488) returns <strong>three fumarate hydratases</strong>: PP_0897 / Q88PF3 (class I, 507 aa, [4Fe-4S]) plus two class II enzymes, PP_0944 / Q88PA6 (459 aa) and PP_1755 / Q88M20 (464 aa). PP_0897 is therefore the organism's only iron-sulfur, class I fumarase.</p>
+<table>
+<thead>
+<tr>
+<th>Locus</th>
+<th>UniProt</th>
+<th>Class</th>
+<th>Length</th>
+<th>Cofactor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>PP_0897</strong></td>
+<td>Q88PF3</td>
+<td><strong>I</strong></td>
+<td>507 aa</td>
+<td>[4Fe-4S]</td>
+</tr>
+<tr>
+<td>PP_0944</td>
+<td>Q88PA6</td>
+<td>II</td>
+<td>459 aa</td>
+<td>none (Fe-independent)</td>
+</tr>
+<tr>
+<td>PP_1755</td>
+<td>Q88M20</td>
+<td>II</td>
+<td>464 aa</td>
+<td>none (Fe-independent)</td>
+</tr>
+</tbody>
+</table>
+<p>This arrangement recapitulates the well-studied <em>E. coli</em> paradigm, in which iron-dependent class I enzymes (FumA/FumB) coexist with an iron-independent class II enzyme (FumC). The two systems are differentially regulated by iron and oxidative stress: "Cellular iron limitation stimulated fumC but not fumA expression. Superoxide radicals also caused increased fumC gene expression; fumA expression was unaffected. Both the superoxide control and the iron control of fumC expression required the SoxR regulatory protein" (<a href="https://pubmed.ncbi.nlm.nih.gov/7592392/">PMID: 7592392</a>). The most likely physiological interpretation is that PP_0897 provides the principal fumarase activity under iron-replete, low-oxidative-stress conditions, while the class II isozymes (which lack the vulnerable Fe-S cluster) act as backups when iron is scarce or superoxide is elevated — precisely the conditions under which the class I enzyme's cluster would be at risk. That class I [4Fe-4S] fumarases can be differentially regulated to serve distinct niches is directly supported: "The highly homologous [4Fe-4S] containing fumarases FumA and FumB, sharing 90% amino acid sequence identity, from <em>Escherichia coli</em> are differentially regulated, which suggests a difference in their physiological function" (<a href="https://pubmed.ncbi.nlm.nih.gov/23405168/">PMID: 23405168</a>).</p>
+<p>PP_0897 carries conserved cysteine motifs in both catalytic domains — alpha-domain C58 (…RMCATGH…) / C66 (…PICQDTG…) and beta-domain C272/C277 (…CMIPNC…) — consistent with the three-cysteine ligation of a catalytic [4Fe-4S] cluster that leaves the unique Fe available for substrate binding.</p>
+<h3 id="f006-refined-4fe-4s-cluster-ligand-prediction-three-conserved-cysteines-c66-c185-c277">F006 — Refined [4Fe-4S] cluster ligand prediction: three conserved cysteines C66, C185, C277</h3>
+<p>Class I fumarate hydratases coordinate their catalytic [4Fe-4S] cluster with <strong>three</strong> cysteines, leaving the fourth "unique" iron free for substrate binding (F002). To identify which of PP_0897's five cysteines serve as cluster ligands, a global (Needleman–Wunsch) alignment of PP_0897 (Q88PF3) to <em>E. coli</em> FumA (P0AC33) was performed. Exactly three of PP_0897's cysteines are positionally conserved with FumA cysteines:</p>
+<table>
+<thead>
+<tr>
+<th>PP_0897 residue</th>
+<th>Aligns to FumA</th>
+<th>Conserved motif</th>
+<th>Domain</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>C66</strong></td>
+<td>C105</td>
+<td>…PI<strong>C</strong>QDTG… ('CQDTG')</td>
+<td>α / TtdA-type</td>
+</tr>
+<tr>
+<td><strong>C185</strong></td>
+<td>C224</td>
+<td>…GW<strong>C</strong>PPG… ('CPP')</td>
+<td>α / TtdA-type</td>
+</tr>
+<tr>
+<td><strong>C277</strong></td>
+<td>C318</td>
+<td>…MIPN<strong>C</strong>AA…</td>
+<td>β / TtdB-type</td>
+</tr>
+<tr>
+<td>C58 (not conserved)</td>
+<td>A97</td>
+<td>—</td>
+<td>α</td>
+</tr>
+<tr>
+<td>C272 (not conserved)</td>
+<td>G313</td>
+<td>—</td>
+<td>β</td>
+</tr>
+</tbody>
+</table>
+<p>The three conserved cysteines (C66, C185, C277) are contributed by <strong>both</strong> catalytic domains — C66 and C185 from the alpha/TtdA-type domain and C277 from the beta/TtdB-type domain — which is exactly the expected topology for a two-domain class I fumarase assembling a single inter-domain cluster. The two non-conserved cysteines (C58, C272) align to non-cysteine residues in FumA (Ala97 and Gly313, respectively) and are therefore not predicted to be cluster ligands.</p>
+<p>This prediction rests on two experimentally established facts: the class I fold "reveals a previously undiscovered protein fold that coordinates a catalytically essential [4Fe-4S] cluster" (<a href="https://pubmed.ncbi.nlm.nih.gov/27528683/">PMID: 27528683</a>), and the reference enzyme is a genuine [4Fe-4S] protein — "The highly homologous [4Fe-4S] containing fumarases FumA and FumB" (<a href="https://pubmed.ncbi.nlm.nih.gov/23405168/">PMID: 23405168</a>). C66, C185, and C277 are thus the most probable [4Fe-4S] cluster ligands of PP_0897, with the unique fourth iron reserved for fumarate/(S)-malate coordination.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>Bringing the findings together, PP_0897 can be modeled as follows.</p>
+<p><strong>Reaction and role in metabolism.</strong> PP_0897 catalyzes one specific, reversible step of central metabolism:</p>
+<div class="codehilite"><pre><span></span><code>        PP_0897 (class I FH, [4Fe-4S])
+   <span class="k">...</span> succinate ──► fumarate  +  H2O  ⇌  (S)-malate ──► oxaloacetate ...
+(SDH)                                                (MDH)
+     └──────── oxidative TCA cycle ────────┘
+</code></pre></div>
+
+<p>The enzyme operates in the cytoplasm of an aerobically respiring cell, feeding the malate/oxaloacetate node that supports respiration, anaplerosis, and gluconeogenesis. Because <em>P. putida</em> KT2440 catabolizes sugars via the Entner–Doudoroff pathway, the TCA cycle — and hence PP_0897 — is central to energy conservation and precursor supply rather than to glycolytic flux per se.</p>
+<p><strong>Active-site chemistry.</strong> The catalytic engine is a [4Fe-4S] cluster ligated by three cysteines (predicted C66, C185, C277), with the fourth "unique" iron left open:</p>
+<div class="codehilite"><pre><span></span><code>Cys66  Cys185   Cys277           substrate
+    \    |      /                  |
+     [4Fe-4S] cluster ── Fe_unique ── O–C (S)-malate / fumarate
+                (Lewis acid)
+</code></pre></div>
+
+<p>The unique iron binds substrate bidentate and polarizes it as a Lewis acid, enabling stereospecific <em>anti</em> hydration/dehydration across the olefinic bond. This is the same chemistry demonstrated crystallographically for the <em>Leishmania major</em> enzyme and probed with the class-I-selective inhibitor 2-thiomalate. The solvent-exposed, redox-active cluster is the source of the enzyme's heat lability and oxygen sensitivity.</p>
+<p><strong>Isozyme division of labor.</strong> KT2440 hedges against the vulnerability of its class I enzyme by maintaining two iron-independent class II fumarases:</p>
+<div class="codehilite"><pre><span></span><code>   Iron-replete, low oxidative stress   ──►  PP_0897 (class I, [4Fe-4S])  = primary
+   Iron limitation / superoxide stress  ──►  PP_0944, PP_1755 (class II)  = robust backup
+</code></pre></div>
+
+<p>By analogy with the <em>E. coli</em> FumA/FumC system (SoxR-controlled induction of the class II enzyme under iron limitation and superoxide stress), the class II isozymes likely safeguard fumarase flux precisely when the class I cluster would be damaged. This makes PP_0897's physiological role <strong>conditional and partly redundant</strong>: it is the workhorse fumarase under favorable conditions, but not indispensable, because backup capacity exists. This is consistent with the general finding that many central-metabolic genes in KT2440 are only conditionally essential (<a href="https://pubmed.ncbi.nlm.nih.gov/20158506/">PMID: 20158506</a>).</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Study (abbrev.)</th>
+<th>How it supports the findings</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/7592392/">7592392</a></td>
+<td>Oxygen, iron, carbon, superoxide control of <em>E. coli</em> fumA/fumC</td>
+<td>Defines the three-fumarase system; distinguishes iron-containing class I (FumA/FumB) from iron-independent class II (FumC); establishes SoxR-dependent induction of class II under iron/superoxide stress (F001, F004, F005)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/31743022/">31743022</a></td>
+<td>Structural/biochemical study of a [4Fe-4S] fumarate hydratase</td>
+<td>States class I FHs use a [4Fe-4S] cluster for the reversible reaction (F001)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/22569531/">22569531</a></td>
+<td>FH isoforms of <em>Leishmania major</em></td>
+<td>Confirms EC 4.2.1.2 and reversible fumarate ↔ (S)-malate; documents oxygen sensitivity; shows cytosolic/mitochondrial localization of class I FHs (F001, F002, F004)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/27528683/">27528683</a></td>
+<td>Crystal structure of <em>L. major</em> Fe-S FH</td>
+<td>Shows substrate S-malate bound bidentate to the unique Fe of the [4Fe-4S] cluster; describes the novel dimeric "heart-shaped" two-domain fold; establishes the cluster is catalytically essential (F002, F003, F006)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/30645090/">30645090</a></td>
+<td><em>L. major</em> FH with 2-thiomalate</td>
+<td>Class I selectivity arises from inhibitor coordination to the unique Fe — present in class I, absent in class II human FH (F002)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23405168/">23405168</a></td>
+<td>Biochemistry of <em>E. coli</em> FumA vs FumB</td>
+<td>Characterizes the [4Fe-4S] class I enzymes PP_0897 is homologous to; reports reduction potential (~−290 mV), differential regulation, and secondary D-tartrate activity of FumB (F002, F003, F005, F006)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/20158506/">20158506</a></td>
+<td>Conditionally essential genes of KT2440</td>
+<td>Context for the conditional/redundant essentiality of central-metabolic genes in this organism (interpretation, F005)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>How the evidence converges.</strong> No primary study characterizes PP_0897 (Q88PF3) directly; the annotation is an inference from (i) the UniProt/InterPro record, (ii) high sequence identity to the experimentally characterized <em>E. coli</em> class I enzymes FumA/FumB, and (iii) crystallographic and mechanistic work on the structurally homologous <em>Leishmania major</em> class I FH. Every independent line — reaction chemistry, cofactor, fold, cluster-ligand topology, and isozyme complement — agrees. The literature corpus also contains many recent papers on mammalian FH in cancer and inflammation (e.g., fumarate/succination biology in renal cell carcinoma, colon cancer, and renal fibrosis). These concern the <em>class II</em> human enzyme and downstream fumarate signaling; while they reinforce the centrality of the fumarase reaction to metabolism, they are <strong>not</strong> direct evidence for the bacterial class I enzyme PP_0897 and were not used to support the mechanistic claims here.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct experimental characterization of PP_0897.</strong> There is, to date, no purified-protein biochemistry, crystal structure, EPR/Mössbauer cluster characterization, or knockout phenotype specifically for the <em>P. putida</em> KT2440 gene. All functional claims are inferences by homology (albeit strong ones).</p>
+</li>
+<li>
+<p><strong>Cluster-ligand assignment is computational.</strong> The C66/C185/C277 prediction rests on global sequence alignment to <em>E. coli</em> FumA. It has not been confirmed by structure or by site-directed mutagenesis. Alignment-based ligand mapping can be misled by insertions/deletions near the active site.</p>
+</li>
+<li>
+<p><strong>Kinetic parameters are unknown.</strong> K_m, k_cat, substrate specificity (including any secondary D-tartrate dehydratase activity as seen for FumB), and the exact reduction potential of PP_0897's cluster have not been measured.</p>
+</li>
+<li>
+<p><strong>Regulation and isozyme division of labor are assumed, not demonstrated.</strong> The proposed iron-/oxidative-stress-conditional role and the backup function of PP_0944/PP_1755 are extrapolated from the <em>E. coli</em> SoxR paradigm. KT2440 uses different regulatory circuitry (e.g., HexR governs much of its central carbon metabolism), and whether the three fumarases are differentially expressed across iron/oxygen/carbon conditions in KT2440 remains untested.</p>
+</li>
+<li>
+<p><strong>Localization is inferred from sequence features.</strong> The cytoplasmic assignment follows from the absence of signal/transmembrane features and general prokaryotic cell biology, not from a localization experiment.</p>
+</li>
+<li>
+<p><strong>Quaternary structure is annotation-based.</strong> The homodimer assignment follows InterPro/UniProt and homology to the "heart-shaped" dimeric class I fold; it has not been verified for PP_0897 (e.g., by size-exclusion chromatography or native mass spectrometry).</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Recombinant expression and anaerobic purification.</strong> Express PP_0897 (with an affinity tag) in <em>E. coli</em> or <em>P. putida</em> under anaerobic/low-oxygen conditions to protect the [4Fe-4S] cluster; confirm cluster incorporation by UV-visible spectroscopy (~400 nm shoulder), iron/sulfide analysis, and EPR/Mössbauer.</p>
+</li>
+<li>
+<p><strong>Steady-state kinetics.</strong> Measure K_m and k_cat for fumarate hydration and (S)-malate dehydration; test for secondary D-tartrate dehydratase activity (as in FumB). Assess heat lability and O₂ sensitivity quantitatively to confirm the class I phenotype.</p>
+</li>
+<li>
+<p><strong>Site-directed mutagenesis of predicted ligands.</strong> Individually mutate C66, C185, and C277 to Ser/Ala and confirm loss of cluster and catalysis, while mutating C58 and C272 as negative controls, to test the F006 ligand-assignment prediction.</p>
+</li>
+<li>
+<p><strong>Structure determination.</strong> Solve the PP_0897 crystal or cryo-EM structure (ideally with bound (S)-malate or the 2-thiomalate inhibitor) to verify the fold, the dimeric assembly, and the substrate–unique-Fe coordination geometry.</p>
+</li>
+<li>
+<p><strong>Genetic and physiological dissection of the three-fumarase system.</strong> Construct single and combinatorial deletions of PP_0897, PP_0944, and PP_1755; assay growth on succinate/malate/fumarate and TCA-dependent carbon sources across iron-replete vs. iron-limited and oxidative-stress (paraquat) conditions to test the proposed conditional/redundant roles.</p>
+</li>
+<li>
+<p><strong>Expression profiling.</strong> Use RT-qPCR/RNA-seq to measure how the three fumarase genes respond to iron limitation, superoxide stress, and different carbon sources, and identify the regulators controlling them in KT2440 (e.g., relationship to HexR and iron/oxidative-stress regulons).</p>
+</li>
+<li>
+<p><strong>Localization confirmation.</strong> Verify cytoplasmic localization by cell fractionation or a fluorescent fusion, controlling for possible cluster/fusion artifacts.</p>
+</li>
+</ol>
+<hr />
+<h2 id="gene-identity-verification">Gene Identity Verification</h2>
+<p>The gene symbol PP_0897, the organism (<em>Pseudomonas putida</em> KT2440, PSEPK; strain ATCC 47054 / DSM 6125 / NCIMB 11950 / KT2440), the protein family (class-I fumarase), and the domain architecture (Fe-S hydro-lyase TtdA-type + TtdB-type catalytic domains; PF05681 Fumerase; IPR011167 Fe-dependent fumarate hydratase) supplied in the research brief are mutually consistent and are corroborated by the sequence, structural, and biochemical evidence assembled above. There is no evidence of gene-symbol ambiguity for this locus. <strong>PP_0897 (Q88PF3) is confidently annotated as the class I [4Fe-4S] fumarate hydratase of <em>P. putida</em> KT2440.</strong></p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="PP_0897-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="PP_0897-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:7592392</li>
+<li>PMID:31743022</li>
+<li>PMID:22569531</li>
+<li>PMID:27528683</li>
+<li>PMID:30645090</li>
+<li>PMID:23405168</li>
+<li>PMID:20158506</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88PF3
+gene_symbol: PP_0897
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: Class-I, Fe-S-dependent fumarate hydratase of Pseudomonas putida KT2440. PP_0897 catalyzes the reversible interconversion of fumarate and (S)-malate, providing one of the organism&#39;s three fumarase activities at the fumarate/malate step of the tricarboxylic acid cycle. Its class-I fumarase family assignment and [4Fe-4S] cofactor distinguish it from the two class-II, iron-independent fumarases in the same strain.
+existing_annotations:
+- term:
+    id: GO:0004333
+    label: fumarate hydratase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Correct core molecular function for this class-I fumarase.
+    action: ACCEPT
+    reason: UniProt annotates Q88PF3 as fumarate hydratase class I with EC 4.2.1.2 and the reaction (S)-malate = fumarate + H2O. The PSEPK TCA-cycle pathway report identifies PP_0897 as the class-I fumarase covering the fumarate hydration step alongside two class-II fumarases.
+    supported_by:
+    - reference_id: file:PSEPK/PP_0897/PP_0897-uniprot.txt
+      supporting_text: Catalyzes the reversible hydration of fumarate to (S)-malate.
+    - reference_id: file:projects/P_PUTIDA/deep-research/PSEPK__tca_cycle__ppu00020-deep-research-openscientist.md
+      supporting_text: &#39;Triply redundant: one class-I fumarate hydratase (PP_0897, K01676) plus two class-II fumarases (K01679) (Finding F005).&#39;
+- term:
+    id: GO:0006091
+    label: generation of precursor metabolites and energy
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: Broad central-metabolism process term; the more specific TCA-cycle process is the appropriate context.
+    action: MODIFY
+    reason: Fumarate hydration is part of energy-generating central carbon metabolism, but GO:0006091 is a broad parent-like process term. The pathway-specific role is the fumarate-to-malate step of the TCA cycle, so GO:0006099 should be used when a process annotation is needed.
+    proposed_replacement_terms:
+    - id: GO:0006099
+      label: tricarboxylic acid cycle
+    supported_by:
+    - reference_id: file:projects/P_PUTIDA/deep-research/PSEPK__tca_cycle__ppu00020-deep-research-openscientist.md
+      supporting_text: Step 7 is robustly covered.
+- term:
+    id: GO:0016829
+    label: lyase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Correct but too broad for a fumarase with a defined hydro-lyase activity.
+    action: KEEP_AS_NON_CORE
+    reason: Fumarate hydratase is a lyase, but this parent term lacks substrate and reaction specificity. GO:0004333 captures the core activity.
+- term:
+    id: GO:0016836
+    label: hydro-lyase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Correct intermediate hydro-lyase class term, but less informative than fumarate hydratase activity.
+    action: KEEP_AS_NON_CORE
+    reason: PP_0897 catalyzes a hydro-lyase reaction, but the specific enzyme activity GO:0004333 should be treated as core.
+- term:
+    id: GO:0046872
+    label: metal ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: Correct broad cofactor-binding annotation for a class-I Fe-S fumarase.
+    action: KEEP_AS_NON_CORE
+    reason: UniProt annotates a [4Fe-4S] cluster cofactor, so metal ion binding is biologically plausible, but it is a broad parent of the more informative iron-sulfur cluster binding annotation and is not the core catalytic role.
+- term:
+    id: GO:0051539
+    label: 4 iron, 4 sulfur cluster binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: Correct cofactor feature for a class-I, Fe-S-dependent fumarase.
+    action: KEEP_AS_NON_CORE
+    reason: UniProt annotates a [4Fe-4S] cluster for Q88PF3 and class-I fumarases are Fe-S hydro-lyases. This supports the enzyme mechanism but is not the primary molecular function to emphasize over fumarate hydratase activity.
+    supported_by:
+    - reference_id: file:PSEPK/PP_0897/PP_0897-uniprot.txt
+      supporting_text: &#39;Name=[4Fe-4S] cluster; Xref=ChEBI:CHEBI:49883;&#39;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations
+    between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/PP_0897/PP_0897-uniprot.txt
+  title: UniProtKB entry Q88PF3 for Pseudomonas putida KT2440 PP_0897
+  findings:
+  - statement: UniProt annotates PP_0897 as a class-I fumarate hydratase catalyzing reversible fumarate hydration to (S)-malate.
+    supporting_text: Catalyzes the reversible hydration of fumarate to (S)-malate.
+    reference_section_type: RESULTS
+  - statement: UniProt annotates PP_0897 as an Fe-S-dependent fumarase with a [4Fe-4S] cluster.
+    supporting_text: &#39;Name=[4Fe-4S] cluster; Xref=ChEBI:CHEBI:49883;&#39;
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: UniProt entry for the exact target accession Q88PF3; protein-existence level is homology-inferred.
+- id: file:projects/P_PUTIDA/deep-research/PSEPK__tca_cycle__ppu00020-deep-research-openscientist.md
+  title: OpenScientist PSEPK TCA-cycle pathway report
+  findings:
+  - statement: The PSEPK pathway report identifies PP_0897 as one of three fumarases covering the fumarate hydration step.
+    supporting_text: &#39;Triply redundant: one class-I fumarate hydratase (PP_0897, K01676) plus two class-II fumarases (K01679) (Finding F005).&#39;
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: UNVERIFIED
+    review_notes: Provider-generated module/pathway report used for first-pass pathway curation; consistent with UniProt and KEGG labels.
+core_functions:
+- description: Class-I fumarate hydratase catalyzing the reversible hydration/dehydration between fumarate and (S)-malate at the TCA-cycle fumarate/malate step.
+  molecular_function:
+    id: GO:0004333
+    label: fumarate hydratase activity
+  supported_by:
+  - reference_id: file:PSEPK/PP_0897/PP_0897-uniprot.txt
+    supporting_text: Catalyzes the reversible hydration of fumarate to (S)-malate.
+  - reference_id: file:projects/P_PUTIDA/deep-research/PSEPK__tca_cycle__ppu00020-deep-research-openscientist.md
+    supporting_text: &#39;Triply redundant: one class-I fumarate hydratase (PP_0897, K01676) plus two class-II fumarases (K01679) (Finding F005).&#39;
+  directly_involved_in:
+  - id: GO:0006099
+    label: tricarboxylic acid cycle
+suggested_questions:
+- question: Under which growth or stress conditions is the Fe-S class-I fumarase PP_0897 used instead of the class-II fumarases FumC-I and FumC?
+suggested_experiments:
+- description: Measure fumarase activity and growth phenotypes in PP_0897, fumC-I, and fumC single and combined mutants under aerobic, iron-limited, and oxidative-stress conditions to resolve isozyme specialization.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

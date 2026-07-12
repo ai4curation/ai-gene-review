@@ -1,0 +1,2421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>scpC - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>scpC</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88RH5" target="_blank" class="term-link">
+                        Q88RH5
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "scpC";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88RH5" data-a="DESCRIPTION: scpC (PP_0154) encodes a soluble class-I CoA-trans..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>scpC (PP_0154) encodes a soluble class-I CoA-transferase of the acetyl-CoA hydrolase/transferase family. The protein has the conserved acetyl-CoA hydrolase/transferase N- and C-terminal domains, a catalytic glutamate annotated as a glutamyl-CoA intermediate site, and CoA-binding residues, supporting an active short-chain acyl-CoA:carboxylate CoA-transferase. Its exact physiological substrate pair in Pseudomonas putida KT2440 is not experimentally established; database and family evidence favor a succinate/succinyl-CoA-linked transferase, plausibly an AarC-like succinyl-CoA:acetate CoA-transferase rather than a canonical cyclic TCA enzyme.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003986" target="_blank" class="term-link">
+                                    GO:0003986
+                                </a>
+                            </span>
+                            <span class="term-label">acetyl-CoA hydrolase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RH5" data-a="GO:0003986" data-r="GO_REF:0000118" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This hydrolase activity is not supported as the core activity. The protein belongs to the acetyl-CoA hydrolase/transferase fold, but the more specific and better-supported function is CoA transfer, not hydrolysis of acetyl-CoA.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> TreeGrafter appears to have propagated the broad family hydrolase label. UniProt/InterPro also identify a succinate CoA-transferase family signature, and OpenScientist found a complete class-I CoA-transferase active site with unresolved short-chain substrate specificity rather than evidence for an acetyl-CoA hydrolase reaction.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/scpC/scpC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SIMILARITY: Belongs to the acetyl-CoA hydrolase/transferase family.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/scpC/scpC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">InterPro; IPR017821; Succinate_CoA_transferase.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/scpC/scpC-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">No primary biochemistry exists for Q88RH5 itself.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006083" target="_blank" class="term-link">
+                                    GO:0006083
+                                </a>
+                            </span>
+                            <span class="term-label">acetate metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RH5" data-a="GO:0006083" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Acetate metabolism is plausible but should be kept as non-core until the P. putida enzyme&#39;s substrate pair is measured directly.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The best current inference favors an AarC-like succinyl-CoA:acetate CoA-transferase role, but the OpenScientist report notes that database annotations disagree between propionyl-CoA:succinate and succinyl-CoA:acetate transfer. This broad process term is therefore useful pathway context, not a definitive core process claim.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/scpC/scpC-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0006083	acetate metabolic process</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/scpC/scpC-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">the identity of the second partner (propionyl‑CoA vs acetate) is unresolved</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006084" target="_blank" class="term-link">
+                                    GO:0006084
+                                </a>
+                            </span>
+                            <span class="term-label">acetyl-CoA metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RH5" data-a="GO:0006084" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Broad acetyl-CoA metabolic process context is consistent with an acyl-CoA/carboxylate CoA-transferase, but is not the most informative representation of the gene&#39;s function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The enzyme is predicted to act on short-chain acyl-CoA pools and may produce or consume acetyl-CoA depending on the physiological substrate pair. The specific molecular function annotation is preferred as the core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/scpC/scpC-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0006084	acetyl-CoA metabolic process</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/scpC/scpC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SubName: Full=Propionyl-CoA:succinate CoA transferase</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008410" target="_blank" class="term-link">
+                                    GO:0008410
+                                </a>
+                            </span>
+                            <span class="term-label">CoA-transferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RH5" data-a="GO:0008410" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct broad molecular-function parent for this class-I CoA-transferase.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> CoA-transferase activity captures the enzyme class, but GO:0008775 acetate CoA-transferase activity is more informative for the current best functional assignment.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/scpC/scpC-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0008410	CoA-transferase activity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/scpC/scpC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SIMILARITY: Belongs to the acetyl-CoA hydrolase/transferase family.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008775" target="_blank" class="term-link">
+                                    GO:0008775
+                                </a>
+                            </span>
+                            <span class="term-label">acetate CoA-transferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RH5" data-a="GO:0008775" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Best available molecular-function assignment for PP_0154, with the caveat that the exact substrate pair has not been directly tested in P. putida.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt/GOA and InterPro support an acetate CoA-transferase annotation, and the OpenScientist report found that sequence, orthology, genomic context, and absence of an E. coli-like Sbm pathway collectively favor an AarC-like succinyl-CoA:acetate CoA-transferase role. The assignment should remain conservative because no P. putida enzyme kinetics are available.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/scpC/scpC-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0008775	acetate CoA-transferase activity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/scpC/scpC-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">Sequence evidence (this work).</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/scpC/scpC-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">collectively favouring a **succinyl‑CoA:acetate CoA‑transferase (AarC‑type, EC 2.8.3.18)** role</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016740" target="_blank" class="term-link">
+                                    GO:0016740
+                                </a>
+                            </span>
+                            <span class="term-label">transferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RH5" data-a="GO:0016740" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but too broad; this parent term adds no useful information beyond the specific CoA-transferase annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Transferase activity is a high-level parent of CoA-transferase functions. The specific GO:0008775 annotation and the broader but still informative GO:0008410 CoA-transferase annotation should carry the molecular-function interpretation instead.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/scpC/scpC-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0016740	transferase activity</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Predicted class-I short-chain acyl-CoA:carboxylate CoA-transferase, most plausibly an AarC-like succinyl-CoA:acetate CoA-transferase, acting in central-carbon acyl-CoA/organic-acid metabolism.</h3>
+                <span class="vote-buttons" data-g="Q88RH5" data-a="FUNCTION: Predicted class-I short-chain acyl-CoA:carboxylate..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008775" target="_blank" class="term-link">
+                            acetate CoA-transferase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/scpC/scpC-goa.tsv
+
+                        </span>
+
+                        <div class="finding-text">GO:0008775	acetate CoA-transferase activity</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/scpC/scpC-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">InterPro; IPR017821; Succinate_CoA_transferase.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/scpC/scpC-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">collectively favouring a **succinyl‑CoA:acetate CoA‑transferase (AarC‑type, EC 2.8.3.18)** role</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/scpC/scpC-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for scpC (PP_0154, Q88RH5)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"SubName: Full=Propionyl-CoA:succinate CoA transferase"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"SIMILARITY: Belongs to the acetyl-CoA hydrolase/transferase family."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"InterPro; IPR017821; Succinate_CoA_transferase."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/scpC/scpC-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO GOA annotations for scpC</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"GO:0008775	acetate CoA-transferase activity"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"GO:0008410	CoA-transferase activity"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/scpC/scpC-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist deep research report for scpC (PP_0154, Q88RH5)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"No primary biochemistry exists for Q88RH5 itself."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"the identity of the second partner (propionyl‑CoA vs acetate) is unresolved"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"collectively favouring a **succinyl‑CoA:acetate CoA‑transferase (AarC‑type, EC 2.8.3.18)** role"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does purified P. putida KT2440 ScpC prefer succinyl-CoA:acetate transfer, propionyl-CoA:succinate transfer, or another short-chain acyl-CoA/carboxylate substrate pair?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88RH5" data-a="Q: Does purified P. putida KT2440 ScpC prefer succiny..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Purify recombinant PP_0154 and measure CoA-transfer kinetics across acetyl-, propionyl-, and succinyl-CoA donors with acetate, propionate, and succinate acceptors, including a Glu288 active-site mutant as a negative control.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q88RH5" data-a="EXPERIMENT: Purify recombinant PP_0154 and measure CoA-transfe..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(scpC-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88RH5" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: scpC / PP_0154 (UniProt Q88RH5)</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-11T17:37:13.782368</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="scpC-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="scpC-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-scpc-pp_0154-uniprot-q88rh5">Functional Annotation Report: scpC / PP_0154 (UniProt Q88RH5)</h1>
+<h3 id="pseudomonas-putida-kt2440-psepk"><em>Pseudomonas putida</em> KT2440 (PSEPK)</h3>
+<h2 id="1-summary-answer-to-the-research-question">1. Summary (Answer to the Research Question)</h2>
+<p><strong>scpC (PP_0154, Q88RH5) encodes a soluble, cytoplasmic class‑I coenzyme‑A transferase of the acetyl‑CoA hydrolase/transferase family (Pfam PF02550 + PF13336; EC 2.8.3.‑).</strong> It catalyzes the reversible transfer of coenzyme A between a short‑chain acyl‑CoA thioester and a free carboxylic acid (a transthioesterification), proceeding through a covalent glutamyl‑CoA / acyl‑glutamyl‑anhydride intermediate on the active‑site glutamate (Glu288). Its physiological substrate pair in <em>P. putida</em> has <strong>not been measured directly</strong>; the two authoritative computational annotations disagree: the EMBL/UniProt gene name "propionyl‑CoA:succinate CoA transferase" is a homology transfer from <em>E. coli</em> YgfH/ScpC, whereas KEGG assigns it to orthology <strong>K18118, succinyl‑CoA:acetate CoA‑transferase (EC 2.8.3.18, AarC‑type)</strong> in the TCA cycle. Both describe the same chemistry on cytoplasmic C2–C4 acyl‑CoA/organic‑acid pools feeding central carbon metabolism.</p>
+<blockquote>
+<p><strong>Identity verification (mandatory):</strong> The gene symbol <em>scpC</em> is ambiguous. This report concerns the <em>Pseudomonas putida</em> KT2440 <strong>CoA‑transferase</strong> Q88RH5 (PP_0154). It is <strong>not</strong> the unrelated streptococcal <em>scpC</em> (a cell‑envelope C5a peptidase/protease). The CoA‑transferase identity is confirmed by the acetyl‑CoA hydrolase/transferase domain architecture, the EC 2.8.3.‑ class, and orthology to <em>E. coli</em> ScpC/YgfH — all consistent with the UniProt record.</p>
+</blockquote>
+<hr />
+<h2 id="2-molecular-identity-and-structure">2. Molecular Identity and Structure</h2>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UniProt</td>
+<td>Q88RH5</td>
+</tr>
+<tr>
+<td>Gene / locus</td>
+<td><em>scpC</em> / PP_0154</td>
+</tr>
+<tr>
+<td>Organism</td>
+<td><em>Pseudomonas putida</em> KT2440</td>
+</tr>
+<tr>
+<td>Length / mass</td>
+<td>497 aa / 53.96 kDa</td>
+</tr>
+<tr>
+<td>Family</td>
+<td>Acetyl‑CoA hydrolase/transferase (class‑I CoA‑transferase)</td>
+</tr>
+<tr>
+<td>Domains</td>
+<td>PF02550 AcetylCoA_hydro (N, aa 11–215); PF13336 AcetylCoA_hyd_C (C, aa 322–463); SUPFAM SSF100950 (NagB/RpiA/CoA‑transferase‑like)</td>
+</tr>
+<tr>
+<td>InterPro</td>
+<td>IPR003702, IPR026888, IPR046433, IPR037171, IPR017821 (Succinate_CoA_transferase)</td>
+</tr>
+<tr>
+<td>Orthology</td>
+<td>eggNOG COG0427; KEGG K18118</td>
+</tr>
+<tr>
+<td>Catalytic residue</td>
+<td><strong>Glu288</strong> — "5‑glutamyl coenzyme A thioester intermediate" (UniProt); binding residues 378/382/402</td>
+</tr>
+<tr>
+<td>Localization</td>
+<td>Cytoplasm (no signal peptide, no transmembrane segment)</td>
+</tr>
+</tbody>
+</table>
+<p>The two‑domain αβ architecture and the catalytic glutamate place scpC firmly in <strong>class‑I CoA‑transferases</strong>, which "catalyze transthioesterification reactions involving acyl‑CoA substrates, using an active‑site carboxylate to form covalent acyl anhydride and CoA thioester adducts" (Mullins &amp; Kappock, 2012, PMID 23030530). This mechanism is directly supported by UniProt's annotation of Glu288 as the glutamyl‑CoA intermediate for Q88RH5.</p>
+<hr />
+<h2 id="3-primary-function-the-catalyzed-reaction">3. Primary Function: The Catalyzed Reaction</h2>
+<p>scpC catalyzes a reversible, ping‑pong CoA transfer:</p>
+<div class="codehilite"><pre><span></span><code>R1‑CO‑SCoA  +  R2‑COO⁻   ⇌   R1‑COO⁻  +  R2‑CO‑SCoA
+</code></pre></div>
+
+<p><strong>Substrate specificity — two candidate assignments (unresolved for the P. putida enzyme):</strong></p>
+<ol>
+<li><strong>Propionyl‑CoA:succinate CoA‑transferase</strong> (EMBL/UniProt name; EC 2.8.3.‑). Based on the <em>E. coli</em> homolog: "YgfH is propionyl CoA:succinate CoA transferase" (Haller et al., 2000, PMID 10769117). In <em>E. coli</em> this enzyme is the third step of the Sbm cycle converting succinate → propionate.</li>
+<li><strong>Succinyl‑CoA:acetate CoA‑transferase</strong> (KEGG K18118; EC 2.8.3.18). The best biochemically/structurally characterized member of this orthology group is <em>Acetobacter aceti</em> AarC: "AarC is succinyl‑coenzyme A (CoA):acetate CoA‑transferase, which replaces succinyl‑CoA synthetase in a variant CAC" (Mullins et al., 2008, PMID 18502856).</li>
+</ol>
+<p>Both activities are short‑chain (C2–C4) acyl‑CoA:carboxylate CoA‑transfers by the same class‑I mechanism; they differ only in the preferred acyl donor/acceptor pair. <strong>No enzyme‑kinetic study of the P. putida protein exists</strong>, so its exact preference is inferred, not measured.</p>
+<p><strong>Sequence evidence (this work).</strong> Needleman–Wunsch pairwise alignment of Q88RH5 against characterized family members gives ~equal identity to the two succinate‑linked transferases and low identity to a pure acetate transferase:</p>
+<table>
+<thead>
+<tr>
+<th>Homolog</th>
+<th>Activity</th>
+<th>% identity to scpC</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>E. coli</em> YgfH/ScpC</td>
+<td>propionyl‑CoA:succinate CoA‑transferase</td>
+<td>48.3% (234/484)</td>
+</tr>
+<tr>
+<td><em>A. aceti</em> AarC</td>
+<td>succinyl‑CoA:acetate CoA‑transferase (EC 2.8.3.18)</td>
+<td>50.9% (251/493)</td>
+</tr>
+<tr>
+<td><em>E. coli</em> YdiF</td>
+<td>acetate CoA‑transferase</td>
+<td>27.0% (129/477)</td>
+</tr>
+</tbody>
+</table>
+<p>Because both nearest homologs share <strong>succinate/succinyl‑CoA</strong> as one substrate, that partner is the most confidently assignable substrate for scpC. Identity is only marginally higher for AarC (+2.6%), so sequence cannot discriminate whether the second partner is propionyl‑CoA (YgfH‑like) or acetate (AarC‑like); the slight AarC lean is consistent with the KEGG K18118 assignment.</p>
+<p><strong>Active‑site integrity (this work).</strong> Residue mapping shows scpC's catalytic <strong>Glu288</strong> and CoA‑binding residues <strong>Asn378 / Gly382 / Lys402</strong> are identical in both YgfH and AarC, confirming a complete, catalytically competent class‑I active site (an active enzyme, not a pseudoenzyme). These positions lie on the conserved CoA/catalytic side and therefore do not discriminate acceptor specificity. Homolog identities were independently verified from UniProt (P52043 = <em>E. coli</em> ScpC "Propanoyl‑CoA:succinate CoA transferase"; A0AB33ICN5 = <em>A. aceti</em> AarC "Succinyl‑CoA:acetate CoA‑transferase"; P37766 = <em>E. coli</em> YdiF "Acetate CoA‑transferase").</p>
+<hr />
+<h2 id="4-pathway-context-and-localization">4. Pathway Context and Localization</h2>
+<ul>
+<li><strong>Localization:</strong> cytoplasmic, soluble. The AarC‑type CoA‑transferase acts on the cytosolic organic‑acid/acyl‑CoA pool — the <em>A. aceti aar</em> genes "support flux through a complete but unorthodox CAC that is needed to lower cytoplasmic acetate levels" (PMID 18502856).</li>
+<li><strong>Pathway (KEGG):</strong> PP_0154 is mapped to the <strong>citrate cycle (ppu00020)</strong> and <strong>pyruvate metabolism (ppu00620)</strong>, consistent with a succinyl‑CoA↔acetate transferase that can bypass succinyl‑CoA synthetase.</li>
+<li><strong>Genomic context distinguishes it from <em>E. coli</em>:</strong> PP_0154 is a <strong>standalone gene</strong>. Its neighbors (PP_0153 hypothetical; PP_0152 exported protein; PP_0155/PP_0156 pyridine‑nucleotide transhydrogenase) are unrelated to CoA/propionate metabolism. This contrasts with <em>E. coli</em>, where the homolog lies in a four‑gene operon "that encodes homologues of methylmalonyl CoA mutases (Sbm) and acyl CoA transferases (YgfH)" (PMID 10769117).</li>
+<li><strong>Plausible physiological niche (hypothesis).</strong> No primary study characterizes PP_0154 in <em>P. putida</em>; its function is annotated by homology only. <em>P. putida</em> KT2440 assimilates acetate via acetyl‑CoA and the glyoxylate shunt, and acetate‑grown cells appear to use "ATP independent acetyl‑CoA recycling as energy saving strategy" (Grether et al., 2026, PMID 42393666). An AarC‑type succinyl‑CoA:acetate CoA‑transferase (the KEGG K18118 activity) would provide exactly this ATP‑independent activation of acetate to acetyl‑CoA, consistent with PP_0154's KEGG mapping to the TCA cycle. This link is a reasonable but <strong>untested</strong> hypothesis.</li>
+<li><strong>The Sbm route is absent in <em>P. putida</em>:</strong> KEGG shows <em>P. putida</em> KT2440 encodes <strong>no methylmalonyl‑CoA mutase</strong> (K01847) and no MCM subunit (K11942). Since propionate oxidation in <em>Pseudomonas</em> runs through the 2‑methylcitrate cycle — "the only known and described pathway for propionate oxidation in this organism" (Santos‑Oliveira et al., 2024, PMID 37995793) — scpC cannot be part of an <em>E. coli</em>‑style succinate→propionate cycle here. This argues that the "propionyl‑CoA:succinate" name is a <strong>homology over‑transfer</strong>, and that the KEGG succinyl‑CoA:acetate CoA‑transferase (TCA‑linked) role is the more parsimonious annotation.</li>
+</ul>
+<hr />
+<h2 id="5-supported-and-refuted-hypotheses">5. Supported and Refuted Hypotheses</h2>
+<table>
+<thead>
+<tr>
+<th>Hypothesis</th>
+<th>Verdict</th>
+<th>Basis</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>scpC is a class‑I CoA‑transferase (acetyl‑CoA hydrolase/transferase family) using a Glu covalent intermediate</td>
+<td><strong>Supported</strong></td>
+<td>Domain architecture, Glu288 active site, PMID 23030530</td>
+</tr>
+<tr>
+<td>scpC catalyzes reversible short‑chain acyl‑CoA:carboxylate CoA transfer</td>
+<td><strong>Supported</strong></td>
+<td>EC 2.8.3.‑ class; homologs YgfH &amp; AarC</td>
+</tr>
+<tr>
+<td>scpC operates as part of an <em>E. coli</em>‑style methylmalonyl‑CoA (Sbm) succinate→propionate cycle in <em>P. putida</em></td>
+<td><strong>Refuted</strong></td>
+<td>No methylmalonyl‑CoA mutase/decarboxylase in KT2440; gene not in an sbm operon</td>
+</tr>
+<tr>
+<td>Exact substrate pair (propionyl‑CoA/succinate vs succinyl‑CoA/acetate) is established for the <em>P. putida</em> enzyme</td>
+<td><strong>Unresolved</strong></td>
+<td>Conflicting database annotations; no direct kinetics</td>
+</tr>
+<tr>
+<td>scpC is cytoplasmic</td>
+<td><strong>Supported (inferred)</strong></td>
+<td>No signal peptide/TM; analogy to soluble CAC enzymes</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="6-limitations-and-future-directions">6. Limitations and Future Directions</h2>
+<ul>
+<li><strong>No primary biochemistry exists for Q88RH5 itself.</strong> Function is inferred from sequence/family, orthology (KEGG K18118, COG0427), and characterized homologs (<em>E. coli</em> YgfH, <em>A. aceti</em> AarC). High‑throughput/database annotations disagree on the exact acyl specificity.</li>
+<li><strong>Recommended experiments:</strong> (i) purify recombinant PP_0154 and assay CoA‑transfer with acetyl‑/propionyl‑/succinyl‑CoA donors against acetate/succinate/propionate acceptors to define kᶜᵃᵗ/Kₘ; (ii) Glu288Ala mutant to confirm the catalytic nucleophile; (iii) ΔPP_0154 phenotyping on acetate/propionate/succinate to place it physiologically; (iv) structure determination (or AlphaFold + docking) to map the auxiliary carboxylate‑recognition site described for AarC.</li>
+</ul>
+<hr />
+<h2 id="references">References</h2>
+<ul>
+<li>Haller T, Buckel T, Rétey J, Gerlt JA. <em>Biochemistry</em> 2000;39:4622‑4629. <strong>PMID 10769117.</strong></li>
+<li>Mullins EA, Francois JA, Kappock TJ. <em>J Bacteriol</em> 2008. <strong>PMID 18502856.</strong></li>
+<li>Mullins EA, Kappock TJ. <em>Biochemistry</em> 2012. <strong>PMID 23030530.</strong></li>
+<li>Froese DS et al. <em>Biochimie/…</em> 2009. <strong>PMID 18950999.</strong></li>
+<li>Santos‑Oliveira et al. 2024. <strong>PMID 37995793.</strong></li>
+<li>Grether et al. <em>Acetate as alternative carbon source … Pseudomonas putida KT2440.</em> 2026. <strong>PMID 42393666.</strong></li>
+<li>Database records: UniProt Q88RH5; KEGG ppu:PP_0154 (K18118, EC 2.8.3.18); InterPro/Pfam domains as listed.</li>
+</ul>
+<hr />
+<h2 id="bottom-line">Bottom Line</h2>
+<p>scpC/PP_0154 is a <strong>soluble cytoplasmic, catalytically competent class‑I CoA‑transferase</strong> (acetyl‑CoA hydrolase/transferase family, EC 2.8.3.‑) that performs reversible CoA transfer between a short‑chain acyl‑CoA thioester and a free carboxylic acid via a Glu288 glutamyl‑CoA intermediate, feeding central carbon metabolism (TCA cycle). Succinate/succinyl‑CoA is the most confidently assigned substrate partner; the identity of the second partner (propionyl‑CoA vs acetate) is unresolved, with sequence, orthology (KEGG K18118), genomic context, and the absence of the Sbm pathway in <em>P. putida</em> collectively favouring a <strong>succinyl‑CoA:acetate CoA‑transferase (AarC‑type, EC 2.8.3.18)</strong> role over the literal "propionyl‑CoA:succinate" name. No gene‑specific experimental data exist for the <em>P. putida</em> protein, so all functional statements are inferences from family, structure/sequence, and orthology.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="scpC-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="scpC-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88RH5
+gene_symbol: scpC
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  scpC (PP_0154) encodes a soluble class-I CoA-transferase of the
+  acetyl-CoA hydrolase/transferase family. The protein has the conserved
+  acetyl-CoA hydrolase/transferase N- and C-terminal domains, a catalytic
+  glutamate annotated as a glutamyl-CoA intermediate site, and CoA-binding
+  residues, supporting an active short-chain acyl-CoA:carboxylate
+  CoA-transferase. Its exact physiological substrate pair in Pseudomonas putida
+  KT2440 is not experimentally established; database and family evidence favor
+  a succinate/succinyl-CoA-linked transferase, plausibly an AarC-like
+  succinyl-CoA:acetate CoA-transferase rather than a canonical cyclic TCA
+  enzyme.
+existing_annotations:
+- term:
+    id: GO:0003986
+    label: acetyl-CoA hydrolase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: enables
+  review:
+    summary: &gt;-
+      This hydrolase activity is not supported as the core activity. The protein
+      belongs to the acetyl-CoA hydrolase/transferase fold, but the more
+      specific and better-supported function is CoA transfer, not hydrolysis of
+      acetyl-CoA.
+    action: REMOVE
+    reason: &gt;-
+      TreeGrafter appears to have propagated the broad family hydrolase label.
+      UniProt/InterPro also identify a succinate CoA-transferase family
+      signature, and OpenScientist found a complete class-I CoA-transferase
+      active site with unresolved short-chain substrate specificity rather than
+      evidence for an acetyl-CoA hydrolase reaction.
+    supported_by:
+    - reference_id: file:PSEPK/scpC/scpC-uniprot.txt
+      supporting_text: &#39;SIMILARITY: Belongs to the acetyl-CoA hydrolase/transferase family.&#39;
+    - reference_id: file:PSEPK/scpC/scpC-uniprot.txt
+      supporting_text: InterPro; IPR017821; Succinate_CoA_transferase.
+    - reference_id: file:PSEPK/scpC/scpC-deep-research-openscientist.md
+      supporting_text: No primary biochemistry exists for Q88RH5 itself.
+- term:
+    id: GO:0006083
+    label: acetate metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Acetate metabolism is plausible but should be kept as non-core until the
+      P. putida enzyme&#39;s substrate pair is measured directly.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The best current inference favors an AarC-like succinyl-CoA:acetate
+      CoA-transferase role, but the OpenScientist report notes that database
+      annotations disagree between propionyl-CoA:succinate and
+      succinyl-CoA:acetate transfer. This broad process term is therefore useful
+      pathway context, not a definitive core process claim.
+    supported_by:
+    - reference_id: file:PSEPK/scpC/scpC-goa.tsv
+      supporting_text: &#34;GO:0006083\tacetate metabolic process&#34;
+    - reference_id: file:PSEPK/scpC/scpC-deep-research-openscientist.md
+      supporting_text: the identity of the second partner (propionyl‑CoA vs acetate) is unresolved
+- term:
+    id: GO:0006084
+    label: acetyl-CoA metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Broad acetyl-CoA metabolic process context is consistent with an
+      acyl-CoA/carboxylate CoA-transferase, but is not the most informative
+      representation of the gene&#39;s function.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The enzyme is predicted to act on short-chain acyl-CoA pools and may
+      produce or consume acetyl-CoA depending on the physiological substrate
+      pair. The specific molecular function annotation is preferred as the core
+      function.
+    supported_by:
+    - reference_id: file:PSEPK/scpC/scpC-goa.tsv
+      supporting_text: &#34;GO:0006084\tacetyl-CoA metabolic process&#34;
+    - reference_id: file:PSEPK/scpC/scpC-uniprot.txt
+      supporting_text: &#39;SubName: Full=Propionyl-CoA:succinate CoA transferase&#39;
+- term:
+    id: GO:0008410
+    label: CoA-transferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Correct broad molecular-function parent for this class-I CoA-transferase.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      CoA-transferase activity captures the enzyme class, but GO:0008775 acetate
+      CoA-transferase activity is more informative for the current best
+      functional assignment.
+    supported_by:
+    - reference_id: file:PSEPK/scpC/scpC-goa.tsv
+      supporting_text: &#34;GO:0008410\tCoA-transferase activity&#34;
+    - reference_id: file:PSEPK/scpC/scpC-uniprot.txt
+      supporting_text: &#39;SIMILARITY: Belongs to the acetyl-CoA hydrolase/transferase family.&#39;
+- term:
+    id: GO:0008775
+    label: acetate CoA-transferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Best available molecular-function assignment for PP_0154, with the caveat
+      that the exact substrate pair has not been directly tested in P. putida.
+    action: ACCEPT
+    reason: &gt;-
+      UniProt/GOA and InterPro support an acetate CoA-transferase annotation,
+      and the OpenScientist report found that sequence, orthology, genomic
+      context, and absence of an E. coli-like Sbm pathway collectively favor an
+      AarC-like succinyl-CoA:acetate CoA-transferase role. The assignment should
+      remain conservative because no P. putida enzyme kinetics are available.
+    supported_by:
+    - reference_id: file:PSEPK/scpC/scpC-goa.tsv
+      supporting_text: &#34;GO:0008775\tacetate CoA-transferase activity&#34;
+    - reference_id: file:PSEPK/scpC/scpC-deep-research-openscientist.md
+      supporting_text: Sequence evidence (this work).
+    - reference_id: file:PSEPK/scpC/scpC-deep-research-openscientist.md
+      supporting_text: collectively favouring a **succinyl‑CoA:acetate CoA‑transferase (AarC‑type, EC 2.8.3.18)** role
+- term:
+    id: GO:0016740
+    label: transferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Correct but too broad; this parent term adds no useful information beyond
+      the specific CoA-transferase annotation.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Transferase activity is a high-level parent of CoA-transferase functions.
+      The specific GO:0008775 annotation and the broader but still informative
+      GO:0008410 CoA-transferase annotation should carry the molecular-function
+      interpretation instead.
+    supported_by:
+    - reference_id: file:PSEPK/scpC/scpC-goa.tsv
+      supporting_text: &#34;GO:0016740\ttransferase activity&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/scpC/scpC-uniprot.txt
+  title: UniProtKB entry for scpC (PP_0154, Q88RH5)
+  findings:
+  - supporting_text: &#39;SubName: Full=Propionyl-CoA:succinate CoA transferase&#39;
+  - supporting_text: &#39;SIMILARITY: Belongs to the acetyl-CoA hydrolase/transferase family.&#39;
+  - supporting_text: InterPro; IPR017821; Succinate_CoA_transferase.
+- id: file:PSEPK/scpC/scpC-goa.tsv
+  title: QuickGO GOA annotations for scpC
+  findings:
+  - supporting_text: &#34;GO:0008775\tacetate CoA-transferase activity&#34;
+  - supporting_text: &#34;GO:0008410\tCoA-transferase activity&#34;
+- id: file:PSEPK/scpC/scpC-deep-research-openscientist.md
+  title: OpenScientist deep research report for scpC (PP_0154, Q88RH5)
+  findings:
+  - supporting_text: No primary biochemistry exists for Q88RH5 itself.
+  - supporting_text: the identity of the second partner (propionyl‑CoA vs acetate) is unresolved
+  - supporting_text: collectively favouring a **succinyl‑CoA:acetate CoA‑transferase (AarC‑type, EC 2.8.3.18)** role
+core_functions:
+- description: &gt;-
+    Predicted class-I short-chain acyl-CoA:carboxylate CoA-transferase, most
+    plausibly an AarC-like succinyl-CoA:acetate CoA-transferase, acting in
+    central-carbon acyl-CoA/organic-acid metabolism.
+  molecular_function:
+    id: GO:0008775
+    label: acetate CoA-transferase activity
+  supported_by:
+  - reference_id: file:PSEPK/scpC/scpC-goa.tsv
+    supporting_text: &#34;GO:0008775\tacetate CoA-transferase activity&#34;
+  - reference_id: file:PSEPK/scpC/scpC-uniprot.txt
+    supporting_text: InterPro; IPR017821; Succinate_CoA_transferase.
+  - reference_id: file:PSEPK/scpC/scpC-deep-research-openscientist.md
+    supporting_text: collectively favouring a **succinyl‑CoA:acetate CoA‑transferase (AarC‑type, EC 2.8.3.18)** role
+suggested_questions:
+- question: &gt;-
+    Does purified P. putida KT2440 ScpC prefer succinyl-CoA:acetate transfer,
+    propionyl-CoA:succinate transfer, or another short-chain acyl-CoA/carboxylate
+    substrate pair?
+suggested_experiments:
+- description: &gt;-
+    Purify recombinant PP_0154 and measure CoA-transfer kinetics across
+    acetyl-, propionyl-, and succinyl-CoA donors with acetate, propionate, and
+    succinate acceptors, including a Glu288 active-site mutant as a negative
+    control.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

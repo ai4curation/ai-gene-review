@@ -1,0 +1,1991 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mqo3 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>mqo3</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88IS4" target="_blank" class="term-link">
+                        Q88IS4
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "mqo3";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88IS4" data-a="DESCRIPTION: FAD-dependent malate:quinone oxidoreductase of the..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>FAD-dependent malate:quinone oxidoreductase of the MQO family. Mqo3 catalyzes oxidation of (S)-malate to oxaloacetate while reducing a respiratory quinone, contributing to the quinone-linked malate oxidation branch of the tricarboxylic acid cycle. It is one of three MQO paralogs in Pseudomonas putida KT2440, so the paralog-specific division of labor remains unresolved, but the UniProt/HAMAP assignment supports malate:quinone oxidoreductase as its core activity.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006099" target="_blank" class="term-link">
+                                    GO:0006099
+                                </a>
+                            </span>
+                            <span class="term-label">tricarboxylic acid cycle</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88IS4" data-a="GO:0006099" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct process annotation for an MQO enzyme in the malate-to-oxaloacetate step of the TCA cycle.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt/HAMAP places Mqo3 in the tricarboxylic acid cycle, specifically oxaloacetate formation from (S)-malate by the quinone route. The PSEPK pathway report treats mqo1, mqo2, and mqo3 as the primary quinone-linked malate oxidation branch.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/mqo3/mqo3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">oxaloacetate from (S)-malate (quinone route): step 1/1.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008924" target="_blank" class="term-link">
+                                    GO:0008924
+                                </a>
+                            </span>
+                            <span class="term-label">L-malate dehydrogenase (quinone) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88IS4" data-a="GO:0008924" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct core molecular function for Mqo3, matching EC 1.1.5.4 and the UniProt catalytic activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Q88IS4 is a reviewed UniProtKB/Swiss-Prot MQO-family entry annotated by HAMAP MF_00212 with malate:quinone oxidoreductase activity. The curated reaction is (S)-malate + quinone = quinol + oxaloacetate.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/mqo3/mqo3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=(S)-malate + a quinone = a quinol + oxaloacetate;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016614" target="_blank" class="term-link">
+                                    GO:0016614
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity, acting on CH-OH group of donors</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88IS4" data-a="GO:0016614" data-r="GO_REF:0000117" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> True but broad parent of the specific malate:quinone oxidoreductase activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The enzyme is an oxidoreductase acting on the CH-OH group of malate, but GO:0008924 captures the specific substrate and quinone acceptor.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0047545" target="_blank" class="term-link">
+                                    GO:0047545
+                                </a>
+                            </span>
+                            <span class="term-label">(S)-2-hydroxyglutarate dehydrogenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88IS4" data-a="GO:0047545" data-r="GO_REF:0000118" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic over-propagation from the PANTHER L-2-hydroxyglutarate dehydrogenase family name; not supported for this MQO.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt&#39;s curated catalytic activity for Q88IS4 is malate:quinone oxidoreductase, not (S)-2-hydroxyglutarate dehydrogenase. The protein carries MQO/HAMAP/Pfam evidence, while the 2-hydroxyglutarate annotation appears to derive from the broad PANTHER family label and has no gene-specific support.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>FAD-dependent malate:quinone oxidoreductase catalyzing oxidation of (S)-malate to oxaloacetate with reduction of a respiratory quinone at the TCA-cycle malate/oxaloacetate node.</h3>
+                <span class="vote-buttons" data-g="Q88IS4" data-a="FUNCTION: FAD-dependent malate:quinone oxidoreductase cataly..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008924" target="_blank" class="term-link">
+                            L-malate dehydrogenase (quinone) activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006099" target="_blank" class="term-link">
+                                tricarboxylic acid cycle
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/mqo3/mqo3-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Reaction=(S)-malate + a quinone = a quinol + oxaloacetate;</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/mqo3/mqo3-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">oxaloacetate from (S)-malate (quinone route): step 1/1.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/mqo3/mqo3-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry Q88IS4 for Pseudomonas putida KT2440 mqo3</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt annotates Q88IS4 as an MQO-family enzyme catalyzing (S)-malate oxidation with a quinone acceptor.</div>
+
+                        <div class="finding-text">"Reaction=(S)-malate + a quinone = a quinol + oxaloacetate;"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt/HAMAP places mqo3 in the quinone-route TCA step from malate to oxaloacetate.</div>
+
+                        <div class="finding-text">"oxaloacetate from (S)-malate (quinone route): step 1/1."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:projects/P_PUTIDA/deep-research/PSEPK__tca_cycle__ppu00020-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist PSEPK TCA-cycle pathway report</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The PSEPK pathway report treats the three MQO paralogs as the dominant quinone-linked malate oxidation route.</div>
+
+                        <div class="finding-text">"Three MQO paralogs (K00116, EC 1.1.5.4) constitute the dominant malate-oxidation route"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which of the three P. putida KT2440 MQO paralogs is the dominant enzyme for respiratory malate oxidation under organic-acid growth conditions?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88IS4" data-a="Q: Which of the three P. putida KT2440 MQO paralogs i..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Measure mqo1, mqo2, and mqo3 expression and malate:quinone oxidoreductase activity in single and combined mutants on malate, succinate, acetate, and glucose to resolve paralog-specific function.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q88IS4" data-a="EXPERIMENT: Measure mqo1, mqo2, and mqo3 expression and malate..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(mqo3-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88IS4" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: *mqo3* (PP_2925, UniProt Q88IS4) — Probable Malate:Quinone Oxidoreductase 3 of *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-11T18:40:50.583498</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="mqo3-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="mqo3-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-mqo3-pp_2925-uniprot-q88is4-probable-malatequinone-oxidoreductase-3-of-pseudomonas-putida-kt2440">Functional Annotation Report: <em>mqo3</em> (PP_2925, UniProt Q88IS4) — Probable Malate:Quinone Oxidoreductase 3 of <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="1-summary-answer-to-the-research-question">1. Summary (Answer to the Research Question)</h2>
+<p><strong>mqo3</strong> (locus tag <strong>PP_2925</strong>; KEGG symbol <em>mqo-III</em>; UniProt <strong>Q88IS4</strong>) of <em>Pseudomonas putida</em> KT2440 encodes one of three paralogous <strong>malate:quinone oxidoreductases (MQO; EC 1.1.5.4)</strong>. Its primary, and essentially sole, catalytic function is the <strong>FAD-dependent oxidation of (S)-malate (L-malate) to oxaloacetate, transferring the two electrons directly to a membrane quinone</strong> rather than to NAD⁺:</p>
+<blockquote>
+<p><strong>(S)-malate + a quinone → oxaloacetate + a quinol</strong>  (Rhea:46012; EC 1.1.5.4)</p>
+</blockquote>
+<p>This is the malate → oxaloacetate step of the <strong>tricarboxylic acid (TCA/citric acid) cycle</strong>, performed via the "quinone route" (UniProt/HAMAP pathway: <em>TCA cycle; oxaloacetate from (S)-malate (quinone route): step 1/1</em>). Because the electron acceptor is a lipophilic quinone of the respiratory chain, MQO3 acts as a <strong>membrane-associated peripheral flavoprotein that couples the TCA cycle directly to aerobic respiration</strong>, in the same conceptual manner that succinate dehydrogenase (complex II) does. The enzyme carries out its function on the <strong>cytoplasmic face of the inner (cytoplasmic) membrane</strong>, where it can reduce the membrane ubiquinone pool. Its substrate specificity is for L-malate (the flavin/FAD active site is that of the MQO/DAO glutathione-reductase-2-like FAD superfamily), and its "substrate" on the acceptor side is a respiratory quinone (ubiquinone in aerobically grown <em>Pseudomonas</em>).</p>
+<p>The identity of the target is confirmed: gene symbol, EC number, MQO family (Pfam PF06039; InterPro IPR006231 "MQO", IPR036188 "FAD/NAD(P)-binding domain superfamily"), organism (<em>P. putida</em> KT2440, taxid 160488), and locus tag (PP_2925) are all mutually consistent across UniProt, KEGG, and the primary MQO literature. There is no ambiguity of identity; the caveat is only that no experimental study has characterized <strong>this specific paralog</strong> — its function is inferred from the well-characterized bacterial MQO family plus bioinformatic, structural, and network evidence.</p>
+<hr />
+<h2 id="2-geneprotein-identity-and-verification">2. Gene/Protein Identity and Verification</h2>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene name / synonym</td>
+<td><em>mqo3</em> / <em>mqo-3</em> / <em>mqo-III</em></td>
+<td>UniProt Q88IS4; KEGG ppu:PP_2925</td>
+</tr>
+<tr>
+<td>Locus tag</td>
+<td>PP_2925</td>
+<td>UniProt; KEGG</td>
+</tr>
+<tr>
+<td>Protein</td>
+<td>Probable malate:quinone oxidoreductase 3 (MQO 3)</td>
+<td>UniProt (HAMAP-Rule MF_00212)</td>
+</tr>
+<tr>
+<td>EC</td>
+<td>1.1.5.4 (malate dehydrogenase, quinone)</td>
+<td>UniProt; KEGG</td>
+</tr>
+<tr>
+<td>Length</td>
+<td>539 aa</td>
+<td>UniProt</td>
+</tr>
+<tr>
+<td>Cofactor</td>
+<td>FAD (non-covalent)</td>
+<td>UniProt; Molenaar 1998 (PMID 9660197)</td>
+</tr>
+<tr>
+<td>Family/domains</td>
+<td>MQO family; Pfam PF06039 (Mqo), also DAO; IPR006231, IPR036188</td>
+<td>UniProt/InterPro; KEGG MOTIF</td>
+</tr>
+<tr>
+<td>Organism</td>
+<td><em>Pseudomonas putida</em> KT2440 (taxid 160488)</td>
+<td>UniProt</td>
+</tr>
+<tr>
+<td>Reference proteome</td>
+<td>UP000000556</td>
+<td>UniProt</td>
+</tr>
+</tbody>
+</table>
+<p>All identifiers are internally consistent, and the retrieved primary literature (below) is genuinely about <strong>malate:quinone oxidoreductase</strong>, not a same-symbol homonym. Verification passed.</p>
+<hr />
+<h2 id="3-primary-function-the-catalyzed-reaction-and-substrate-specificity">3. Primary Function: The Catalyzed Reaction and Substrate Specificity</h2>
+<p>MQO is a <strong>flavin adenine dinucleotide (FAD)-dependent oxidoreductase</strong> that oxidizes L-malate to oxaloacetate and reduces a quinone. Unlike the classical NAD-dependent malate dehydrogenase (MDH, EC 1.1.1.37), MQO <strong>does not use NAD⁺</strong>; the natural electron acceptor is a membrane quinone. This was established biochemically for the founding family member from <em>Corynebacterium glutamicum</em>:</p>
+<blockquote>
+<p>"It oxidizes L-malate to oxaloacetate and donates electrons to ubiquinone-1 and other artificial acceptors or, via the electron transfer chain, to oxygen. NAD is not an acceptor and the natural direct acceptor for the enzyme is most likely a quinone." (Molenaar et al., 1998, PMID 9660197)</p>
+</blockquote>
+<p>The same study established that <strong>FAD is the (non-covalently but tightly bound) prosthetic group</strong> and that the enzyme is lipid-activated (Molenaar et al., 1998, PMID 9660197). MQO3's sequence contains the canonical N-proximal FAD/dinucleotide-binding fingerprint (<code>VDVLLVGGGIMS</code>), a Rossmann-like βαβ motif of the FAD/NAD(P)-binding superfamily (IPR036188), shared by all three <em>P. putida</em> paralogs.</p>
+<p><strong>Thermodynamic/directional consequence.</strong> Because MQO deposits electrons into the quinone pool (high redox potential relative to NAD⁺) rather than reducing NAD⁺, the malate→oxaloacetate reaction becomes <strong>effectively irreversible in the oxidative direction</strong>, in contrast to the readily reversible NAD-MDH. This "pulls" the TCA cycle forward and directly links carbon oxidation to respiratory electron flow. The purified thermophilic <em>Bacillus</em> PS3 MQO directly demonstrated menaquinol production that could feed a quinol oxidase, confirming quinone reduction as the physiological output (Kabashima et al., 2013, PMID 23143325).</p>
+<p><strong>Substrate specificity.</strong> The carbon substrate is L-(S)-malate; the acceptor is a respiratory quinone (ubiquinone in aerobic <em>Pseudomonas</em>; menaquinone in organisms that use it). This is an inference from the conserved MQO family fold and the UniProt/Rhea catalytic annotation; no paralog-specific kinetic study exists for PP_2925.</p>
+<hr />
+<h2 id="4-biological-process-pathway-context">4. Biological Process / Pathway Context</h2>
+<p>MQO3 operates in <strong>central carbon metabolism</strong>, specifically the <strong>TCA cycle</strong> (KEGG ppu00020; module M00009), and is mapped by KEGG additionally to <strong>pyruvate metabolism</strong> (ppu00620), the <strong>methylcitrate cycle</strong> (M00982), and general <strong>carbon metabolism</strong> (ppu01200). Its reaction sits at the <strong>malate ↔ oxaloacetate node</strong>, a major hub connecting:</p>
+<ul>
+<li>the <strong>oxidative TCA cycle</strong> (fumarate → malate → oxaloacetate → citrate),</li>
+<li>the <strong>glyoxylate shunt</strong> (isocitrate lyase/malate synthase; important during growth on acetyl-CoA-generating substrates), and</li>
+<li><strong>anaplerosis/gluconeogenesis</strong> (oxaloacetate ↔ PEP/pyruvate via PEP carboxylase, pyruvate carboxylase, malic enzyme, PEP carboxykinase).</li>
+</ul>
+<p>This placement is independently confirmed by the <strong>STRING functional-association network</strong> for PP_2925, whose highest-scoring partners are precisely the neighbours of this node: fumarate hydratase (fumC-I/fumC-II, PP_0897; produces MQO's substrate malate), <strong>citrate synthase gltA</strong> (consumes MQO's product oxaloacetate), <strong>malate synthase glcB</strong> (glyoxylate-shunt malate producer), the parallel <strong>NAD-MDH (mdh)</strong>, and the anaplerotic enzymes <strong>PEP carboxylase (ppc), pyruvate carboxylase (pycB), and malic enzyme (maeB)</strong> — together with the two sister paralogs mqo-I and mqo-II (all association scores 0.90–0.94).</p>
+<p>Functional relevance in <em>P. putida</em> physiology: <em>P. putida</em> is an obligately aerobic, metabolically versatile soil bacterium with a strongly <strong>oxidative, respiration-driven metabolism</strong> and a highly active TCA cycle that is central to its catabolism of organic acids and of <strong>aromatic/lignin-derived compounds</strong> (which funnel through acetyl-CoA and the glyoxylate/TCA cycle) (e.g., Zhou et al., 2025, PMID 40883435; Moreno et al., 2024, PMID 38923400). A respiration-coupled malate oxidase such as MQO fits this lifestyle by maximizing the yield of reducing equivalents delivered to the electron-transport chain.</p>
+<p>In the related organism <em>P. aeruginosa</em>, <strong>mqo is required for growth on ethanol</strong> (which enters metabolism as acetyl-CoA and depends on a functional glyoxylate/TCA cycle to regenerate oxaloacetate) (Görisch, 2003, PMID 12686116) — a concrete example of the physiological importance of MQO-type malate oxidation in pseudomonads.</p>
+<hr />
+<h2 id="5-subcellular-localization">5. Subcellular Localization</h2>
+<p>MQO family enzymes are <strong>peripheral membrane proteins</strong> associated with the cytoplasmic (inner) membrane, from which they can be released by chelators:</p>
+<blockquote>
+<p>"Mqo is a peripheral membrane protein and can be released from the membrane by addition of chelators." (Molenaar et al., 1998, PMID 9660197)</p>
+</blockquote>
+<p>They are membrane-associated (not integral polytopic membrane proteins) and function at the <strong>cytoplasmic face of the inner membrane</strong>, where the catalytic FAD domain oxidizes cytosolic malate and reduces the membrane quinone pool. In <em>H. pylori</em> MQO activity was demonstrated directly in isolated membranes, and the enzyme was described as being — "similar to succinate dehydrogenase" — a shared component of <strong>both the electron transfer chain and the citric acid cycle</strong> (Kather et al., 2000, PMID 10809701). By homology, MQO3 of <em>P. putida</em> is expected to localize to the inner membrane and reduce ubiquinone.</p>
+<p><strong>Paralog-specific feature.</strong> Uniquely among the three <em>P. putida</em> MQOs, MQO3 carries an <strong>N-terminal ~24-residue extension</strong> (<code>MKITIKPKLAMAGLALAIGMLNAQAA…</code>) that has the classic tripartite architecture of a <strong>Sec-type signal peptide</strong> (positively charged n-region KITIKPK; hydrophobic h-region LAMAGLALAIGML; an A-x-A signal-peptidase-I cleavage motif …AQAA↓ET), after which the sequence aligns residue-for-residue with the N-terminus of MQO2. The AlphaFold model (AF-Q88IS4; mean pLDDT 88.8) shows these first ~24 residues are <strong>disordered/very-low-confidence (per-residue pLDDT ~37–49)</strong> and structurally separate from the well-folded FAD-catalytic core (confidence rises sharply at residues ~25–30). This is consistent with a <strong>flexible, membrane-targeting or cleavable N-terminal add-on</strong> distinct from the catalytic domain. <em>Caveat:</em> canonical MQOs are cytoplasm-facing peripheral membrane enzymes (they must access the cytoplasmic quinone pool), so genuine periplasmic export is unlikely; the extension is more plausibly a membrane-anchoring/targeting or regulatory segment. UniProt/HAMAP annotate no signal-peptide feature. This should be treated as a bioinformatic hypothesis pending experimental localization.</p>
+<hr />
+<h2 id="6-evolutionary-paralog-context">6. Evolutionary / Paralog Context</h2>
+<p><em>P. putida</em> KT2440 encodes <strong>three MQO paralogs</strong> — mqo1/PP_0751 (502 aa), mqo2/PP_1251 (527 aa), mqo3/PP_2925 (539 aa), all assigned KEGG orthology K00116 / EC 1.1.5.4 — <strong>plus a single canonical NAD-dependent MDH</strong> (mdh/PP_0654; K00024; EC 1.1.1.37). Global pairwise alignment shows <strong>mqo3 and mqo2 are recent, close paralogs (78.0% identity)</strong>, whereas mqo1 is more anciently diverged (mqo3–mqo1 50.7%; mqo2–mqo1 48.2%). Thus mqo3 most likely arose by a relatively recent duplication of an mqo2-like ancestor, with the acquisition/retention of its distinctive N-terminal extension as the main sequence divergence. Expansion of MQO gene families is characteristic of metabolically versatile <em>Pseudomonas</em>.</p>
+<p>The presence of both MQO and NAD-MDH routes implies <strong>functional redundancy</strong> at the malate-oxidation step. In <em>E. coli</em>, MQO and MDH are active simultaneously, but Δ<em>mqo</em> has no measurable growth or fitness defect while Δ<em>mdh</em> is severely impaired — i.e., MQO is dispensable when MDH is present (van der Rest et al., 2000, PMID 11092847). By analogy, MQO3 is expected to be <strong>conditionally used and non-essential</strong> in <em>P. putida</em>, rather than the principal malate-oxidizing enzyme, especially given the additional redundancy from mqo1 and mqo2.</p>
+<hr />
+<h2 id="7-regulation-family-level-inference">7. Regulation (family-level inference)</h2>
+<p>MQO expression is tied to respiratory/redox status. In <em>E. coli</em>, <em>mqo</em> transcription is controlled by the <strong>ArcA-ArcB redox two-component system</strong>, and MQO activity peaks during exponential (respiratory) growth and falls at stationary phase (van der Rest et al., 2000, PMID 11092847). MQO activity is also regulated by carbon/energy source. In <em>C. glutamicum</em>, loss of MQO down-regulates TCA-cycle gene expression and <strong>redirects oxaloacetate flux</strong> (e.g., toward L-lysine biosynthesis), illustrating that MQO activity influences the partitioning of the oxaloacetate node (Mitsuhashi et al., 2006, PMID 17090916). Paralog-specific regulation of PP_2925 in <em>P. putida</em> has not been experimentally defined.</p>
+<hr />
+<h2 id="8-supported-and-refuted-hypotheses">8. Supported and Refuted Hypotheses</h2>
+<p><strong>Supported:</strong><br />
+- <strong>H1 (primary function):</strong> MQO3 catalyzes FAD-dependent oxidation of L-malate to oxaloacetate with a quinone acceptor (EC 1.1.5.4). <em>Supported</em> by UniProt/Rhea catalytic annotation, conserved FAD-binding fingerprint, MQO-family membership, and biochemically characterized homologs (PMID 9660197, 23143325).<br />
+- <strong>H2 (localization):</strong> MQO3 is a peripheral, inner-membrane-associated flavoprotein acting at the cytoplasmic face. <em>Supported</em> by family biochemistry (PMID 9660197, 10809701).<br />
+- <strong>H3 (pathway):</strong> MQO3 sits at the malate↔oxaloacetate node of the TCA/glyoxylate/anaplerotic network, coupling the cycle to respiration. <em>Supported</em> by KEGG pathway mapping and STRING network (partners: fumarase, citrate synthase, malate synthase, MDH, Ppc/PycB/MaeB).<br />
+- <strong>H4 (evolution/redundancy):</strong> mqo3 is a recent duplicate of mqo2 and functionally redundant with NAD-MDH and the other MQOs. <em>Supported</em> by pairwise identity analysis and the <em>E. coli</em> Δ<em>mqo</em> precedent (PMID 11092847).</p>
+<p><strong>Refuted / down-weighted:</strong><br />
+- <strong>H5 (periplasmic export via the N-terminal signal):</strong> Although MQO3's N-terminal extension has Sec-signal-peptide architecture and is disordered in the AlphaFold model, genuine periplasmic localization is <strong>inconsistent</strong> with the requirement for MQO to reduce the cytoplasmic quinone pool. This hypothesis is down-weighted in favour of a membrane-targeting/regulatory role; it remains untested experimentally.</p>
+<hr />
+<h2 id="9-evidence-quality-and-limitations">9. Evidence Quality and Limitations</h2>
+<ul>
+<li><strong>Strengths:</strong> The core annotation (reaction, cofactor, localization, pathway) rests on decades of biochemical and genetic characterization of the MQO family in <em>C. glutamicum</em>, <em>E. coli</em>, <em>H. pylori</em>, and <em>Bacillus</em>, plus fully consistent, curated database records (UniProt HAMAP MF_00212, KEGG, Rhea, InterPro) and independent structural (AlphaFold) and network (STRING) corroboration.</li>
+<li><strong>Evidence level:</strong> UniProt classifies all three <em>P. putida</em> MQO paralogs (Q88IS4/mqo3, Q88NF9/mqo2, Q88PU7/mqo1) at protein-existence level <strong>"3: Inferred from homology"</strong>, with no proteomics cross-references — consistent with the "Probable" designation and the absence of paralog-specific experimental work.</li>
+<li><strong>Limitations:</strong> No experimental study has directly characterized <strong>PP_2925/MQO3 itself</strong> — kinetics, quinone specificity, exact subcellular topology, the role of the N-terminal extension, and the physiological division of labour among mqo1/mqo2/mqo3 in <em>P. putida</em> are all inferred, not measured. The annotation status "Probable" reflects this. High-throughput RB-TnSeq fitness datasets exist for <em>P. putida</em> (e.g., PMID 32826213, 33964456) and could, in principle, quantify MQO3's conditional fitness contribution, but paralog-specific values were not extracted here.</li>
+</ul>
+<h2 id="10-future-directions">10. Future Directions</h2>
+<ol>
+<li>Targeted deletion of PP_2925 (and combinatorial Δmqo1/2/3 and Δmdh mutants) to define the division of labour and essentiality at the malate-oxidation step.</li>
+<li>Enzymatic characterization of purified MQO3 (kinetics, ubiquinone vs. menaquinone specificity, FAD stoichiometry).</li>
+<li>Experimental determination of subcellular topology and the fate/function of the N-terminal extension (cleavage, membrane anchoring, or regulation).</li>
+<li>Condition-resolved proteomics to determine which paralog is expressed on which carbon source (organic acids vs. sugars vs. aromatics).</li>
+</ol>
+<hr />
+<h3 id="key-references">Key References</h3>
+<ul>
+<li>Molenaar D, van der Rest ME, Petrović S. Biochemical and genetic characterization of the membrane-associated malate dehydrogenase (acceptor) from <em>Corynebacterium glutamicum</em>. <strong>1998</strong> (PMID 9660197).</li>
+<li>van der Rest ME, Frank C, Molenaar D. Functions of the membrane-associated and cytoplasmic malate dehydrogenases in the citric acid cycle of <em>Escherichia coli</em>. <strong>2000</strong> (PMID 11092847).</li>
+<li>Kather B, Stingl K, van der Rest ME, Altendorf K, Molenaar D. Another unusual type of citric acid cycle enzyme in <em>Helicobacter pylori</em>: the malate:quinone oxidoreductase. <strong>2000</strong> (PMID 10809701).</li>
+<li>Mitsuhashi S, Hayashi M, Ohnishi J, Ikeda M. Disruption of malate:quinone oxidoreductase increases L-lysine production by <em>Corynebacterium glutamicum</em>. <strong>2006</strong> (PMID 17090916).</li>
+<li>Kabashima Y, Sone N, Kusumoto T, Sakamoto J. Purification and characterization of malate:quinone oxidoreductase from thermophilic <em>Bacillus</em> sp. PS3. <strong>2013</strong> (PMID 23143325).</li>
+<li>Görisch H. The ethanol oxidation system and its regulation in <em>Pseudomonas aeruginosa</em>. <strong>2003</strong> (PMID 12686116).</li>
+<li>UniProt Q88IS4; KEGG ppu:PP_2925; Rhea RHEA:46012; AlphaFold AF-Q88IS4; STRING 160488.PP_2925.</li>
+</ul>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="mqo3-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="mqo3-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88IS4
+gene_symbol: mqo3
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: FAD-dependent malate:quinone oxidoreductase of the MQO family. Mqo3 catalyzes oxidation of (S)-malate to oxaloacetate while reducing a respiratory quinone, contributing to the quinone-linked malate oxidation branch of the tricarboxylic acid cycle. It is one of three MQO paralogs in Pseudomonas putida KT2440, so the paralog-specific division of labor remains unresolved, but the UniProt/HAMAP assignment supports malate:quinone oxidoreductase as its core activity.
+existing_annotations:
+- term:
+    id: GO:0006099
+    label: tricarboxylic acid cycle
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Correct process annotation for an MQO enzyme in the malate-to-oxaloacetate step of the TCA cycle.
+    action: ACCEPT
+    reason: UniProt/HAMAP places Mqo3 in the tricarboxylic acid cycle, specifically oxaloacetate formation from (S)-malate by the quinone route. The PSEPK pathway report treats mqo1, mqo2, and mqo3 as the primary quinone-linked malate oxidation branch.
+    supported_by:
+    - reference_id: file:PSEPK/mqo3/mqo3-uniprot.txt
+      supporting_text: &#39;oxaloacetate from (S)-malate (quinone route): step 1/1.&#39;
+- term:
+    id: GO:0008924
+    label: L-malate dehydrogenase (quinone) activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Correct core molecular function for Mqo3, matching EC 1.1.5.4 and the UniProt catalytic activity.
+    action: ACCEPT
+    reason: Q88IS4 is a reviewed UniProtKB/Swiss-Prot MQO-family entry annotated by HAMAP MF_00212 with malate:quinone oxidoreductase activity. The curated reaction is (S)-malate + quinone = quinol + oxaloacetate.
+    supported_by:
+    - reference_id: file:PSEPK/mqo3/mqo3-uniprot.txt
+      supporting_text: &#39;Reaction=(S)-malate + a quinone = a quinol + oxaloacetate;&#39;
+- term:
+    id: GO:0016614
+    label: oxidoreductase activity, acting on CH-OH group of donors
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: enables
+  review:
+    summary: True but broad parent of the specific malate:quinone oxidoreductase activity.
+    action: KEEP_AS_NON_CORE
+    reason: The enzyme is an oxidoreductase acting on the CH-OH group of malate, but GO:0008924 captures the specific substrate and quinone acceptor.
+- term:
+    id: GO:0047545
+    label: (S)-2-hydroxyglutarate dehydrogenase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: enables
+  review:
+    summary: Electronic over-propagation from the PANTHER L-2-hydroxyglutarate dehydrogenase family name; not supported for this MQO.
+    action: REMOVE
+    reason: UniProt&#39;s curated catalytic activity for Q88IS4 is malate:quinone oxidoreductase, not (S)-2-hydroxyglutarate dehydrogenase. The protein carries MQO/HAMAP/Pfam evidence, while the 2-hydroxyglutarate annotation appears to derive from the broad PANTHER family label and has no gene-specific support.
+references:
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/mqo3/mqo3-uniprot.txt
+  title: UniProtKB entry Q88IS4 for Pseudomonas putida KT2440 mqo3
+  findings:
+  - statement: UniProt annotates Q88IS4 as an MQO-family enzyme catalyzing (S)-malate oxidation with a quinone acceptor.
+    supporting_text: &#39;Reaction=(S)-malate + a quinone = a quinol + oxaloacetate;&#39;
+    reference_section_type: RESULTS
+  - statement: UniProt/HAMAP places mqo3 in the quinone-route TCA step from malate to oxaloacetate.
+    supporting_text: &#39;oxaloacetate from (S)-malate (quinone route): step 1/1.&#39;
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Curated UniProtKB/Swiss-Prot entry for the exact target accession Q88IS4.
+- id: file:projects/P_PUTIDA/deep-research/PSEPK__tca_cycle__ppu00020-deep-research-openscientist.md
+  title: OpenScientist PSEPK TCA-cycle pathway report
+  findings:
+  - statement: The PSEPK pathway report treats the three MQO paralogs as the dominant quinone-linked malate oxidation route.
+    supporting_text: &#39;Three MQO paralogs (K00116, EC 1.1.5.4) constitute the dominant malate-oxidation route&#39;
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: UNVERIFIED
+    review_notes: Provider-generated module/pathway report used for first-pass pathway curation; consistent with UniProt/HAMAP labels.
+core_functions:
+- description: FAD-dependent malate:quinone oxidoreductase catalyzing oxidation of (S)-malate to oxaloacetate with reduction of a respiratory quinone at the TCA-cycle malate/oxaloacetate node.
+  molecular_function:
+    id: GO:0008924
+    label: L-malate dehydrogenase (quinone) activity
+  directly_involved_in:
+  - id: GO:0006099
+    label: tricarboxylic acid cycle
+  supported_by:
+  - reference_id: file:PSEPK/mqo3/mqo3-uniprot.txt
+    supporting_text: &#39;Reaction=(S)-malate + a quinone = a quinol + oxaloacetate;&#39;
+  - reference_id: file:PSEPK/mqo3/mqo3-uniprot.txt
+    supporting_text: &#39;oxaloacetate from (S)-malate (quinone route): step 1/1.&#39;
+suggested_questions:
+- question: Which of the three P. putida KT2440 MQO paralogs is the dominant enzyme for respiratory malate oxidation under organic-acid growth conditions?
+suggested_experiments:
+- description: Measure mqo1, mqo2, and mqo3 expression and malate:quinone oxidoreductase activity in single and combined mutants on malate, succinate, acetate, and glucose to resolve paralog-specific function.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
