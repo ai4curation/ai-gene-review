@@ -2,7 +2,7 @@
 
 Source: GAPDH-bioreason-rl-predictions.md
 
-- **Correctness**: 4/5
+- **Correctness**: 5/5
 - **Completeness**: 3/5
 
 ## Functional Summary Review
@@ -13,11 +13,15 @@ The BioReason functional summary states:
 
 This accurately captures GAPDH's core enzymatic function: glyceraldehyde-3-phosphate dehydrogenase activity (GO:0004365) in glycolysis (GO:0006096), using NAD+ as a cofactor. The curated review accepts these as core functions. The description of NAD binding, cytoplasmic localization, and role in central carbon metabolism is correct.
 
-However, the summary has notable gaps:
+Every substantive claim in the Functional Summary is supported. The following are
+completeness gaps or diagnostic-output issues, not correctness errors:
 
 1. **Moonlighting functions omitted**: GAPDH is one of the most well-characterized moonlighting proteins. The curated review describes roles in translational regulation (GO:0006417, kept as non-core), apoptosis (GO:0006915, kept as non-core), innate immune response (GO:0045087, kept as non-core), and nuclear functions (GO:0005634, accepted). BioReason captures none of these.
 
-2. **The GO term predictions are strikingly wrong**: The predicted MF terms include "peptidase inhibitor activity" (GO:0030414), "endopeptidase inhibitor activity" (GO:0004866), and entirely omit the actual GAPDH enzymatic activity. This suggests the model's GO term predictions are based on a different or corrupted feature set, not aligned with the functional summary.
+2. **Diagnostic GO output is strikingly wrong but not score-driving**: The predicted MF
+   terms include "peptidase inhibitor activity" (GO:0030414), "endopeptidase inhibitor
+   activity" (GO:0004866), and omit GAPDH activity. Those raw terms are outside the
+   Functional Summary score.
 
 3. The curated review identifies NAD binding (GO:0051287) as accepted and removes several over-broad annotations (GO:0016491 oxidoreductase activity, GO:0016620 oxidoreductase activity acting on aldehydes). BioReason's summary describes the correct chemistry but the GO term output does not match.
 

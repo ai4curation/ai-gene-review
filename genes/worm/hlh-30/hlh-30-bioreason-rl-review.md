@@ -2,7 +2,7 @@
 
 Source: hlh-30-bioreason-rl-predictions.md
 
-- **Correctness**: 3/5
+- **Correctness**: 5/5
 - **Completeness**: 2/5
 
 ## Functional Summary Review
@@ -12,6 +12,8 @@ The BioReason functional summary states:
 > A nuclear basic helix-loop-helix transcription regulator in Caenorhabditis elegans that dimerizes through its helix-loop-helix core and uses a basic DNA-contact region to recognize regulatory elements and modulate RNA polymerase II-dependent gene expression. By assembling dimers on target promoters and recruiting co-regulatory machinery, it fine-tunes transcriptional programs central to development and environmental responsiveness within the nucleus.
 
 This correctly identifies HLH-30 as a bHLH transcription factor that dimerizes and binds DNA to regulate gene expression. These are accurate molecular function descriptions matching the curated annotations for GO:0000981 (DNA-binding transcription factor activity, RNA polymerase II-specific) and GO:0046983 (protein dimerization activity).
+
+All claims in the paragraph are supported. Nuclear localization describes the active state; omission of regulated cytoplasm-to-nucleus shuttling affects completeness rather than correctness.
 
 However, the summary presents HLH-30 as a generic bHLH factor with no indication of its actual biological identity. HLH-30 is the C. elegans ortholog of mammalian TFEB, the master transcriptional regulator of autophagy, lysosomal biogenesis, and lipid metabolism. The curated review establishes:
 

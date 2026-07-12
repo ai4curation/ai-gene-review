@@ -2,7 +2,7 @@
 
 Source: atfs-1-bioreason-rl-predictions.md
 
-- **Correctness**: 3/5
+- **Correctness**: 5/5
 - **Completeness**: 2/5
 
 ## Functional Summary Review
@@ -12,6 +12,8 @@ The BioReason functional summary states:
 > A nuclear transcriptional regulator in Caenorhabditis elegans that uses a C-terminal basic-leucine zipper module to dimerize and bind specific DNA elements at target promoters. By assembling cooperative dimers and recruiting chromatin-modifying and transcriptional machinery, it modulates RNA polymerase II-dependent gene expression programs central to transcriptional control within the nucleus.
 
 This correctly identifies ATFS-1 as a bZIP transcription factor that functions in the nucleus. The identification of the C-terminal bZIP domain (residues 418-483) and its role in dimerization and DNA binding is accurate.
+
+All claims in the paragraph are supported. Nuclear function is a real stress-activated state; omission of the mitochondrial-import state and the switch between them affects completeness, not correctness.
 
 However, the summary is fundamentally incomplete because it treats ATFS-1 as a generic bZIP transcription factor. The curated review establishes that ATFS-1 is the master regulator of the mitochondrial unfolded protein response (UPRmt) -- a highly specific and distinctive function. The key features entirely missed include:
 

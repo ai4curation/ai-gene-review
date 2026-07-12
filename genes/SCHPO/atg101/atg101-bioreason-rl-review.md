@@ -2,7 +2,7 @@
 
 Source: atg101-bioreason-rl-predictions.md
 
-- **Correctness**: 3/5
+- **Correctness**: 5/5
 - **Completeness**: 2/5
 
 ## Functional Summary Review
@@ -11,7 +11,7 @@ The BioReason functional summary describes atg101 as:
 
 > A cytoplasmic autophagy adaptor that organizes the autophagy initiation machinery in fission yeast. Lacking catalytic motifs, it functions through multivalent binding to assemble and stabilize the autophagy nucleation hub, thereby driving autophagosome formation and delivery to the vacuole.
 
-The core claims are largely correct: atg101 is indeed a non-enzymatic autophagy adaptor localized to the cytoplasm that functions through protein-protein interactions. The claim about lacking catalytic motifs is accurate, and the involvement in autophagosome formation is correct.
+Every claim in the Functional Summary is supported: atg101 is a non-enzymatic autophagy adaptor localized to the cytoplasm that functions through protein-protein interactions. The claim about lacking catalytic motifs is accurate, and the involvement in autophagosome formation is correct. The low completeness score reflects missing specificity, not inaccurate stated biology.
 
 However, the summary misses critical specifics:
 

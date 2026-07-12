@@ -2,7 +2,7 @@
 
 Source: COP1-bioreason-rl-predictions.md
 
-- **Correctness**: 4/5
+- **Correctness**: 5/5
 - **Completeness**: 3/5
 
 ## Functional Summary Review
@@ -12,6 +12,9 @@ The BioReason summary states:
 > A soluble plant ubiquitin ligase that combines an N-terminal RING catalytic module with a C-terminal WD40 beta-propeller scaffold to assemble and activate ubiquitination complexes. By recruiting ubiquitin-charged E2 enzymes and selecting substrates through a beta-propeller platform, it promotes ubiquitin attachment and turnover of nuclear regulatory proteins. This activity tunes proteostasis and signaling pathways by directing specific targets toward degradation, consistent with a soluble nuclear role.
 
 This correctly identifies COP1's core function as an E3 ubiquitin ligase. The curated review confirms ubiquitin protein ligase activity (GO:0061630) and proteasome-mediated ubiquitin-dependent protein catabolic process (GO:0043161) as core functions. The RING-WD40 domain architecture description is accurate.
+
+All claims in the Functional Summary are supported. The issues below are omissions and
+therefore affect completeness only.
 
 **Strengths**:
 - Correctly identifies the RING + WD40 bipartite architecture

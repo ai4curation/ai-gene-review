@@ -2,7 +2,7 @@
 
 Source: DnaJ-bioreason-rl-predictions.md
 
-- **Correctness**: 4/5
+- **Correctness**: 5/5
 - **Completeness**: 4/5
 
 ## Functional Summary Review
@@ -17,13 +17,15 @@ This is a strong summary that accurately captures the core function of DnaJ. The
 - Role in proteostasis under stress
 - Cytoplasmic localization
 
+No substantive claim in the Functional Summary is contradicted by the curated review.
+
 Minor gaps:
 - Does not mention DnaJ's homodimeric nature
 - Does not mention the secondary function of sigma32 (heat shock transcription factor) inactivation, which is a significant regulatory role
 - Does not mention the DnaK-independent chaperone activity dependent on zinc center 1
 - Refers to DnaK only as "the principal cytosolic chaperone" without naming it
 
-The thinking trace correctly identifies the zinc-binding function of the cysteine-rich domain (IPR001305) and its role in "client recognition and cochaperone assembly."
+The thinking trace correctly identifies the zinc-binding function of the cysteine-rich domain (IPR001305) and its role in "client recognition and cochaperone assembly." Any trace-only speculation is diagnostic and does not affect correctness.
 
 Comparison with interpro2go:
 

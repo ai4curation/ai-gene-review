@@ -23,7 +23,7 @@ BioReason claims:
 
 > By providing high-capacity protein-binding surfaces, it coordinates soluble assemblies that drive membrane remodeling and furrow formation in the cytoplasm.
 
-This is entirely fabricated. There is no evidence for membrane remodeling, furrow formation, or cytoplasmic function. The UniProt summary itself says "Involved in cytokinesis," but the curated review and literature firmly establish the rRNA transcription/ribosome biogenesis function based on direct experimental evidence (PMID:16816948, PMID:31745560). The UniProt summary appears to be outdated or reflects an earlier, less accurate annotation.
+This is entirely fabricated. There is no evidence for membrane remodeling, furrow formation, or cytoplasmic function. BioReason's model-generated UniProt-style section also says "Involved in cytokinesis," but the actual cached UniProt record and literature establish rRNA transcription/ribosome biogenesis based on direct experimental evidence (PMID:16816948, PMID:31745560). The cytokinesis line is a BioReason fabrication, not an outdated UniProt annotation.
 
 The localization is wrong: BioReason assigns cytoplasm (GO:0005737), but pol5 is nuclear/nucleolar (confirmed by multiple evidence codes: IBA, IEA, IDA, HDA).
 

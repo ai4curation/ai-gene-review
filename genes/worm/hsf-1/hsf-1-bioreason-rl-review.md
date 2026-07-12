@@ -2,7 +2,7 @@
 
 Source: hsf-1-bioreason-rl-predictions.md
 
-- **Correctness**: 4/5
+- **Correctness**: 5/5
 - **Completeness**: 3/5
 
 ## Functional Summary Review
@@ -20,7 +20,9 @@ This is a notably better summary than most others in this set. It correctly iden
 
 These align well with the curated review's description of HSF-1 as the master regulator of the heat shock response that binds heat shock elements (HSEs) and activates expression of HSPs and molecular chaperones.
 
-The correctness score is docked slightly because the summary does not distinguish between the canonical heat shock response and the broader stress responses -- it refers generically to "proteotoxic cues" without specifying heat stress as the primary trigger.
+The broader phrase "proteotoxic cues" is accurate; failure to name heat stress as the
+canonical trigger is a specificity omission and therefore affects completeness, not
+correctness. No substantive claim in the paragraph is contradicted by the curated review.
 
 Key aspects missing from completeness:
 

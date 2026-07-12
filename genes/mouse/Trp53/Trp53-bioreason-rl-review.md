@@ -13,7 +13,7 @@ The BioReason functional summary is accurate and well-articulated:
 
 This correctly identifies: (1) the nuclear localization (GO:0005634), (2) the tetramerization domain and cooperative DNA binding, (3) the N-terminal transactivation domain, (4) the central DNA-binding domain, (5) RNA polymerase II transcriptional regulation (GO:0000981), (6) the dual activator/repressor function, (7) cell cycle control (GO:0051726), and (8) apoptosis induction (GO:0006915). The curated review's IBA annotations include GO:0000981 (DNA-binding transcription factor activity, RNA polymerase II-specific), GO:0042771 (intrinsic apoptotic signaling pathway in response to DNA damage by p53 class mediator), and GO:0042981 (regulation of apoptotic process).
 
-The UniProt summary for mouse Trp53 describes it as a "tumor suppressor" that "induces growth arrest or apoptosis" and acts as "a trans-activating protein that acts downstream of a signal mediated by a DNA damage-stress pathway" -- all consistent with the BioReason summary.
+BioReason's model-generated UniProt-style section also describes Trp53 as a tumor suppressor that induces growth arrest or apoptosis downstream of DNA-damage stress. That internal consistency is not independent evidence; the Functional Summary is supported by the curated review itself.
 
 The mention of "toggling between activation and repression" is a good nuance that captures the dual transcriptional function. The description of "checkpoint pathways" accurately reflects the DNA damage checkpoint role.
 

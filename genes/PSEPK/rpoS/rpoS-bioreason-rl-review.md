@@ -2,7 +2,7 @@
 
 Source: rpoS-bioreason-rl-predictions.md
 
-- **Correctness**: 4/5
+- **Correctness**: 5/5
 - **Completeness**: 3/5
 
 ## Functional Summary Review
@@ -18,6 +18,8 @@ This is a solid summary that correctly captures the core function of RpoS:
 - Holoenzyme assembly and open-complex formation
 - Cytoplasmic localization
 - Association with stress and stationary-phase gene regulation
+
+No substantive claim in the Functional Summary is contradicted by the curated review. The limitations below are omissions.
 
 The thinking trace correctly identifies all eleven InterPro domains spanning the sigma-70 regions (1.2, 2, 3, 4) and the RpoS family signature.
 

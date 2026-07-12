@@ -2,7 +2,7 @@
 
 Source: sigK-bioreason-rl-predictions.md
 
-- **Correctness**: 3/5
+- **Correctness**: 5/5
 - **Completeness**: 2/5
 
 ## Functional Summary Review
@@ -11,9 +11,9 @@ The BioReason functional summary reads:
 
 > A cytosolic bacterial transcription initiation factor that associates with the core RNA polymerase to confer promoter specificity. Its modular architecture binds the polymerase through an N-terminal recognition module and uses a C-terminal helix-turn-helix to engage -35 promoter elements, thereby assembling the initiation-competent holoenzyme, stabilizing the open complex, and launching RNA synthesis from chromosome-embedded promoters in Bacillus subtilis.
 
-This is a generic description of a sigma-70 family sigma factor that could apply to essentially any bacterial sigma factor. While technically correct in describing sigma factor biochemistry (GO:0016987), it fails to capture anything specific about SigK.
+This is a generic but technically correct description of sigma-factor biochemistry (GO:0016987). No claim in the paragraph is contradicted by the curated review, but it fails to capture anything specific about SigK.
 
-Key omissions and errors:
+Key completeness omissions and diagnostic-output errors:
 
 1. **Missing identity as late mother cell sigma factor**: SigK is specifically the late mother cell-specific sigma factor during sporulation. The curated review emphasizes that SigK activates coat proteins (cotA, cotB, cotD, cotE, cotH), cortex genes, and germination genes. BioReason's summary contains no hint of this.
 
@@ -21,7 +21,7 @@ Key omissions and errors:
 
 3. **No sporulation context**: The summary does not mention sporulation at all, despite sporulation (GO:0030435) being a core biological process for SigK.
 
-4. **Erroneous GO predictions**: BioReason predicts negative regulation of transcription terms (GO:0045892, GO:1903507) and nucleus (GO:0005634), host cell cytoplasm (GO:0030430), and endonuclease complex -- all incorrect for this bacterial sigma factor.
+4. **Diagnostic GO errors (not score-driving)**: Raw predictions include inappropriate negative-regulation and eukaryotic/localization terms. They do not affect the narrative score.
 
 5. **Missing feed-forward regulation**: SigK operates in a hierarchical feed-forward network with GerE, which the curated review identifies as important regulatory context.
 

@@ -2,7 +2,7 @@
 
 Source: git-bioreason-rl-predictions.md
 
-- **Correctness**: 4/5
+- **Correctness**: 5/5
 - **Completeness**: 3/5
 
 ## Functional Summary Review
@@ -12,6 +12,8 @@ The BioReason summary states:
 > A cytoplasmic scaffold that accelerates GTP hydrolysis on Arf small GTPases and organizes endocytic and recycling pathways in fruit fly cells. Its N-terminal catalytic module drives Arf inactivation, while central ankyrin repeats and a GIT platform assemble multiprotein complexes that couple membrane trafficking to actin remodeling. By positioning catalytic and scaffolding elements in a GIT-like architecture, it coordinates vesicle dynamics and cytoskeletal control from soluble cytoplasmic hubs.
 
 This is a solid summary that correctly identifies the dual nature of Git: ARF-GAP catalytic activity and scaffold function. The curated review confirms Git as an "ARF GTPase-activating protein that functions as a multidomain scaffold protein, forming a conserved dPix-Git-PAK complex." The core molecular function of GTPase activator activity (GO:0005096) is well-captured.
+
+All claims in the paragraph are supported. The missing gene-specific contexts below affect completeness only.
 
 **Strengths**:
 - Correctly identifies the ArfGAP catalytic function

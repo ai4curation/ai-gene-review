@@ -2,8 +2,8 @@
 
 Source: tam10-bioreason-rl-predictions.md
 
-- **Correctness**: 2/5
-- **Completeness**: 2/5
+- **Correctness**: 1/5
+- **Completeness**: 1/5
 
 ## Functional Summary Review
 
@@ -11,15 +11,24 @@ BioReason's functional summary states:
 
 > A soluble scaffold that is essential for vegetative growth in fission yeast. It uses an acidic-like interaction module to assemble cytoplasmic complexes that coordinate vegetative proliferation, likely by organizing protein networks involved in mRNA handling, cytoskeletal dynamics, and energy metabolism to sustain biomass accumulation and cell division.
 
-This contains significant errors. The curated review establishes that tam10 is:
-- A **sequence orphan** with no identifiable protein domains or orthologs outside fission yeast
-- Identified through proteogenomic screening as having altered transcript levels during **meiosis** (not vegetative growth)
-- Deletion mutants show **no phenotype** under standard conditions
-- Function is **completely unknown**
+This fundamentally mischaracterizes an uncharacterized protein. The current curated
+review establishes that tam10 is:
+
+- Poorly conserved and apparently restricted to the fission-yeast lineage
+- Assigned a SMAP domain (Pfam PF15477 / InterPro IPR028124), but with no experimentally
+  validated molecular function for that domain or for tam10
+- Identified through proteogenomic screening as having altered transcript levels during
+  **meiosis**, not as an essential vegetative-growth factor
+- Associated with no deletion phenotype under standard conditions
+- Of unknown molecular function, localization, and pathway membership
 
 BioReason claims tam10 is "essential for vegetative growth," which is directly contradicted by the curated review stating that "deletion mutants show no phenotype under standard conditions." The gene was identified precisely because of its meiotic expression (PMID:21270388), not vegetative importance.
 
-The claim about an "acidic-like interaction module" (IPR028124, Small acidic protein-like domain, residues 101-167) is the only domain BioReason identified, and building an elaborate scaffolding narrative from this single small domain is a significant overinterpretation. The curated review explicitly states that tam10 has "no identifiable protein domains or motifs."
+The claim about an "acidic-like interaction module" extrapolates an elaborate scaffolding
+narrative from the SMAP family assignment alone. The domain call itself is present in the
+current review; the error is treating it as evidence for cytoplasmic complex assembly,
+mRNA handling, cytoskeletal dynamics, or energy metabolism when none of those functions
+has been established.
 
 Notably, the curated review also identifies and recommends removing incorrect ISO/ISS annotations that linked tam10 to human KNOP1 based on only 16.7% sequence identity. The curated review determined tam10's function should be annotated as simply unknown (GO:0003674, GO:0008150, GO:0005575 root terms).
 
@@ -31,4 +40,9 @@ There are no interpro2go (GO_REF:0000002) annotations for tam10 in the curated r
 
 ## Notes on thinking trace
 
-The trace identifies only one domain (Small acidic protein-like, IPR028124) and then extrapolates extensively about scaffolding, mRNA handling, and cytoskeletal dynamics. The statement that the protein is "required for vegetative growth" appears to be derived from the UniProt summary ("Required for vegetative growth"), but this is contradicted by the deletion phenotype data showing no growth defect.
+The trace identifies only one domain (Small acidic protein-like, IPR028124) and then
+extrapolates extensively about scaffolding, mRNA handling, and cytoskeletal dynamics. The
+exported `UniProt Summary` line saying "Required for vegetative growth" is
+model-generated UniProt-style text, not evidence imported from UniProt. It is contradicted
+by the deletion phenotype data showing no growth defect and must not be treated as source
+provenance.

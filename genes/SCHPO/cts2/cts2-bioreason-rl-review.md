@@ -11,7 +11,7 @@ The BioReason functional summary describes cts2 (SPAPB1E7.04c) as:
 
 > A GH18 glycoside-hydrolase-family enzyme in fission yeast that uses a chitinase-like catalytic core to bind and hydrolyze beta-linked N-acetylglucosamine polymers. Although exhibiting low activity in vitro, its architecture positions it as a wall-associated remodeling factor that fine-tunes chitin-rich matrices during developmental transitions.
 
-The summary correctly identifies the GH18 family membership and Cts1-like domain. It also correctly notes "low activity in vitro," which matches the UniProt summary "Possesses low chitinase activity in vitro."
+The summary correctly identifies the GH18 family membership and Cts1-like domain. It also notes "low activity in vitro," matching BioReason's model-generated UniProt-style line. That generated agreement is not independent evidence for activity, which the curated review disputes on catalytic-residue grounds.
 
 However, there are important errors and omissions:
 
