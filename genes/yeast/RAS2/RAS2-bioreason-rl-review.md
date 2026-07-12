@@ -17,7 +17,7 @@ The identification as a Ras-family small GTPase with GTP/GDP cycling is correct 
 
 This description of vesicle trafficking with HOPS/CORVET complexes, Vam3 SNAREs, and AP-3 sorting is entirely misattributed. These are functions of Rab GTPases (like Ypt7/Vps21), not Ras GTPases. RAS2's actual effector is adenylate cyclase (CYR1), and its downstream pathway involves PKA-mediated phosphorylation.
 
-The thinking trace reveals the source of the error: the model sees Ras-type GTPase domains, notes the UniProt summary says "Potential regulator of intracellular vesicle traffic," and proceeds to develop a vesicle trafficking narrative. The UniProt summary for RAS2 is remarkably uninformative and potentially misleading. However, the InterPro family assignments (IPR001806 Small GTPase, IPR020849 Small GTPase Ras-type) should have pointed toward signaling rather than trafficking, since Ras-type GTPases are canonically signal transduction molecules.
+The thinking trace and BioReason's model-generated UniProt-style section both converge on "Potential regulator of intracellular vesicle traffic" and develop a vesicle-trafficking narrative. The actual cached UniProt record instead states that Ras2 modulates adenylate cyclase and cAMP biosynthesis. This is a model-generated provenance failure, not a misleading UniProt annotation. The InterPro family assignments (IPR001806 Small GTPase, IPR020849 Small GTPase Ras-type) should also have pointed toward signaling rather than trafficking.
 
 The summary completely misses:
 - cAMP/PKA signaling pathway regulation (the core function)
@@ -35,4 +35,4 @@ The interpro2go annotation (GO_REF:0000002) assigns signal transduction (GO:0007
 
 ## Notes on thinking trace
 
-The trace is heavily influenced by the misleading UniProt summary "Potential regulator of intracellular vesicle traffic" and constructs an elaborate but incorrect vesicle trafficking narrative. The model correctly identifies Ras-type GTPase domains but then maps them to the wrong biological context. This case illustrates a failure mode where the model trusts a vague UniProt description over what the domain family classification would suggest.
+The trace constructs an elaborate but incorrect vesicle-trafficking narrative that matches BioReason's own generated UniProt-style line, not the actual UniProt record. The model correctly identifies Ras-type GTPase domains but maps them to the wrong biological context. This case illustrates UniProt-style fabrication within the RL output.

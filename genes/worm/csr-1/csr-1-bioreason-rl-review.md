@@ -22,6 +22,11 @@ The curated review documents a critical data issue: the original GOA/UniProt fil
 
 This is an input data error rather than a reasoning error on BioReason's part. The InterPro domains listed (zinc finger NHR-type, nuclear hormone receptor ligand-binding domain) are those of nhr-47, not csr-1.
 
+**Benchmark handling:** exclude this case from model-performance aggregates and report it
+in a wrong-input/data-pipeline stratum. The 1/1 scores describe the mismatch between the
+generated paragraph and CSR-1 biology; they must not be interpreted as a BioReason
+reasoning failure on the sequence it actually received.
+
 Comparison with interpro2go:
 
 The interpro2go annotations in the curated review (GO:0000978 DNA binding, GO:0003700 transcription factor activity, GO:0006355 regulation of transcription) are all marked REMOVE because they apply to the wrong gene. BioReason faithfully recapitulates these incorrect interpro2go annotations. The error here originates entirely from the wrong input sequence/identifier.

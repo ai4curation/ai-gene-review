@@ -2,7 +2,7 @@
 
 Source: CDC37-bioreason-rl-predictions.md
 
-- **Correctness**: 4/5
+- **Correctness**: 5/5
 - **Completeness**: 3/5
 
 ## Functional Summary Review
@@ -20,6 +20,8 @@ This domain-level description correctly maps to the three known CDC37 domains (I
 > By orchestrating chaperone-mediated folding in the cytosol, it promotes the attainment and maintenance of functional conformations central to cellular signaling and proteostasis.
 
 Cytosolic localization is correct (multiple lines of evidence in curated review: IBA, IEA, HDA). The connection to protein folding (GO:0006457) and protein stabilization (GO:0050821) is accurate.
+
+All claims in the Functional Summary are supported. The downstream roles omitted below affect completeness only.
 
 The summary correctly captures protein folding and protein stabilization as core functions. However, it misses several important non-core but documented functions: the requirement for passage through START in the cell cycle (GO:0051726), involvement in HOG and PKC MAP kinase signaling cascades (GO:0043410, GO:0038066), spindle pole body duplication (GO:0030474), and the cellular hyperosmotic response (GO:0071474). These are context-dependent functions documented by IMP evidence (PMID:17220467, PMID:9060463, PMID:7753858).
 

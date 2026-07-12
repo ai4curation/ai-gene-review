@@ -21,6 +21,12 @@ While the structural description is reasonable, the functional interpretation fu
 
 4. **Axon guidance receptor activity missing**: The curated core functions include axon guidance receptor activity (GO:0008046), with signaling via the Dock/Pak pathway. BioReason vaguely mentions "actin remodeling" but does not identify axon guidance.
 
+**Input caveat:** the BioReason export contains exactly 2,000 residues, whereas cached
+UniProt Dscam1 is 2,016 residues. Only the final 16 residues are absent, so this is much
+less severe than the other 2,000-residue truncations, but it should still be recorded in
+the truncated-input stratum. The central adhesion-versus-repulsion error is not explained
+by this small truncation.
+
 Comparison with interpro2go:
 
 The ai-review.yaml does not contain GO_REF:0000002 annotations for Dscam1. BioReason's reasoning from Ig/FNIII/DSCAM domains correctly identifies the cell-surface receptor topology and homophilic binding capability, but then defaults to a generic "adhesion" interpretation. This is the same error pattern as the IEA annotation for cell adhesion (GO:0007155) that the curated review flags as needing modification -- interpro2go-level reasoning correctly identifies adhesion-related domains but cannot distinguish adhesion from repulsion/self-avoidance.

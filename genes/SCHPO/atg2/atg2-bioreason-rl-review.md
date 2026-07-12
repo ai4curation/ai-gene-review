@@ -2,7 +2,7 @@
 
 Source: atg2-bioreason-rl-predictions.md
 
-- **Correctness**: 3/5
+- **Correctness**: 5/5
 - **Completeness**: 2/5
 
 ## Functional Summary Review
@@ -11,7 +11,7 @@ The BioReason functional summary describes atg2 as:
 
 > A large autophagy-dedicated scaffold that orchestrates autophagosome biogenesis in fission yeast. It assembles and stabilizes isolation membrane structures, recruiting initiation machinery and engaging membrane carriers to drive phagophore expansion and closure. By coupling extensive protein-protein interfaces with membrane association, it supports the formation and maturation of autophagic vesicles within the autophagy pathway.
 
-The general claim that Atg2 is a large autophagy scaffold that drives autophagosome biogenesis is correct. The mention of membrane association and phagophore expansion is directionally accurate.
+The stated claims that Atg2 is a large autophagy factor driving autophagosome biogenesis, membrane association, and phagophore expansion are supported. The paragraph is incomplete because it never states the molecular mechanism that explains those claims.
 
 However, the summary misses the most important functional insight about Atg2:
 
@@ -25,7 +25,7 @@ However, the summary misses the most important functional insight about Atg2:
 
 5. **Atg18/Atg9 cooperation not mentioned.** Atg2 works cooperatively with Atg18 (PI3P binding) and the lipid scramblase Atg9 to coordinate membrane biogenesis.
 
-The summary also incorrectly states the cellular component as "autophagosome (GO:0005737)" -- GO:0005737 is actually cytoplasm, not autophagosome. This appears to be a mapping error in BioReason's output.
+The raw GO section also labels GO:0005737 as "autophagosome" even though the ID is cytoplasm. This diagnostic mapping error is not part of the Functional Summary score.
 
 ## Comparison with interpro2go
 

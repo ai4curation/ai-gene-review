@@ -27,10 +27,15 @@ Minor gaps:
 2. The role of gamma-secretase in S3 cleavage is not explicitly mentioned
 3. Specific developmental processes (heart development, neurogenesis) covered in the curated review are not addressed
 
+**Input caveat:** the BioReason export contains exactly 2,000 residues, whereas cached
+UniProt NOTCH1 is 2,555 residues. The missing C-terminal sequence includes part of the
+intracellular signaling region. This case should be reported in the truncated-input
+stratum even though the generated Functional Summary recovers the core mechanism.
+
 Comparison with interpro2go:
 
 The curated review includes IBA annotations for Notch signaling pathway (GO:0007219) and transmembrane signaling receptor activity (GO:0004888). BioReason's domain analysis of EGF repeats, Notch/NOD/NODP domains, and ankyrin repeats closely parallels what interpro2go would derive. BioReason adds significant mechanistic value by describing the proteolytic activation cascade and membrane-to-nucleus trafficking, which goes well beyond what domain mapping alone provides.
 
 ## Notes on thinking trace
 
-The trace demonstrates sophisticated reasoning about the NOTCH1 activation mechanism. The identification of S2/S3 cleavage sites from the NOD/NODP domain annotations is particularly insightful. The only oddity is the truncated UniProt summary containing Chinese characters ("cell-fate决定"), suggesting a Unicode issue in the source data.
+The trace demonstrates sophisticated reasoning about the NOTCH1 activation mechanism. The identification of S2/S3 cleavage sites from the NOD/NODP domain annotations is particularly insightful. The Chinese characters in BioReason's model-generated UniProt-style section ("cell-fate决定") are a generation artifact, not a Unicode defect in imported UniProt source data.

@@ -21,6 +21,8 @@ from typing import Any
 import duckdb
 import yaml
 
+from ai_gene_review.bioreason_ontology import FROZEN_GO_ADAPTER, get_go_adapter
+
 
 DB_PATH = Path("data/bioreason-hf/protein_catalogue.ddb")
 HF_PARQUET_URLS = [
@@ -29,6 +31,10 @@ HF_PARQUET_URLS = [
     "https://huggingface.co/datasets/wanglab/protein_catalogue/resolve/main/data/train-00002-of-00003.parquet",
 ]
 SOURCE_REFERENCE_ID = "doi:10.64898/2026.03.19.712954"
+DEFAULT_ONTOLOGY_ADAPTER = FROZEN_GO_ADAPTER
+POSITIVE_ACTIONS = {"ACCEPT", "KEEP_AS_NON_CORE"}
+NEGATIVE_ACTIONS = {"REMOVE", "MARK_AS_OVER_ANNOTATED"}
+ONTOLOGY_NOTE_MARKER = "[ONTOLOGY_LABEL_AUDIT]"
 
 
 def load_hf_entry(protein_id: str) -> dict[str, str]:
@@ -105,13 +111,14 @@ def load_goa_terms(goa_file: Path) -> set[str]:
     with goa_file.open() as handle:
         for line in handle:
             parts = line.rstrip("\n").split("\t")
-            if len(parts) > 4 and re.match(r"GO:\d{7}", parts[4]):
+            if len(parts) > 4 and re.fullmatch(r"GO:\d{7}", parts[4]):
                 terms.add(parts[4])
     return terms
 
 
-def load_aigr_review(review_file: Path) -> tuple[dict[str, str], set[str]]:
-    actions: dict[str, str] = {}
+def load_aigr_review(review_file: Path) -> tuple[dict[str, set[str]], set[str]]:
+    """Load all exact AIGR actions and authored core-function GO terms."""
+    actions: dict[str, set[str]] = {}
     core_terms: set[str] = set()
     if not review_file.exists():
         return actions, core_terms
@@ -124,17 +131,24 @@ def load_aigr_review(review_file: Path) -> tuple[dict[str, str], set[str]]:
         action = ann.get("review", {}).get("action", "")
         if not go_id.startswith("GO:") or not action:
             continue
-        if go_id not in actions or action in {"REMOVE", "MARK_AS_OVER_ANNOTATED"}:
-            actions[go_id] = action
+        actions.setdefault(go_id, set()).add(action)
+
+    def add_term_values(value: Any) -> None:
+        values = value if isinstance(value, list) else [value]
+        for term in values:
+            if isinstance(term, dict) and term.get("id", "").startswith("GO:"):
+                core_terms.add(term["id"])
 
     for core_function in doc.get("core_functions", []):
-        mf = core_function.get("molecular_function", {})
-        if mf.get("id", "").startswith("GO:"):
-            core_terms.add(mf["id"])
-        for slot in ("directly_involved_in", "occurs_in", "locations"):
-            for term in core_function.get(slot, []) or []:
-                if term.get("id", "").startswith("GO:"):
-                    core_terms.add(term["id"])
+        for slot in (
+            "molecular_function",
+            "contributes_to_molecular_function",
+            "directly_involved_in",
+            "occurs_in",
+            "locations",
+            "in_complex",
+        ):
+            add_term_values(core_function.get(slot))
 
     return actions, core_terms
 
@@ -142,76 +156,109 @@ def load_aigr_review(review_file: Path) -> tuple[dict[str, str], set[str]]:
 def assess_prediction(
     go_id: str,
     goa_terms: set[str],
-    actions: dict[str, str],
+    actions: dict[str, set[str]],
     core_terms: set[str],
 ) -> dict[str, Any]:
-    action = actions.get(go_id, "")
+    exact_actions = actions.get(go_id, set())
 
-    if go_id in goa_terms:
-        if action in {"REMOVE", "MARK_AS_OVER_ANNOTATED"}:
-            return {
-                "assessment": "NPI",
-                "confidence_score": 0,
-                "summary": (
-                    f"Term is present in GOA, but the curated AIGR review recommends "
-                    f"{action}. The SFT model is reproducing an existing annotation "
-                    "that the review rejects or flags as over-annotated."
-                ),
-            }
-        if action == "MODIFY":
-            return {
-                "assessment": "LSP",
-                "confidence_score": 2,
-                "summary": (
-                    "Term is present in GOA, but the curated AIGR review recommends "
-                    "MODIFY to a more appropriate term. The prediction is correct at "
-                    "a broad level but less precise than the reviewed annotation."
-                ),
-            }
-        return {
-            "assessment": "CNN",
-            "confidence_score": 2,
-            "summary": "Term is present in GOA. Correct but not novel.",
-        }
-
-    if go_id in core_terms:
-        return {
-            "assessment": "COR",
-            "confidence_score": 2,
-            "summary": (
-                "Term is not present in GOA but is included in AIGR core functions. "
-                "The prediction is treated as correct relative to the curated review."
-            ),
-        }
-
-    if action in {"ACCEPT", "KEEP_AS_NON_CORE"}:
-        return {
-            "assessment": "COR",
-            "confidence_score": 2,
-            "summary": (
-                f"Term is not present in GOA but the AIGR review action is {action}. "
-                "The prediction is treated as correct relative to the curated review."
-            ),
-        }
-
-    if action in {"REMOVE", "MARK_AS_OVER_ANNOTATED"}:
+    if exact_actions and exact_actions <= NEGATIVE_ACTIONS:
         return {
             "assessment": "NPI",
             "confidence_score": 0,
             "summary": (
-                f"The AIGR review action is {action}. The prediction is likely "
-                "incorrect or over-annotated relative to the curated review."
+                "The exact AIGR actions are "
+                f"{', '.join(sorted(exact_actions))}. The SFT model is reproducing "
+                "an annotation that the current review rejects or flags as "
+                "over-annotated."
+            ),
+        }
+
+    if exact_actions & POSITIVE_ACTIONS:
+        return {
+            "assessment": "CNN",
+            "confidence_score": 2,
+            "summary": (
+                "The exact term is already present in AIGR with a positive action "
+                f"({', '.join(sorted(exact_actions & POSITIVE_ACTIONS))}). Correct "
+                "but not novel."
+            ),
+        }
+
+    if go_id in goa_terms and exact_actions == {"MODIFY"}:
+        return {
+            "assessment": "LSP",
+            "confidence_score": 2,
+            "summary": (
+                "The term is in GOA, but AIGR recommends MODIFY to a more appropriate "
+                "term. It is retained as a less-precise prediction."
+            ),
+        }
+
+    if go_id in goa_terms and not exact_actions:
+        return {
+            "assessment": "CNN",
+            "confidence_score": 2,
+            "summary": "The exact term is present in current GOA. Correct but not novel.",
+        }
+
+    if not exact_actions and go_id in core_terms:
+        return {
+            "assessment": "COR",
+            "confidence_score": 2,
+            "summary": (
+                "The term is absent from current GOA but present in AIGR core "
+                "functions. It is treated as correct relative to the local review."
             ),
         }
 
     return {
         "assessment": "UNC",
         "confidence_score": 1,
-        "summary": "Not in GOA and not addressed in the AIGR review. Cannot determine.",
+        "summary": (
+            "The term is not resolved by an unambiguous exact current-GOA/AIGR match. "
+            "Manual assessment is required."
+        ),
     }
 
 
-def build_prediction_review(protein_id: str, gene: str, species: str) -> dict[str, Any]:
+def ontology_label_note(
+    go_id: str,
+    raw_label: str,
+    ontology_adapter: Any,
+) -> str | None:
+    """Return an explicit raw-pair warning without normalizing model output."""
+    canonical = ontology_adapter.label(go_id)
+    if canonical is None:
+        return (
+            f"{ONTOLOGY_NOTE_MARKER} {go_id} does not resolve in the configured "
+            f"current GO ontology. The raw model label '{raw_label}' is retained for "
+            "provenance and the unresolved identifier is explicitly flagged."
+        )
+
+    def normalize(value: str) -> str:
+        return " ".join(value.split()).casefold()
+
+    if normalize(raw_label) == normalize(canonical):
+        return None
+    aliases = {
+        normalize(alias) for alias in ontology_adapter.entity_aliases(go_id) if alias
+    }
+    if normalize(raw_label) in aliases:
+        return None
+    return (
+        f"{ONTOLOGY_NOTE_MARKER} Raw model pair mismatch: {go_id} resolves to "
+        f"'{canonical}', not '{raw_label}'. The raw ID and label are retained for "
+        "provenance; the assessment applies to the GO ID and explicitly flags the "
+        "label error."
+    )
+
+
+def build_prediction_review(
+    protein_id: str,
+    gene: str,
+    species: str,
+    ontology_adapter: Any | None = None,
+) -> dict[str, Any]:
     entry = load_hf_entry(protein_id)
     terms = extract_go_terms(entry["generation"])
     gene_dir = Path("genes") / species / gene
@@ -220,6 +267,11 @@ def build_prediction_review(protein_id: str, gene: str, species: str) -> dict[st
 
     predictions = []
     for go_id, label, term_type in terms:
+        review = assess_prediction(go_id, goa_terms, actions, core_terms)
+        if ontology_adapter is not None:
+            note = ontology_label_note(go_id, label, ontology_adapter)
+            if note:
+                review["summary"] = f"{review['summary']} {note}"
         predictions.append(
             {
                 "source_method": "BioReason-Pro-SFT",
@@ -227,7 +279,7 @@ def build_prediction_review(protein_id: str, gene: str, species: str) -> dict[st
                 "source_reference_id": SOURCE_REFERENCE_ID,
                 "predicted_term": {"id": go_id, "label": label},
                 "predicted_term_type": term_type,
-                "review": assess_prediction(go_id, goa_terms, actions, core_terms),
+                "review": review,
             }
         )
 
@@ -257,6 +309,7 @@ def write_prediction_review(
     species: str,
     output_dir: Path,
     overwrite: bool,
+    ontology_adapter: Any | None = None,
 ) -> Path:
     outdir = output_dir / species / gene
     outpath = outdir / f"{gene}-sft-predictions.yaml"
@@ -264,7 +317,7 @@ def write_prediction_review(
         print(f"  SKIP {outpath} (already exists)")
         return outpath
 
-    doc = build_prediction_review(protein_id, gene, species)
+    doc = build_prediction_review(protein_id, gene, species, ontology_adapter)
     outdir.mkdir(parents=True, exist_ok=True)
     with outpath.open("w") as handle:
         yaml.safe_dump(doc, handle, sort_keys=False, allow_unicode=False, width=88)
@@ -294,6 +347,12 @@ def main() -> None:
     parser.add_argument("--batch", type=Path, help="TSV with protein_id, gene_symbol, species_code")
     parser.add_argument("--output-dir", type=Path, default=Path("genes"))
     parser.add_argument("--overwrite", action="store_true")
+    parser.add_argument("--ontology-adapter", default=DEFAULT_ONTOLOGY_ADAPTER)
+    parser.add_argument(
+        "--skip-ontology",
+        action="store_true",
+        help="Skip GO ID/label validation",
+    )
     args = parser.parse_args()
 
     if args.batch:
@@ -303,6 +362,11 @@ def main() -> None:
     else:
         parser.error("Provide either --batch or --protein-id/--gene/--species")
 
+    if args.skip_ontology:
+        ontology_adapter = None
+    else:
+        ontology_adapter = get_go_adapter(args.ontology_adapter)
+
     for protein_id, gene, species in rows:
         write_prediction_review(
             protein_id=protein_id,
@@ -310,6 +374,7 @@ def main() -> None:
             species=species,
             output_dir=args.output_dir,
             overwrite=args.overwrite,
+            ontology_adapter=ontology_adapter,
         )
 
 

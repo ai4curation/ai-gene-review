@@ -2,7 +2,7 @@
 
 Source: ftsY-bioreason-rl-predictions.md
 
-- **Correctness**: 4/5
+- **Correctness**: 5/5
 - **Completeness**: 4/5
 
 ## Functional Summary Review
@@ -19,11 +19,13 @@ This is a strong summary that accurately captures the core function of FtsY:
 - Transient membrane association
 - Role in delivering nascent chains to the membrane
 
+Every substantive claim is supported. Calling FtsY cytoplasmic with transient membrane docking captures its dynamic peripheral membrane association; the missing details below affect completeness only.
+
 Minor issues:
 - The curated review specifies that FtsY contains an acidic A-domain that mediates membrane association, which is not captured in the BioReason summary
 - The curated review emphasizes the specific partnership with Ffh (the SRP subunit) through NG domain heterodimerization, whereas BioReason describes generic "targeting factors"
 - Does not mention the SecYEG translocon as the downstream target for nascent chain transfer
-- The summary says "cytoplasmic" but FtsY is actually membrane-associated (plasma membrane localization in the curated review)
+- It does not explicitly distinguish the cytosolic pool from the peripheral plasma-membrane-associated pool
 
 The thinking trace correctly identifies all seven InterPro domains including the SRP54 N-terminal domain, SRP receptor FtsY family, and P-loop NTPase superfamily. The AAA+ ATPase domain (IPR003593) annotation is noted but may be a superfamily-level classification rather than indicating AAA+ function per se.
 

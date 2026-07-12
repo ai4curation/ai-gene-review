@@ -2,7 +2,7 @@
 
 Source: atg5-bioreason-rl-predictions.md
 
-- **Correctness**: 4/5
+- **Correctness**: 5/5
 - **Completeness**: 3/5
 
 ## Functional Summary Review
@@ -11,14 +11,14 @@ The BioReason functional summary describes atg5 as:
 
 > A cytoplasmic autophagy factor that builds a rigid, two-lobed scaffold to assemble and activate the conjugation machinery required for autophagosome formation. Its paired ubiquitin-like folds and central helical bundle organize transient complexes that recruit an E2-like conjugase and an E3-like organizer, thereby driving membrane-associated lipidation steps that expand the phagophore and sustain autophagic flux.
 
-This is one of BioReason's better functional summaries. The core claims are largely accurate:
+This is one of BioReason's better functional summaries. All core claims in the paragraph are supported:
 
 - The description of "paired ubiquitin-like folds and central helical bundle" accurately reflects the UblA-helical bundle-UblB domain architecture.
 - The role in autophagosome formation is correct.
 - The description of recruiting conjugation machinery for "membrane-associated lipidation steps" correctly captures the Atg8-PE lipidation function.
 - The cytoplasmic localization is correct.
 
-The main deficiencies are:
+The main completeness deficiencies are:
 
 1. **Atg12 conjugation not explicitly named.** The curated review describes that Atg5 forms a covalent conjugate with Atg12 through Atg7 (E1) and Atg10 (E2). BioReason refers generically to "E2-like conjugase" without naming the specific partners.
 

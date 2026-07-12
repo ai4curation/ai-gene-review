@@ -2,7 +2,7 @@
 
 Source: Tim10-bioreason-rl-predictions.md
 
-- **Correctness**: 4/5
+- **Correctness**: 5/5
 - **Completeness**: 4/5
 
 ## Functional Summary Review
@@ -23,8 +23,10 @@ The curated review confirms the hexameric six-bladed alpha-propeller structure w
 
 This accurately describes the relay from TOM complex to TIM22 translocase.
 
+All claims in the Functional Summary are supported. The issues below are omissions or errors in diagnostic output.
+
 Minor issues:
-- BioReason says "mitochondrial" for cellular component but writes GO:0005737 (cytoplasm) in the GO terms section, which is an error (likely confusing mitochondrion GO:0005739 with cytoplasm). The curated review correctly places Tim10 in the mitochondrial intermembrane space (GO:0005758).
+- The raw GO section writes GO:0005737 (cytoplasm) despite the narrative correctly saying mitochondrial. This diagnostic error is outside the score; the curated review places Tim10 in the mitochondrial intermembrane space (GO:0005758).
 - BioReason describes it generically as "protein binding" for molecular function. The curated review identifies the more specific GO:0140309 (unfolded protein carrier activity) and proposes GO:0140318 (protein transporter activity) as a replacement for the membrane insertase annotation.
 - BioReason does not mention the twin CX3C motif that forms disulfide bonds in the IMS, which is an important structural feature.
 - BioReason does not mention the specific substrate class (mitochondrial carrier family/SLC25 proteins).

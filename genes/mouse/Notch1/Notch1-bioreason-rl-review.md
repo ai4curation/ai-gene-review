@@ -17,6 +17,11 @@ The mention of "endocytic activation" is slightly misleading -- endocytosis by t
 
 A minor inaccuracy: the primary molecular function is described as "protein binding" (GO:0005515), which is too generic. The curated review identifies more specific functions including GO:0005112 (Notch binding), GO:0038023 (signaling receptor activity), and the transcriptional coactivator role. BioReason does not explicitly name the RBPJ/CSL transcription factor partnership in the summary, though the thinking trace does.
 
+**Input caveat:** the BioReason export contains exactly 2,000 residues, whereas cached
+UniProt Notch1 is 2,531 residues. The missing C-terminal sequence includes part of the
+intracellular signaling region. This case should be reported in the truncated-input
+stratum; the scores still evaluate the Functional Summary as generated.
+
 Comparison with interpro2go:
 
 The curated review has six GO_REF:0000002 annotations: GO:0005509 (calcium ion binding), GO:0006355 (regulation of DNA-templated transcription), GO:0030154 (cell differentiation), GO:0038023 (signaling receptor activity), GO:0042981 (regulation of apoptotic process), and GO:0050793 (regulation of developmental process). BioReason's functional summary captures most of these conceptually (calcium stabilization, transcriptional regulation, cell fate/differentiation, receptor signaling) but misses the apoptotic connection. BioReason adds substantial value in explaining the proteolytic activation mechanism and the NOD/NODP regulatory switch, which interpro2go cannot convey.

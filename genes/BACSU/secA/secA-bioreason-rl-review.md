@@ -2,7 +2,7 @@
 
 Source: secA-bioreason-rl-predictions.md
 
-- **Correctness**: 4/5
+- **Correctness**: 5/5
 - **Completeness**: 4/5
 
 ## Functional Summary Review
@@ -15,7 +15,7 @@ This is a highly accurate summary that captures the essence of SecA function. Th
 
 The thinking trace provides excellent domain-by-domain analysis, correctly identifying the DEAD-like ATPase core, preprotein cross-linking domain, helicase-like C-terminal region, wing/scaffold domain, and SEC-C motif. The mechanistic description of "clamp, ratchet, and release" is an apt summary of the translocation mechanism.
 
-One minor issue: the BioReason functional summary correctly assigns "protein binding" (GO:0005515) as the molecular function in its GO terms section, but the narrative makes clear this is ATP-driven translocation activity. The curated review's more specific GO:0008564 (protein-exporting ATPase activity) better captures the function. BioReason also misses the zinc binding through the SEC-C motif (metal ion binding, GO:0046872) and the association with the Sec protein transport complex (GO:0031522).
+No substantive claim in the Functional Summary is contradicted by the curated review. The raw GO section's generic "protein binding" assignment is a diagnostic issue outside the score; the narrative itself clearly describes protein-exporting ATPase activity. Missing zinc binding through the SEC-C motif and explicit Sec-complex membership are completeness gaps.
 
 Comparison with interpro2go:
 

@@ -13,7 +13,7 @@ The BioReason functional summary describes BenR as:
 
 The domain architecture description is correct: N-terminal AraC-type ligand-binding domain + C-terminal HTH DNA-binding domain. The general transcriptional regulator function is correct. However, there are significant errors:
 
-1. **Wrong pathway target**: The summary says BenR controls "carbon monoxide and formate catabolism." This is incorrect. BenR regulates the benABCD operon for benzoate degradation via the beta-ketoadipate pathway. The UniProt summary for this protein (which BioReason itself includes) says "Involved in the regulation of carbon monoxide (CO) and formate catabolism" -- this appears to be a UniProt annotation error that BioReason propagated without correction.
+1. **Wrong pathway target**: The summary says BenR controls "carbon monoxide and formate catabolism." This is incorrect. BenR regulates the benABCD operon for benzoate degradation via the beta-ketoadipate pathway. BioReason's model-generated UniProt-style section repeats the CO/formate claim, but the cached UniProt record does not. This is a BioReason fabrication, not a UniProt annotation error.
 
 2. **Wrong mode of regulation**: The summary emphasizes repression ("repress pathway genes under non-inducing conditions"). BenR is primarily a transcriptional activator that requires benzoate as an allosteric effector for optimal activation of the benABCD operon. The curated review assigns GO:0141097 (ligand-modulated transcription activator activity) as the core molecular function.
 
@@ -27,4 +27,4 @@ The curated review's interpro2go annotations include DNA binding (GO:0003677, ac
 
 ## Notes on thinking trace
 
-The trace demonstrates good structural reasoning from the AraC/XylS domain architecture. However, it appears to uncritically adopt the UniProt summary about CO/formate catabolism, which is incorrect for this specific gene. The thinking trace also mentions "IHF, H-NS" as potential partners, which is speculative but not unreasonable for an AraC-family regulator.
+The trace demonstrates good structural reasoning from the AraC/XylS domain architecture. However, it converges on the same CO/formate fabrication as the model-generated UniProt-style section. The thinking trace also mentions "IHF, H-NS" as potential partners, which is speculative but not unreasonable for an AraC-family regulator.

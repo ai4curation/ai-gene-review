@@ -30,13 +30,13 @@ We store raw RL exports in:
  
  * Metadata (organism and sequence)
  * Thinking/Reasoning trace -- the models exposed internal trace of thoughts as to why it arrived at its conclusions
- * Functional summary -- a consise summary of what the function of the gene is
+ * Functional summary -- a concise summary of what the function of the gene is
  * Other details
-    * Uniprot summary (imported)
+    * UniProt-style summary (model-generated; not imported from UniProt)
     * Interpro domains (from running it as part of pipeline)
     * GO Terms (upstream ESM autoregressive transformer predictions -- high recall, low precision)
 
-We are generally NOT interested in the GO terms in this report. We know in advance these over-predict, they are just their to show provenance of the reasoner.
+We are generally NOT interested in the GO terms in this report. We know in advance these over-predict; they are there to show provenance of the reasoner.
 
 ## File naming
 
@@ -65,7 +65,7 @@ Source: {GENE}-bioreason-rl-predictions.md
 
 Comparison with interpro2go:
 
-{comparison{
+{comparison}
 
 ## Notes on thinking trace
 
@@ -85,11 +85,71 @@ Your review should quote sections of the functional summary verbatim where you w
 
 You can also look at the thinking trace and provide notes on it, but this is NOT score-driving. The main focus is the one-paragraph section "Functional Summary" in `{GENE}-bioreason-rl-predictions.md`
 
-Also perform a comparison with interpro2go GO_REF:0000002, which you will find in the ai-review.yaml. I am particularly interested in whether BioReason is just doing a fancy recapitulation of interpro2go (and whether it recapitulates the same mistakes) or if there is additional biological insight.
+Also compare the narrative with the supplied InterPro domain/family labels. Where the AIGR file actually contains `GO_REF:0000002`, separately compare against that InterPro2GO mapping. Do not call the domain-label comparison an InterPro2GO baseline when no such annotation exists. Assess whether BioReason simply narrates its supplied domain evidence, recapitulates a mapping error, or adds biological insight.
 
-Scoring:
-- **Correctness** (1-5): Are claims accurate? 5=all supported, 3=core right with errors, 1=fundamentally wrong
-- **Completeness** (1-5): Important biology covered? 5=comprehensive, 3=basics only, 1=superficial
+### Scoring scope
+
+Score only the one-paragraph **Functional Summary**. The reasoning trace, raw GO-GPT/ESM
+terms, InterPro output, and model-generated UniProt-style summary may be discussed as
+diagnostics, but they do not affect either score. The InterPro2GO comparison is likewise a
+separate analysis, not a score component.
+
+Treat correctness and completeness as independent axes:
+
+- Missing true biology lowers **completeness only**. An accurate but narrow summary can be
+  `5/2`.
+- A false or unsupported claim lowers **correctness only**. If the summary nevertheless
+  covers all important biology, it can be `4/5`.
+- Do not lower correctness for omitted functions, specificity, mechanism, phenotype, or
+  biological context. Do not lower completeness merely because a stated claim is wrong;
+  lower completeness only when the correct core biology is itself absent.
+- Do not charge errors found only in the reasoning trace, GO term list, or UniProt-style
+  section to the Functional Summary scores.
+
+### Correctness anchors
+
+- **5/5**: Every substantive claim in the Functional Summary is supported by the current
+  curated review; there are no material factual errors. The summary may still be incomplete.
+- **4/5**: The central function is accurate, with one limited factual error, overstatement,
+  or unsupported detail that does not change the main functional interpretation.
+- **3/5**: The core interpretation is recognizable and mostly right, but one or more
+  meaningful errors or unsupported extensions make the summary only partly reliable.
+- **2/5**: Some relationship to the real protein is recognizable (for example the correct
+  family, domain, or broad process), but a central mechanistic, catalytic, localization,
+  organism-context, or functional claim is wrong.
+- **1/5**: The protein's identity or core function is fundamentally mischaracterized, so
+  the Functional Summary is largely unusable for this gene.
+
+### Completeness anchors
+
+- **5/5**: Covers all, or nearly all, core functions plus the major mechanism, location,
+  and biological context established in the curated review.
+- **4/5**: Covers all central functions but omits one secondary role or useful mechanistic
+  or contextual detail.
+- **3/5**: Covers at least one main function but omits another important core role, pathway,
+  mechanism, or location.
+- **2/5**: Captures only a narrow or generic fragment and misses most distinctive or
+  important biology.
+- **1/5**: Provides essentially no meaningful coverage of the gene's established core
+  biology.
+
+### Input and provenance checks
+
+- Verify that the accession, organism, and input sequence match the reviewed gene. Record a
+  wrong-input case as a pipeline/data-quality failure and flag it for exclusion from model
+  performance aggregates rather than treating it as an ordinary model error.
+- Check whether the sequence was truncated, especially at the BioReason 2,000-residue input
+  limit. State which missing domains/functions could be affected and flag the case for a
+  truncated-input stratum. Still score only what the Functional Summary actually says.
+- The exported section titled `UniProt Summary` is generated by BioReason in a UniProt-like
+  format. It is not evidence that the text came from UniProt. Never blame or credit UniProt
+  for that text unless it has been independently verified against the cached UniProt record.
+- Use the current `-ai-review.yaml`, not an older TODO or draft description quoted in a
+  prior comparison. If the reference review has materially changed, re-adjudicate the
+  narrative against the current file.
+- Do not infer evidence from an output label. Support factual corrections with the curated
+  review and its cited literature; when evidence is unresolved, say so rather than inventing
+  a definitive correction.
 
 Read BOTH the `-bioreason-rl-predictions.md` (reasoning trace) and `-ai-review.yaml` (curated review), then compare.
 

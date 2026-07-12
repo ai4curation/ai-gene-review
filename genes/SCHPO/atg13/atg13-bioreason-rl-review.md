@@ -2,7 +2,7 @@
 
 Source: atg13-bioreason-rl-predictions.md
 
-- **Correctness**: 3/5
+- **Correctness**: 5/5
 - **Completeness**: 2/5
 
 ## Functional Summary Review
@@ -11,7 +11,7 @@ The BioReason functional summary describes atg13 as:
 
 > A cytoplasmic autophagy-initiation scaffold in fission yeast that uses an interaction-driven N-terminal core to assemble and regulate early autophagy machinery. By organizing and timing the formation of initiation complexes that precede autophagosome biogenesis, it coordinates cytoplasmic events of macroautophagy through multivalent protein binding and higher-order assembly rather than catalysis.
 
-The general claims are directionally correct: Atg13 is indeed a cytoplasmic scaffold that functions in autophagy initiation through protein-protein interactions rather than catalysis. The mention of macroautophagy is accurate.
+Every general claim in the paragraph is supported: Atg13 is a cytoplasmic scaffold that functions in autophagy initiation through protein-protein interactions rather than catalysis, and the mention of macroautophagy is accurate. The low completeness score reflects the missing gene-specific mechanism.
 
 However, major functional details are missing or vague:
 

@@ -20,7 +20,7 @@ However, BioReason's specific claim about **actin-remodeling** function is unsup
 
 The interacting partners point toward **microtubule/spindle pole body organization**, not actin dynamics. The HDA annotations from PMID:16823372 place the protein at the mitotic spindle pole body (GO:0044732) and cell division site (GO:0032153), both consistent with microtubule-related functions.
 
-BioReason's UniProt summary section says "May be involved in actin filament dynamics," but the curated review's description and interaction partners suggest the function is more related to microtubule organization. The BioReason GO terms section actually includes microtubule-based process (GO:0007017) and spindle pole body (GO:0005816), contradicting its own functional summary about actin.
+BioReason's model-generated UniProt-style section says "May be involved in actin filament dynamics," but this is not imported UniProt evidence. The curated review's description and interaction partners instead suggest a relation to microtubule organization. The raw BioReason GO section includes microtubule-based process (GO:0007017) and spindle pole body (GO:0005816), contradicting its own actin narrative.
 
 The cytoplasmic localization claim partially aligns with the curated review, which suggests cytoplasmic localization based on orthology, though the HDA data places it at nucleus, cell division site, and spindle pole body.
 

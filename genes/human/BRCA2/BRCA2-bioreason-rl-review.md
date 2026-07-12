@@ -13,9 +13,22 @@ The BioReason functional summary states:
 
 This captures the core function of BRCA2 correctly. The identification of BRC repeats as a RAD51-binding platform and the role in homologous recombination (GO:0006310) are well-supported by the curated review, which lists double-strand break repair via homologous recombination (GO:0000724) as a core function. The nuclear localization is accurate.
 
-However, the summary misses several important aspects. BRCA2 has a DNA-binding domain (the OB folds and tower domain at the C-terminus) that directly binds ssDNA -- this is not captured by the "non-enzymatic, repeat-mediated assembly factor" framing. The curated review includes single-stranded DNA binding (GO:0003697) as a function. Additionally, the predicted GO terms include acetyltransferase activities (histone H3/H4 acetyltransferase) which are incorrect for BRCA2 -- these appear to be prediction errors from the model.
+One limited architecture error prevents 5/5 correctness: the eight BRC repeats form a
+large central array, not a "C-terminal repeat array." The C-terminal region instead
+contains the OB-fold/tower DNA-binding domain and additional RAD51-regulatory surfaces.
+
+The summary also misses several important aspects. BRCA2 directly binds ssDNA through its
+C-terminal OB folds and tower domain; the curated review includes single-stranded DNA
+binding (GO:0003697). The acetyltransferase terms in the raw GO output are incorrect, but
+they are diagnostic and do not affect the Functional Summary score.
 
 The summary also omits BRCA2's role in replication fork protection and its interaction with PALB2, which mediates BRCA1-BRCA2 complex formation. The curated review addresses centrosome biology and gamma-tubulin binding, which BioReason does not capture.
+
+**Input caveat:** the BioReason export contains exactly 2,000 residues, whereas cached
+UniProt BRCA2 is 3,418 residues. The omitted 1,418-residue C-terminal region includes the
+DNA-binding domain and other functionally important surfaces. This case should be
+stratified as a truncated-input case in aggregate analysis; the scores above evaluate the
+Functional Summary itself rather than penalizing the model for the data-pipeline cause.
 
 Comparison with interpro2go:
 

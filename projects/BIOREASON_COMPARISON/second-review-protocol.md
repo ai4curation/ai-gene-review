@@ -1,0 +1,7 @@
+# Blinded second-review protocol
+
+The score re-audit includes an independent second rating of 20 RL Functional Summaries. The performance cohort excludes the documented wrong-input `csr-1` case. To cover the full rubric rather than mirror the imbalanced score distribution, the sample contains four genes from each first-rater correctness stratum (1 through 5). Within each stratum, genes were selected by sorting the SHA-256 digest of `argo-audit-2026-07-11:{species}/{gene}` and taking the first four.
+
+The second rater received the fixed gene list and the five-anchor rubric. It could read only each raw `*-bioreason-rl-predictions.md` export and local `*-ai-review.yaml` reference. It was explicitly prohibited from reading the first-rater review, benchmark metrics, project report, issue, or git history. It scored only the exported `Functional Summary`; diagnostic trace, GO, InterPro, and generated UniProt-style sections were excluded from scoring.
+
+The raw ratings are in `second-review-ratings.csv`. `analyze_second_review.py` verifies that the committed rows still match the deterministic sample and generates `second-review-agreement.json` with exact agreement, agreement within one point, mean absolute error, Pearson and Spearman association, and quadratic-weighted Cohen's kappa for both axes. Because sampling is balanced by first-rater score, agreement estimates assess rubric reproducibility across its range and are not prevalence-weighted estimates for ARGO139.

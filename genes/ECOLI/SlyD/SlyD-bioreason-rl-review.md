@@ -2,8 +2,8 @@
 
 Source: SlyD-bioreason-rl-predictions.md
 
-- **Correctness**: 3/5
-- **Completeness**: 2/5
+- **Correctness**: 5/5
+- **Completeness**: 3/5
 
 ## Functional Summary Review
 
@@ -17,7 +17,9 @@ The PPIase and chaperone aspects are correctly described:
 - Cytoplasmic localization is correct
 - The dual PPIase + chaperone architecture is well described
 
-However, the summary misses the most distinctive and arguably most important function of SlyD:
+Every substantive claim in this paragraph is supported by the curated review. The
+following are completeness gaps, not correctness errors. In particular, the summary
+misses the most distinctive and arguably most important function of SlyD:
 
 1. **Missing nickel metallochaperone function**: SlyD's C-terminal histidine/cysteine-rich tail binds up to 7 nickel ions and functions as a nickel metallochaperone in the [NiFe]-hydrogenase maturation pathway. This is a core function assigned GO:0170061 (nickel chaperone activity) in the curated review. The hydrogenase maturation function requires the chaperone domain and C-terminal metal-binding tail but NOT the PPIase activity.
 

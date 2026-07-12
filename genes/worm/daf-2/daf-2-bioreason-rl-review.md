@@ -2,7 +2,7 @@
 
 Source: daf-2-bioreason-rl-predictions.md
 
-- **Correctness**: 4/5
+- **Correctness**: 5/5
 - **Completeness**: 2/5
 
 ## Functional Summary Review
@@ -13,9 +13,12 @@ The BioReason functional summary states:
 
 This is largely correct at the molecular level. DAF-2 is indeed a receptor tyrosine kinase with an extracellular ligand-binding domain and an intracellular kinase domain. The domain architecture description -- L-domains, cysteine-rich region, FN3 repeats, and tyrosine kinase domain -- matches the curated review's confirmation of insulin receptor activity (GO:0005009) and protein tyrosine kinase activity (GO:0004713).
 
-The correctness score is docked because:
-- The summary describes "growth factor-like ligands" generically rather than identifying DAF-2 as an insulin/IGF-1 receptor, which is its specific and well-established identity.
-- It mentions "cell proliferation and fate decisions" -- while not wrong, DAF-2's primary biology in C. elegans centers on longevity regulation, dauer diapause, metabolism, and stress resistance rather than proliferation.
+The broad phrase "growth factor-like ligands" is compatible with DAF-2's insulin-like
+peptide ligands, and the stated receptor-tyrosine-kinase mechanism is correct. Likewise,
+the generic developmental language is not contradicted by the curated review, even though
+it is poorly tailored to DAF-2. Failure to name insulin/IGF-1 signaling, longevity, dauer,
+metabolism, and stress resistance is a completeness problem only. No stated claim warrants
+a correctness deduction.
 
 The completeness score is low because the summary omits essentially all of the gene-specific biology that makes DAF-2 one of the most important genes in aging research:
 

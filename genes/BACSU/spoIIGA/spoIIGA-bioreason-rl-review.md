@@ -2,7 +2,7 @@
 
 Source: spoIIGA-bioreason-rl-predictions.md
 
-- **Correctness**: 4/5
+- **Correctness**: 5/5
 - **Completeness**: 3/5
 
 ## Functional Summary Review
@@ -13,7 +13,7 @@ The BioReason functional summary reads:
 
 This is a largely accurate summary. The description of SpoIIGA as a membrane-anchored processing endopeptidase that activates a sporulation sigma factor precursor matches the curated core function of aspartic-type endopeptidase activity (GO:0004190). The membrane localization (GO:0005886) is correct. The sporulation context is captured, though BioReason assigns the more general GO:0030435 rather than the curated preference for endospore formation (GO:0034301).
 
-The key inaccuracy is in the molecular function specificity: BioReason identifies "endopeptidase activity" (GO:0004175) as the primary term, while the curated review establishes aspartic-type endopeptidase activity (GO:0004190) based on experimental evidence (PMID:18378688) showing D183 as the essential catalytic aspartate and a dimeric active site architecture similar to HIV-1 protease. BioReason's GO predictions do include aspartic-type endopeptidase activity and aspartic-type peptidase activity, so this information is present in the predictions but the narrative summary uses the less specific "processing endopeptidase" language.
+The paragraph's "processing endopeptidase" wording is accurate but less specific than the curated aspartic-type endopeptidase activity (GO:0004190). Failure to name the aspartic mechanism is an omission, not a false functional claim. The more specific terms in the raw GO section are diagnostic only.
 
 Omissions:
 

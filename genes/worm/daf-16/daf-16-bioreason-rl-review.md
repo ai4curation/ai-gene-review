@@ -2,7 +2,7 @@
 
 Source: daf-16-bioreason-rl-predictions.md
 
-- **Correctness**: 3/5
+- **Correctness**: 5/5
 - **Completeness**: 2/5
 
 ## Functional Summary Review
@@ -12,6 +12,8 @@ The BioReason functional summary states:
 > A nuclear transcriptional regulator in Caenorhabditis elegans that uses a winged-helix DNA-recognition module to bind specific genomic sites and modulate gene expression. By anchoring to promoter or enhancer elements and recruiting transcriptional and chromatin-modifying assemblies, it adjusts transcriptional output to guide downstream cellular programs within the nucleus.
 
 This correctly identifies DAF-16 as a forkhead/winged-helix transcription factor that binds DNA and regulates gene expression in the nucleus. These basic facts are accurate.
+
+All claims in the paragraph are supported. Nuclear DAF-16 is the active transcriptional state; failure to describe its regulated cytoplasmic pool is a completeness gap rather than a false nuclear-function claim.
 
 However, the summary is severely incomplete. DAF-16 is one of the most extensively studied genes in C. elegans biology, and BioReason misses essentially all of its distinctive biology:
 

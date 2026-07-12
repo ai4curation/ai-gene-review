@@ -29,13 +29,13 @@ PROJECT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = PROJECT_DIR.parents[1]
 GENES_DIR = REPO_ROOT / "genes"
 CACHE_DIR = REPO_ROOT / "cache" / "ontologies"
-DEFAULT_ONTOLOGY = CACHE_DIR / "go-basic.obo"
+ONTOLOGY_RELEASE = "2026-03-25"
+DEFAULT_ONTOLOGY = CACHE_DIR / f"go-basic-{ONTOLOGY_RELEASE}.obo"
 OUT_DIR = PROJECT_DIR / "cafa-style"
 FIGURE_PATH = PROJECT_DIR / "article" / "figures" / "cafa_style_argo139_sft.png"
 
 GO_BASIC_URLS = [
-    "https://current.geneontology.org/ontology/go-basic.obo",
-    "http://purl.obolibrary.org/obo/go/go-basic.obo",
+    f"https://release.geneontology.org/{ONTOLOGY_RELEASE}/ontology/go-basic.obo",
 ]
 
 ASPECT_ROOTS = {
@@ -512,7 +512,7 @@ def write_markdown_summary(summary: pd.DataFrame, assessment_overlap: pd.DataFra
         "BioReason-Pro SFT files do not contain model confidence scores.",
         "",
         "The score propagates predicted and reference GO terms over `is_a` and",
-        "`part_of` ancestors from `go-basic.obo`, excluding the three GO aspect roots.",
+        f"`part_of` ancestors from the GO {ONTOLOGY_RELEASE} `go-basic.obo`, excluding the three GO aspect roots.",
         "",
         "## Propagated all-aspect agreement against current GOA",
         "",
@@ -560,7 +560,7 @@ def write_markdown_summary(summary: pd.DataFrame, assessment_overlap: pd.DataFra
         hf["exact_in_goa_all"],
         dropna=False,
     ).rename(columns={False: "not_exact_in_goa", True: "exact_in_goa"})
-    hf_wrong = hf[hf["assessment"].isin(["NPI", "REP"])]
+    hf_wrong = hf[hf["assessment"].isin(["NPI", "PLI", "REP"])]
     wrong_exact = int(hf_wrong["exact_in_goa_all"].sum())
     wrong_closure = int(hf_wrong["closure_intersects_goa_all"].sum())
     lines.extend(
@@ -570,7 +570,7 @@ def write_markdown_summary(summary: pd.DataFrame, assessment_overlap: pd.DataFra
             "",
             (
                 f"In the HF catalogue subset, {wrong_exact}/{len(hf_wrong)} "
-                "NPI/REP terms are exact matches to current GOA, and "
+                "NPI/PLI/REP terms are exact matches to current GOA, and "
                 f"{wrong_closure}/{len(hf_wrong)} have propagated overlap with "
                 "current GOA. A retrospective GOA-agreement metric would therefore "
                 "reward some terms that the evidence-grounded review classifies as "

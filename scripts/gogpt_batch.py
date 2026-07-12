@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 """Batch GO-GPT predictions — loads model once, clears memory between genes."""
-import json, sys, os, yaml, gc
+import csv
+import gc
+import json
+import os
+import sys
 from pathlib import Path
-from datetime import datetime
 
-import torch
+import yaml
 
-REPO = Path(os.environ.get('AIGR_DIR', os.path.expanduser('~/repos/ai-gene-review')))
+REPO = Path(os.environ.get("AIGR_DIR", Path(__file__).resolve().parents[1]))
 MODEL_DIR = Path(os.path.expanduser('~/repos/BioReason-Pro/models/gogpt'))
 sys.path.insert(0, str(Path.home() / 'repos/BioReason-Pro/gogpt/src'))
 
@@ -32,38 +35,75 @@ ORG_MAP = {
 
 def extract_sequence(uniprot_file):
     lines = uniprot_file.read_text().splitlines()
-    in_seq = False; seq = []
+    in_seq = False
+    seq = []
     for line in lines:
-        if line.startswith('SQ'): in_seq = True; continue
+        if line.startswith('SQ'):
+            in_seq = True
+            continue
         if in_seq:
-            if line.startswith('//'): break
+            if line.startswith('//'):
+                break
             seq.append(line.strip().replace(' ', ''))
     return ''.join(seq)
 
-def load_review_terms(review_file):
+def load_review_terms(review_file, goa_file):
+    """Load retained/replacement and core AIGR terms partitioned by GO aspect."""
     with open(review_file) as f:
         review = yaml.safe_load(f)
-    terms = {'MF': set(), 'BP': set(), 'CC': set()}
+
+    aspect_by_id = {}
+    if goa_file.exists():
+        with goa_file.open(newline="", encoding="utf-8") as handle:
+            for row in csv.DictReader(handle, delimiter="\t"):
+                aspect = {
+                    "molecular_function": "MF",
+                    "biological_process": "BP",
+                    "cellular_component": "CC",
+                }.get(row.get("GO ASPECT", ""))
+                if aspect:
+                    aspect_by_id[row.get("GO TERM", "")] = aspect
+
+    terms = {"MF": set(), "BP": set(), "CC": set()}
     for ann in review.get('existing_annotations', []):
+        if ann.get("negated") is True:
+            continue
         t = ann.get('term', {})
         go_id = t.get('id', '')
-        if go_id.startswith('GO:'):
-            a = ann.get('aspect', '')
-            if 'molecular' in a: terms['MF'].add(go_id)
-            elif 'biological' in a: terms['BP'].add(go_id)
-            elif 'cellular' in a: terms['CC'].add(go_id)
+        aspect = aspect_by_id.get(go_id)
+        action = (ann.get("review") or {}).get("action", "")
+        if action == "MODIFY" and aspect:
+            for replacement in (ann.get("review") or {}).get(
+                "proposed_replacement_terms", []
+            ):
+                replacement_id = replacement.get("id", "")
+                if replacement_id.startswith("GO:"):
+                    terms[aspect].add(replacement_id)
+        elif action in {"", "ACCEPT", "KEEP_AS_NON_CORE", "UNDECIDED", "PENDING"}:
+            if aspect and go_id.startswith("GO:"):
+                terms[aspect].add(go_id)
     for cf in review.get('core_functions', []):
-        mf = cf.get('molecular_function', {})
-        if mf and mf.get('id', '').startswith('GO:'): terms['MF'].add(mf['id'])
+        for slot in ("molecular_function", "contributes_to_molecular_function"):
+            mf = cf.get(slot, {})
+            if mf and mf.get('id', '').startswith('GO:'):
+                terms['MF'].add(mf['id'])
         for bp in cf.get('directly_involved_in', []):
-            if bp.get('id', '').startswith('GO:'): terms['BP'].add(bp['id'])
+            if bp.get('id', '').startswith('GO:'):
+                terms['BP'].add(bp['id'])
+        complex_term = cf.get("in_complex", {})
+        if complex_term and complex_term.get("id", "").startswith("GO:"):
+            terms["CC"].add(complex_term["id"])
+        for location in cf.get("locations", []):
+            if location.get("id", "").startswith("GO:"):
+                terms["CC"].add(location["id"])
     return terms
 
 def main():
+    import torch
     from gogpt.inference import GOGPTPredictor, GOTokenizerJSON, OrganismMapperJSON
     from transformers import AutoTokenizer
     
-    print(f"Loading GO-GPT model...", flush=True)
+    print("Loading GO-GPT model...", flush=True)
     predictor = object.__new__(GOGPTPredictor)
     predictor.device = torch.device('mps' if torch.backends.mps.is_available() else 'cpu')
     predictor.verbose = False
@@ -107,7 +147,9 @@ def main():
             with torch.no_grad():
                 preds = predictor.predict(sequence=seq, organism=org_name)
             
-            review_terms = load_review_terms(review_file)
+            review_terms = load_review_terms(
+                review_file, review_file.parent / f"{gene}-goa.tsv"
+            )
             
             for aspect in ['MF', 'BP', 'CC']:
                 pred_set = set(preds.get(aspect, [])) - GENERIC_TERMS
@@ -151,7 +193,7 @@ def main():
     total_rev = sum(r['reviewed'] for r in results)
     genes_done = len(set((r['organism'], r['gene']) for r in results))
     
-    print(f"\n=== SUMMARY ===")
+    print("\n=== SUMMARY ===")
     print(f"Genes processed: {genes_done}")
     print(f"Total predicted (specific): {total_pred}")
     print(f"Total in reviews: {total_rev}")
