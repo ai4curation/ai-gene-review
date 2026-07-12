@@ -2,7 +2,7 @@
 title: "IBA Annotation Quality Project"
 maturity: COMPLETE
 tags: [PIPELINE, FLAGSHIP]
-species: [human, CANAL, MYCTU, VIBCH, SCHPO, ECOLI, mouse, rat, worm, yeast, ANOGA, POPTR, DANRE]
+species: [human, CANAL, MYCTU, VIBCH, SCHPO, ECOLI, mouse, rat, worm, yeast, ANOGA, POPTR, DANRE, DICDI]
 genes:
   - Epe1
   - cds1
@@ -67,6 +67,15 @@ genes:
   - lys-7
   - UBP3
   - CASP12
+  - carD
+  - rasC
+  - pten
+  - regA
+  - pdsA
+  - acgA
+  - yakA
+  - statA
+  - statC
 ---
 
 # IBA Annotation Quality Project
@@ -560,6 +569,49 @@ See detailed family analysis: `interpro/panther/PTHR10314/PTHR10314-notes.md`
 
 See detailed family analysis: `families/PTHR48034/PTHR48034-review.md`
 
+### DICDI cAMP / STAT developmental families — Stage-Specific Paralog & Lineage Over-Propagation
+
+*Dictyostelium discoideum* development is driven by several **paralog families whose
+members do the same molecular job at different developmental stages** (the cAMP
+receptors cAR1–4, the adenylate cyclases ACA/ACG/ACR, the Ras GTPases RasC/RasG,
+the STATs Dd-STATa/c). Reviewing one representative per family alongside its
+sisters exposed IBA transferring a **family-node consensus onto the wrong member,
+stage, compartment, or lineage** — the same failure classes catalogued above, now
+in a social amoeba:
+
+- **Stage/paralog leakage (`PROPAGATION_BAD` · `WRONG_ORTHOLOG_OR_PARALOG`).**
+  The aggregation-stage "adenylate cyclase-activating cAMP receptor signaling"
+  role (`GO:0007189`) is propagated by the cAR family node onto the *later*,
+  lower-affinity receptor **cAR4/carD**, whose characterised output is the
+  PTP/GSK3 axis, not adenylate-cyclase activation. Likewise **rasC** carries
+  `GO:0000281` mitotic cytokinesis, but rasC-null cells divide normally — cytokinesis
+  is **RasG's** job in this family.
+- **Lineage-inappropriate process transfer (`LINEAGE_OR_TAXON_MISMATCH`).** The STAT
+  family node **PTN000927860** transfers metazoan STAT roles — `GO:0006952` defense
+  response and `GO:0042127` regulation of cell population proliferation — onto both
+  **Dd-STATa** and **Dd-STATc** from all-metazoan seeds (human/mouse/rat/fly/worm
+  STAT1/2/5…). This mirrors the existing worm `sta-2`/`fshr-1` cross-kingdom row.
+- **Term-scoping across a lineage gap (`TERM_SCOPING_PROBLEM`).** Both Dictyostelium
+  STATs are annotated `GO:0007259` "signaling via **JAK**-STAT", yet *Dictyostelium*
+  has **no JAK** (they are activated by the TKL kinases Pyk2/Pyk3); the term is
+  rescoped to `GO:0097696` STAT signaling.
+- **Functional divergence with fold retained (`FUNCTIONAL_DIVERGENCE`).** **regA**
+  inherits `GO:0047555` cGMP-phosphodiesterase activity from the cyclic-nucleotide
+  PDE family node, but RegA is **cAMP-specific** (>200-fold selectivity). **yakA**
+  (a dual-specificity DYRK) carries the family's generic `GO:0004713` protein
+  **tyrosine** kinase activity.
+- **Compartment mismatch (`COMPARTMENT_OR_COMPLEX_MISMATCH`).** **pten** inherits
+  `GO:0005634` nucleus (a mammalian-PTEN behaviour) although all Dictyostelium
+  evidence places it at the membrane/cortex/cytosol; **spiA** (a demonstrated
+  spore-coat protein) inherits the canonical SCAMP `trans-Golgi`/`recycling
+  endosome` localisations.
+
+Each of these rows carries a structured `review.propagation_review`
+(`root_cause` + `failure_modes` + the real GOA `WITH/FROM` PANTHER `PTN…` node
+and a representative seed) in the corresponding
+`genes/DICDI/<gene>/<gene>-ai-review.yaml`. Full module and paralog context:
+[Dictyostelium Development Project](DICTYOSTELIUM_DEVELOPMENT.md).
+
 ## Genes with IBA Issues
 
 | Gene | Species | IBA Issue Type | Severity | Status |
@@ -608,6 +660,13 @@ See detailed family analysis: `families/PTHR48034/PTHR48034-review.md`
 | Serpinh1/HSP47 | mouse | Pseudo-inhibitor (non-inhibitory serpin; collagen chaperone) | MEDIUM | COMPLETE |
 | sigF/sigG/sigK | BACSU | Subunit assigned holoenzyme catalytic activity (sigma ≠ RNA pol) | LOW | COMPLETE |
 | CIRBP / RBM3 | human | Functional divergence within RRM family (splicing terms on cold-shock mRNA-stability subfamily; PTHR48034 node PTN000391532) | MEDIUM | COMPLETE |
+| statA / statC | DICDI | Cross-kingdom: metazoan STAT defense/proliferation + JAK-STAT (no JAK in amoebae); node PTN000927860 | MEDIUM | COMPLETE |
+| carD (cAR4) | DICDI | Stage-specific paralog: aggregation adenylate-cyclase-activating role leaked onto a late low-affinity cAMP receptor | MEDIUM | COMPLETE |
+| rasC | DICDI | Wrong-paralog: mitotic cytokinesis (RasG's role; rasC-null divides normally) | MEDIUM | COMPLETE |
+| regA | DICDI | Functional divergence: cGMP-PDE activity on a cAMP-specific phosphodiesterase | MEDIUM | COMPLETE |
+| pten | DICDI | Compartment mismatch: nucleus on a membrane/cortex PtdIns(3,4,5)P3 phosphatase | LOW | COMPLETE |
+| spiA | DICDI | Compartment mismatch: SCAMP TGN/recycling-endosome on a spore-coat protein | LOW | COMPLETE |
+| acgA, pdsA, yakA | DICDI | Role/granularity conflation (peptide-receptor, neg-reg cAMP/PKA, generic Tyr-kinase) | LOW | COMPLETE |
 
 ## IBA Incompleteness: core function that IBA fails to propagate
 
