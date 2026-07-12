@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from ai_gene_review.module_scan import Component, extract_components, _acc_from_name
+from ai_gene_review.module_scan import _acc_from_name, extract_components
 from ai_gene_review.render_modules import is_module_document
 
 
