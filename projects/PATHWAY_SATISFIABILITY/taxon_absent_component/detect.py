@@ -2,26 +2,34 @@
 """Genome-content satisfiability check for IBA process/pathway over-annotations.
 
 For each case in ``signatures.yaml`` this asks: does the TARGET taxon encode any
-member of the obligate component's InterPro signature(s)? A control taxon (where
-the component is known to be present) proves the query itself is sound.
+member of the obligate component, using TWO oracles?
 
-Classification per case:
+  PANTHER family membership (PRIMARY, divergence-robust) -- IBA propagates along
+      the PANTHER tree, so even a divergent ortholog that lost its domain
+      signature is still placed in the family.
+  InterPro domain signature (CONTRAST) -- sensitive to divergence, so it
+      under-calls in distant lineages.
 
-  COMPONENT_PRESENT   target has >=1 member  -> pathway satisfiable w.r.t. this
-                                               component; the annotation is NOT
-                                               flagged.
-  ABSENT_CANDIDATE    target 0, control >0   -> CANDIDATE unsatisfiable. The IBA
-                                               transfer of this pathway term is a
-                                               candidate LINEAGE_OR_TAXON_MISMATCH.
-                                               MUST be corroborated: divergent
-                                               orthologs can escape a signature.
-  INCONCLUSIVE        control 0, or an API   -> query unsound (bad signature) or
-                      error                     network failure. No call made.
+A control taxon (component known present) proves each query is sound.
 
-This is a TRIAGE SCREEN, not an oracle. Signature-absence != genome-absence for
-distant lineages (see the STAT and P2X control cases). Results are fetched live
-from the UniProt REST API and are never hard-coded; a failed fetch yields
-INCONCLUSIVE, not a fabricated count.
+Per-case status (PANTHER decides; InterPro adds a divergence flag):
+
+  COMPONENT_PRESENT   PANTHER target > 0  -> satisfiable w.r.t. this component;
+                                             not flagged. If InterPro target == 0
+                                             here, a DIVERGENCE FLAG is raised:
+                                             the ortholog exists but a domain
+                                             screen would have wrongly called it
+                                             absent.
+  ABSENT              PANTHER target 0, control > 0 -> candidate unsatisfiable.
+                                             Confidence HIGH when InterPro agrees
+                                             (also 0), since two independent
+                                             oracles concur.
+  INCONCLUSIVE        PANTHER control 0 (bad family id) or a fetch error.
+
+Counts are fetched LIVE from UniProt REST and never hard-coded; a failed fetch
+yields INCONCLUSIVE, not a fabricated number. Even with PANTHER this remains a
+triage screen: a genome could carry an unclassified member, so a confident
+REMOVE still wants independent corroboration (the `corroboration` field).
 
 Usage:
     uv run python detect.py [signatures.yaml] [--target TAXID] [--control TAXID]
@@ -42,110 +50,140 @@ except ImportError:  # pragma: no cover
     sys.exit("PyYAML required: run via `uv run python detect.py` in this repo.")
 
 UNIPROT = "https://rest.uniprot.org/uniprotkb/search"
-UA = {"User-Agent": "aigr-taxon-absent-component/0.1 (ai-gene-review)"}
+UA = {"User-Agent": "aigr-taxon-absent-component/0.2 (ai-gene-review)"}
 
 
-def count_members(interpro: str, taxon: int, timeout: int = 45) -> int | None:
-    """Return the number of UniProtKB entries in `taxon` carrying `interpro`.
+def count_members(xref_db: str, acc: str, taxon: int, timeout: int = 45) -> int | None:
+    """UniProtKB entries in `taxon` carrying cross-ref `xref_db-acc`.
 
-    Returns None on any network/parse failure (caller treats as INCONCLUSIVE).
-    We request a bounded page and count returned accessions; the cap (below) is
-    far above the handful of members these lineage-restricted families have, and
-    the only decision that matters is zero vs non-zero.
+    `xref_db` is 'panther' or 'interpro'. Returns None on any failure (caller
+    treats as INCONCLUSIVE). Only zero vs non-zero matters; the page cap is far
+    above these lineage-restricted families.
     """
-    query = f"(xref:interpro-{interpro}) AND (taxonomy_id:{taxon})"
+    query = f"(xref:{xref_db}-{acc}) AND (taxonomy_id:{taxon})"
     url = f"{UNIPROT}?query={urllib.parse.quote(query)}&format=list&size=500"
     try:
         req = urllib.request.Request(url, headers=UA)
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             body = resp.read().decode()
     except Exception as exc:  # noqa: BLE001 - any failure -> inconclusive
-        print(f"    ! fetch failed for {interpro} tax:{taxon}: {exc}", file=sys.stderr)
+        print(f"    ! fetch failed {xref_db}:{acc} tax:{taxon}: {exc}", file=sys.stderr)
         return None
     return len([ln for ln in body.splitlines() if ln.strip()])
 
 
-def classify(target_hits: int | None, control_hits: int | None) -> str:
-    if target_hits is None or control_hits is None:
-        return "INCONCLUSIVE"
-    if control_hits == 0:
-        return "INCONCLUSIVE"  # signature returns nothing even in the control
-    if target_hits > 0:
-        return "COMPONENT_PRESENT"
-    return "ABSENT_CANDIDATE"
-
-
-def evaluate(case: dict, target: int, control: int) -> dict:
-    """Component is present if ANY of its signatures has a target member."""
-    per_sig = []
-    t_any = 0
-    c_any = 0
+def presence(accs: list[str], xref_db: str, target: int, control: int) -> dict:
+    """Aggregate one oracle over its accession list (present if ANY has a member)."""
+    per = []
+    t_any = c_any = 0
     t_seen = c_seen = False
-    for ipr in case["interpro"]:
-        th = count_members(ipr, target)
-        ch = count_members(ipr, control)
-        per_sig.append({"interpro": ipr, "target": th, "control": ch})
+    for acc in accs or []:
+        th = count_members(xref_db, acc, target)
+        ch = count_members(xref_db, acc, control)
+        per.append({"acc": acc, "target": th, "control": ch})
         if th is not None:
             t_seen = True
             t_any = max(t_any, th)
         if ch is not None:
             c_seen = True
             c_any = max(c_any, ch)
-    target_hits = t_any if t_seen else None
-    control_hits = c_any if c_seen else None
+    return {
+        "per": per,
+        "target": t_any if t_seen else None,
+        "control": c_any if c_seen else None,
+    }
+
+
+def evaluate(case: dict, target: int, control: int) -> dict:
+    pan = presence(case.get("panther"), "panther", target, control)
+    ipr = presence(case.get("interpro"), "interpro", target, control)
+
+    # PANTHER is authoritative for the present/absent call.
+    pt, pc = pan["target"], pan["control"]
+    it = ipr["target"]
+    if pt is None or pc is None:
+        status, confidence = "INCONCLUSIVE", "-"
+    elif pc == 0:
+        status, confidence = "INCONCLUSIVE", "-"  # family id returns nothing even in control
+    elif pt > 0:
+        status = "COMPONENT_PRESENT"
+        confidence = "-"
+    else:  # pt == 0, pc > 0
+        status = "ABSENT"
+        # two independent oracles agreeing raises confidence
+        confidence = "HIGH" if it == 0 else "MEDIUM"
+
+    # divergence flag: present by PANTHER but missed by the InterPro domain screen
+    divergent = status == "COMPONENT_PRESENT" and it == 0
+
     return {
         "id": case["id"],
         "go_term": case["go_term"],
         "go_label": case["go_label"],
         "component": case["obligate_component"],
-        "per_sig": per_sig,
-        "target_hits": target_hits,
-        "control_hits": control_hits,
-        "status": classify(target_hits, control_hits),
+        "panther": pan,
+        "interpro": ipr,
+        "status": status,
+        "confidence": confidence,
+        "divergent_ortholog": divergent,
         "corroboration": case.get("corroboration", "").strip(),
+        "expected": case.get("expected"),
     }
 
 
-def render_markdown(cfg: dict, results: list[dict], target: int, control: int) -> str:
-    lines = [
+def _fmt(x) -> str:
+    return "err" if x is None else str(x)
+
+
+def render_markdown(results: list[dict], target: int, control: int) -> str:
+    L = [
         "# Taxon-absent-component detector — results",
         "",
         f"- **Target taxon:** {target}  ·  **Control taxon:** {control}",
-        "- Source: UniProtKB REST (`xref:interpro-*` counts), fetched live.",
-        "- **A zero in the target is a CANDIDATE absence, not proof** — divergent",
-        "  orthologs can escape a metazoan signature. Read `corroboration`.",
+        "- Two oracles per component: **PANTHER family** (primary, divergence-robust)",
+        "  and **InterPro domain** (contrast). Counts fetched live from UniProt REST.",
+        "- `COMPONENT_PRESENT` where PANTHER finds a member; `ABSENT` where it does",
+        "  not (confidence HIGH when InterPro agrees). A **divergence flag** marks",
+        "  components present by PANTHER but missed by the InterPro domain screen.",
         "",
-        "| Case | GO term | Obligate component | Control | Target | Status |",
-        "|------|---------|--------------------|--------:|-------:|--------|",
+        "| Case | GO term | Component | PANTHER (ctrl/tgt) | InterPro (ctrl/tgt) | Status | Conf | Divergent? |",
+        "|------|---------|-----------|:------------------:|:-------------------:|--------|:----:|:----------:|",
     ]
     for r in results:
-        th = "err" if r["target_hits"] is None else r["target_hits"]
-        ch = "err" if r["control_hits"] is None else r["control_hits"]
-        lines.append(
-            f"| {r['id']} | {r['go_term']} | {r['component']} | {ch} | {th} | **{r['status']}** |"
+        p, i = r["panther"], r["interpro"]
+        L.append(
+            f"| {r['id']} | {r['go_term']} | {r['component']} "
+            f"| {_fmt(p['control'])}/{_fmt(p['target'])} "
+            f"| {_fmt(i['control'])}/{_fmt(i['target'])} "
+            f"| **{r['status']}** | {r['confidence']} "
+            f"| {'YES' if r['divergent_ortholog'] else '-'} |"
         )
-    lines += ["", "## Interpretation", ""]
+    L += ["", "## Interpretation", ""]
     for r in results:
-        lines.append(f"### {r['id']} — {r['status']}")
-        lines.append("")
-        lines.append(f"- **Term:** {r['go_term']} — {r['go_label']}")
-        sig = ", ".join(
-            f"{s['interpro']} (control {s['control']}, target {s['target']})"
-            for s in r["per_sig"]
-        )
-        lines.append(f"- **Signatures:** {sig}")
+        L.append(f"### {r['id']} — {r['status']}"
+                 + (f" (confidence {r['confidence']})" if r["confidence"] != "-" else ""))
+        L.append("")
+        L.append(f"- **Term:** {r['go_term']} — {r['go_label']}")
+        pan = ", ".join(f"{s['acc']} ctrl {_fmt(s['control'])}/tgt {_fmt(s['target'])}" for s in r["panther"]["per"]) or "—"
+        ipr = ", ".join(f"{s['acc']} ctrl {_fmt(s['control'])}/tgt {_fmt(s['target'])}" for s in r["interpro"]["per"]) or "—"
+        L.append(f"- **PANTHER:** {pan}")
+        L.append(f"- **InterPro:** {ipr}")
+        if r["divergent_ortholog"]:
+            L.append("- **⚠ Divergence flag:** present by PANTHER but the InterPro "
+                     "domain signature scores zero — a domain-only screen would have "
+                     "falsely called this absent.")
         if r["corroboration"]:
-            lines.append(f"- **Corroboration:** {r['corroboration']}")
-        lines.append("")
-    return "\n".join(lines) + "\n"
+            L.append(f"- **Corroboration:** {r['corroboration']}")
+        L.append("")
+    return "\n".join(L) + "\n"
 
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("config", nargs="?", default=None, help="signatures.yaml path")
+    ap.add_argument("config", nargs="?", default=None)
     ap.add_argument("--target", type=int, default=None)
     ap.add_argument("--control", type=int, default=None)
-    ap.add_argument("--write", metavar="MD", default=None, help="write results to markdown")
+    ap.add_argument("--write", metavar="MD", default=None)
     args = ap.parse_args()
 
     cfg_path = Path(args.config) if args.config else Path(__file__).with_name("signatures.yaml")
@@ -157,19 +195,24 @@ def main() -> None:
     for case in cfg["cases"]:
         print(f"[{case['id']}] {case['go_term']} obligate={case['obligate_component']}")
         r = evaluate(case, target, control)
-        print(f"    control={r['control_hits']} target={r['target_hits']} -> {r['status']}")
+        flag = "  (DIVERGENCE FLAG)" if r["divergent_ortholog"] else ""
+        print(f"    PANTHER ctrl={_fmt(r['panther']['control'])} tgt={_fmt(r['panther']['target'])} | "
+              f"InterPro ctrl={_fmt(r['interpro']['control'])} tgt={_fmt(r['interpro']['target'])} "
+              f"-> {r['status']} {r['confidence']}{flag}")
         results.append(r)
 
     if args.write:
         out = Path(args.write)
         if not out.is_absolute():
             out = cfg_path.with_name(args.write)
-        out.write_text(render_markdown(cfg, results, target, control))
+        out.write_text(render_markdown(results, target, control))
         print(f"\nWrote {out}")
 
-    # machine-readable to stdout tail
     print("\nJSON:")
-    print(json.dumps([{k: r[k] for k in ("id", "status", "control_hits", "target_hits")} for r in results], indent=2))
+    print(json.dumps(
+        [{k: r[k] for k in ("id", "status", "confidence", "divergent_ortholog")} for r in results],
+        indent=2,
+    ))
 
 
 if __name__ == "__main__":

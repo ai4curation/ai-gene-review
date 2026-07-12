@@ -626,14 +626,17 @@ and a representative seed) in the corresponding
 > is a candidate `LINEAGE_OR_TAXON_MISMATCH` over-propagation. A runnable
 > prototype of exactly this check —
 > [taxon-absent-component detector](PATHWAY_SATISFIABILITY/taxon_absent_component/README.md)
-> — screens JAK for JAK-STAT and confirms JAK is genome-absent in
-> *Dictyostelium*. It also documents the method's key limitation: an InterPro
-> signature returning zero is a **candidate**, not a proof, because divergent
-> orthologs can escape the signature — the `GO:0035589` purinergic case is
-> instructive, since *Dictyostelium* **does** have divergent (ionotropic) P2X
-> receptors and only the metabotropic **P2Y (GPCR)** component that this term
-> specifically requires appears absent. A confident `REMOVE` still needs
-> corroboration beyond signature-absence.
+> — confirms JAK is genome-absent in *Dictyostelium* (`GO:0007259` unsatisfiable
+> → `GO:0097696`). It uses **two oracles**: an InterPro domain signature and,
+> primarily, **PANTHER family (`PTHR…`) membership** — the divergence-robust one,
+> since IBA propagates along the PANTHER tree. That distinction matters: an
+> InterPro-only screen falsely calls STAT and P2X *absent* in *Dictyostelium*
+> (both diverged past their metazoan domain signature), whereas PANTHER correctly
+> recovers the 4 Dd-STATs and the ~5 divergent P2X receptors — so the organism
+> **does** have (ionotropic) P2X, and only the metabotropic **P2Y (GPCR)**
+> component that `GO:0035589` specifically requires is genuinely absent. Even at
+> HIGH confidence an `ABSENT` verdict is a strong lead for review, not an
+> automatic `REMOVE`.
 
 ## Genes with IBA Issues
 
