@@ -25,7 +25,7 @@ autolink_gene_symbols: false
 - [x] Curate each selected gene review.
 - [x] Validate module and gene reviews.
 - [x] Open one PR for this module/pathway: [PR #2051](https://github.com/ai4curation/ai-gene-review/pull/2051).
-- [ ] Shepherd PR through review, CI, and merge readiness.
+- [x] Shepherd PR through review, CI, and merge readiness.
 
 ## Candidate Genes
 
@@ -42,6 +42,11 @@ Generated UTC: 2026-07-10T01:23:19.469718+00:00
 - Created and validated `modules/efp_translation_stall_rescue.yaml` as a compact
   single-gene UPA00345 module for cytoplasmic EF-P translation elongation and
   stalled-ribosome rescue.
+- Follow-up after PR #2051 review: generalized the reusable module from a
+  PSEPK-centered wording to a species-neutral bacterial EF-P-family module.
+  `efp` / PP_1858 / Q88LS0 is now recorded as the PSEPK UniProt exemplar rather
+  than as the module's full scope, with additional representative EF-P members
+  and PAINT/PTN anchors recorded in the module.
 - Corrected the accession-based seed so `gene_symbol` is `efp` rather than
   `Q88LS0`.
 - `efp` accepts translation elongation factor activity, translational
