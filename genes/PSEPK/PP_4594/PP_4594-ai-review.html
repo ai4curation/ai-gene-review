@@ -1,0 +1,2299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PP_4594 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PP_4594</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88E72" target="_blank" class="term-link">
+                        Q88E72
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PP_4594";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88E72" data-a="DESCRIPTION: PP_4594 encodes a PLP-dependent trans-sulfuration-..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PP_4594 encodes a PLP-dependent trans-sulfuration-enzyme-family protein near the cysteine/methionine/selenocompound pathway boundary. Its sequence annotations conflict between cystathionine gamma-synthase product naming and cystathionine gamma-lyase GO/PANTHER assignments, so it is tracked as an adjacent unresolved paralog rather than a required methionine-biosynthesis module member.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004123" target="_blank" class="term-link">
+                                    GO:0004123
+                                </a>
+                            </span>
+                            <span class="term-label">cystathionine gamma-lyase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88E72" data-a="GO:0004123" data-r="GO_REF:0000118" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cystathionine gamma-lyase activity may be correct for this paralog, but it is not resolved enough for module-core use.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GOA/PANTHER assign cystathionine gamma-lyase activity, while UniProt&#39;s submitted protein name says cystathionine gamma-synthase. Without direct biochemical or phylogenetic evidence separating this paralog from metB, the specific activity should remain unresolved.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4594/PP_4594-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0004123	cystathionine gamma-lyase activity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4594/PP_4594-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SubName: Full=Cystathionine gamma-synthase</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:projects/P_PUTIDA/deep-research/PSEPK__methionine_biosynthesis__ppu00270-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">best interpreted as a reverse-transsulfuration enzyme (cysteine formation), not the forward metB</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4594/PP_4594-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">the exact substrate specificity and reaction direction remain to be confirmed by direct biochemical characterization</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88E72" data-a="GO:0005737" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasm is plausible for this soluble PLP-dependent enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The GOA cytoplasm annotation fits the soluble Cys/Met PLP-dependent enzyme family.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4594/PP_4594-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0005737	cytoplasm</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4594/PP_4594-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Cys/Met-Metab_PyrdxlP-dep_enz</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016846" target="_blank" class="term-link">
+                                    GO:0016846
+                                </a>
+                            </span>
+                            <span class="term-label">carbon-sulfur lyase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88E72" data-a="GO:0016846" data-r="GO_REF:0000118" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Carbon-sulfur lyase activity is a safe broad family-level function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> A PLP-dependent cystathionine gamma-lyase/synthase-family enzyme is expected to be a carbon-sulfur lyase or related C-S transfer enzyme, but the exact physiological activity remains unresolved.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4594/PP_4594-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0016846	carbon-sulfur lyase activity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4594/PP_4594-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PTHR11808:SF15; CYSTATHIONINE GAMMA-LYASE</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4594/PP_4594-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">a **cytoplasmic, cysteine-inducible, accessory PLP-dependent γ-family enzyme</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019346" target="_blank" class="term-link">
+                                    GO:0019346
+                                </a>
+                            </span>
+                            <span class="term-label">transsulfuration</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88E72" data-a="GO:0019346" data-r="GO_REF:0000120" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Transsulfuration is plausible but not resolved as the module route for this paralog.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The annotation is family-supported, but the primary methionine module already has a clearer metB plus PP_4348 trans-sulfuration candidate pair and a direct MetXS/MetZ route. PP_4594 should not be treated as a required module member without stronger evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4594/PP_4594-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0019346	transsulfuration</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4594/PP_4594-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PTHR11808:SF15; CYSTATHIONINE GAMMA-LYASE</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030170" target="_blank" class="term-link">
+                                    GO:0030170
+                                </a>
+                            </span>
+                            <span class="term-label">pyridoxal phosphate binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88E72" data-a="GO:0030170" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Pyridoxal phosphate binding is supported for this enzyme family.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PLP binding is a family-level catalytic cofactor feature, while the specific physiological reaction remains unresolved.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4594/PP_4594-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Name=pyridoxal 5&#39;-phosphate</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4594/PP_4594-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0030170	pyridoxal phosphate binding</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_4594/PP_4594-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for PP_4594</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt lists PP_4594 as a cystathionine gamma-synthase submitted protein, but family cross-references include cystathionine gamma-lyase.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_4594/PP_4594-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO GOA annotations for PP_4594</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The fetched GOA table contains the five annotations reviewed for PP_4594.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:projects/P_PUTIDA/deep-research/PSEPK__methionine_biosynthesis__ppu00270-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist pathway research for PSEPK methionine biosynthesis</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The pathway-level report treats PP_4594 as a paralog-ambiguous PLP enzyme likely outside the forward methionine-biosynthesis trans-sulfuration route.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_4594/PP_4594-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist gene research for PP_4594</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The gene-level report favors an accessory gamma-lyase-type role but keeps the exact substrate and reaction direction unresolved because PP_4594 has not been directly assayed.</div>
+
+                        <div class="finding-text">"no direct enzymology has been performed on the protein"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is PP_4594 a cystathionine gamma-lyase, a cystathionine gamma-synthase paralog, or a selenocompound/cysteine-pathway enzyme outside methionine biosynthesis?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88E72" data-a="Q: Is PP_4594 a cystathionine gamma-lyase, a cystathi..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Compare PP_4594 and MetB substrate preferences using cystathionine, O-succinylhomoserine, O-acetylhomoserine, cysteine, and selenium analogs.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: comparative PLP-enzyme substrate profiling</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88E72" data-a="EXPERIMENT: Compare PP_4594 and MetB substrate preferences usi..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PP_4594-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88E72" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: PP_4594 (Q88E72), *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">5 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-11T17:07:02.816135</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="PP_4594-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="PP_4594-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-pp_4594-q88e72-pseudomonas-putida-kt2440">Functional Annotation Report: PP_4594 (Q88E72), <em>Pseudomonas putida</em> KT2440</h1>
+<p><strong>Gene:</strong> PP_4594 (OrderedLocusNames PP_4594)<br />
+<strong>UniProt:</strong> Q88E72<br />
+<strong>Organism:</strong> <em>Pseudomonas putida</em> (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440) — proteome code PSEPK<br />
+<strong>Submitted name:</strong> Cystathionine gamma-synthase<br />
+<strong>Protein family:</strong> Trans-sulfuration enzymes family (Cys/Met metabolism, PLP-dependent, fold-type I "γ-family")</p>
+<hr />
+<h2 id="summary">Summary</h2>
+<p>PP_4594 encodes a <strong>393-residue, cytoplasmic, pyridoxal-5′-phosphate (PLP)-dependent enzyme</strong> belonging to the <strong>fold-type I Cys/Met-metabolism "γ-family"</strong> of trans-sulfuration enzymes (Pfam <strong>PF01053</strong>, Cys_Met_Meta_PP; InterPro <strong>IPR000277</strong>). Its sequence carries a <strong>fully intact catalytic apparatus</strong> — the Schiff-base lysine (Lys205) that forms the internal aldimine with PLP, and the conserved aspartate (Asp180) that anchors the PLP pyridinium nitrogen — so the protein is very likely a <strong>catalytically active PLP enzyme</strong>, not a pseudoenzyme. Enzymes of this family carry out <strong>α,γ-elimination and γ-replacement reactions on sulfur-containing amino acids</strong> (cystathionine, homocysteine, methionine and their O-substituted derivatives) and share a common three-domain, homotetrameric fold.</p>
+<p>Assigning the <strong>precise reaction</strong> catalyzed by PP_4594 is the central challenge of this annotation, because two credible calls exist and no direct enzymology has ever been performed on the PP_4594 protein itself. The <strong>original 2002 genome annotation and PIRSF/CDD signatures name it "cystathionine γ-synthase"</strong>, whereas <strong>KEGG assigns it the orthology K01758 = cystathionine γ-lyase (EC 4.4.1.1)</strong>. The weight of convergent bioinformatic evidence favors the <strong>γ-lyase-type function</strong>: PP_4594 falls into the <strong>same PANTHER subfamily (PTHR11808:SF15)</strong> as the experimentally characterized <em>P. aeruginosa</em> cystathionine γ-lyase PA0400, its <strong>closest characterized homolog at ~47% identity</strong>, and in a pairwise-identity/phylogenetic comparison it clusters with the <strong>γ-elimination clade</strong> (human CTH 42%, <em>P. putida</em> methionine γ-lyase 42%) and is clearly separated from the β-lyase clade (E. coli MetC 28%, KT2440 MetC/PP_4348 24%). Importantly, PP_4594 is <strong>distinct from KT2440's dedicated forward methionine-biosynthetic genes</strong> metB (PP_0659) and metC (PP_4348), and it sits immediately adjacent to a <strong>cysteine-sensing Lrp/AsnC-family transcriptional activator (PP_4595)</strong> — a genomic arrangement consistent with a cysteine-inducible, accessory catabolic role rather than a housekeeping biosynthetic one.</p>
+<p>The most defensible functional statement is therefore: <strong>PP_4594 is a cytoplasmic PLP-dependent γ-family trans-sulfuration enzyme, most probably acting as a cystathionine γ-lyase (γ-elimination on cystathionine/homocysteine-type substrates, potentially producing H₂S), likely functioning as an accessory, cysteine-inducible enzyme in sulfur-amino-acid metabolism.</strong> This assignment rests on orthology and sequence/structure inference; the exact substrate specificity and reaction direction remain to be confirmed by direct biochemical characterization. A significant caveat is that Vermeij &amp; Kertesz (1999) could <strong>not detect cystathionine γ-lyase activity in <em>P. putida</em></strong>, which tempers over-confident acceptance of the K01758 label.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-pp_4594-is-a-cytoplasmic-plp-dependent-trans-sulfuration-cysmet-family-enzyme">Finding 1 — PP_4594 is a cytoplasmic PLP-dependent trans-sulfuration (Cys/Met γ-family) enzyme</h3>
+<p>UniProt entry Q88E72 describes a <strong>393-amino-acid protein</strong> whose cofactor is <strong>pyridoxal 5′-phosphate (PLP)</strong> and whose family membership is annotated as "Belongs to the trans-sulfuration enzymes family." This placement is supported by a dense, mutually consistent set of domain signatures:</p>
+<table>
+<thead>
+<tr>
+<th>Signature</th>
+<th>Database</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PF01053 (Cys_Met_Meta_PP)</td>
+<td>Pfam</td>
+<td>Cys/Met metabolism PLP-dependent enzyme</td>
+</tr>
+<tr>
+<td>IPR000277 (Cys/Met-Metab_PyrdxlP-dep_enz)</td>
+<td>InterPro</td>
+<td>Cys/Met metabolism, PLP-dependent</td>
+</tr>
+<tr>
+<td>IPR015421 / IPR015422 / IPR015424</td>
+<td>InterPro</td>
+<td>PLP-dependent transferase, fold-type I (major/small/overall)</td>
+</tr>
+<tr>
+<td>SSF53383</td>
+<td>SUPFAM</td>
+<td>PLP-dependent transferases superfamily</td>
+</tr>
+<tr>
+<td>COG0626</td>
+<td>eggNOG</td>
+<td>Cystathionine β-lyase / γ-synthase family</td>
+</tr>
+</tbody>
+</table>
+<p>Gene Ontology terms assigned to the entry are <strong>pyridoxal phosphate binding (GO:0030170)</strong>, <strong>cytoplasm (GO:0005737)</strong>, and <strong>transsulfuration (GO:0019346)</strong>. All of these localization/function terms are currently <strong>IEA (inferred from electronic annotation)</strong>, meaning they are computational rather than experimentally verified for this specific protein. Nonetheless, the convergence of independent domain databases makes the <strong>fold assignment (fold-type I PLP transferase) and the broad functional category (Cys/Met γ-family trans-sulfuration enzyme) highly secure</strong>. The predicted cytoplasmic localization is fully consistent with the biology of this enzyme family, whose members are soluble cytosolic proteins with no signal peptides or membrane-spanning segments.</p>
+<h3 id="finding-2-pp_4594-is-annotated-as-cystathionine-lyase-k01758-ec-4411-and-is-distinct-from-kt2440s-dedicated-forward-transsulfuration-genes">Finding 2 — PP_4594 is annotated as cystathionine γ-lyase (K01758 / EC 4.4.1.1) and is distinct from KT2440's dedicated forward-transsulfuration genes</h3>
+<p>There is a genuine <strong>annotation conflict</strong> at the heart of this gene. KEGG assigns <code>ppu:PP_4594</code> to ortholog <strong>K01758 (cystathionine γ-lyase, EC 4.4.1.1)</strong>, whereas the original 2002 genome submission and the UniProt "SubName" call it <strong>cystathionine γ-synthase</strong>. Resolving this required situating PP_4594 relative to the other Cys/Met enzymes encoded in the KT2440 genome and relative to characterized reference enzymes.</p>
+<p>In KT2440 the canonical forward methionine-biosynthetic genes are <strong>separate loci</strong>:<br />
+- <strong>metB (cystathionine γ-synthase, K01739) = PP_0659</strong><br />
+- <strong>metC (cystathionine β-lyase, K01760) = PP_4348</strong><br />
+- <strong>methionine γ-lyase (K01761) = PP_1308</strong></p>
+<p>Because these dedicated biosynthetic functions are already accounted for elsewhere in the genome, PP_4594 is <strong>not</strong> the housekeeping γ-synthase or β-lyase of methionine biosynthesis; it is an additional, paralogous γ-family enzyme.</p>
+<p>An independent Needleman–Wunsch pairwise-identity analysis places PP_4594 firmly in the <strong>γ-elimination clade</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Reference enzyme</th>
+<th>% identity to PP_4594</th>
+<th>Clade</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Human CGL/CTH (cystathionine γ-lyase)</td>
+<td>42.4%</td>
+<td>γ-lyase</td>
+</tr>
+<tr>
+<td><em>P. putida</em> methionine γ-lyase (PpMGL)</td>
+<td>41.7%</td>
+<td>γ-family</td>
+</tr>
+<tr>
+<td>Yeast CGL/CYS3</td>
+<td>40.5%</td>
+<td>γ-lyase</td>
+</tr>
+<tr>
+<td><em>E. coli</em> MetB (γ-synthase)</td>
+<td>37.6%</td>
+<td>γ-synthase</td>
+</tr>
+<tr>
+<td>KT2440 MetB / PP_0659</td>
+<td>37.4%</td>
+<td>γ-synthase</td>
+</tr>
+<tr>
+<td><em>E. coli</em> MetC (β-lyase)</td>
+<td>28.4%</td>
+<td>β-lyase</td>
+</tr>
+<tr>
+<td>KT2440 MetC / PP_4348 (β-lyase)</td>
+<td>23.7%</td>
+<td>β-lyase</td>
+</tr>
+</tbody>
+</table>
+<p>PP_4594 is <strong>most similar to γ-lyases and clearly separated from the β-lyase clade</strong>, supporting a γ-elimination (γ-lyase / γ-family) rather than a β-elimination function. Its genomic neighbor, <strong>PP_4595, is a Lrp/AsnC-family cysteine-sensing transcriptional activator (K05800)</strong> — a regulatory context that strongly suggests PP_4594 expression is <strong>cysteine-responsive</strong>.</p>
+<h3 id="finding-3-physiological-context-p-putida-uses-direct-sulfhydrylation-for-methionine-synthesis-transsulfuration-enzymes-are-low-level-and-cysteine-inducible">Finding 3 — Physiological context: <em>P. putida</em> uses direct sulfhydrylation for methionine synthesis; transsulfuration enzymes are low-level and cysteine-inducible</h3>
+<p>The physiology of sulfur metabolism in <em>P. putida</em> was directly measured by <strong>Vermeij &amp; Kertesz (1999)</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/10482527/">PMID: 10482527</a>. Their findings frame the likely role of PP_4594:</p>
+<ul>
+<li><em>P. putida</em> (and <em>P. aeruginosa</em>) <strong>"used direct sulfhydrylation of O-succinylhomoserine for the synthesis of methionine"</strong> and also contained substantial O-acetylserine sulfhydrylase (cysteine synthase) activity. This means the <strong>main methionine-biosynthetic route bypasses the transsulfuration enzymes</strong>, casting them as accessory rather than essential.</li>
+<li><strong>"The enzymes of the transsulfuration pathway (cystathionine gamma-synthase and cystathionine beta-lyase) were expressed at low levels in both pseudomonads but were strongly upregulated during growth with cysteine as the sole sulfur source."</strong> This matches the presence of the cysteine-sensing Lrp/AsnC regulator (PP_4595) beside PP_4594 and supports a <strong>cysteine-inducible</strong> expression pattern.</li>
+<li>Critically, <strong>"P. putida S-313 also grew well with methionine as the sulfur source, but no cystathionine gamma-lyase, the key enzyme of the reverse transsulfuration pathway, was found in this species"</strong> — instead, methionine was degraded via methionine γ-lyase. This is important <strong>counter-evidence</strong> that cautions against uncritically accepting the KEGG K01758 (cystathionine γ-lyase) call for PP_4594 as its principal in vivo activity.</li>
+</ul>
+<p>Structural context reinforces the shared fold. Motoshima et al. (2000) <a href="https://pubmed.ncbi.nlm.nih.gov/10965031/">PMID: 10965031</a> showed that <em>P. putida</em> methionine γ-lyase adopts a fold in which "the spatial fold of subunits, with three functionally distinct domains and their quarternary arrangement, is <strong>similar to those of L-cystathionine beta-lyase and L-cystathionine gamma-synthase from Escherichia coli</strong>," confirming the common fold-type I, three-domain architecture across the entire γ-family to which PP_4594 belongs.</p>
+<h3 id="finding-4-pp_4594-has-a-fully-intact-fold-type-i-plp-catalytic-apparatus-schiff-base-lys205-plp-anchoring-asp180">Finding 4 — PP_4594 has a fully intact fold-type I PLP catalytic apparatus (Schiff-base Lys205, PLP-anchoring Asp180)</h3>
+<p>Motif mapping of the 393-residue Q88E72 sequence identified <strong>all signature catalytic elements</strong> of the fold-type I Cys/Met γ-family, indicating the protein is a <strong>catalytically competent enzyme</strong>, not a degenerate pseudoenzyme:</p>
+<table>
+<thead>
+<tr>
+<th>Catalytic element</th>
+<th>Residues / motif</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Schiff-base lysine</td>
+<td><strong>Lys205</strong> in H-S-A-S-<strong>K</strong>-Y (201–206)</td>
+<td>Forms internal aldimine with PLP; central to catalysis</td>
+</tr>
+<tr>
+<td>Conserved aspartate</td>
+<td><strong>Asp180</strong> in <strong>D</strong>-N-T-F (180–183)</td>
+<td>Hydrogen-bonds/orients the PLP pyridinium nitrogen</td>
+</tr>
+<tr>
+<td>PLP phosphate-binding loop</td>
+<td>E-S-P-T-N-P (151–156)</td>
+<td>Binds the PLP phosphate group</td>
+</tr>
+<tr>
+<td>N-terminal substrate/cofactor loop</td>
+<td>G-N-P-T-R (57–61)</td>
+<td>Substrate and cofactor positioning</td>
+</tr>
+</tbody>
+</table>
+<p>Additional structural classifiers agree: <strong>CDD cd00614 (CGS_like)</strong>, <strong>PIRSF001434 (Cystathionine gamma-synthase)</strong>, and <strong>CATH 3.40.640.10 / 3.90.1150.10</strong> (aspartate aminotransferase-like two-domain PLP fold). This is the canonical architecture shared by cystathionine γ-synthase, cystathionine γ-lyase, and methionine γ-lyase (Motoshima 2000). The presence of a complete, unmutated catalytic set means the enzyme <strong>retains the machinery to perform PLP-dependent α,γ-eliminations/γ-replacements</strong> on appropriate sulfur-amino-acid substrates.</p>
+<h3 id="finding-5-pp_4594-co-classifies-with-and-is-the-closest-characterized-homolog-of-the-p-aeruginosa-cystathionine-lyase-pa0400-favoring-a-lyase-over-a-synthase-call">Finding 5 — PP_4594 co-classifies with, and is the closest characterized homolog of, the <em>P. aeruginosa</em> cystathionine γ-lyase PA0400 — favoring a γ-lyase over a γ-synthase call</h3>
+<p>The single most informative comparison for narrowing PP_4594's function is to <strong>PA0400 (Q9I6A0) of <em>P. aeruginosa</em> PAO1</strong>, annotated as "probable cystathionine γ-lyase" and the subject of a 2024 structure/specificity study, Pedretti et al. <a href="https://pubmed.ncbi.nlm.nih.gov/38654065/">PMID: 38654065</a>. PP_4594 and PA0400:</p>
+<ul>
+<li>are assigned to the <strong>same PANTHER subfamily, PTHR11808:SF15</strong>, and</li>
+<li>share <strong>47.4% pairwise identity</strong> — <strong>higher than to any other characterized reference</strong> (human CTH 42.4%, PpMGL 41.7%, E. coli MetB 37.6%, E. coli MetC β-lyase 28.4%).</li>
+</ul>
+<p>Because PA0400 is a <em>characterized</em> enzyme placed in <strong>bacterial defense against oxidative stress and antibiotics via H₂S production</strong>, and because PP_4594 is its nearest characterized relative in the same fine-grained subfamily, the balance of evidence favors a <strong>cystathionine γ-lyase-type (γ-elimination, potentially H₂S-generating) function</strong> for PP_4594. The Pedretti et al. study frames this defense role explicitly: "The escalating drug resistance among microorganisms underscores the urgent need for innovative therapeutic strategies and a comprehensive understanding of bacteria's defense mechanisms against oxidative stress and antibiotics." KEGG's independent assignment of K01758 to PP_4594 is consistent with the γ-lyase call.</p>
+<p>The <strong>counter-evidence for a synthase call</strong> should be stated plainly: the original 2002 genome name, the PIRSF001434 label ("Cystathionine gamma-synthase"), and the CDD cd00614 name ("CGS_like") all describe the broader clade as γ-synthase-like, and PP_4594's identity to true γ-synthases (E. coli MetB 37.6%; KT2440 metB/PP_0659 37.4%) is only modestly lower than its identity to γ-lyases. The γ-synthase vs. γ-lyase distinction within this fold can hinge on a small number of active-site residues, so <strong>the assignment is a probabilistic lean, not a certainty.</strong></p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<h3 id="the-enzyme-family-and-its-chemistry">The enzyme family and its chemistry</h3>
+<p>PP_4594 belongs to the <strong>fold-type I (aspartate-aminotransferase-like) PLP enzyme superfamily</strong>, specifically the <strong>Cys/Met-metabolism "γ-family"</strong> (trans-sulfuration enzymes). Members are typically <strong>homotetramers</strong> in which each active site is built from residues of two adjacent subunits, with a bound PLP cofactor tethered as an internal aldimine (Schiff base) to the catalytic lysine (here <strong>Lys205</strong>). Substrate amino acids displace this lysine to form an external aldimine, after which PLP stabilizes carbanionic intermediates enabling elimination or replacement chemistry at the Cβ or Cγ position.</p>
+<div class="codehilite"><pre><span></span><code><span class="nx">Cys</span><span class="o">/</span><span class="nx">Met</span><span class="w"> </span><span class="nx">γ</span><span class="o">-</span><span class="nx">family</span><span class="w"> </span><span class="nx">reactions</span><span class="w"> </span><span class="nx">on</span><span class="w"> </span><span class="nx">sulfur</span><span class="w"> </span><span class="nx">amino</span><span class="w"> </span><span class="nx">acids</span>
+<span class="p">(</span><span class="nx">fold</span><span class="o">-</span><span class="k">type</span><span class="w"> </span><span class="nx">I</span><span class="w"> </span><span class="nx">PLP</span><span class="w"> </span><span class="nx">enzymes</span><span class="p">;</span><span class="w"> </span><span class="nx">PP_4594</span><span class="w"> </span><span class="nx">belongs</span><span class="w"> </span><span class="nx">here</span><span class="p">)</span>
+
+<span class="w">  </span><span class="nx">γ</span><span class="o">-</span><span class="nx">synthase</span><span class="w"> </span><span class="p">(</span><span class="nx">metB</span><span class="p">):</span><span class="w">  </span><span class="nx">O</span><span class="o">-</span><span class="nx">succinyl</span><span class="o">-</span><span class="nx">L</span><span class="o">-</span><span class="nx">homoserine</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">L</span><span class="o">-</span><span class="nx">cysteine</span>
+<span class="w">          </span><span class="err">→</span><span class="w"> </span><span class="nx">L</span><span class="o">-</span><span class="nx">cystathionine</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">succinate</span><span class="w">       </span><span class="p">(</span><span class="nx">γ</span><span class="o">-</span><span class="nx">replacement</span><span class="p">)</span>
+
+<span class="w">  </span><span class="nx">β</span><span class="o">-</span><span class="nx">lyase</span><span class="w">   </span><span class="p">(</span><span class="nx">metC</span><span class="p">):</span><span class="w">  </span><span class="nx">L</span><span class="o">-</span><span class="nx">cystathionine</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">H2O</span>
+<span class="w">          </span><span class="err">→</span><span class="w"> </span><span class="nx">L</span><span class="o">-</span><span class="nx">homocysteine</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">pyruvate</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">NH3</span><span class="w">   </span><span class="p">(</span><span class="nx">β</span><span class="o">-</span><span class="nx">elimination</span><span class="p">)</span>
+
+<span class="w">  </span><span class="nx">γ</span><span class="o">-</span><span class="nx">lyase</span><span class="w">   </span><span class="p">(</span><span class="nx">CTH</span><span class="p">):</span><span class="w">   </span><span class="nx">L</span><span class="o">-</span><span class="nx">cystathionine</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">H2O</span>
+<span class="w">          </span><span class="err">→</span><span class="w"> </span><span class="nx">L</span><span class="o">-</span><span class="nx">cysteine</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">2</span><span class="o">-</span><span class="nx">oxobutanoate</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">NH3</span><span class="w"> </span><span class="p">(</span><span class="nx">γ</span><span class="o">-</span><span class="nx">elimination</span><span class="p">)</span>
+<span class="w">       </span><span class="p">(</span><span class="nx">side</span><span class="w"> </span><span class="nx">reactions</span><span class="w"> </span><span class="nx">can</span><span class="w"> </span><span class="nx">release</span><span class="w"> </span><span class="nx">H2S</span><span class="w"> </span><span class="nx">from</span><span class="w"> </span><span class="nx">Cys</span><span class="o">/</span><span class="nx">homocysteine</span><span class="p">)</span>
+
+<span class="w">  </span><span class="nx">Met</span><span class="w"> </span><span class="nx">γ</span><span class="o">-</span><span class="nx">lyase</span><span class="p">(</span><span class="nx">MGL</span><span class="p">):</span><span class="w"> </span><span class="nx">L</span><span class="o">-</span><span class="nx">methionine</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">H2O</span>
+<span class="w">          </span><span class="err">→</span><span class="w"> </span><span class="nx">methanethiol</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">2</span><span class="o">-</span><span class="nx">oxobutanoate</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">NH3</span><span class="w"> </span><span class="p">(</span><span class="nx">α</span><span class="p">,</span><span class="nx">γ</span><span class="o">-</span><span class="nx">elimination</span><span class="p">)</span>
+</code></pre></div>
+
+<p>All four activities are performed by structurally near-identical enzymes; <strong>substrate specificity and reaction type are dictated by a small set of active-site residues</strong>, which is precisely why sequence-only annotation is ambiguous here. Structural studies of <em>P. putida</em> MGL (e.g., <a href="https://pubmed.ncbi.nlm.nih.gov/28329912/">PMID: 28329912</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/34953671/">PMID: 34953671</a>) demonstrate that single active-site substitutions can switch substrate preference between methionine and homocysteine, underscoring the limits of homology-only calls.</p>
+<h3 id="where-pp_4594-sits">Where PP_4594 sits</h3>
+<div class="codehilite"><pre><span></span><code><span class="w">   </span><span class="n">KT2440</span><span class="w"> </span><span class="n">sulfur</span><span class="o">-</span><span class="n">amino</span><span class="o">-</span><span class="n">acid</span><span class="w"> </span><span class="n">enzyme</span><span class="w"> </span><span class="n">inventory</span>
+<span class="w">   </span><span class="err">─────────────────────────────────────────────</span>
+<span class="w">   </span><span class="n">PP_0659</span><span class="w">  </span><span class="n">metB</span><span class="w">   </span><span class="n">cystathionine</span><span class="w"> </span><span class="err">γ</span><span class="o">-</span><span class="n">synthase</span><span class="w">   </span><span class="n">K01739</span><span class="w">   </span><span class="p">(</span><span class="n">forward</span><span class="w"> </span><span class="n">Met</span><span class="w"> </span><span class="n">biosynth</span><span class="p">)</span>
+<span class="w">   </span><span class="n">PP_4348</span><span class="w">  </span><span class="n">metC</span><span class="w">   </span><span class="n">cystathionine</span><span class="w"> </span><span class="err">β</span><span class="o">-</span><span class="n">lyase</span><span class="w">      </span><span class="n">K01760</span><span class="w">   </span><span class="p">(</span><span class="n">forward</span><span class="w"> </span><span class="n">Met</span><span class="w"> </span><span class="n">biosynth</span><span class="p">)</span>
+<span class="w">   </span><span class="n">PP_1308</span><span class="w">  </span><span class="o">---</span><span class="w">    </span><span class="n">methionine</span><span class="w"> </span><span class="err">γ</span><span class="o">-</span><span class="n">lyase</span><span class="w">         </span><span class="n">K01761</span><span class="w">   </span><span class="p">(</span><span class="n">Met</span><span class="w"> </span><span class="n">catabolism</span><span class="p">)</span>
+<span class="w">   </span><span class="n">PP_4594</span><span class="w">  </span><span class="o">???</span><span class="w">    </span><span class="s">&quot;γ-synthase&quot;</span><span class="o">/</span><span class="err">γ</span><span class="o">-</span><span class="n">lyase</span><span class="w">       </span><span class="n">K01758</span><span class="w">   </span><span class="err">←</span><span class="w"> </span><span class="n">THIS</span><span class="w"> </span><span class="n">GENE</span>
+<span class="w">   </span><span class="n">PP_4595</span><span class="w">  </span><span class="o">---</span><span class="w">    </span><span class="n">Lrp</span><span class="o">/</span><span class="n">AsnC</span><span class="w"> </span><span class="n">Cys</span><span class="o">-</span><span class="n">sensing</span><span class="w"> </span><span class="n">activator</span><span class="w">  </span><span class="n">K05800</span><span class="w">  </span><span class="p">(</span><span class="n">neighbor</span><span class="o">/</span><span class="n">regulator</span><span class="p">)</span>
+
+<span class="w">   </span><span class="n">Pairwise</span><span class="w"> </span><span class="n">identity</span><span class="w"> </span><span class="n">places</span><span class="w"> </span><span class="n">PP_4594</span><span class="w"> </span><span class="n">in</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="err">γ</span><span class="o">-</span><span class="n">LYASE</span><span class="w"> </span><span class="n">clade</span><span class="p">,</span>
+<span class="w">   </span><span class="n">closest</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">P</span><span class="p">.</span><span class="w"> </span><span class="n">aeruginosa</span><span class="w"> </span><span class="n">PA0400</span><span class="w"> </span><span class="p">(</span><span class="mh">47</span><span class="o">%</span><span class="p">)</span><span class="w"> </span><span class="err">—</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">characterized</span><span class="w"> </span><span class="err">γ</span><span class="o">-</span><span class="n">lyase</span><span class="p">.</span>
+</code></pre></div>
+
+<p>The presence of dedicated metB and metC elsewhere means PP_4594 is a <strong>surplus γ-family paralog</strong>. Combined with (a) its clustering with γ-lyases, (b) its ~47% identity to the characterized <em>P. aeruginosa</em> γ-lyase PA0400 in the same PANTHER subfamily, and (c) its cysteine-sensing regulatory neighbor PP_4595, the coherent model is:</p>
+<blockquote>
+<p><strong>PP_4594 is a cytoplasmic, cysteine-inducible, accessory PLP-dependent γ-family enzyme most likely performing a cystathionine γ-lyase-type γ-elimination, contributing to sulfur-amino-acid interconversion/catabolism (with possible H₂S generation), rather than serving as the primary methionine-biosynthetic γ-synthase.</strong></p>
+</blockquote>
+<p>The one loose thread is Vermeij &amp; Kertesz's failure to detect classical <em>reverse-transsulfuration</em> cystathionine γ-lyase activity in <em>P. putida</em>. This can be reconciled if PP_4594's true in vivo activity is a related γ-elimination (e.g., on homocysteine or a non-canonical substrate) that was not assayed, or if the enzyme is expressed only under conditions not tested in that study — but it does mean the <strong>K01758 = "cystathionine γ-lyase" label should be treated as a best-available hypothesis, not an established fact.</strong></p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbrev.)</th>
+<th>How it supports / challenges the annotation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10482527/">10482527</a></td>
+<td><em>Pathways of assimilative sulfur metabolism in P. putida</em></td>
+<td><strong>Supports &amp; tempers.</strong> Establishes direct sulfhydrylation as the main Met route (transsulfuration is accessory); shows transsulfuration enzymes are cysteine-inducible (matches PP_4595 neighbor). <strong>But</strong> reports cystathionine γ-lyase activity was <em>not detected</em> in <em>P. putida</em> — key caveat against the K01758 call.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10965031/">10965031</a></td>
+<td><em>Crystal structure of PLP-dependent L-methionine γ-lyase from P. putida</em></td>
+<td><strong>Supports fold.</strong> Confirms shared fold-type I, three-domain architecture across γ-family enzymes (β-lyase, γ-synthase, γ-lyase, MGL), validating PP_4594's structural class.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/38654065/">38654065</a></td>
+<td><em>Catalytic specificity and crystal structure of cystathionine γ-lyase from P. aeruginosa</em></td>
+<td><strong>Supports γ-lyase call.</strong> PA0400 is PP_4594's closest characterized homolog (47%, same PANTHER SF15); places bacterial γ-lyase in oxidative-stress/antibiotic defense via H₂S, suggesting an analogous role for PP_4594.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/8586629/">8586629</a></td>
+<td><em>Structural analysis of the L-methionine γ-lyase gene from P. putida</em></td>
+<td>Documents the extensive homology of MGL with cystathionine γ-lyase and γ-synthase — the same α,γ-elimination/γ-replacement PLP enzyme group PP_4594 belongs to.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/26913973/">26913973</a></td>
+<td><em>Revisited genome of P. putida KT2440</em></td>
+<td>Provides the re-annotation framework for KT2440 gene functions used to distinguish PP_4594 from metB/metC.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/28329912/">28329912</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/34953671/">34953671</a></td>
+<td><em>Mechanistic / mutant studies of P. putida MGL</em></td>
+<td>Illustrate how single active-site substitutions switch substrate preference (Met↔homocysteine) in this fold — explaining why γ-synthase vs. γ-lyase cannot be settled by sequence alone.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/39427081/">39427081</a></td>
+<td><em>Reverse transsulfuration pathway and colitis</em></td>
+<td>Defines cystathionine γ-lyase (CTH) chemistry (cystathionine→cysteine) — the reaction KEGG proposes for PP_4594.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Confidence in fold/family assignment: very high.</strong> Multiple independent domain databases (Pfam, InterPro, SUPFAM, CDD, CATH, eggNOG) concur, and all catalytic residues are intact.</p>
+<p><strong>Confidence in precise reaction (γ-lyase vs. γ-synthase): moderate.</strong> The lean is toward γ-lyase (KEGG K01758; closest to characterized PA0400; γ-clade clustering), but the original genome/PIRSF/CDD names say γ-synthase, and no direct assay exists.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li><strong>No direct enzymology on the PP_4594 protein.</strong> Every functional statement here is inferred from orthology, domain signatures, and sequence/structure comparison. The substrate specificity (cystathionine? homocysteine? O-substituted homoserine?), reaction direction (elimination vs. replacement), and kinetic parameters have never been measured for Q88E72.</li>
+<li><strong>Annotation conflict is unresolved.</strong> KEGG (γ-lyase, K01758) vs. original genome/PIRSF/CDD (γ-synthase). Within this fold, specificity can hinge on a few active-site residues, so bioinformatics cannot fully settle it.</li>
+<li><strong>All GO localization/function terms are IEA (computational).</strong> No experimental localization data confirm the predicted cytoplasmic site (though it is biologically near-certain for a soluble PLP enzyme with no targeting signals).</li>
+<li><strong>Contradictory physiology.</strong> Vermeij &amp; Kertesz did not detect cystathionine γ-lyase activity in <em>P. putida</em>, in tension with the K01758 assignment — possibly a condition- or substrate-dependent gap rather than a true contradiction.</li>
+<li><strong>Regulatory linkage is inferred, not proven.</strong> PP_4595 is a cysteine-sensing Lrp/AsnC activator by annotation; direct evidence that it controls PP_4594 (operon structure, ChIP, promoter mapping) has not been established.</li>
+<li><strong>H₂S-generating / defense role is by analogy only</strong> to <em>P. aeruginosa</em> PA0400 and has not been tested in <em>P. putida</em>.</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li><strong>Heterologous expression and enzymatic assay.</strong> Clone PP_4594, purify the His-tagged protein, confirm PLP loading (absorbance at ~420 nm), and assay candidate reactions: cystathionine γ-elimination (→ cysteine + 2-oxobutanoate + NH₃), cystathionine γ-synthesis (O-succinyl/acetyl-homoserine + cysteine), methionine/homocysteine γ-elimination, and H₂S release (lead-acetate or fluorescent probe). Report kcat/Km for each substrate to settle the γ-lyase-vs-γ-synthase question definitively.</li>
+<li><strong>Crystal structure or AlphaFold-model active-site comparison.</strong> Solve/model the structure and superpose the active site onto PA0400 (γ-lyase) vs. E. coli MetB (γ-synthase) to identify the specificity-determining residues and predict substrate scope.</li>
+<li><strong>Transcriptional regulation test.</strong> Fuse the PP_4594 promoter to a reporter and measure induction under cysteine vs. sulfate vs. methionine as sole sulfur source; delete PP_4595 to test whether it is the activating regulator, confirming or refuting the cysteine-inducible model.</li>
+<li><strong>Phenotypic characterization of a knockout.</strong> Construct a ΔPP_4594 mutant and test growth on various sulfur sources, sensitivity to oxidative stress/antibiotics (the PA0400 defense hypothesis), and endogenous H₂S levels.</li>
+<li><strong>Metabolomic tracing.</strong> Use ³⁴S- or ¹³C-labeled cysteine/cystathionine to trace flux through PP_4594 in vivo, distinguishing forward biosynthetic from catabolic/reverse-transsulfuration roles.</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>PP_4594 (Q88E72) of <em>Pseudomonas putida</em> KT2440 is a <strong>cytoplasmic, 393-residue, PLP-dependent fold-type I enzyme of the Cys/Met-metabolism γ-family (trans-sulfuration family)</strong> with an intact catalytic apparatus (Schiff-base Lys205, PLP-anchoring Asp180). Convergent bioinformatic evidence — KEGG ortholog K01758, shared PANTHER subfamily PTHR11808:SF15 with the characterized <em>P. aeruginosa</em> cystathionine γ-lyase PA0400 (its closest characterized homolog at ~47% identity), and clustering with the γ-elimination clade — indicates its <strong>most probable activity is a cystathionine γ-lyase-type γ-elimination (EC 4.4.1.1)</strong> acting on cystathionine/homocysteine-type sulfur amino acids in the cytosol, possibly generating H₂S. It is <strong>distinct from KT2440's dedicated forward methionine-biosynthetic genes metB (PP_0659) and metC (PP_4348)</strong> and is most consistent with an <strong>accessory, cysteine-inducible catabolic role</strong> (adjacent to the cysteine-sensing Lrp regulator PP_4595). This assignment is inference-based: the original genome/PIRSF annotation calls it "cystathionine γ-synthase," no direct enzymology has been performed on the protein, and <em>P. putida</em> was reported to lack detectable cystathionine γ-lyase activity — so the exact substrate and reaction direction await experimental confirmation.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="PP_4594-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="PP_4594-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:10482527</li>
+<li>PMID:10965031</li>
+<li>PMID:38654065</li>
+<li>PMID:28329912</li>
+<li>PMID:34953671</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88E72
+gene_symbol: PP_4594
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: PP_4594 encodes a PLP-dependent trans-sulfuration-enzyme-family protein
+  near the cysteine/methionine/selenocompound pathway boundary. Its sequence annotations
+  conflict between cystathionine gamma-synthase product naming and cystathionine
+  gamma-lyase GO/PANTHER assignments, so it is tracked as an adjacent unresolved
+  paralog rather than a required methionine-biosynthesis module member.
+existing_annotations:
+- term:
+    id: GO:0004123
+    label: cystathionine gamma-lyase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: enables
+  review:
+    summary: Cystathionine gamma-lyase activity may be correct for this paralog, but it is not resolved enough for module-core use.
+    action: UNDECIDED
+    reason: GOA/PANTHER assign cystathionine gamma-lyase activity, while UniProt&#39;s
+      submitted protein name says cystathionine gamma-synthase. Without direct biochemical
+      or phylogenetic evidence separating this paralog from metB, the specific activity
+      should remain unresolved.
+    supported_by:
+    - reference_id: file:PSEPK/PP_4594/PP_4594-goa.tsv
+      supporting_text: &#34;GO:0004123\tcystathionine gamma-lyase activity&#34;
+    - reference_id: file:PSEPK/PP_4594/PP_4594-uniprot.txt
+      supporting_text: &#34;SubName: Full=Cystathionine gamma-synthase&#34;
+    - reference_id: file:projects/P_PUTIDA/deep-research/PSEPK__methionine_biosynthesis__ppu00270-deep-research-openscientist.md
+      supporting_text: &#34;best interpreted as a reverse-transsulfuration enzyme (cysteine formation), not the forward metB&#34;
+    - reference_id: file:PSEPK/PP_4594/PP_4594-deep-research-openscientist.md
+      supporting_text: &#34;the exact substrate specificity and reaction direction remain to be confirmed by direct biochemical characterization&#34;
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: located_in
+  review:
+    summary: Cytoplasm is plausible for this soluble PLP-dependent enzyme.
+    action: ACCEPT
+    reason: The GOA cytoplasm annotation fits the soluble Cys/Met PLP-dependent enzyme family.
+    supported_by:
+    - reference_id: file:PSEPK/PP_4594/PP_4594-goa.tsv
+      supporting_text: &#34;GO:0005737\tcytoplasm&#34;
+    - reference_id: file:PSEPK/PP_4594/PP_4594-uniprot.txt
+      supporting_text: &#34;Cys/Met-Metab_PyrdxlP-dep_enz&#34;
+- term:
+    id: GO:0016846
+    label: carbon-sulfur lyase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: enables
+  review:
+    summary: Carbon-sulfur lyase activity is a safe broad family-level function.
+    action: KEEP_AS_NON_CORE
+    reason: A PLP-dependent cystathionine gamma-lyase/synthase-family enzyme is expected
+      to be a carbon-sulfur lyase or related C-S transfer enzyme, but the exact
+      physiological activity remains unresolved.
+    supported_by:
+    - reference_id: file:PSEPK/PP_4594/PP_4594-goa.tsv
+      supporting_text: &#34;GO:0016846\tcarbon-sulfur lyase activity&#34;
+    - reference_id: file:PSEPK/PP_4594/PP_4594-uniprot.txt
+      supporting_text: &#34;PTHR11808:SF15; CYSTATHIONINE GAMMA-LYASE&#34;
+    - reference_id: file:PSEPK/PP_4594/PP_4594-deep-research-openscientist.md
+      supporting_text: &#34;a **cytoplasmic, cysteine-inducible, accessory PLP-dependent γ-family enzyme&#34;
+- term:
+    id: GO:0019346
+    label: transsulfuration
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Transsulfuration is plausible but not resolved as the module route for this paralog.
+    action: UNDECIDED
+    reason: The annotation is family-supported, but the primary methionine module
+      already has a clearer metB plus PP_4348 trans-sulfuration candidate pair and
+      a direct MetXS/MetZ route. PP_4594 should not be treated as a required module
+      member without stronger evidence.
+    supported_by:
+    - reference_id: file:PSEPK/PP_4594/PP_4594-goa.tsv
+      supporting_text: &#34;GO:0019346\ttranssulfuration&#34;
+    - reference_id: file:PSEPK/PP_4594/PP_4594-uniprot.txt
+      supporting_text: &#34;PTHR11808:SF15; CYSTATHIONINE GAMMA-LYASE&#34;
+- term:
+    id: GO:0030170
+    label: pyridoxal phosphate binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Pyridoxal phosphate binding is supported for this enzyme family.
+    action: KEEP_AS_NON_CORE
+    reason: PLP binding is a family-level catalytic cofactor feature, while the
+      specific physiological reaction remains unresolved.
+    supported_by:
+    - reference_id: file:PSEPK/PP_4594/PP_4594-uniprot.txt
+      supporting_text: &#34;Name=pyridoxal 5&#39;-phosphate&#34;
+    - reference_id: file:PSEPK/PP_4594/PP_4594-goa.tsv
+      supporting_text: &#34;GO:0030170\tpyridoxal phosphate binding&#34;
+references:
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/PP_4594/PP_4594-uniprot.txt
+  title: UniProtKB entry for PP_4594
+  findings:
+  - statement: UniProt lists PP_4594 as a cystathionine gamma-synthase submitted
+      protein, but family cross-references include cystathionine gamma-lyase.
+- id: file:PSEPK/PP_4594/PP_4594-goa.tsv
+  title: QuickGO GOA annotations for PP_4594
+  findings:
+  - statement: The fetched GOA table contains the five annotations reviewed for PP_4594.
+- id: file:projects/P_PUTIDA/deep-research/PSEPK__methionine_biosynthesis__ppu00270-deep-research-openscientist.md
+  title: OpenScientist pathway research for PSEPK methionine biosynthesis
+  findings:
+  - statement: The pathway-level report treats PP_4594 as a paralog-ambiguous PLP
+      enzyme likely outside the forward methionine-biosynthesis trans-sulfuration
+      route.
+- id: file:PSEPK/PP_4594/PP_4594-deep-research-openscientist.md
+  title: OpenScientist gene research for PP_4594
+  findings:
+  - statement: The gene-level report favors an accessory gamma-lyase-type role but
+      keeps the exact substrate and reaction direction unresolved because PP_4594
+      has not been directly assayed.
+    supporting_text: &#34;no direct enzymology has been performed on the protein&#34;
+proposed_new_terms: []
+suggested_questions:
+- question: Is PP_4594 a cystathionine gamma-lyase, a cystathionine gamma-synthase
+    paralog, or a selenocompound/cysteine-pathway enzyme outside methionine biosynthesis?
+suggested_experiments:
+- description: Compare PP_4594 and MetB substrate preferences using cystathionine,
+    O-succinylhomoserine, O-acetylhomoserine, cysteine, and selenium analogs.
+  experiment_type: comparative PLP-enzyme substrate profiling
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

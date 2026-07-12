@@ -1,0 +1,2758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>metZ - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>metZ</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88LD4" target="_blank" class="term-link">
+                        Q88LD4
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "metZ";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88LD4" data-a="DESCRIPTION: metZ (PP_2001) encodes a cytosolic PLP-dependent O..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>metZ (PP_2001) encodes a cytosolic PLP-dependent O-succinylhomoserine sulfhydrylase that converts O-succinyl-L-homoserine and sulfide to L-homocysteine in the direct sulfhydrylation branch of de novo L-methionine biosynthesis.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003824" target="_blank" class="term-link">
+                                    GO:0003824
+                                </a>
+                            </span>
+                            <span class="term-label">catalytic activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88LD4" data-a="GO:0003824" data-r="GO_REF:0000117" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Catalytic activity is correct but far too broad for MetZ.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt assigns the specific O-succinylhomoserine sulfhydrylase reaction and the GOA table already includes a more informative carbon-sulfur lyase activity annotation.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016846" target="_blank" class="term-link">
+                                    carbon-sulfur lyase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/metZ/metZ-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">FUNCTION: Catalyzes the formation of L-homocysteine from O-succinyl-L-</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/metZ/metZ-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0003824	catalytic activity</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88LD4" data-a="GO:0005737" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasm is consistent with a soluble amino-acid biosynthetic enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> MetZ lacks membrane or secretion features and is annotated as a cytoplasmic PLP-dependent enzyme.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/metZ/metZ-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0005737	cytoplasm</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/metZ/metZ-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Amino-acid biosynthesis; L-methionine biosynthesis via de novo</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016765" target="_blank" class="term-link">
+                                    GO:0016765
+                                </a>
+                            </span>
+                            <span class="term-label">transferase activity, transferring alkyl or aryl (other than methyl) groups</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88LD4" data-a="GO:0016765" data-r="GO_REF:0000104" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The transferase parent is a coarse but compatible description of O-succinylhomoserine sulfhydrylation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniRule maps MetZ to a transferase parent because no specific GO molecular function term for O-succinylhomoserine sulfhydrylase is present in the current GOA record. The core function is better captured in the review description and module step, while this broad parent can be retained as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/metZ/metZ-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=O-succinyl-L-homoserine + hydrogen sulfide = L-homocysteine +</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/metZ/metZ-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0016765	transferase activity, transferring alkyl or aryl (other than methyl) groups</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016846" target="_blank" class="term-link">
+                                    GO:0016846
+                                </a>
+                            </span>
+                            <span class="term-label">carbon-sulfur lyase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88LD4" data-a="GO:0016846" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Carbon-sulfur lyase activity is a reasonable available parent for the MetZ reaction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> MetZ cleaves the O-succinylhomoserine carbon-sulfur chemistry to form L-homocysteine, and the specific UniProt reaction supports this carbon-sulfur lyase-family assignment.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/metZ/metZ-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=O-succinyl-L-homoserine + hydrogen sulfide = L-homocysteine +</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/metZ/metZ-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0016846	carbon-sulfur lyase activity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/metZ/metZ-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">encodes **O-succinylhomoserine sulfhydrylase (OSHS)**</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019346" target="_blank" class="term-link">
+                                    GO:0019346
+                                </a>
+                            </span>
+                            <span class="term-label">transsulfuration</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88LD4" data-a="GO:0019346" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Transsulfuration is likely an over-broad family propagation for this direct sulfhydrylation enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The methionine pathway template distinguishes direct sulfhydrylation by MetZ from the two-enzyme trans-sulfuration route through cystathionine. UniProt describes MetZ as converting O-succinylhomoserine and sulfide directly to homocysteine, not as using cystathionine.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/metZ/metZ-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">L-homocysteine from O-succinyl-L-homoserine: step 1/1</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:modules/experimental/gapmind-mining/cache/gapmind/aa/met.steps
+
+                                </span>
+
+                                <div class="support-text">homocysteine: homoserine metA metZ</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/metZ/metZ-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0019346	transsulfuration</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030170" target="_blank" class="term-link">
+                                    GO:0030170
+                                </a>
+                            </span>
+                            <span class="term-label">pyridoxal phosphate binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88LD4" data-a="GO:0030170" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Pyridoxal phosphate binding is a catalytic cofactor feature for MetZ.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PLP binding supports the enzyme mechanism but is secondary to the pathway reaction in methionine biosynthesis.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/metZ/metZ-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Name=pyridoxal 5&#39;-phosphate</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/metZ/metZ-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0030170	pyridoxal phosphate binding</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071266" target="_blank" class="term-link">
+                                    GO:0071266
+                                </a>
+                            </span>
+                            <span class="term-label">&#39;de novo&#39; L-methionine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88LD4" data-a="GO:0071266" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> De novo L-methionine biosynthesis is the core biological process for MetZ.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> MetZ produces L-homocysteine from O-succinyl-L-homoserine in the direct sulfhydrylation branch upstream of methionine synthase.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/metZ/metZ-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PATHWAY: Amino-acid biosynthesis; L-methionine biosynthesis via de novo</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/metZ/metZ-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0071266	&#39;de novo&#39; L-methionine biosynthetic process</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:projects/P_PUTIDA/deep-research/PSEPK__methionine_biosynthesis__ppu00270-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">PP_2001 `metZ` (Q88LD4) — Step 2, direct sulfhydrylation.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>PLP-dependent O-succinylhomoserine sulfhydrylase reaction that converts O-succinyl-L-homoserine and sulfide to L-homocysteine in de novo L-methionine biosynthesis.</h3>
+                <span class="vote-buttons" data-g="Q88LD4" data-a="FUNCTION: PLP-dependent O-succinylhomoserine sulfhydrylase r..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016846" target="_blank" class="term-link">
+                            carbon-sulfur lyase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071265" target="_blank" class="term-link">
+                                L-methionine biosynthetic process
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071269" target="_blank" class="term-link">
+                                L-homocysteine biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/metZ/metZ-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">FUNCTION: Catalyzes the formation of L-homocysteine from O-succinyl-L-</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/metZ/metZ-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">L-homocysteine from O-succinyl-L-homoserine: step 1/1</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/metZ/metZ-goa.tsv
+
+                        </span>
+
+                        <div class="finding-text">GO:0071266	&#39;de novo&#39; L-methionine biosynthetic process</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:projects/P_PUTIDA/deep-research/PSEPK__methionine_biosynthesis__ppu00270-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">Substrate-matched to PP_5097</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/metZ/metZ-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">The enzyme performs **direct sulfhydrylation**</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/metZ/metZ-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for metZ</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt identifies MetZ as an O-succinylhomoserine sulfhydrylase in de novo L-methionine biosynthesis.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/metZ/metZ-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO GOA annotations for metZ</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The fetched GOA table contains the seven annotations reviewed for metZ.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:modules/experimental/gapmind-mining/cache/gapmind/aa/met.steps
+
+                    </span>
+                </div>
+
+                <div class="reference-title">GapMind methionine biosynthesis step definitions</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">GapMind models MetZ as direct formation of homocysteine from the metA-activated homoserine route, separate from the cystathionine trans-sulfuration route.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:projects/P_PUTIDA/deep-research/PSEPK__methionine_biosynthesis__ppu00270-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist pathway research for PSEPK methionine biosynthesis</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The pathway-level report identifies metZ/PP_2001 as the substrate-matched O-succinylhomoserine direct sulfhydrylation gene downstream of MetXS.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/metZ/metZ-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist gene research for metZ</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The gene-level report confirms metZ/PP_2001 as the O-succinylhomoserine sulfhydrylase for direct sulfhydrylation in Pseudomonas methionine biosynthesis.</div>
+
+                        <div class="finding-text">"direct sulfhydrylation (metZ) is the default, primary pathway"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is MetZ the dominant KT2440 sulfhydrylase under sulfide-replete conditions, or does PP_2528 provide a parallel O-acetylhomoserine-dependent route?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88LD4" data-a="Q: Is MetZ the dominant KT2440 sulfhydrylase under su..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Measure in vitro sulfhydrylase activity of purified MetZ with O-succinyl-L-homoserine and sulfide, comparing O-acetyl-L-homoserine as an alternate substrate.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: enzymology</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88LD4" data-a="EXPERIMENT: Measure in vitro sulfhydrylase activity of purifie..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(metZ-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88LD4" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: metZ (O-Succinylhomoserine Sulfhydrylase) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">10 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-11T16:50:48.359791</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="metZ-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="metZ-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-metz-o-succinylhomoserine-sulfhydrylase-in-pseudomonas-putida-kt2440">Functional Annotation Report: metZ (O-Succinylhomoserine Sulfhydrylase) in <em>Pseudomonas putida</em> KT2440</h1>
+<p><strong>UniProt Accession:</strong> Q88LD4 | <strong>Gene:</strong> metZ | <strong>Ordered Locus:</strong> PP_2001<br />
+<strong>Organism:</strong> <em>Pseudomonas putida</em> (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440) — PSEPK<br />
+<strong>EC:</strong> 2.5.1.- | <strong>Enzyme family:</strong> Cys/Met-metabolism PLP-dependent, trans-sulfuration (γ-family), MetZ subfamily</p>
+<hr />
+<h2 id="geneprotein-identity-verification">Gene/Protein Identity Verification</h2>
+<p>The target is <strong>metZ</strong> (ordered locus <strong>PP_2001</strong>; UniProt <strong>Q88LD4</strong>) of <em>Pseudomonas putida</em> KT2440, annotated as <strong>O-succinylhomoserine (OSH) sulfhydrylase</strong> (EC 2.5.1.-), a member of the trans-sulfuration (Cys/Met-metabolism, PLP-dependent) enzyme family, MetZ subgroup. The literature is <strong>fully consistent</strong> with this identity. The gene symbol <em>metZ</em> in <em>Pseudomonas</em> denotes exactly this enzyme: it was originally defined in <em>Pseudomonas aeruginosa</em> as the O-succinylhomoserine sulfhydrylase performing direct sulfhydrylation in methionine biosynthesis <a href="https://pubmed.ncbi.nlm.nih.gov/7704274/">PMID: 7704274</a>, and direct sulfhydrylation of O-succinylhomoserine was experimentally demonstrated in <em>Pseudomonas putida</em> itself <a href="https://pubmed.ncbi.nlm.nih.gov/10482527/">PMID: 10482527</a>. The organism, gene symbol, protein family (trans-sulfuration/MetZ), and PLP-dependent Cys/Met domains all align. <strong>No gene-symbol ambiguity was encountered.</strong></p>
+<hr />
+<h2 id="summary">Summary</h2>
+<p>The gene <strong>metZ</strong> (PP_2001, UniProt <strong>Q88LD4</strong>) of <em>Pseudomonas putida</em> KT2440 encodes <strong>O-succinylhomoserine sulfhydrylase (OSHS)</strong>, a soluble, cytoplasmic, pyridoxal-5′-phosphate (PLP)-dependent enzyme that catalyzes the second, sulfur-incorporating step of <em>de novo</em> <strong>L-methionine biosynthesis</strong>. The enzyme performs <strong>direct sulfhydrylation</strong>: it condenses <strong>O-succinyl-L-homoserine</strong> with <strong>inorganic sulfide (HS⁻)</strong> to yield <strong>L-homocysteine</strong> and <strong>succinate</strong>, bypassing the cystathionine intermediate used by the alternative transsulfuration pathway. This is a distinctive reaction because <em>Pseudomonas</em> is the primary described case of an organism that uses the <em>succinyl</em> (rather than acetyl) ester of homoserine for direct sulfhydrylation.</p>
+<p>Three convergent lines of evidence establish this function. First, the founding characterization of <em>metZ</em> in the sibling species <em>P. aeruginosa</em> directly demonstrated that this gene encodes the enzyme performing the second step of methionine biosynthesis by direct sulfhydrylation of O-succinylhomoserine <a href="https://pubmed.ncbi.nlm.nih.gov/7704274/">PMID: 7704274</a>. Second, direct experimental study of sulfur metabolism in <em>P. putida</em> itself confirmed that this organism uses direct sulfhydrylation of O-succinylhomoserine as its <strong>primary</strong> methionine-biosynthetic route, with the transsulfuration enzymes expressed only at low, cysteine-inducible levels <a href="https://pubmed.ncbi.nlm.nih.gov/10482527/">PMID: 10482527</a>. Third, loss-of-function genetics in the orthologous system of <em>Rhizobium etli</em> showed that a <em>metZ</em> mutant lacks detectable O-succinylhomoserine sulfhydrylase activity and becomes a methionine auxotroph, and that the gene functionally complements a <em>P. aeruginosa metZ</em> mutant <a href="https://pubmed.ncbi.nlm.nih.gov/9885190/">PMID: 9885190</a>.</p>
+<p>At the mechanistic level, metZ belongs to the γ-subclass of the Cys/Met-metabolism PLP fold — the same fold shared by cystathionine γ-lyase, methionine γ-lyase, and O-acetylhomoserine sulfhydrylase (MetY). Catalysis proceeds through a covalent <strong>PLP–lysine Schiff base (internal aldimine)</strong> that activates the homoserine-ester substrate for γ-replacement, and the enzyme's preference for the bulkier <strong>succinyl</strong> leaving group is encoded by the conformation of an active-site acyl-binding loop (the β10–β11 connecting-loop region). The enzyme functions in the <strong>cytoplasm</strong> as a soluble homotetramer, consistent with its family. Together these data yield a confident, mechanistically detailed annotation for a protein that has not itself been the subject of a dedicated structural or kinetic study, but whose function is tightly constrained by orthology, pathway context, and family biochemistry.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-metz-encodes-o-succinylhomoserine-sulfhydrylase-catalyzing-the-second-step-of-methionine-biosynthesis-by-direct-sulfhydrylation">Finding 1 — metZ encodes O-succinylhomoserine sulfhydrylase, catalyzing the second step of methionine biosynthesis by direct sulfhydrylation</h3>
+<p>The primary function of metZ is to catalyze the <strong>incorporation of sulfur</strong> into the carbon skeleton of methionine. In the methionine-biosynthetic pathway, L-homoserine is first activated at its γ-hydroxyl by an acyltransferase — in <em>Pseudomonas</em>, <strong>MetA (O-succinylhomoserine synthase)</strong> — to produce <strong>O-succinyl-L-homoserine</strong>. The metZ product then catalyzes the second step:</p>
+<blockquote>
+<p><strong>O-succinyl-L-homoserine + HS⁻ → L-homocysteine + succinate</strong> (EC 2.5.1.-)</p>
+</blockquote>
+<p>This is a <strong>direct sulfhydrylation</strong> reaction: inorganic sulfide is incorporated in a single step, in contrast to the transsulfuration route in which cysteine sulfur is transferred via a cystathionine intermediate. The founding study of <em>metZ</em> in <em>P. aeruginosa</em> stated explicitly that "the second step is achieved by direct sulfhydrylation, involving the enzyme encoded by a metZ gene that we have identified and sequenced," and further noted that "<em>Pseudomonas</em> appears to be the only organism so far described that uses O-succinylhomoserine as substrate for a direct sulfhydrylation" <a href="https://pubmed.ncbi.nlm.nih.gov/7704274/">PMID: 7704274</a>. This latter point is the defining substrate-specificity feature of MetZ: most direct-sulfhydrylation organisms (e.g., <em>Corynebacterium</em>, <em>Leptospira</em>) use the <strong>acetyl</strong> ester via an O-acetylhomoserine sulfhydrylase (MetY), whereas <em>Pseudomonas</em> MetZ acts on the <strong>succinyl</strong> ester.</p>
+<p>Genetic loss-of-function evidence anchors the enzymatic assignment. In the orthologous <em>R. etli</em> system, a <em>metZ</em> mutant "showed undetectable levels of O-succinylhomoserine sulfhydrylase activity," was a methionine auxotroph, and the cloned <em>R. etli metZ</em> gene complemented a <em>P. aeruginosa metZ</em> mutant <a href="https://pubmed.ncbi.nlm.nih.gov/9885190/">PMID: 9885190</a>. This directly links the <em>metZ</em> gene product to the biochemical activity and to the physiological requirement for methionine.</p>
+<p>Because <em>P. putida</em> PP_2001 is a syntenic <em>Pseudomonas</em> ortholog of the characterized <em>P. aeruginosa metZ</em>, carries the HAMAP MetZ rule signature (MF_02056), and possesses the diagnostic InterPro domains (IPR006234, O-succinylhomoserine sulfhydrylase; IPR000277, Cys/Met-metabolism PLP-dependent enzyme), the enzymatic function transfers with high confidence.</p>
+<h3 id="finding-2-direct-sulfhydrylation-of-o-succinylhomoserine-is-the-primary-methionine-route-in-p-putida">Finding 2 — Direct sulfhydrylation of O-succinylhomoserine is the <em>primary</em> methionine route in <em>P. putida</em></h3>
+<p>Beyond identifying the enzyme, the biological importance of metZ is that it drives the <strong>principal</strong> route to homocysteine (and hence methionine) in <em>P. putida</em>. Vermeij &amp; Kertesz directly examined assimilative sulfur metabolism in <em>P. putida</em> S-313 (and <em>P. aeruginosa</em> PAO1) and found that "both these organisms used direct sulfhydrylation of O-succinylhomoserine for the synthesis of methionine" <a href="https://pubmed.ncbi.nlm.nih.gov/10482527/">PMID: 10482527</a>. Critically, the same study showed that the alternative transsulfuration enzymes — cystathionine γ-synthase and cystathionine β-lyase — "were expressed at low levels in both pseudomonads but were strongly upregulated during growth with cysteine as the sole sulfur source." This establishes a clear hierarchy: <strong>direct sulfhydrylation (metZ) is the default, primary pathway</strong>, while transsulfuration serves as a minor, condition-specific (cysteine-inducible) alternative. <em>P. putida</em> also lacks a reverse transsulfuration (cystathionine γ-lyase) pathway, further concentrating homocysteine biosynthesis through the metZ-dependent direct route.</p>
+<p>This physiological context matters for annotation quality: it distinguishes metZ from a redundant or auxiliary activity and identifies it as the committed sulfur-fixing enzyme of methionine biosynthesis under standard (sulfate/sulfide) growth conditions. Loss of metZ activity produces <strong>methionine auxotrophy</strong> in orthologous systems (<em>R. etli</em>, <em>P. aeruginosa</em> mutants), confirming its essential role for methionine prototrophy when methionine/homocysteine are not supplied exogenously.</p>
+<h3 id="finding-3-metz-is-a-soluble-cytoplasmic-plp-dependent-enzyme-of-the-cysmet-metabolism-family">Finding 3 — metZ is a soluble cytoplasmic PLP-dependent enzyme of the Cys/Met-metabolism γ-family</h3>
+<p>metZ belongs to the <strong>trans-sulfuration enzymes family (MetZ subfamily)</strong> and contains the <strong>Cys/Met-metabolism pyridoxal-phosphate-dependent enzyme domain</strong> (InterPro IPR000277), together with the fold-type I PLP transferase domains (IPR015421, IPR015424). Enzymes of this family are <strong>soluble cytoplasmic</strong> proteins that carry out sulfur-amino-acid metabolism in the cytosol; there is no signal peptide, transmembrane segment, or export signal implied by the family or by the sequence annotation, so the enzyme performs its function <strong>inside the cell, in the cytoplasm</strong>. Its substrates (O-succinylhomoserine, sulfide) and product (homocysteine) are all cytoplasmic metabolites.</p>
+<p>The structural classification is supported by the crystal structure of the homologous <strong>O-acetylhomoserine sulfhydrylase (MetY)</strong> from <em>Wolinella succinogenes</em>, a "pyridoxal 5′-phosphate (PLP) dependent sulfide-utilizing enzyme" <a href="https://pubmed.ncbi.nlm.nih.gov/21931214/">PMID: 21931214</a>. That work reported that "MetY has the same fold as cystathionine γ-lyase and methionine γ-lyase," placing the sulfhydrylases firmly in the <strong>γ-elimination/replacement subclass</strong> of PLP enzymes. These enzymes are typically homotetramers with the PLP cofactor bound at each active site. By homology, metZ is expected to adopt the same fold and quaternary organization and to operate as a cytoplasmic PLP-dependent γ-replacement catalyst.</p>
+<h3 id="finding-4-substrate-specificity-for-the-succinyl-ester-is-set-by-active-site-loop-architecture-catalysis-uses-a-plplysine-schiff-base">Finding 4 — Substrate specificity for the succinyl ester is set by active-site loop architecture; catalysis uses a PLP–lysine Schiff base</h3>
+<p>Two mechanistic features complete the functional picture. First, <strong>catalysis</strong>: in the Cys/Met γ-family, the PLP cofactor is covalently anchored to a conserved active-site lysine through a <strong>Schiff base (internal aldimine)</strong>. In <em>Corynebacterium glutamicum</em> cystathionine γ-synthase (MetB), "the pyridoxal phosphate cofactor is covalently bound to Lys204 via a Schiff base linkage in the deep cavity" <a href="https://pubmed.ncbi.nlm.nih.gov/28675039/">PMID: 28675039</a>. The incoming amino-acid substrate transaldiminates with this internal aldimine to form an external aldimine, after which γ-proton abstraction and elimination of the acyl leaving group generate a reactive PLP-bound intermediate that is attacked by the sulfur nucleophile — here, sulfide — to yield homocysteine. metZ possesses the corresponding conserved catalytic lysine and PLP-binding residues (HAMAP rule MF_02056 defines the PLP-binding lysine).</p>
+<p>Second, <strong>substrate discrimination</strong>: the same structural work established that "the conformation of the β10–β11 connecting loops determines the size and shape of the acetyl- or succinyl-group binding site and ultimately determines the substrate specificity of MetBs toward OAHS or OSHS" <a href="https://pubmed.ncbi.nlm.nih.gov/28675039/">PMID: 28675039</a>. This provides the structural rationale for why MetZ prefers the bulkier <strong>O-succinylhomoserine</strong> substrate: its acyl-binding pocket is shaped to accommodate the four-carbon succinyl leaving group. Quantitative support that γ-family enzymes bind and turn over O-succinylhomoserine comes from <em>Helicobacter pylori</em> cystathionine γ-synthase, for which "the K(m) and k(cat)/K(m) values against the substrate O-succinyl-L-homoserine (L-OSHS) were 3.02 mM" <a href="https://pubmed.ncbi.nlm.nih.gov/17981822/">PMID: 17981822</a>, confirming millimolar-range affinity for the succinyl ester in this enzyme class.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<h3 id="pathway-placement">Pathway placement</h3>
+<p>metZ operates at the <strong>sulfur-incorporation branch point</strong> of methionine biosynthesis in <em>P. putida</em>:</p>
+<div class="codehilite"><pre><span></span><code>  L-aspartate
+      │  (aspartokinase, ASD, homoserine dehydrogenase)
+      ▼
+  L-homoserine
+      │  MetA (homoserine O-succinyltransferase)
+      │  + succinyl-CoA
+      ▼
+  O-succinyl-L-homoserine ─────────────────────────────┐
+      │                                                 │
+      │  ★ MetZ (PP_2001)  ← THIS ENZYME                │ (minor, cysteine-inducible
+      │  + HS⁻ (inorganic sulfide)                      │  transsulfuration branch:
+      │  → succinate                                    │  cystathionine γ-synthase
+      ▼   DIRECT SULFHYDRYLATION (primary route)         │  + L-cysteine → cystathionine
+  L-homocysteine  ◄─────────────────────────────────────┘  → cystathionine β-lyase → homocysteine
+      │  MetH / MetE (methionine synthase)
+      │  + N5-methyl-THF
+      ▼
+  L-methionine
+      │  MetK (SAM synthetase)
+      ▼
+  S-adenosylmethionine (SAM)
+</code></pre></div>
+
+<h3 id="reaction-catalyzed">Reaction catalyzed</h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Substrate 1</strong></td>
+<td>O-succinyl-L-homoserine</td>
+</tr>
+<tr>
+<td><strong>Substrate 2</strong></td>
+<td>Inorganic sulfide (HS⁻ / S²⁻)</td>
+</tr>
+<tr>
+<td><strong>Product 1</strong></td>
+<td>L-homocysteine</td>
+</tr>
+<tr>
+<td><strong>Product 2</strong></td>
+<td>Succinate</td>
+</tr>
+<tr>
+<td><strong>Cofactor</strong></td>
+<td>Pyridoxal-5′-phosphate (PLP)</td>
+</tr>
+<tr>
+<td><strong>Reaction class</strong></td>
+<td>γ-replacement (direct sulfhydrylation)</td>
+</tr>
+<tr>
+<td><strong>EC</strong></td>
+<td>2.5.1.- (transferase; sulfhydrylase)</td>
+</tr>
+<tr>
+<td><strong>Distinctive specificity</strong></td>
+<td>Succinyl ester (vs. acetyl in MetY-type enzymes)</td>
+</tr>
+<tr>
+<td><strong>Localization</strong></td>
+<td>Cytoplasm (soluble homotetramer, by homology)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="catalytic-cycle-replacement">Catalytic cycle (γ-replacement)</h3>
+<div class="codehilite"><pre><span></span><code><span class="w"> </span><span class="n">PLP</span><span class="err">–</span><span class="n">Lys</span><span class="w"> </span><span class="p">(</span><span class="n">internal</span><span class="w"> </span><span class="n">aldimine</span><span class="p">)</span>
+<span class="err">│</span><span class="w">  </span><span class="o">+</span><span class="w"> </span><span class="n">O</span><span class="o">-</span><span class="n">succinyl</span><span class="o">-</span><span class="n">L</span><span class="o">-</span><span class="n">homoserine</span>
+<span class="err">▼</span>
+<span class="w"> </span><span class="n">External</span><span class="w"> </span><span class="n">aldimine</span><span class="w"> </span><span class="p">(</span><span class="n">substrate</span><span class="err">–</span><span class="n">PLP</span><span class="p">)</span>
+<span class="err">│</span><span class="w">  </span><span class="err">γ</span><span class="o">-</span><span class="n">proton</span><span class="w"> </span><span class="n">abstraction</span>
+<span class="err">▼</span>
+<span class="w"> </span><span class="err">α</span><span class="p">,</span><span class="err">β</span><span class="o">/</span><span class="err">γ</span><span class="o">-</span><span class="n">unsaturated</span><span class="w"> </span><span class="n">PLP</span><span class="w"> </span><span class="n">intermediate</span><span class="w">  </span><span class="err">──►</span><span class="w">  </span><span class="n">succinate</span><span class="w"> </span><span class="n">released</span>
+<span class="err">│</span><span class="w">  </span><span class="n">nucleophilic</span><span class="w"> </span><span class="n">addition</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">HS</span><span class="err">⁻</span><span class="w"> </span><span class="n">at</span><span class="w"> </span><span class="n">Cγ</span>
+<span class="err">▼</span>
+<span class="w"> </span><span class="n">L</span><span class="o">-</span><span class="n">homocysteine</span><span class="err">–</span><span class="n">PLP</span><span class="w"> </span><span class="n">external</span><span class="w"> </span><span class="n">aldimine</span>
+<span class="err">│</span><span class="w">  </span><span class="n">transaldimination</span><span class="w"> </span><span class="n">with</span><span class="w"> </span><span class="n">Lys</span>
+<span class="err">▼</span>
+<span class="w"> </span><span class="n">PLP</span><span class="err">–</span><span class="n">Lys</span><span class="w"> </span><span class="p">(</span><span class="n">regenerated</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">L</span><span class="o">-</span><span class="n">homocysteine</span>
+</code></pre></div>
+
+<h3 id="interpretation">Interpretation</h3>
+<p>MetZ is best understood as <em>Pseudomonas</em>'s specialized, committed enzyme for <strong>fixing inorganic sulfur into the methionine skeleton</strong>. Its succinyl-ester specificity is the biochemical signature that separates the MetZ subfamily from the more widespread MetY (acetyl) sulfhydrylases and from the cystathionine γ-synthases (which use the same succinyl ester in <em>E. coli</em> but partner it with cysteine rather than sulfide). Comparative-genomics work suggests these enzymes share a common ancestor with broad homoserine-ester and sulfur-source promiscuity that later specialized — MetZ retaining the succinyl-substrate/direct-sulfhydrylation phenotype in <em>Pseudomonas</em> and related Proteobacteria. In <em>P. putida</em> specifically, the dominance of metZ over transsulfuration means that this single enzyme carries the bulk of <em>de novo</em> homocysteine flux, making it functionally essential for methionine prototrophy in the absence of exogenous methionine.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbrev.)</th>
+<th>Role in this report</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/7704274/">7704274</a></td>
+<td><em>A direct sulfhydrylation pathway is used for Met biosynthesis in P. aeruginosa</em></td>
+<td><strong>Primary</strong> — defines metZ as the O-succinylhomoserine sulfhydrylase performing step 2; establishes succinyl-substrate specificity unique to <em>Pseudomonas</em>. Supports Findings 1, 2.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/9885190/">9885190</a></td>
+<td><em>The R. etli metZ gene is essential for Met biosynthesis and nodulation</em></td>
+<td><strong>Primary/genetic</strong> — metZ mutant lacks OSHS activity and is a Met auxotroph; cross-complements a P. aeruginosa metZ mutant. Supports Finding 1.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10482527/">10482527</a></td>
+<td><em>Pathways of assimilative sulfur metabolism in P. putida</em></td>
+<td><strong>Primary (in-organism)</strong> — shows <em>P. putida</em> uses direct sulfhydrylation of OSH as primary Met route; transsulfuration low/cysteine-inducible. Supports Finding 2.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/21931214/">21931214</a></td>
+<td><em>Novel sulfur transfer by O-acetylhomoserine sulfhydrylase, W. succinogenes</em></td>
+<td><strong>Structural (homolog)</strong> — PLP-dependent sulfide-utilizing enzyme; same fold as cystathionine γ-lyase/methionine γ-lyase. Supports Finding 3.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/28675039/">28675039</a></td>
+<td><em>Structural insights into substrate specificity of C. glutamicum CGS</em></td>
+<td><strong>Structural (family)</strong> — PLP–Lys204 Schiff base; β10–β11 loop sets acetyl vs succinyl specificity. Supports Finding 4.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/17981822/">17981822</a></td>
+<td><em>Cystathionine γ-synthase from H. pylori</em></td>
+<td><strong>Kinetic (family)</strong> — Km(OSHS) = 3.02 mM, quantifying succinyl-ester turnover in this enzyme class. Supports Finding 4.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12832650/">12832650</a></td>
+<td><em>In vivo substrates of CGS and OAH sulfhydrylase</em></td>
+<td><strong>Context</strong> — multisubstrate promiscuity and evolutionary origins of homoserine-ester sulfhydrylases. Supports Findings 1, 4.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/11844756/">11844756</a></td>
+<td><em>C. glutamicum uses both transsulfuration and direct sulfhydrylation</em></td>
+<td><strong>Context</strong> — metY (OAH sulfhydrylase) as the direct-sulfhydrylation paradigm; parallel-pathway logic. Supports Finding 2.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12845493/">12845493</a></td>
+<td><em>Met biosynthesis and regulation in C. glutamicum</em></td>
+<td><strong>Context</strong> — direct sulfhydrylation vs. transsulfuration distinction and regulation. Supports Finding 2.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/15581575/">15581575</a></td>
+<td><em>Enzymology of cystathionine biosynthesis (review)</em></td>
+<td><strong>Review</strong> — control of reaction/substrate specificity in PLP γ-family enzymes. Supports Finding 4.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="how-the-evidence-fits-together">How the evidence fits together</h3>
+<p>The assignment for Q88LD4 is <strong>inferred by strong orthology plus in-organism physiology</strong>, not by a dedicated study of the PP_2001 protein itself. The <em>P. aeruginosa metZ</em> characterization [PMID: 7704274] provides the direct gene→enzyme→reaction link within the same genus; the <em>P. putida</em> sulfur-metabolism study [PMID: 10482527] confirms that <em>P. putida</em> actually runs this pathway as its primary route; the <em>R. etli</em> genetics [PMID: 9885190] supplies orthogonal loss-of-function proof of the enzyme identity. The structural and kinetic papers from related γ-family enzymes [PMID: 21931214, 28675039, 17981822] supply the mechanistic and specificity detail (PLP–Lys Schiff base, γ-replacement chemistry, succinyl-loop specificity, cytoplasmic soluble fold) that could not be obtained from <em>P. putida</em> MetZ directly. No paper in the reviewed set contradicts the annotation.</p>
+<h3 id="supported-and-refuted-hypotheses">Supported and refuted hypotheses</h3>
+<table>
+<thead>
+<tr>
+<th>Hypothesis</th>
+<th>Status</th>
+<th>Basis</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>metZ (Q88LD4) is O-succinylhomoserine sulfhydrylase</td>
+<td><strong>Supported</strong></td>
+<td>PMID 7704274, 9885190; UniProt/InterPro family</td>
+</tr>
+<tr>
+<td>It catalyzes OSH + sulfide → homocysteine + succinate (direct sulfhydrylation, 2nd Met step)</td>
+<td><strong>Supported</strong></td>
+<td>PMID 7704274</td>
+</tr>
+<tr>
+<td>Direct sulfhydrylation of OSH is the primary Met route in <em>P. putida</em></td>
+<td><strong>Supported</strong></td>
+<td>PMID 10482527 (S-313 strain)</td>
+</tr>
+<tr>
+<td>Enzyme is PLP-dependent, γ-subclass, tetrameric, cytoplasmic</td>
+<td><strong>Supported (by homology)</strong></td>
+<td>PMID 21931214, 28675039</td>
+</tr>
+<tr>
+<td><em>P. putida</em> uses O-acetylhomoserine (not succinyl) for sulfhydrylation</td>
+<td><strong>Refuted</strong></td>
+<td>PMID 7704274, 10482527: substrate is O-succinylhomoserine</td>
+</tr>
+<tr>
+<td>Methionine synthesis in <em>P. putida</em> relies mainly on transsulfuration/cystathionine</td>
+<td><strong>Refuted</strong></td>
+<td>PMID 10482527: transsulfuration low/inducible; no reverse transsulfuration</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No dedicated study of PP_2001/Q88LD4 itself.</strong> All enzymatic evidence is by orthology (<em>P. aeruginosa</em> metZ, <em>R. etli</em> metZ, <em>P. putida</em> strain S-313) and family inference. The specific KT2440 protein has not, in the reviewed literature, been purified, crystallized, or kinetically characterized. Its Km, kcat, and substrate/sulfur-donor preferences are predicted, not measured.</p>
+</li>
+<li>
+<p><strong>Sulfur donor identity in vivo.</strong> Direct sulfhydrylation formally uses HS⁻/sulfide, but some γ-family enzymes accept alternative thiols. The exact physiological sulfur nucleophile used by <em>P. putida</em> MetZ across growth conditions has not been resolved here.</p>
+</li>
+<li>
+<p><strong>Structural specificity residues not mapped in MetZ.</strong> The β10–β11 acyl-binding loop determinant is documented for CGS/MetY-type enzymes; the corresponding residues in <em>P. putida</em> MetZ have not been individually verified by mutagenesis or structure. No experimental 3D structure of a <em>Pseudomonas</em> OSH-specific MetZ was found.</p>
+</li>
+<li>
+<p><strong>Regulation.</strong> Methionine-mediated repression and sulfur-source control are documented in other organisms (e.g., <em>C. glutamicum</em>, and induction by sulfate/thiosulfate in <em>R. etli</em>), but the precise regulators of PP_2001 (e.g., CysB/sulfate regulon, MetR-type control) were not established for <em>P. putida</em> in the reviewed set.</p>
+</li>
+<li>
+<p><strong>Localization is inferred.</strong> Cytoplasmic localization is by family analogy and absence of export signals, not by experimental fractionation of <em>P. putida</em> MetZ.</p>
+</li>
+<li>
+<p><strong>Essentiality.</strong> Methionine auxotrophy upon loss is demonstrated in orthologs (<em>R. etli</em>) and implied by pathway dominance in <em>P. putida</em>, but a clean <em>P. putida</em> KT2440 ΔPP_2001 phenotype was not directly cited here.</p>
+</li>
+<li>
+<p><strong>Possible secondary activity.</strong> Some family members show cystathionine γ-synthase-like promiscuity [PMID: 12832650]; whether MetZ has any secondary activity is untested.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Recombinant enzymology.</strong> Overexpress and purify <em>P. putida</em> KT2440 MetZ (His-tag), confirm PLP content (A₄₂₀ spectrum), and measure steady-state kinetics for O-succinyl-L-homoserine + sulfide → homocysteine + succinate. Directly compare Km/kcat for O-succinyl- vs O-acetyl-homoserine to quantify the succinyl preference.</p>
+</li>
+<li>
+<p><strong>Sulfur-donor panel.</strong> Assay the purified enzyme with Na₂S, cysteine, methanethiol, and thiosulfate to define the physiological nucleophile and any promiscuity.</p>
+</li>
+<li>
+<p><strong>Targeted genetics.</strong> Construct a <em>P. putida</em> KT2440 ΔPP_2001 mutant and test for methionine auxotrophy on minimal sulfate/sulfide medium; complement with wild-type and catalytic-lysine (Schiff-base) point mutants to confirm the active-site residue.</p>
+</li>
+<li>
+<p><strong>Structure determination / AlphaFold validation.</strong> Solve or model the MetZ structure and map the β10–β11 acyl-binding loop; use it to design point mutations that switch succinyl↔acetyl specificity, testing the loop-architecture hypothesis directly in MetZ.</p>
+</li>
+<li>
+<p><strong>Regulation.</strong> Measure metZ (PP_2001) transcript/protein levels across sulfur sources (sulfate, cysteine, methionine) and identify the transcriptional regulator, to establish whether, as in <em>C. glutamicum</em>, methionine represses the direct-sulfhydrylation route.</p>
+</li>
+<li>
+<p><strong>Flux confirmation.</strong> Use ³⁴S/³⁵S labeling to demonstrate direct incorporation of inorganic sulfide into homocysteine via MetZ in vivo, and quantify the metZ vs. transsulfuration flux split under standard growth.</p>
+</li>
+</ol>
+<hr />
+<h2 id="references">References</h2>
+<ul>
+<li>Foglino M, et al. (1995) A direct sulfhydrylation pathway is used for methionine biosynthesis in <em>Pseudomonas aeruginosa</em>. <a href="https://pubmed.ncbi.nlm.nih.gov/7704274/">PMID: 7704274</a></li>
+<li>Vermeij P, Kertesz MA (1999) Pathways of assimilative sulfur metabolism in <em>Pseudomonas putida</em>. <a href="https://pubmed.ncbi.nlm.nih.gov/10482527/">PMID: 10482527</a></li>
+<li>Taté R, et al. (1999) The <em>Rhizobium etli</em> metZ gene is essential for methionine biosynthesis and nodulation of <em>Phaseolus vulgaris</em>. <a href="https://pubmed.ncbi.nlm.nih.gov/9885190/">PMID: 9885190</a></li>
+<li>Tran TH, et al. (2011) A novel mechanism of sulfur transfer catalyzed by O-acetylhomoserine sulfhydrylase in <em>Wolinella succinogenes</em>. <a href="https://pubmed.ncbi.nlm.nih.gov/21931214/">PMID: 21931214</a></li>
+<li>Sagong HY, Kim KJ (2017) Structural insights into substrate specificity of cystathionine γ-synthase from <em>Corynebacterium glutamicum</em>. <a href="https://pubmed.ncbi.nlm.nih.gov/28675039/">PMID: 28675039</a></li>
+<li>Kong Y, et al. (2008) Enzymatic characterization and inhibitor discovery of a new cystathionine γ-synthase from <em>Helicobacter pylori</em>. <a href="https://pubmed.ncbi.nlm.nih.gov/17981822/">PMID: 17981822</a></li>
+<li>Hacham Y, et al. (2003) In vivo analysis of various substrates utilized by cystathionine γ-synthase and O-acetylhomoserine sulfhydrylase in methionine biosynthesis. <a href="https://pubmed.ncbi.nlm.nih.gov/12832650/">PMID: 12832650</a></li>
+<li>Hwang BJ, et al. (2002) <em>Corynebacterium glutamicum</em> utilizes both transsulfuration and direct sulfhydrylation pathways for methionine biosynthesis. <a href="https://pubmed.ncbi.nlm.nih.gov/11844756/">PMID: 11844756</a></li>
+<li>Lee HS, Hwang BJ (2003) Methionine biosynthesis and its regulation in <em>Corynebacterium glutamicum</em>. <a href="https://pubmed.ncbi.nlm.nih.gov/12845493/">PMID: 12845493</a></li>
+<li>Aitken SM, Kirsch JF (2005) The enzymology of cystathionine biosynthesis. <a href="https://pubmed.ncbi.nlm.nih.gov/15581575/">PMID: 15581575</a></li>
+</ul>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="metZ-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="metZ-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:7704274</li>
+<li>PMID:10482527</li>
+<li>PMID:9885190</li>
+<li>PMID:21931214</li>
+<li>PMID:28675039</li>
+<li>PMID:17981822</li>
+<li>PMID:12832650</li>
+<li>PMID:11844756</li>
+<li>PMID:12845493</li>
+<li>PMID:15581575</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88LD4
+gene_symbol: metZ
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: metZ (PP_2001) encodes a cytosolic PLP-dependent O-succinylhomoserine
+  sulfhydrylase that converts O-succinyl-L-homoserine and sulfide to L-homocysteine
+  in the direct sulfhydrylation branch of de novo L-methionine biosynthesis.
+existing_annotations:
+- term:
+    id: GO:0003824
+    label: catalytic activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: enables
+  review:
+    summary: Catalytic activity is correct but far too broad for MetZ.
+    action: MODIFY
+    reason: UniProt assigns the specific O-succinylhomoserine sulfhydrylase reaction
+      and the GOA table already includes a more informative carbon-sulfur lyase
+      activity annotation.
+    proposed_replacement_terms:
+    - id: GO:0016846
+      label: carbon-sulfur lyase activity
+    supported_by:
+    - reference_id: file:PSEPK/metZ/metZ-uniprot.txt
+      supporting_text: &#34;FUNCTION: Catalyzes the formation of L-homocysteine from O-succinyl-L-&#34;
+    - reference_id: file:PSEPK/metZ/metZ-goa.tsv
+      supporting_text: &#34;GO:0003824\tcatalytic activity&#34;
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: located_in
+  review:
+    summary: Cytoplasm is consistent with a soluble amino-acid biosynthetic enzyme.
+    action: ACCEPT
+    reason: MetZ lacks membrane or secretion features and is annotated as a cytoplasmic
+      PLP-dependent enzyme.
+    supported_by:
+    - reference_id: file:PSEPK/metZ/metZ-goa.tsv
+      supporting_text: &#34;GO:0005737\tcytoplasm&#34;
+    - reference_id: file:PSEPK/metZ/metZ-uniprot.txt
+      supporting_text: &#34;Amino-acid biosynthesis; L-methionine biosynthesis via de novo&#34;
+- term:
+    id: GO:0016765
+    label: transferase activity, transferring alkyl or aryl (other than methyl) groups
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: The transferase parent is a coarse but compatible description of O-succinylhomoserine sulfhydrylation.
+    action: KEEP_AS_NON_CORE
+    reason: UniRule maps MetZ to a transferase parent because no specific GO molecular
+      function term for O-succinylhomoserine sulfhydrylase is present in the current
+      GOA record. The core function is better captured in the review description
+      and module step, while this broad parent can be retained as non-core.
+    supported_by:
+    - reference_id: file:PSEPK/metZ/metZ-uniprot.txt
+      supporting_text: &#34;Reaction=O-succinyl-L-homoserine + hydrogen sulfide = L-homocysteine +&#34;
+    - reference_id: file:PSEPK/metZ/metZ-goa.tsv
+      supporting_text: &#34;GO:0016765\ttransferase activity, transferring alkyl or aryl (other than methyl) groups&#34;
+- term:
+    id: GO:0016846
+    label: carbon-sulfur lyase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: enables
+  review:
+    summary: Carbon-sulfur lyase activity is a reasonable available parent for the MetZ reaction.
+    action: ACCEPT
+    reason: MetZ cleaves the O-succinylhomoserine carbon-sulfur chemistry to form
+      L-homocysteine, and the specific UniProt reaction supports this carbon-sulfur
+      lyase-family assignment.
+    supported_by:
+    - reference_id: file:PSEPK/metZ/metZ-uniprot.txt
+      supporting_text: &#34;Reaction=O-succinyl-L-homoserine + hydrogen sulfide = L-homocysteine +&#34;
+    - reference_id: file:PSEPK/metZ/metZ-goa.tsv
+      supporting_text: &#34;GO:0016846\tcarbon-sulfur lyase activity&#34;
+    - reference_id: file:PSEPK/metZ/metZ-deep-research-openscientist.md
+      supporting_text: &#34;encodes **O-succinylhomoserine sulfhydrylase (OSHS)**&#34;
+- term:
+    id: GO:0019346
+    label: transsulfuration
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Transsulfuration is likely an over-broad family propagation for this direct sulfhydrylation enzyme.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The methionine pathway template distinguishes direct sulfhydrylation
+      by MetZ from the two-enzyme trans-sulfuration route through cystathionine.
+      UniProt describes MetZ as converting O-succinylhomoserine and sulfide directly
+      to homocysteine, not as using cystathionine.
+    supported_by:
+    - reference_id: file:PSEPK/metZ/metZ-uniprot.txt
+      supporting_text: &#34;L-homocysteine from O-succinyl-L-homoserine: step 1/1&#34;
+    - reference_id: file:modules/experimental/gapmind-mining/cache/gapmind/aa/met.steps
+      supporting_text: &#34;homocysteine: homoserine metA metZ&#34;
+    - reference_id: file:PSEPK/metZ/metZ-goa.tsv
+      supporting_text: &#34;GO:0019346\ttranssulfuration&#34;
+- term:
+    id: GO:0030170
+    label: pyridoxal phosphate binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Pyridoxal phosphate binding is a catalytic cofactor feature for MetZ.
+    action: KEEP_AS_NON_CORE
+    reason: PLP binding supports the enzyme mechanism but is secondary to the pathway
+      reaction in methionine biosynthesis.
+    supported_by:
+    - reference_id: file:PSEPK/metZ/metZ-uniprot.txt
+      supporting_text: &#34;Name=pyridoxal 5&#39;-phosphate&#34;
+    - reference_id: file:PSEPK/metZ/metZ-goa.tsv
+      supporting_text: &#34;GO:0030170\tpyridoxal phosphate binding&#34;
+- term:
+    id: GO:0071266
+    label: &#39;&#39;&#39;de novo&#39;&#39; L-methionine biosynthetic process&#39;
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: involved_in
+  review:
+    summary: De novo L-methionine biosynthesis is the core biological process for MetZ.
+    action: ACCEPT
+    reason: MetZ produces L-homocysteine from O-succinyl-L-homoserine in the direct
+      sulfhydrylation branch upstream of methionine synthase.
+    supported_by:
+    - reference_id: file:PSEPK/metZ/metZ-uniprot.txt
+      supporting_text: &#34;PATHWAY: Amino-acid biosynthesis; L-methionine biosynthesis via de novo&#34;
+    - reference_id: file:PSEPK/metZ/metZ-goa.tsv
+      supporting_text: &#34;GO:0071266\t&#39;de novo&#39; L-methionine biosynthetic process&#34;
+    - reference_id: file:projects/P_PUTIDA/deep-research/PSEPK__methionine_biosynthesis__ppu00270-deep-research-openscientist.md
+      supporting_text: &#34;PP_2001 `metZ` (Q88LD4) — Step 2, direct sulfhydrylation.&#34;
+references:
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations
+    between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/metZ/metZ-uniprot.txt
+  title: UniProtKB entry for metZ
+  findings:
+  - statement: UniProt identifies MetZ as an O-succinylhomoserine sulfhydrylase
+      in de novo L-methionine biosynthesis.
+- id: file:PSEPK/metZ/metZ-goa.tsv
+  title: QuickGO GOA annotations for metZ
+  findings:
+  - statement: The fetched GOA table contains the seven annotations reviewed for metZ.
+- id: file:modules/experimental/gapmind-mining/cache/gapmind/aa/met.steps
+  title: GapMind methionine biosynthesis step definitions
+  findings:
+  - statement: GapMind models MetZ as direct formation of homocysteine from the
+      metA-activated homoserine route, separate from the cystathionine trans-sulfuration
+      route.
+- id: file:projects/P_PUTIDA/deep-research/PSEPK__methionine_biosynthesis__ppu00270-deep-research-openscientist.md
+  title: OpenScientist pathway research for PSEPK methionine biosynthesis
+  findings:
+  - statement: The pathway-level report identifies metZ/PP_2001 as the substrate-matched
+      O-succinylhomoserine direct sulfhydrylation gene downstream of MetXS.
+- id: file:PSEPK/metZ/metZ-deep-research-openscientist.md
+  title: OpenScientist gene research for metZ
+  findings:
+  - statement: The gene-level report confirms metZ/PP_2001 as the O-succinylhomoserine
+      sulfhydrylase for direct sulfhydrylation in Pseudomonas methionine biosynthesis.
+    supporting_text: &#34;direct sulfhydrylation (metZ) is the default, primary pathway&#34;
+core_functions:
+- description: PLP-dependent O-succinylhomoserine sulfhydrylase reaction that converts
+    O-succinyl-L-homoserine and sulfide to L-homocysteine in de novo L-methionine
+    biosynthesis.
+  molecular_function:
+    id: GO:0016846
+    label: carbon-sulfur lyase activity
+  directly_involved_in:
+  - id: GO:0071265
+    label: L-methionine biosynthetic process
+  - id: GO:0071269
+    label: L-homocysteine biosynthetic process
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+  supported_by:
+  - reference_id: file:PSEPK/metZ/metZ-uniprot.txt
+    supporting_text: &#34;FUNCTION: Catalyzes the formation of L-homocysteine from O-succinyl-L-&#34;
+  - reference_id: file:PSEPK/metZ/metZ-uniprot.txt
+    supporting_text: &#34;L-homocysteine from O-succinyl-L-homoserine: step 1/1&#34;
+  - reference_id: file:PSEPK/metZ/metZ-goa.tsv
+    supporting_text: &#34;GO:0071266\t&#39;de novo&#39; L-methionine biosynthetic process&#34;
+  - reference_id: file:projects/P_PUTIDA/deep-research/PSEPK__methionine_biosynthesis__ppu00270-deep-research-openscientist.md
+    supporting_text: &#34;Substrate-matched to PP_5097&#34;
+  - reference_id: file:PSEPK/metZ/metZ-deep-research-openscientist.md
+    supporting_text: &#34;The enzyme performs **direct sulfhydrylation**&#34;
+proposed_new_terms: []
+suggested_questions:
+- question: Is MetZ the dominant KT2440 sulfhydrylase under sulfide-replete conditions,
+    or does PP_2528 provide a parallel O-acetylhomoserine-dependent route?
+suggested_experiments:
+- description: Measure in vitro sulfhydrylase activity of purified MetZ with O-succinyl-L-homoserine
+    and sulfide, comparing O-acetyl-L-homoserine as an alternate substrate.
+  experiment_type: enzymology
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
