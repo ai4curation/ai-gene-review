@@ -24,19 +24,24 @@ import pandas as pd
 import pronto
 import yaml
 
+from ai_gene_review.bioreason_ontology import (
+    FROZEN_GO_PATH,
+    GO_RELEASE,
+    GO_RELEASE_URL,
+    ensure_frozen_go,
+    validate_frozen_go_release,
+)
+
 
 PROJECT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = PROJECT_DIR.parents[1]
 GENES_DIR = REPO_ROOT / "genes"
-CACHE_DIR = REPO_ROOT / "cache" / "ontologies"
-ONTOLOGY_RELEASE = "2026-03-25"
-DEFAULT_ONTOLOGY = CACHE_DIR / f"go-basic-{ONTOLOGY_RELEASE}.obo"
+ONTOLOGY_RELEASE = GO_RELEASE
+DEFAULT_ONTOLOGY = FROZEN_GO_PATH
 OUT_DIR = PROJECT_DIR / "cafa-style"
 FIGURE_PATH = PROJECT_DIR / "article" / "figures" / "cafa_style_argo139_sft.png"
 
-GO_BASIC_URLS = [
-    f"https://release.geneontology.org/{ONTOLOGY_RELEASE}/ontology/go-basic.obo",
-]
+GO_BASIC_URLS = [GO_RELEASE_URL]
 
 ASPECT_ROOTS = {
     "molecular_function": "GO:0003674",
@@ -189,6 +194,17 @@ def download_ontology(path: Path) -> None:
         except Exception as error:  # pragma: no cover - exercised only on network failure
             last_error = error
     raise RuntimeError(f"Could not download go-basic.obo: {last_error}")
+
+
+def prepare_ontology(path: Path) -> Path:
+    """Resolve and verify the exact GO release used for CAFA-style scoring."""
+    if path.resolve() == FROZEN_GO_PATH.resolve():
+        resolved = ensure_frozen_go()
+    else:
+        download_ontology(path)
+        resolved = path
+    validate_frozen_go_release(resolved)
+    return resolved
 
 
 def read_argo139() -> dict[tuple[str, str], str]:
@@ -636,8 +652,8 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    download_ontology(args.ontology)
-    graph = GoGraph(args.ontology)
+    ontology_path = prepare_ontology(args.ontology)
+    graph = GoGraph(ontology_path)
     argo = read_argo139()
     argo_keys = set(argo)
     predictions = read_predictions(argo_keys)

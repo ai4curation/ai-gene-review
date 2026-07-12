@@ -5,6 +5,7 @@ import csv
 import importlib.util
 import json
 import re
+import sys
 from pathlib import Path
 
 import yaml
@@ -34,6 +35,16 @@ def _load_sidecar_module():
     spec = importlib.util.spec_from_file_location("write_benchmark_sidecars", path)
     assert spec and spec.loader
     module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _load_cafa_module():
+    path = PROJECT_DIR / "cafa_style_argo139.py"
+    spec = importlib.util.spec_from_file_location("cafa_style_argo139", path)
+    assert spec and spec.loader
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
     spec.loader.exec_module(module)
     return module
 
@@ -84,6 +95,41 @@ def test_frozen_go_checksum_and_release_sentinels() -> None:
     for go_id, (label, is_obsolete) in GO_RELEASE_SENTINELS.items():
         assert adapter.label(go_id) == label
         assert (go_id in obsolete) is is_obsolete
+
+
+def test_cafa_generator_uses_shared_frozen_go_verifier(
+    monkeypatch, tmp_path: Path
+) -> None:
+    module = _load_cafa_module()
+    custom_path = tmp_path / "go-basic.obo"
+    calls: list[tuple[str, Path | None]] = []
+
+    monkeypatch.setattr(
+        module,
+        "download_ontology",
+        lambda path: calls.append(("download", path)),
+    )
+    monkeypatch.setattr(
+        module,
+        "validate_frozen_go_release",
+        lambda path: calls.append(("validate", path)),
+    )
+
+    assert module.prepare_ontology(custom_path) == custom_path
+    assert calls == [("download", custom_path), ("validate", custom_path)]
+
+    calls.clear()
+
+    def fake_ensure_frozen_go() -> Path:
+        calls.append(("ensure", None))
+        return module.FROZEN_GO_PATH
+
+    monkeypatch.setattr(module, "ensure_frozen_go", fake_ensure_frozen_go)
+    assert module.prepare_ontology(module.FROZEN_GO_PATH) == module.FROZEN_GO_PATH
+    assert calls == [
+        ("ensure", None),
+        ("validate", module.FROZEN_GO_PATH),
+    ]
 
 
 def test_argo139_truncated_sequences_are_flagged_not_excluded() -> None:

@@ -65,6 +65,16 @@ def validate_frozen_go_adapter(adapter: Any) -> None:
         )
 
 
+def validate_frozen_go_release(path: Path) -> None:
+    """Verify both the bytes and release-specific term semantics."""
+    validate_frozen_go_file(path)
+
+    from oaklib import get_adapter
+
+    adapter = get_adapter(f"pronto:{path}")
+    validate_frozen_go_adapter(adapter)
+
+
 def ensure_frozen_go() -> Path:
     """Return the pinned GO file, downloading the archived release if needed."""
     if FROZEN_GO_PATH.exists() and FROZEN_GO_PATH.stat().st_size > 1_000_000:
