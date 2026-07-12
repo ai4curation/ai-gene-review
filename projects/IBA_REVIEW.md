@@ -623,10 +623,17 @@ and a representative seed) in the corresponding
 > genome-content check in the
 > [Pathway satisfiability project](PATHWAY_SATISFIABILITY.md): a process/pathway
 > term whose definition entails a component **absent from the target's genome**
-> is a candidate `LINEAGE_OR_TAXON_MISMATCH` over-propagation (cf. the
-> purinergic-receptor terms removed from cAR2/3/4 — no P2X/P2Y receptors in
-> *Dictyostelium*). Turning that into a detector would generalise the hand-made
-> taxon-mismatch REMOVE/MODIFY calls above.
+> is a candidate `LINEAGE_OR_TAXON_MISMATCH` over-propagation. A runnable
+> prototype of exactly this check —
+> [taxon-absent-component detector](PATHWAY_SATISFIABILITY/taxon_absent_component/README.md)
+> — screens JAK for JAK-STAT and confirms JAK is genome-absent in
+> *Dictyostelium*. It also documents the method's key limitation: an InterPro
+> signature returning zero is a **candidate**, not a proof, because divergent
+> orthologs can escape the signature — the `GO:0035589` purinergic case is
+> instructive, since *Dictyostelium* **does** have divergent (ionotropic) P2X
+> receptors and only the metabotropic **P2Y (GPCR)** component that this term
+> specifically requires appears absent. A confident `REMOVE` still needs
+> corroboration beyond signature-absence.
 
 ## Genes with IBA Issues
 
