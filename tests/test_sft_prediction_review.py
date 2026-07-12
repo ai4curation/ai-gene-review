@@ -1,5 +1,7 @@
 """Regression tests for deterministic BioReason SFT review repair."""
 
+import csv
+
 from pathlib import Path
 
 import yaml
@@ -132,6 +134,54 @@ def test_repair_keeps_raw_term_and_applies_cts2_override():
     assert prediction["review"]["error_type"] == "PSEUDOENZYME_OVERANNOTATION"
 
 
+def test_summary_only_manual_override_is_persisted_and_idempotent():
+    doc = {
+        "predictions": [
+            {
+                "source_version": "wanglab/protein_catalogue",
+                "predicted_term": {
+                    "id": "GO:0044183",
+                    "label": "protein folding chaperone",
+                },
+                "review": {
+                    "assessment": "UNC",
+                    "confidence_score": 1,
+                    "summary": "Stale rationale.",
+                },
+            }
+        ]
+    }
+    stats = RepairStats()
+
+    assert repair_document(
+        doc,
+        "ECOLI",
+        "CpxP",
+        set(),
+        {},
+        set(),
+        "wanglab/protein_catalogue",
+        None,
+        stats,
+    )
+    assert (
+        "Uncertain rather than refuted"
+        in doc["predictions"][0]["review"]["summary"]
+    )
+
+    assert not repair_document(
+        doc,
+        "ECOLI",
+        "CpxP",
+        set(),
+        {},
+        set(),
+        "wanglab/protein_catalogue",
+        None,
+        RepairStats(),
+    )
+
+
 def test_label_note_is_explicit_idempotent_and_source_preserving():
     review = {"summary": "Correct relative to the authoritative GO ID."}
     check = LabelCheck(
@@ -244,7 +294,7 @@ def test_ontology_pair_adjudications_are_applied_to_committed_reviews():
         / "argo95-ontology-pair-adjudication.tsv"
     )
     decisions = load_ontology_pair_decisions(audit_path)
-    assert len(decisions) == 56
+    assert len(decisions) == 65
 
     for (species, gene, go_id, raw_label), decision in decisions.items():
         path = root / "genes" / species / gene / f"{gene}-sft-predictions.yaml"
@@ -259,6 +309,44 @@ def test_ontology_pair_adjudications_are_applied_to_committed_reviews():
         assert len(matches) == 1, (species, gene, go_id, raw_label)
         assert matches[0]["assessment"] == decision.assessment
         assert matches[0].get("error_type") == decision.error_type
+        assert f"classified {decision.assessment}" in matches[0]["summary"]
+
+
+def test_ontology_pair_audit_covers_every_current_nonnegative_mismatch():
+    root = Path(__file__).resolve().parents[1]
+    audit_path = (
+        root
+        / "projects"
+        / "BIOREASON_COMPARISON"
+        / "argo95-ontology-pair-adjudication.tsv"
+    )
+    with audit_path.open() as handle:
+        audited = {
+            (row["species"], row["gene"], row["go_id"], row["raw_label"])
+            for row in csv.DictReader(handle, delimiter="\t")
+        }
+
+    cohort = load_cohort(root / "projects/BIOREASON_COMPARISON/genes.csv")
+    uncovered = []
+    for species, gene in sorted(cohort):
+        path = root / "genes" / species / gene / f"{gene}-sft-predictions.yaml"
+        if not path.exists():
+            continue
+        document = yaml.safe_load(path.read_text())
+        for prediction in document.get("predictions", []):
+            if prediction.get("source_version") != "wanglab/protein_catalogue":
+                continue
+            review = prediction["review"]
+            if review["assessment"] in {"NPI", "PLI", "REP"}:
+                continue
+            if "[ONTOLOGY_LABEL_AUDIT]" not in str(review.get("summary", "")):
+                continue
+            term = prediction["predicted_term"]
+            key = (species, gene, term["id"], term["label"])
+            if key not in audited:
+                uncovered.append(key)
+
+    assert uncovered == []
 
 
 def test_frequency_bias_is_reserved_for_repetition_in_argo95():

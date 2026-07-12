@@ -209,10 +209,19 @@ MANUAL_OVERRIDES: dict[tuple[str, str, str], ManualOverride] = {
         error_type="CURATION_MISTAKE",
         set_error_type=True,
     ),
-    # Wrong causal direction, not an in-vitro/in-vivo discrepancy.
+    # The generic transcription role is supported, but the hypoxia-specific claim is unresolved.
     ("human", "VEGFA", "GO:0061419"): ManualOverride(
+        assessment="UNC",
         error_type=None,
         set_error_type=True,
+        summary=(
+            "Uncertain rather than refuted. Current GOA and the AIGR support VEGFA in "
+            "positive regulation of RNA polymerase II transcription, but they do not "
+            "resolve whether that role is specifically executed in response to hypoxia. "
+            "The prior causal-reversal rationale was too strong because VEGFA signaling "
+            "can activate downstream transcription; the narrower hypoxia context still "
+            "requires expert confirmation."
+        ),
     ),
     # Malformed ID/label pairs whose canonical GO IDs change the biological call.
     ("ARATH", "ETR1", "GO:0009731"): ManualOverride(
@@ -315,17 +324,78 @@ MANUAL_OVERRIDES: dict[tuple[str, str, str], ManualOverride] = {
     ("AGKCO", "fibrolase", "GO:0000287"): ManualOverride(
         error_type=None, set_error_type=True
     ),
+    ("ECOLI", "CnoX", "GO:0061077"): ManualOverride(
+        assessment="LSP",
+        error_type=None,
+        set_error_type=True,
+        summary=(
+            "Less precise, not refuted. GOA and the AIGR directly support CnoX in "
+            "protein refolding (GO:0042026): CnoX preserves substrates and hands them "
+            "to the GroEL/DnaK foldases. The supplied historical chaperone-mediated "
+            "protein-folding concept is broader and misses that specific handoff and "
+            "refolding role."
+        ),
+    ),
+    ("ECOLI", "Skp", "GO:0061077"): ManualOverride(
+        assessment="CNN",
+        error_type=None,
+        set_error_type=True,
+        summary=(
+            "Correct but not novel under the curated reference. The replacement protein "
+            "folding term (GO:0006457) has IBA, IDA, and IMP annotations in current GOA, "
+            "and the AIGR accepts it. Skp acts as a holdase/carrier before OMP folding, "
+            "but that mechanistic qualification does not justify overruling the positive "
+            "experimental curation."
+        ),
+    ),
     ("ECOLI", "Spy", "GO:0014070"): ManualOverride(
-        error_type=None, set_error_type=True
+        assessment="COR",
+        error_type=None,
+        set_error_type=True,
+        summary=(
+            "Correct novel biological response. Tannin, an organic cyclic polyphenol, "
+            "strongly induces spy; Spy protects proteins during tannin stress, and spy-null "
+            "cells are tannin-sensitive (PMID:21317898). The concept is supported but is "
+            "absent as an exact term from current GOA. Its obsolete ontology status is "
+            "reported separately from the COR assessment."
+        ),
     ),
     ("ECOLI", "SlyD", "GO:0044008"): ManualOverride(
         error_type=None, set_error_type=True
     ),
     ("ECOLI", "CpxP", "GO:0044183"): ManualOverride(
-        error_type=None, set_error_type=True
+        assessment="UNC",
+        error_type=None,
+        set_error_type=True,
+        summary=(
+            "Uncertain rather than refuted. CpxP has reported mild protein-chaperone "
+            "activity, but its established core roles are CpxA inhibition and delivery "
+            "of misfolded substrates to DegP. The available evidence does not establish "
+            "a general protein-folding chaperone function, yet it also does not support "
+            "a confident NPI call."
+        ),
     ),
     ("ECOLI", "CpxP", "GO:0061077"): ManualOverride(
-        error_type=None, set_error_type=True
+        assessment="UNC",
+        error_type=None,
+        set_error_type=True,
+        summary=(
+            "Uncertain rather than refuted. CpxP binds misfolded periplasmic proteins "
+            "and has mild chaperone activity, but direct participation in productive "
+            "protein folding is not established. Its adaptor role in DegP degradation "
+            "does not by itself prove or disprove this broader process prediction."
+        ),
+    ),
+    ("ECOLI", "CpxP", "GO:0014070"): ManualOverride(
+        assessment="UNC",
+        error_type=None,
+        set_error_type=True,
+        summary=(
+            "Uncertain. CpxP is experimentally involved in envelope-stress responses, "
+            "but the current evidence does not isolate an organic cyclic compound as "
+            "the causal stimulus. Absence of an exact GOA annotation is not biological "
+            "refutation, so NPI was too strong."
+        ),
     ),
     ("ECOLI", "DnaK", "GO:0016021"): ManualOverride(
         error_type=None, set_error_type=True
@@ -692,20 +762,23 @@ def apply_manual_override(
     go_id: str,
     review: MutableMapping[str, Any],
 ) -> tuple[bool, bool]:
-    """Apply one explicit override and return assessment/error-type change flags."""
+    """Apply one explicit override and return review/error-type change flags."""
     override = MANUAL_OVERRIDES.get((species, gene, go_id))
     if override is None:
         return False, False
 
     assessment_changed = False
+    summary_changed = False
     old_assessment = review.get("assessment", "")
     if override.assessment and override.assessment != old_assessment:
         review["assessment"] = override.assessment
         assessment_changed = True
         if override.summary is not None:
-            review["summary"] = _with_scalar_style(
-                review.get("summary", ""), override.summary
-            )
+            old_summary = review.get("summary", "")
+            updated_summary = _with_scalar_style(old_summary, override.summary)
+            if updated_summary != old_summary:
+                review["summary"] = updated_summary
+                summary_changed = True
         elif override.replace_category_mentions:
             old_summary = review.get("summary", "")
             updated = re.sub(
@@ -719,11 +792,12 @@ def apply_manual_override(
         and _without_ontology_note(review.get("summary", "")) != override.summary
     ):
         review["summary"] = _with_scalar_style(review.get("summary", ""), override.summary)
+        summary_changed = True
 
     error_changed = False
     if override.set_error_type:
         error_changed = set_error_type(review, override.error_type)
-    return assessment_changed, error_changed
+    return assessment_changed or summary_changed, error_changed
 
 
 ONTOLOGY_BASIS_TEXT = {
@@ -746,8 +820,22 @@ ONTOLOGY_BASIS_TEXT = {
     "CANONICAL_TERM_SUPPORTED_AND_ABSENT_FROM_GOA": (
         "The canonical GO term is supported and absent as an exact ID from the frozen GOA."
     ),
+    "CANONICAL_TERM_SUPPORTED_AS_NOT_NOVEL": (
+        "The canonical GO concept is supported and already established in GOA, the "
+        "AIGR, or UniProt, so it is correct but not novel."
+    ),
     "CANONICAL_TERM_NOT_RESOLVED_BY_CURRENT_EVIDENCE": (
         "The canonical GO term is not resolved by the current reference evidence."
+    ),
+    "ONTOLOGY_STATUS_ONLY_RETAINS_RUBRIC_ASSESSMENT": (
+        "The raw and canonical labels denote the same biological concept. Ontology "
+        "status is flagged separately, so the biological novelty and precision "
+        "assessment is retained."
+    ),
+    "ONTOLOGY_STATUS_ONLY_SUPPORTED_AS_NOT_NOVEL": (
+        "The raw and canonical labels denote the same biological concept, and the "
+        "replacement concept is already supported by GOA and the AIGR. The prediction "
+        "is correct but not novel; ontology status is flagged separately."
     ),
 }
 
@@ -771,20 +859,29 @@ def apply_ontology_pair_decision(
 
     error_changed = set_error_type(review, decision.error_type)
     base = _without_ontology_note(review.get("summary", ""))
-    if not base.startswith(ONTOLOGY_ADJUDICATION_MARKER):
-        canonical = decision.canonical_label or "unresolved in the frozen ontology"
-        basis = ONTOLOGY_BASIS_TEXT[decision.basis]
-        historical = _plain_summary(base)
-        updated = (
-            f"{ONTOLOGY_ADJUDICATION_MARKER} Assessed the supplied GO ID rather than "
-            f"the intended raw label: {go_id} is '{canonical}'. {basis} The pair is "
-            f"classified {decision.assessment}; the raw source pair remains unchanged."
+    historical_marker = (
+        " Historical rationale about the intended raw label is retained below "
+        "for provenance, not as support for the canonical GO ID: "
+    )
+    if base.startswith(ONTOLOGY_ADJUDICATION_MARKER):
+        historical = (
+            base.split(historical_marker, 1)[1]
+            if historical_marker in base
+            else ""
         )
-        if historical:
-            updated += (
-                " Historical rationale about the intended raw label is retained below "
-                f"for provenance, not as support for the canonical GO ID: {historical}"
-            )
+    else:
+        historical = _plain_summary(base)
+
+    canonical = decision.canonical_label or "unresolved in the frozen ontology"
+    basis = ONTOLOGY_BASIS_TEXT[decision.basis]
+    updated = (
+        f"{ONTOLOGY_ADJUDICATION_MARKER} Assessed the supplied GO ID rather than "
+        f"the intended raw label: {go_id} is '{canonical}'. {basis} The pair is "
+        f"classified {decision.assessment}; the raw source pair remains unchanged."
+    )
+    if historical:
+        updated += historical_marker + historical
+    if base != updated:
         old_summary = review.get("summary", "")
         review["summary"] = _with_scalar_style(old_summary, updated)
         assessment_changed = True

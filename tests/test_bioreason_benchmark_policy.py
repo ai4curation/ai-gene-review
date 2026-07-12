@@ -67,6 +67,7 @@ def test_argo139_quality_policy_is_complete_and_explicit() -> None:
 def test_benchmark_and_refresh_commands_share_frozen_go_release() -> None:
     policy = yaml.safe_load((PROJECT_DIR / "benchmark-policy.yaml").read_text())
     frozen = policy["cohorts"]["argo139_rl_narrative"]["frozen_inputs"]
+    sft = policy["cohorts"]["argo95_sft_terms"]
 
     assert frozen["ontology_release"] == GO_RELEASE
     assert frozen["ontology_url"] == GO_RELEASE_URL
@@ -83,6 +84,17 @@ def test_benchmark_and_refresh_commands_share_frozen_go_release() -> None:
             if not is_obsolete
         ],
     }
+    external = frozen["ontology_external_verification"]
+    assert external["official_archive_sha256_match"] is True
+    assert external["live_obsolete_terms"] == [
+        go_id
+        for go_id, (_, is_obsolete) in GO_RELEASE_SENTINELS.items()
+        if is_obsolete
+    ]
+    assert len(external["authorities"]) == 2
+    assert "every mismatched or unresolved pair" in sft["ontology_status_rule"]
+    assert "Do not change the biological assessment solely" in sft["ontology_status_rule"]
+    assert "LSP is used only" in sft["ontology_status_rule"]
     assert FROZEN_GO_ADAPTER == "frozen-go-2026-03-25"
 
 
@@ -218,6 +230,7 @@ def test_publication_headlines_match_generated_metrics() -> None:
     manuscript = (PROJECT_DIR / "article" / "manuscript.tex").read_text()
     supplement = (PROJECT_DIR / "article" / "supplemental-benchmark-details.md").read_text()
     slides = (PROJECT_DIR / "article" / "slides.md").read_text()
+    manuscript_flat = " ".join(manuscript.split())
 
     assert (
         f"**Overall correctness: {rl['mean_correctness']:.1f}/5** | "
@@ -248,12 +261,12 @@ def test_publication_headlines_match_generated_metrics() -> None:
             gogpt["assessment_distribution"]["UNC"],
         )
     )
-    assert sft["cnn_exact_frozen_goa"] == 629
-    assert sft["cnn_other_established_basis"] == 29
+    assert sft["cnn_exact_frozen_goa"] == 631
+    assert sft["cnn_other_established_basis"] == 47
     assert sft["cor_exact_frozen_goa"] == 0
     assert sft["ontology_pair_adjudication"] == {
-        "n_reviewed": 76,
-        "n_changed": 56,
+        "n_reviewed": 82,
+        "n_changed": 65,
     }
     assert all(f"{value:,}" in project for value in assessments.values())
 
@@ -292,5 +305,25 @@ def test_publication_headlines_match_generated_metrics() -> None:
         f"{overlap['core']['n_reference_terms']:,} | "
         f"{overlap['core']['n_overlap']:,} | 3.8 |"
     ) in supplement
-    assert "**68.9% CNN**" in slides
-    assert "**16.6% NPI/PLI/REP**" in slides
+    assert "**71.0% CNN**" in slides
+    assert "**15.9% NPI/PLI/REP**" in slides
+    assert "**2.5% COR**" in slides
+
+    with (PROJECT_DIR / "cafa-style" / "argo139_prediction_goa_overlap.csv").open() as handle:
+        incorrect_hf = [
+            row
+            for row in csv.DictReader(handle)
+            if row["source_group"] == "hf_catalogue"
+            and row["assessment"] in {"NPI", "PLI", "REP"}
+        ]
+    n_incorrect = len(incorrect_hf)
+    n_exact = sum(row["exact_in_goa_all"] == "True" for row in incorrect_hf)
+    n_propagated = sum(
+        row["closure_intersects_goa_all"] == "True" for row in incorrect_hf
+    )
+    assert (n_incorrect, n_exact, n_propagated) == (152, 53, 124)
+    assert f"{n_exact}/{n_incorrect} HF terms labelled NPI, PLI, or REP" in manuscript_flat
+    assert (
+        f"{n_propagated}/{n_incorrect} had propagated overlap with current GOA"
+        in manuscript_flat
+    )

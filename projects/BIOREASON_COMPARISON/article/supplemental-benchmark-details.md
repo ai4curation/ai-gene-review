@@ -34,7 +34,7 @@ The key availability issue is simple: the HuggingFace `wanglab/protein_catalogue
 
 | Benchmark | Genes | Terms | CNN | NPI | PLI | COR | LSP | REP | UNC |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| ARGO95 (HF catalogue) | 95 | 955 | 658 (68.9%) | 125 (13.1%) | 5 (0.5%) | 23 (2.4%) | 61 (6.4%) | 29 (3.0%) | 54 (5.7%) |
+| ARGO95 (HF catalogue) | 95 | 955 | 678 (71.0%) | 118 (12.4%) | 5 (0.5%) | 24 (2.5%) | 44 (4.6%) | 29 (3.0%) | 57 (6.0%) |
 
 For comparison, the mixed-source ARGO139 view is retained as a source-diagnostic table, not as a primary SFT benchmark.
 
@@ -42,9 +42,9 @@ For comparison, the mixed-source ARGO139 view is retained as a source-diagnostic
 
 | Source | Genes | Terms | CNN | NPI | PLI | COR | LSP | REP | UNC |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| HF catalogue / ARGO95 | 95 | 955 | 658 (68.9%) | 125 (13.1%) | 5 (0.5%) | 23 (2.4%) | 61 (6.4%) | 29 (3.0%) | 54 (5.7%) |
+| HF catalogue / ARGO95 | 95 | 955 | 678 (71.0%) | 118 (12.4%) | 5 (0.5%) | 24 (2.5%) | 44 (4.6%) | 29 (3.0%) | 57 (6.0%) |
 | Web export | 44 | 9,742 | 2,321 (23.8%) | 42 (0.4%) | 0 (0.0%) | 7 (0.1%) | 388 (4.0%) | 1 (0.0%) | 6,983 (71.7%) |
-| Mixed-source ARGO139 total | 139 | 10,697 | 2,979 (27.8%) | 167 (1.6%) | 5 (0.0%) | 30 (0.3%) | 449 (4.2%) | 30 (0.3%) | 7,037 (65.8%) |
+| Mixed-source ARGO139 total | 139 | 10,697 | 2,999 (28.0%) | 160 (1.5%) | 5 (0.0%) | 31 (0.3%) | 432 (4.0%) | 30 (0.3%) | 7,040 (65.8%) |
 
 **Table S4.** Terms per gene in the SFT source views.
 
@@ -60,11 +60,11 @@ The all-HF view is still useful as the broadest single-source HF view, but it is
 
 | Assessment | Count | % |
 |---|---:|---:|
-| CNN | 897 | 66.1 |
-| NPI | 179 | 13.2 |
-| UNC | 140 | 10.3 |
-| LSP | 74 | 5.4 |
-| COR | 30 | 2.2 |
+| CNN | 917 | 67.5 |
+| NPI | 172 | 12.7 |
+| UNC | 143 | 10.5 |
+| LSP | 57 | 4.2 |
+| COR | 31 | 2.3 |
 | REP | 33 | 2.4 |
 | PLI | 5 | 0.4 |
 
@@ -74,17 +74,17 @@ The all-source union is the broadest source-availability view, but it combines A
 
 | Assessment | Count | % |
 |---|---:|---:|
-| UNC | 7,123 | 64.2 |
-| CNN | 3,218 | 29.0 |
-| LSP | 462 | 4.2 |
-| NPI | 221 | 2.0 |
-| COR | 37 | 0.3 |
+| UNC | 7,126 | 64.2 |
+| CNN | 3,238 | 29.2 |
+| LSP | 445 | 4.0 |
+| NPI | 214 | 1.9 |
+| COR | 38 | 0.3 |
 | REP | 34 | 0.3 |
 | PLI | 5 | 0.0 |
 
 ## S3. CAFA-style retrospective GOA agreement
 
-We computed a retrospective CAFA-style agreement score for ARGO95 SFT GO-term predictions using current local GOA as the reference. This is not a true CAFA benchmark: ARGO95 is retrospective, there is no temporal holdout, and the BioReason-Pro SFT files do not contain model confidence scores. The score therefore treats predictions as an unranked single-threshold set and reports propagated precision/recall/F1 rather than \(F_{\max}\). Both predictions and reference GOA annotations are propagated over `is_a` and `part_of` ancestors from the frozen 2026-03-25 `go-basic.obo`, excluding the three GO aspect roots. The archived file's SHA-256 is pinned in `benchmark-policy.yaml`; load-time sentinels verify release-specific active and obsolete terms. GOA can retain identifiers after ontology obsoletion, so the mixed-date legacy `cache/ontologies/go.tsv` status flag is not used as the ontology authority. The mixed-source ARGO139 rows are retained only as diagnostics.
+We computed a retrospective CAFA-style agreement score for ARGO95 SFT GO-term predictions using current local GOA as the reference. This is not a true CAFA benchmark: ARGO95 is retrospective, there is no temporal holdout, and the BioReason-Pro SFT files do not contain model confidence scores. The score therefore treats predictions as an unranked single-threshold set and reports propagated precision/recall/F1 rather than \(F_{\max}\). Both predictions and reference GOA annotations are propagated over `is_a` and `part_of` ancestors from the frozen 2026-03-25 `go-basic.obo`, excluding the three GO aspect roots. The archived file's SHA-256 is pinned in `benchmark-policy.yaml`; load-time sentinels verify release-specific active and obsolete terms. The reproducible `verify_ontology_authority.py` check independently downloads the official archive and queries QuickGO and OLS; on 2026-07-12 the remote checksum matched and both live services reported the five disputed sentinels as obsolete. GOA can retain identifiers after ontology obsoletion, so the mixed-date legacy `cache/ontologies/go.tsv` status flag is not used as the ontology authority. Ontology status is recorded separately from assessment: a status-only label mismatch retains its biological `CNN`, `COR`, or `UNC` call, while `LSP` remains reserved for a canonical concept that is more generic than the supported annotation. The mixed-source ARGO139 rows are retained only as diagnostics.
 
 **Table S7.** Propagated all-aspect agreement against current GOA.
 
@@ -94,7 +94,7 @@ We computed a retrospective CAFA-style agreement score for ARGO95 SFT GO-term pr
 | Web export | 44 | 9,730 | 3,885 | 0.780 | 0.533 | 0.633 |
 | Mixed-source ARGO139 total | 139 | 10,682 | 6,267 | 0.810 | 0.511 | 0.627 |
 
-The score shows why aggregate GOA agreement is useful but incomplete. In the HF catalogue subset, 52/159 terms classified by AI-AUGR as NPI, PLI, or REP are exact matches to current GOA, and 123/159 have propagated overlap with current GOA. A GOA-agreement metric would reward some of these predictions despite evidence-grounded review classifying them as wrong or frequency-biased.
+The score shows why aggregate GOA agreement is useful but incomplete. In the HF catalogue subset, 53/152 terms classified by AI-AUGR as NPI, PLI, or REP are exact matches to current GOA, and 124/152 have propagated overlap with current GOA. A GOA-agreement metric would reward some of these predictions despite evidence-grounded review classifying them as wrong or frequency-biased.
 
 ![CAFA-style propagated F1 by aspect for ARGO95 SFT terms, with mixed-source diagnostics.](figures/cafa_style_argo139_sft.png)
 
@@ -135,7 +135,7 @@ GO-GPT emitted 8,910 predictions across 300 genes (mean 29.7 per gene). Raw GOA 
 - `../benchmark-genes.csv`: gene-level benchmark/source provenance.
 - `../benchmark-quality.csv`: per-gene source presence, dates, and checksums.
 - `../benchmark-metrics.json`: generated authoritative aggregate metrics.
-- `../argo95-ontology-pair-adjudication.tsv`: independent adjudication of every nonnegative ARGO95 prediction whose raw GO label disagreed with, or did not resolve from, its supplied GO identifier.
+- `../argo95-ontology-pair-adjudication.tsv`: independent adjudication of every ARGO95 ID-label mismatch that was nonnegative either at the audit baseline or after manual biological reclassification.
 - `../cafa_style_argo139.py`: retrospective CAFA-style SFT scorer; ARGO95 is the primary HF-catalogue row.
 - `../cafa-style/argo139_cafa_style_summary.csv`: propagated and exact precision/recall/F1 summary.
 - `../cafa-style/argo139_cafa_style_per_gene_aspect.csv`: per-gene/per-aspect score components.

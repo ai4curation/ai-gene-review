@@ -164,7 +164,7 @@ def load_prediction_assessments(repo_root: Path | None = None) -> pd.DataFrame:
 ASSESSMENT_ORDER = ["COR", "CNN", "LSP", "UNC", "PLI", "NPI", "REP"]
 ASSESSMENT_GLOSS = {
     "COR": "Correct novel",
-    "CNN": "Correct but Not Novel (already in GOA)",
+    "CNN": "Correct but Not Novel (established annotation or evidence)",
     "LSP": "Less Precise than existing annotation",
     "UNC": "Uncertain - cannot validate or refute",
     "PLI": "Paralog Incorrect",
