@@ -1,0 +1,2220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>pycA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>pycA</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88C36" target="_blank" class="term-link">
+                        Q88C36
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "pycA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88C36" data-a="DESCRIPTION: Predicted biotin carboxylase subunit associated wi..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Predicted biotin carboxylase subunit associated with the two-subunit pyruvate carboxylase system in Pseudomonas putida KT2440. PycA catalyzes ATP-dependent carboxylation of a biotinylated carrier and, together with the carboxyltransferase subunit PycB, is inferred to contribute to pyruvate carboxylase activity that provides an anaplerotic oxaloacetate input. The pycA/pycB assignment is weaker than the core TCA enzyme assignments because both UniProt entries are protein-existence level 4/predicted.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000166" target="_blank" class="term-link">
+                                    GO:0000166
+                                </a>
+                            </span>
+                            <span class="term-label">nucleotide binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88C36" data-a="GO:0000166" data-r="GO_REF:0000104" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but broad nucleotide-binding term; ATP binding is the more specific annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PycA contains an ATP-grasp/biotin carboxylation domain and binds nucleotide during the biotin carboxylase reaction, but GO:0005524 ATP binding is the more informative term.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004075" target="_blank" class="term-link">
+                                    GO:0004075
+                                </a>
+                            </span>
+                            <span class="term-label">biotin carboxylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88C36" data-a="GO:0004075" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct core subunit activity for PycA.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt annotates PycA as a biotin carboxylase with the ATP-dependent carboxybiotin-forming reaction. The PSEPK pathway report places PycA with PycB as the two-subunit biotin-dependent pyruvate carboxylase system.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/pycA/pycA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=N(6)-biotinyl-L-lysyl-[protein] + hydrogencarbonate + ATP =</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:projects/P_PUTIDA/deep-research/PSEPK__tca_cycle__ppu00020-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">The two-subunit biotin-dependent form: biotin carboxylase *pycA* (K01959) + carboxyltransferase *pycB* (K01960) (Finding F004).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88C36" data-a="GO:0005524" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct ATP-binding feature for the ATP-grasp biotin carboxylase subunit.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ATP is a substrate of the biotin carboxylase reaction, and UniProt annotates an ATP-grasp domain in PycA.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/pycA/pycA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">FT   DOMAIN          119..315</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046872" target="_blank" class="term-link">
+                                    GO:0046872
+                                </a>
+                            </span>
+                            <span class="term-label">metal ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88C36" data-a="GO:0046872" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic metal-binding parent term with limited specificity for this first-pass review.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Metal ion binding may reflect the broader ATP-grasp/biotin carboxylase family chemistry, but the specific useful annotations here are biotin carboxylase activity and ATP binding.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004736" target="_blank" class="term-link">
+                                    GO:0004736
+                                </a>
+                            </span>
+                            <span class="term-label">pyruvate carboxylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IC</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:projects/P_PUTIDA/deep-research/PSEPK__tca_cycle__ppu00020-deep-research-openscientist.md
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88C36" data-a="GO:0004736" data-r="file:projects/P_PUTIDA/deep-research/PSEPK__tca_cycle__ppu00020-deep-research-openscientist.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PycA is inferred to contribute to the two-subunit pyruvate carboxylase activity together with PycB.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The pathway report assigns pycA and pycB to the two-subunit biotin-dependent pyruvate carboxylase system. PycA supplies the biotin carboxylase subreaction and should not be interpreted as independently catalyzing the full pyruvate carboxylase reaction.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:projects/P_PUTIDA/deep-research/PSEPK__tca_cycle__ppu00020-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">The two-subunit biotin-dependent form: biotin carboxylase *pycA* (K01959) + carboxyltransferase *pycB* (K01960) (Finding F004).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>ATP-dependent biotin carboxylase subunit that contributes to the inferred two-subunit pyruvate carboxylase system producing anaplerotic oxaloacetate.</h3>
+                <span class="vote-buttons" data-g="Q88C36" data-a="FUNCTION: ATP-dependent biotin carboxylase subunit that cont..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004075" target="_blank" class="term-link">
+                            biotin carboxylase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/pycA/pycA-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Reaction=N(6)-biotinyl-L-lysyl-[protein] + hydrogencarbonate + ATP =</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:projects/P_PUTIDA/deep-research/PSEPK__tca_cycle__ppu00020-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">The two-subunit biotin-dependent form: biotin carboxylase *pycA* (K01959) + carboxyltransferase *pycB* (K01960) (Finding F004).</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/pycA/pycA-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry Q88C36 for Pseudomonas putida KT2440 pycA</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt annotates PycA as a biotin carboxylase with an ATP-dependent carboxybiotin-forming reaction.</div>
+
+                        <div class="finding-text">"Reaction=N(6)-biotinyl-L-lysyl-[protein] + hydrogencarbonate + ATP ="</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:projects/P_PUTIDA/deep-research/PSEPK__tca_cycle__ppu00020-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist PSEPK TCA-cycle pathway report</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The PSEPK pathway report assigns pycA and pycB to a two-subunit biotin-dependent pyruvate carboxylase system.</div>
+
+                        <div class="finding-text">"The two-subunit biotin-dependent form: biotin carboxylase *pycA* (K01959) + carboxyltransferase *pycB* (K01960) (Finding F004)."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report notes that pycA/pycB are weak PE4 predicted calls.</div>
+
+                        <div class="finding-text">"UniProt protein-existence level 4 (&#34;Predicted&#34;) — the weakest evidence tier in the set."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is the predicted PycA/PycB two-subunit enzyme the physiologically relevant pyruvate carboxylase in P. putida KT2440, and how is it distinguished from acetyl-CoA carboxylase biotin-carboxylase chemistry?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88C36" data-a="Q: Is the predicted PycA/PycB two-subunit enzyme the ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Reconstitute PycA/PycB in vitro with the appropriate biotin carrier and test pyruvate-dependent oxaloacetate formation, then assess pycA/pycB mutant growth on gluconeogenic and anaplerotic carbon-source regimes.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q88C36" data-a="EXPERIMENT: Reconstitute PycA/PycB in vitro with the appropria..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(pycA-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88C36" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation of *pycA* (PP_5347; UniProt Q88C36) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">12 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-11T19:34:20.283909</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="pycA-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="pycA-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-of-pyca-pp_5347-uniprot-q88c36-in-pseudomonas-putida-kt2440">Functional Annotation of <em>pycA</em> (PP_5347; UniProt Q88C36) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="summary">Summary</h2>
+<p><strong>pycA (locus PP_5347; UniProt Q88C36) in <em>Pseudomonas putida</em> KT2440 encodes the biotin carboxylase (BC), or α, subunit of a two-subunit pyruvate carboxylase (EC 6.4.1.1).</strong> Its primary molecular function is to catalyze the first, ATP- and bicarbonate-dependent half-reaction of biotin-dependent carboxylation: it carboxylates the biotin prosthetic group that is covalently attached to a lysine of its partner subunit, PycB. Working together, PycA and PycB convert pyruvate + HCO₃⁻ + ATP into oxaloacetate + ADP + Pᵢ. This is a soluble, cytoplasmic <strong>anaplerotic</strong> reaction — it replenishes the four-carbon dicarboxylic-acid pool of the tricarboxylic acid (TCA) cycle and supplies oxaloacetate for gluconeogenesis and biosynthesis.</p>
+<p>An important correction emerged during this investigation. UniProt's automated (ARBA/rule-based) annotation labels Q88C36 as the "acetyl-coenzyme A carboxylase biotin carboxylase subunit A." This name is derived from the shared ATP-grasp/biotin-carboxylase domain architecture that is common to <strong>all</strong> biotin-dependent carboxylases, and it is a <strong>mis-annotation</strong> in the specific genomic context of <em>P. putida</em> KT2440. Genomic synteny, orthology (KEGG), and domain analysis all indicate that PP_5347 is the BC subunit of pyruvate carboxylase, not of acetyl-CoA carboxylase. Decisively, <em>P. putida</em> KT2440 possesses a <em>separate, complete</em> acetyl-CoA carboxylase encoded by <em>accBCAD</em> (accC = PP_0558, accB = PP_0559, accA = PP_1607, accD = PP_1996), so PycA is neither required for nor part of fatty-acid initiation.</p>
+<p>The evidence base combines (i) direct genomic and orthology evidence within <em>P. putida</em> KT2440, (ii) sequence and structural bioinformatics on Q88C36 itself (51% identity to <em>E. coli</em> biotin carboxylase with a fully conserved active site; soluble cytoplasmic protein with no signal peptide or transmembrane helix), and (iii) a rich mechanistic literature on the biotin-dependent carboxylase superfamily and, specifically, the distinct two-subunit pyruvate carboxylase architecture found in Gram-negative bacteria. Multi-omics data from <em>P. putida</em> KT2440 grown on lignin-derived aromatic substrates provide physiological confirmation that the enzyme is upregulated for anaplerotic TCA replenishment.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-pyca-is-the-biotin-carboxylase-subunit-of-a-two-subunit-pyruvate-carboxylase-not-of-acetyl-coa-carboxylase">Finding 1 — pycA is the biotin carboxylase subunit of a two-subunit pyruvate carboxylase, not of acetyl-CoA carboxylase</h3>
+<p>The single most consequential result of this investigation is a <strong>correction to the database annotation.</strong> The initial reading of UniProt Q88C36 ("Biotin carboxylase"; alt. name "Acetyl-coenzyme A carboxylase biotin carboxylase subunit A") suggested a role in fatty-acid initiation. However, examination of the genomic context, orthology assignments, and domain content of the neighboring gene overturns this.</p>
+<p>Several independent lines of evidence converge:</p>
+<ol>
+<li><strong>Genomic synteny.</strong> PP_5347 (<em>pycA</em>) sits immediately adjacent to PP_5346 (<em>pycB</em>, UniProt Q88C37, 602 aa), which KEGG annotates as <strong>pyruvate carboxylase subunit B (K01960)</strong>. Adjacent, co-transcribed α/β genes are the hallmark of the two-subunit pyruvate carboxylase.</li>
+<li><strong>Domain partitioning.</strong> PycB contains a <strong>pyruvate carboxyltransferase (CT) domain (IPR000891/PF00682)</strong> plus a C-terminal <strong>biotin/lipoyl-attachment (BCCP) domain</strong> (residues ~526–601) — i.e., PycB carries the biotin. PycA (471 aa) contains <strong>only</strong> the biotin-carboxylase/ATP-grasp domain and has <strong>no</strong> BCCP domain. This division of labor is exactly the two-subunit PC architecture.</li>
+<li><strong>Orthology.</strong> KEGG assigns PP_5347 → <strong>K01959 (pyruvate carboxylase subunit A, EC 6.4.1.1)</strong>, mapped to the TCA cycle and pyruvate metabolism — not to fatty-acid biosynthesis.</li>
+<li><strong>A separate ACC exists.</strong> <em>P. putida</em> KT2440 encodes a complete, dedicated acetyl-CoA carboxylase elsewhere in the genome: accC = PP_0558 (K01961), accB = PP_0559 (K02160), accA = PP_1607, accD = PP_1996. Because a full ACC is already present, PP_5347 is not needed for malonyl-CoA production.</li>
+</ol>
+<p>This architecture matches the described two-subunit pyruvate carboxylase of Gram-negative bacteria. As Choi <em>et al.</em> (2016) state, "PC is a two-subunit enzyme in a collection of Gram-negative bacteria, with the α subunit containing the BC and the β subunit the CT and BCCP domains" (<a href="https://pubmed.ncbi.nlm.nih.gov/27708276/">PMID: 27708276</a>). PycA (BC; α; PP_5347) and PycB (CT + BCCP; β; PP_5346) map directly onto this description. The holoenzyme catalyzes the reaction that Laseke <em>et al.</em> (2025) describe: "Pyruvate carboxylase (PC) catalyzes the carboxylation of pyruvate to oxaloacetate which serves as an important anaplerotic reaction to replenish citric acid cycle intermediates" (<a href="https://pubmed.ncbi.nlm.nih.gov/39725256/">PMID: 39725256</a>).</p>
+<h3 id="finding-2-the-reaction-catalyzed-the-atpbicarbonate-biotin-carboxylation-half-reaction">Finding 2 — The reaction catalyzed: the ATP·bicarbonate biotin-carboxylation half-reaction</h3>
+<p>PycA's specific catalytic contribution is the <strong>first half-reaction</strong> of biotin-dependent carboxylation. The overall pyruvate carboxylase reaction proceeds in two spatially separated half-reactions:</p>
+<ul>
+<li><strong>Half-reaction 1 (PycA, BC domain):</strong> biotin–[PycB] + HCO₃⁻ + ATP → carboxybiotin–[PycB] + ADP + Pᵢ. This is the activity annotated for Q88C36 (Rhea RHEA:13501; the biotin-carboxylase sub-activity that operates within EC 6.4.1.1).</li>
+<li><strong>Half-reaction 2 (PycB, CT domain):</strong> carboxybiotin + pyruvate → oxaloacetate + biotin.</li>
+<li><strong>Net (EC 6.4.1.1):</strong> pyruvate + HCO₃⁻ + ATP → oxaloacetate + ADP + Pᵢ.</li>
+</ul>
+<p>The BC half-reaction chemistry is well established across the superfamily. Chou &amp; Tong (2011) note that "Biotin carboxylase (BC) activity is shared among biotin-dependent carboxylases and catalyzes the Mg-ATP-dependent carboxylation of biotin using bicarbonate as the CO₂ donor" (<a href="https://pubmed.ncbi.nlm.nih.gov/21592965/">PMID: 21592965</a>). Kinetic dissection of the BC domain of <em>Rhizobium etli</em> PC by Adina-Zada <em>et al.</em> (2012) resolves this half-reaction into "the enzyme-catalyzed bicarbonate-dependent ATP cleavage, carboxylation of biotin, and phosphorylation of ADP by carbamoyl phosphate" (<a href="https://pubmed.ncbi.nlm.nih.gov/22985389/">PMID: 22985389</a>) — precisely the chemistry assigned to PycA. Tong (2017) places PycA in context: "Biotin-dependent carboxylases are widely distributed in nature and have central roles in the metabolism of fatty acids, amino acids, carbohydrates, and other compounds" (<a href="https://pubmed.ncbi.nlm.nih.gov/28683917/">PMID: 28683917</a>).</p>
+<h3 id="finding-3-substrate-specificity-pyca-carboxylates-the-biotinyl-lysine-of-pycbs-bccp-domain">Finding 3 — Substrate specificity: PycA carboxylates the biotinyl-lysine of PycB's BCCP domain</h3>
+<p>The physiological substrate of PycA is <strong>not free biotin</strong> but the biotin prosthetic group covalently tethered to a specific lysine of its partner subunit. PycB (Q88C37) carries the conserved biotin-attachment motif <strong>A-M-K-M</strong>, with the biotinylated residue at <strong>Lys567</strong> within its C-terminal biotin/lipoyl (BCCP) domain (residues ~526–601). This covalently biotinylated lysine is the moiety that PycA carboxylates in half-reaction 1. This mode of substrate presentation — a mobile, protein-tethered biotin — is the defining feature of biotin-dependent carboxylases and dictates that PycA must physically dock the BCCP arm of PycB into its BC active site to accomplish carboxylation.</p>
+<h3 id="finding-4-fully-conserved-intact-biotin-carboxylase-active-site-51-identity-to-e-coli-accc">Finding 4 — Fully conserved, intact biotin-carboxylase active site (51% identity to <em>E. coli</em> AccC)</h3>
+<p>Direct bioinformatic analysis of Q88C36 confirms a catalytically competent BC enzyme. A Needleman–Wunsch global alignment of Q88C36 (471 aa) against <em>E. coli</em> biotin carboxylase AccC (P24182) gives <strong>51.0% identity over 447 aligned positions</strong>. Critically, <strong>all</strong> of the <em>E. coli</em> BC catalytic and ATP-binding residues are conserved in Q88C36:</p>
+<table>
+<thead>
+<tr>
+<th><em>E. coli</em> AccC residue</th>
+<th>Q88C36 equivalent</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Lys116</td>
+<td>Lys115</td>
+<td>ATP binding</td>
+</tr>
+<tr>
+<td>Lys159</td>
+<td>Lys157</td>
+<td>ATP binding</td>
+</tr>
+<tr>
+<td>His209</td>
+<td>His207</td>
+<td>catalysis</td>
+</tr>
+<tr>
+<td>Glu276</td>
+<td>Glu274</td>
+<td>catalytic base</td>
+</tr>
+<tr>
+<td>Glu288</td>
+<td>Glu286</td>
+<td>divalent-metal coordination</td>
+</tr>
+<tr>
+<td>Asn290</td>
+<td>Asn288</td>
+<td>divalent-metal coordination</td>
+</tr>
+</tbody>
+</table>
+<p>The glycine-rich ATP-binding loop is present (…MLKATSGGGGRGI…) within the ATP-grasp domain (residues ~119–315). These are the very residues identified by Thoden <em>et al.</em> for mutagenesis: "Four of these residues of biotin carboxylase, Lys-116, Lys-159, His-209, and Glu-276, were selected for site-directed mutagenesis studies" (<a href="https://pubmed.ncbi.nlm.nih.gov/11346647/">PMID: 11346647</a>). Their full conservation in Q88C36 indicates an intact, functional active site. The enzyme requires Mg²⁺ (and can use Mn²⁺), as for all biotin carboxylases.</p>
+<h3 id="finding-5-localization-soluble-cytoplasmic-protein">Finding 5 — Localization: soluble cytoplasmic protein</h3>
+<p>PycA carries out its function in the <strong>cytoplasm</strong>. Two lines of evidence support this:</p>
+<ol>
+<li><strong>Sequence/topology analysis of Q88C36.</strong> A Kyte–Doolittle hydropathy scan gives a maximum 19-residue window score of <strong>1.26</strong>, below the ~1.6 threshold for a transmembrane helix; the N-terminus (MIKKILIANRGEIA…) shows no cleavable signal peptide. The protein is therefore predicted soluble and cytoplasmic with no membrane insertion or secretion.</li>
+<li><strong>Biology of the family.</strong> Bacterial pyruvate carboxylases and biotin carboxylases are cytosolic enzymes. As a comparative example, in the related soil bacterium <em>Azotobacter vinelandii</em> the biotin carboxylase (AccC) is a cytoplasmic protein whose ATPase activity is regulated by a cytoplasmic cyclophilin; Dimou <em>et al.</em> (2012) report "a physical interaction among AvppiB, encoding the cytoplasmic cyclophilin from the soil nitrogen-fixing bacterium <em>Azotobacter vinelandii</em>, and AvaccC, encoding the biotin carboxylase subunit of acetyl-CoA carboxylase" (<a href="https://pubmed.ncbi.nlm.nih.gov/22809506/">PMID: 22809506</a>). While that study concerns an ACC biotin carboxylase, it demonstrates the cytoplasmic, soluble nature of bacterial BC subunits generally.</li>
+</ol>
+<h3 id="finding-6-mechanistic-coupling-swinging-biotin-and-allosteric-control-by-acetyl-coa">Finding 6 — Mechanistic coupling: swinging biotin and allosteric control by acetyl-CoA</h3>
+<p>Within the holoenzyme, PycA's active site is coupled to PycB's CT active site by <strong>long-range translocation of the biotinylated carrier domain</strong> — the "swinging arm" mechanism. Liu <em>et al.</em> (2018) show that in pyruvate carboxylase "the reaction occurs in two separate catalytic domains, coupled by the long-range translocation of a biotinylated carrier domain (BCCP)" (<a href="https://pubmed.ncbi.nlm.nih.gov/29643369/">PMID: 29643369</a>). PycA generates carboxybiotin at its BC site; the BCCP arm of PycB then shuttles the carboxybiotin over tens of ångströms to the CT active site, where pyruvate is carboxylated to oxaloacetate.</p>
+<p>This coupling is under <strong>allosteric control by acetyl-CoA</strong>, a hallmark of pyruvate carboxylase. Laseke <em>et al.</em> (2025) note that "In most organisms, the PC-catalyzed reaction is allosterically activated by acetyl-coenzyme A" (<a href="https://pubmed.ncbi.nlm.nih.gov/39725256/">PMID: 39725256</a>). Mechanistically, acetyl-CoA acts on the carrier translocation step: Liu <em>et al.</em> (2018) find that "the allosteric activator, acetyl CoA, promotes one specific intermolecular carrier domain translocation pathway" (<a href="https://pubmed.ncbi.nlm.nih.gov/29643369/">PMID: 29643369</a>). The acetyl-CoA binding site is formed largely within the CT/tetramerization (β/PycB-type) region; in <em>R. etli</em> PC, key residues include Arg427, Arg429, Arg469, Asp471, and Arg472 (<a href="https://pubmed.ncbi.nlm.nih.gov/27379711/">PMID: 27379711</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/26149215/">PMID: 26149215</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/22985389/">PMID: 22985389</a>). The physiological logic is elegant: high acetyl-CoA signals a need for more oxaloacetate (to condense with acetyl-CoA into citrate, and to sustain the TCA cycle), so acetyl-CoA switches on the anaplerotic PC reaction.</p>
+<h3 id="finding-7-bc-domain-dimerization-is-required-for-catalysis">Finding 7 — BC-domain dimerization is required for catalysis</h3>
+<p>The BC domain of pyruvate carboxylase functions as a dimer, and the dimer interface is catalytically essential. Studies on <em>Staphylococcus aureus</em> PC show that "mutations in the dimer interface can produce stable monomers that are still catalytically active," yet several interface mutations (e.g., K442E) and BC-domain chimeras abolish activity, and the isolated <em>S. aureus</em> BC domain "is monomeric in solution and catalytically inactive" (<a href="https://pubmed.ncbi.nlm.nih.gov/23286247/">PMID: 23286247</a>). <em>E. coli</em> BC studies indicate long-range communication between the two active sites of a dimer, and BC shows substrate inhibition by ATP that is competitive against bicarbonate (<a href="https://pubmed.ncbi.nlm.nih.gov/21592965/">PMID: 21592965</a>). These properties are expected to apply to PycA given its 51% identity and full active-site conservation.</p>
+<h3 id="finding-8-physiological-role-in-p-putida-kt2440-anaplerosis-for-tcaoxaloacetate-replenishment">Finding 8 — Physiological role in <em>P. putida</em> KT2440: anaplerosis for TCA/oxaloacetate replenishment</h3>
+<p>Direct, organism-specific evidence confirms the anaplerotic function. Multi-omics analysis of <em>P. putida</em> KT2440 grown on lignin-derived phenolic acids (ferulate, <em>p</em>-coumarate, vanillate, 4-hydroxybenzoate) versus succinate showed a large induction of pyruvate carboxylase: Zhou <em>et al.</em> (2025) report "Up to 30-fold increase in pyruvate carboxylase and glyoxylate shunt proteins implies a metabolic remodeling" (<a href="https://pubmed.ncbi.nlm.nih.gov/40883435/">PMID: 40883435</a>). When <em>P. putida</em> grows on aromatic/gluconeogenic substrates that feed carbon into the TCA cycle asymmetrically, it must replenish oxaloacetate to keep the cycle turning and to supply gluconeogenic and amino-acid precursors — exactly the role of pyruvate carboxylase. KEGG maps PP_5347 to the TCA cycle, pyruvate metabolism, carbon fixation, and amino-acid biosynthesis pathways, all consistent with anaplerosis.</p>
+<h3 id="finding-9-position-within-the-p-putida-anaplerotic-network">Finding 9 — Position within the <em>P. putida</em> anaplerotic network</h3>
+<p>Pyruvate carboxylase (PycA/PycB) operates alongside a set of parallel anaplerotic and gluconeogenic enzymes in <em>P. putida</em> KT2440:</p>
+<ul>
+<li><strong>PEP carboxylase</strong> (<em>ppc</em> = PP_1505; K01595): PEP + HCO₃⁻ → oxaloacetate.</li>
+<li><strong>NADP-malic enzyme</strong> (<em>maeB</em> = PP_5085; K00029): interconverts malate and pyruvate.</li>
+</ul>
+<p>Notably, <em>P. putida</em> KT2440 has <strong>no single-chain pyruvate carboxylase</strong> (the canonical single-polypeptide KO K01958 is absent from the genome), which is fully consistent with the two-subunit PycA/PycB being the organism's pyruvate carboxylase. The presence of both PEP carboxylase and a two-subunit PC gives <em>P. putida</em> redundant routes to oxaloacetate, reflecting the metabolic versatility of this soil bacterium.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<h3 id="the-two-subunit-pyruvate-carboxylase-of-p-putida-kt2440">The two-subunit pyruvate carboxylase of <em>P. putida</em> KT2440</h3>
+<div class="codehilite"><pre><span></span><code>   Operon:   ... PP_5347 (pycA) --- PP_5346 (pycB) ...
+   |                     |
+   v                     v
+     BC subunit (alpha)    CT + BCCP subunit (beta)
+     471 aa, Q88C36        602 aa, Q88C37
+     ATP-grasp fold        carboxyltransferase + biotin-Lys567
+</code></pre></div>
+
+<p>The holoenzyme executes anaplerosis in two coupled half-reactions:</p>
+<div class="codehilite"><pre><span></span><code><span class="w">  </span><span class="n">HALF</span><span class="o">-</span><span class="n">REACTION</span><span class="w"> </span><span class="mi">1</span><span class="w">  </span><span class="p">(</span><span class="n">PycA</span><span class="p">,</span><span class="w"> </span><span class="n">biotin</span><span class="w"> </span><span class="n">carboxylase</span><span class="w"> </span><span class="n">active</span><span class="w"> </span><span class="n">site</span><span class="p">)</span>
+<span class="w">  </span><span class="c1">---------------------------------------------------------</span>
+<span class="w">     </span><span class="n">ATP</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">HCO3</span><span class="o">-</span><span class="w">  </span><span class="o">+</span><span class="w">  </span><span class="n">biotin</span><span class="o">~</span><span class="n">Lys567</span><span class="o">-[</span><span class="n">PycB</span><span class="o">]</span>
+<span class="w">          </span><span class="o">|</span>
+<span class="w">      </span><span class="n">Mg2</span><span class="o">+</span><span class="p">,</span><span class="w"> </span><span class="n">BC</span><span class="w"> </span><span class="n">active</span><span class="w"> </span><span class="n">site</span><span class="w"> </span><span class="p">(</span><span class="n">Lys115</span><span class="p">,</span><span class="w"> </span><span class="n">Lys157</span><span class="p">,</span>
+<span class="w">      </span><span class="n">His207</span><span class="p">,</span><span class="w"> </span><span class="n">Glu274</span><span class="p">,</span><span class="w"> </span><span class="n">Glu286</span><span class="o">/</span><span class="n">Asn288</span><span class="p">)</span>
+<span class="w">          </span><span class="n">v</span>
+<span class="w">     </span><span class="n">ADP</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nf">Pi</span><span class="w">     </span><span class="o">+</span><span class="w">  </span><span class="n">carboxy</span><span class="o">-</span><span class="n">biotin</span><span class="o">~</span><span class="n">Lys567</span><span class="o">-[</span><span class="n">PycB</span><span class="o">]</span>
+
+<span class="w">  </span><span class="o">|</span><span class="w">  </span><span class="n">BCCP</span><span class="w"> </span><span class="ss">&quot;swinging arm&quot;</span><span class="w"> </span><span class="n">translocates</span>
+<span class="w">  </span><span class="o">|</span><span class="w">  </span><span class="n">carboxybiotin</span><span class="w"> </span><span class="o">~</span><span class="n">tens</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="n">Angstroms</span>
+<span class="w">  </span><span class="n">v</span>
+
+<span class="w">  </span><span class="n">HALF</span><span class="o">-</span><span class="n">REACTION</span><span class="w"> </span><span class="mi">2</span><span class="w">  </span><span class="p">(</span><span class="n">PycB</span><span class="p">,</span><span class="w"> </span><span class="n">carboxyltransferase</span><span class="w"> </span><span class="n">active</span><span class="w"> </span><span class="n">site</span><span class="p">)</span>
+<span class="w">  </span><span class="c1">---------------------------------------------------------</span>
+<span class="w">     </span><span class="n">carboxy</span><span class="o">-</span><span class="n">biotin</span><span class="o">~</span><span class="n">Lys567</span><span class="w">  </span><span class="o">+</span><span class="w">  </span><span class="n">pyruvate</span>
+<span class="w">          </span><span class="n">v</span>
+<span class="w">     </span><span class="n">biotin</span><span class="o">~</span><span class="n">Lys567</span><span class="w">         </span><span class="o">+</span><span class="w">  </span><span class="n">OXALOACETATE</span>
+
+<span class="w">  </span><span class="nl">NET</span><span class="p">:</span><span class="w">  </span><span class="n">pyruvate</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">HCO3</span><span class="o">-</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">ATP</span><span class="w">  </span><span class="c1">--&gt;  oxaloacetate + ADP + Pi   (EC 6.4.1.1)</span>
+<span class="w">  </span><span class="n">Allosteric</span><span class="w"> </span><span class="nl">activator</span><span class="p">:</span><span class="w"> </span><span class="n">acetyl</span><span class="o">-</span><span class="n">CoA</span><span class="w"> </span><span class="p">(</span><span class="n">acts</span><span class="w"> </span><span class="k">on</span><span class="w"> </span><span class="n">carrier</span><span class="w"> </span><span class="n">translocation</span><span class="p">)</span>
+</code></pre></div>
+
+<h3 id="why-this-matters-for-cellular-physiology">Why this matters for cellular physiology</h3>
+<p>Oxaloacetate is consumed continuously — condensed with acetyl-CoA into citrate to run the TCA cycle, and drawn off for gluconeogenesis (via PEP carboxykinase), for aspartate/asparagine and the aspartate-derived amino-acid family, and for pyrimidine biosynthesis. When carbon enters metabolism as pyruvate or as compounds that funnel through pyruvate/acetyl-CoA (including many aromatic and lignin-derived substrates that <em>P. putida</em> famously degrades), oxaloacetate would be depleted without a replenishing (anaplerotic) reaction. PycA/PycB pyruvate carboxylase provides exactly this replenishment. The 30-fold induction of PC on aromatic substrates (<a href="https://pubmed.ncbi.nlm.nih.gov/40883435/">PMID: 40883435</a>) is the physiological signature of this demand.</p>
+<h3 id="the-annotation-correction-summarized">The annotation correction, summarized</h3>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>UniProt automated annotation</th>
+<th>Corrected assignment (this investigation)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Enzyme complex</td>
+<td>Acetyl-CoA carboxylase (ACC)</td>
+<td>Two-subunit pyruvate carboxylase (PC)</td>
+</tr>
+<tr>
+<td>EC number</td>
+<td>6.4.1.2 (implied)</td>
+<td><strong>6.4.1.1</strong></td>
+</tr>
+<tr>
+<td>Product</td>
+<td>Malonyl-CoA (fatty-acid initiation)</td>
+<td><strong>Oxaloacetate (anaplerosis)</strong></td>
+</tr>
+<tr>
+<td>Partner subunit</td>
+<td>AccB/BCCP + AccA/AccD</td>
+<td><strong>PycB (PP_5346): CT + BCCP</strong></td>
+</tr>
+<tr>
+<td>Genomic neighbor</td>
+<td>—</td>
+<td>PP_5346 = pyruvate carboxylase β (K01960)</td>
+</tr>
+<tr>
+<td>Basis of error</td>
+<td>Shared ATP-grasp/BC domain</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p>The shared biotin-carboxylase/ATP-grasp domain is common to ACC, PC, propionyl-CoA carboxylase, methylcrotonyl-CoA carboxylase, and urea carboxylase. Automated pipelines keyed on this domain frequently default to the ACC name. The decisive discriminators here are <strong>genomic synteny with a CT+BCCP β-subunit</strong> and the <strong>presence of a separate, complete accBCAD operon</strong> elsewhere in the genome.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbrev.)</th>
+<th>How it supports the findings</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/27708276/">27708276</a></td>
+<td><em>A distinct holoenzyme organization for two-subunit pyruvate carboxylase</em></td>
+<td>Directly describes the α (BC) / β (CT+BCCP) two-subunit PC architecture that matches PycA/PycB in Gram-negative bacteria. <strong>Core support for Finding 1.</strong></td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/39725256/">39725256</a></td>
+<td><em>Hydrolysis of the acetyl-CoA allosteric activator by S. aureus PC</em></td>
+<td>Defines the pyruvate→oxaloacetate reaction, its anaplerotic role, and acetyl-CoA allosteric activation. <strong>Supports Findings 1, 2, 6, 8.</strong></td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/22985389/">22985389</a></td>
+<td><em>Roles of Arg427 and Arg472 in acetyl-CoA binding in PC</em></td>
+<td>Kinetically dissects the BC-domain half-reaction (bicarbonate-dependent ATP cleavage, biotin carboxylation). <strong>Defines the PycA half-reaction; Findings 2, 6.</strong></td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/21592965/">21592965</a></td>
+<td><em>Regulation of biotin carboxylase by substrate inhibition and dimerization</em></td>
+<td>Establishes the Mg-ATP + bicarbonate BC mechanism and substrate inhibition/dimer behavior. <strong>Findings 2, 7.</strong></td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/11346647/">11346647</a></td>
+<td><em>Site-directed mutagenesis of ATP binding residues of biotin carboxylase</em></td>
+<td>Identifies the catalytic residues (Lys116, Lys159, His209, Glu276) conserved in Q88C36. <strong>Finding 4.</strong></td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/28683917/">28683917</a></td>
+<td><em>Striking diversity in holoenzyme architecture of biotin-dependent carboxylases</em></td>
+<td>Places PycA in the biotin-dependent carboxylase superfamily with a shared BC half-reaction across diverse holoenzymes. <strong>Findings 2, 5.</strong></td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/29643369/">29643369</a></td>
+<td><em>Allosteric regulation alters carrier domain translocation in PC</em></td>
+<td>Establishes the swinging-BCCP mechanism coupling BC and CT sites, and acetyl-CoA's effect on translocation. <strong>Finding 6.</strong></td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23286247/">23286247</a></td>
+<td><em>Importance of the BC domain dimer for S. aureus PC catalysis</em></td>
+<td>Shows the BC-domain dimer interface is essential for catalysis; isolated BC domain is inactive. <strong>Finding 7.</strong></td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/22809506/">22809506</a></td>
+<td><em>Cyclophilin interaction with the biotin carboxylase subunit</em></td>
+<td>Demonstrates a bacterial BC subunit is cytoplasmic and regulated by protein–protein interaction. <strong>Finding 5.</strong></td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/40883435/">40883435</a></td>
+<td><em>Quantitative decoding of carbon/energy metabolism in P. putida for lignin utilization</em></td>
+<td>Organism-specific: up to 30-fold PC induction during growth on aromatics implies anaplerotic remodeling. <strong>Finding 8.</strong></td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/27379711/">27379711</a> / <a href="https://pubmed.ncbi.nlm.nih.gov/26149215/">26149215</a></td>
+<td><em>Allosteric domain residues of R. etli PC</em></td>
+<td>Map the acetyl-CoA allosteric site (Arg427/Arg429/Arg469/Asp471/Arg472). <strong>Finding 6.</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Note on organism specificity of the evidence:</strong> Direct enzymological characterization of <em>P. putida</em> KT2440 PycA/PycB has not, to our knowledge, been published. The mechanistic detail above is inferred by strong homology (51% identity of PycA to characterized biotin carboxylases; conserved active site; two-subunit architecture matching Choi <em>et al.</em> 2016) and by organism-specific expression data (Zhou <em>et al.</em> 2025). This is a well-supported inference, but it remains an inference for the enzymological specifics.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li><strong>No direct enzymology on <em>P. putida</em> PycA/PycB.</strong> Kinetic parameters (kcat, Kₘ for ATP, bicarbonate, pyruvate), the extent of acetyl-CoA activation, and confirmation of the reaction product for <em>this specific enzyme</em> have not been measured. Assignments rest on homology and genomic context.</li>
+<li><strong>UniProt name is a known mis-annotation.</strong> The recommended UniProt name ("acetyl-CoA carboxylase biotin carboxylase subunit A") is an automated ARBA/rule-based call driven by the shared ATP-grasp/BC domain and should be treated with caution. The corrected functional assignment (pyruvate carboxylase BC subunit) is supported by orthology and synteny but has not been experimentally validated in KT2440.</li>
+<li><strong>Biotinyl-Lys567 of PycB not experimentally confirmed.</strong> The biotinylation site is inferred from the conserved A-M-K-M motif position; direct mass-spectrometric confirmation is lacking.</li>
+<li><strong>Structural data are homology-based.</strong> No experimental structure of <em>P. putida</em> PycA exists; residue mappings and the hydropathy/topology analysis are computational.</li>
+<li><strong>Regulation in vivo.</strong> Whether PycA/PycB is acetyl-CoA-activated in <em>P. putida</em> (as in most organisms) and how its expression is controlled at the transcriptional level are not established beyond the proteomic correlation with aromatic-substrate growth.</li>
+<li><strong>Interplay with parallel anaplerotic routes.</strong> The relative flux contributions of PC vs. PEP carboxylase (Ppc) vs. malic enzyme under different carbon sources remain to be quantified (e.g., by ¹³C metabolic flux analysis).</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li><strong>Gene knockout / complementation.</strong> Construct a clean ΔpycA (and ΔpycA ΔpycB) mutant in <em>P. putida</em> KT2440 and test growth on pyruvate, lactate, and aromatic/lignin-derived substrates (where anaplerosis via PC is expected to be critical) versus TCA-feeding substrates (succinate) where it should be dispensable. Complement to confirm phenotype specificity.</li>
+<li><strong>In vitro enzymology.</strong> Co-express and purify recombinant PycA + PycB; measure the coupled pyruvate → oxaloacetate reaction (malate-dehydrogenase-coupled assay) and the isolated BC half-reaction (ATP/bicarbonate-dependent biotin carboxylation). Determine kcat and Kₘ values and test acetyl-CoA activation.</li>
+<li><strong>Confirm biotinylation site.</strong> Use streptavidin blotting and LC-MS/MS to verify covalent biotin attachment at Lys567 of PycB and demonstrate that PycA carboxylates the holo (biotinylated) but not apo PycB.</li>
+<li><strong>Active-site validation.</strong> Site-directed mutagenesis of the conserved catalytic residues predicted here (e.g., Lys115, Glu274) and assay for loss of BC activity, testing the homology-based active-site assignment.</li>
+<li><strong>¹³C metabolic flux analysis (MFA).</strong> Quantify the flux through PC vs. PEP carboxylase vs. malic enzyme across carbon sources (glucose, succinate, ferulate) to define the physiological weighting of PycA/PycB in the <em>P. putida</em> anaplerotic network.</li>
+<li><strong>Structural determination.</strong> Solve the PycA (and PycA/PycB holoenzyme) structure by cryo-EM or X-ray crystallography to confirm the ATP-grasp fold, the BC-domain dimer interface, and the holoenzyme organization predicted for two-subunit PCs.</li>
+<li><strong>Database correction.</strong> Submit the corrected functional assignment (pyruvate carboxylase BC subunit, EC 6.4.1.1) to UniProt with the supporting synteny/orthology evidence to prevent propagation of the ACC mis-annotation.</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p><em>pycA</em> (PP_5347; Q88C36) encodes the biotin carboxylase (α) subunit of a two-subunit pyruvate carboxylase in <em>Pseudomonas putida</em> KT2440. It catalyzes the MgATP- and bicarbonate-dependent carboxylation of the biotin prosthetic group carried on Lys567 of its partner subunit PycB (PP_5346), and, together with PycB's carboxyltransferase activity, converts pyruvate + HCO₃⁻ + ATP to oxaloacetate + ADP + Pᵢ (EC 6.4.1.1). The enzyme is a soluble, cytoplasmic, anaplerotic protein that replenishes TCA-cycle oxaloacetate — a role of particular importance when <em>P. putida</em> grows on aromatic and lignin-derived carbon. The UniProt "acetyl-CoA carboxylase" designation is a domain-driven mis-annotation; <em>P. putida</em> KT2440 has a separate, complete acetyl-CoA carboxylase (accBCAD), and PycA is not involved in fatty-acid initiation.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="pycA-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="pycA-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:27708276</li>
+<li>PMID:39725256</li>
+<li>PMID:21592965</li>
+<li>PMID:22985389</li>
+<li>PMID:28683917</li>
+<li>PMID:11346647</li>
+<li>PMID:22809506</li>
+<li>PMID:29643369</li>
+<li>PMID:27379711</li>
+<li>PMID:26149215</li>
+<li>PMID:23286247</li>
+<li>PMID:40883435</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88C36
+gene_symbol: pycA
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: Predicted biotin carboxylase subunit associated with the two-subunit pyruvate carboxylase system in Pseudomonas putida KT2440. PycA catalyzes ATP-dependent carboxylation of a biotinylated carrier and, together with the carboxyltransferase subunit PycB, is inferred to contribute to pyruvate carboxylase activity that provides an anaplerotic oxaloacetate input. The pycA/pycB assignment is weaker than the core TCA enzyme assignments because both UniProt entries are protein-existence level 4/predicted.
+existing_annotations:
+- term:
+    id: GO:0000166
+    label: nucleotide binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: Correct but broad nucleotide-binding term; ATP binding is the more specific annotation.
+    action: KEEP_AS_NON_CORE
+    reason: PycA contains an ATP-grasp/biotin carboxylation domain and binds nucleotide during the biotin carboxylase reaction, but GO:0005524 ATP binding is the more informative term.
+- term:
+    id: GO:0004075
+    label: biotin carboxylase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Correct core subunit activity for PycA.
+    action: ACCEPT
+    reason: UniProt annotates PycA as a biotin carboxylase with the ATP-dependent carboxybiotin-forming reaction. The PSEPK pathway report places PycA with PycB as the two-subunit biotin-dependent pyruvate carboxylase system.
+    supported_by:
+    - reference_id: file:PSEPK/pycA/pycA-uniprot.txt
+      supporting_text: &#39;Reaction=N(6)-biotinyl-L-lysyl-[protein] + hydrogencarbonate + ATP =&#39;
+    - reference_id: file:projects/P_PUTIDA/deep-research/PSEPK__tca_cycle__ppu00020-deep-research-openscientist.md
+      supporting_text: &#39;The two-subunit biotin-dependent form: biotin carboxylase *pycA* (K01959) + carboxyltransferase *pycB* (K01960) (Finding F004).&#39;
+- term:
+    id: GO:0005524
+    label: ATP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Correct ATP-binding feature for the ATP-grasp biotin carboxylase subunit.
+    action: ACCEPT
+    reason: ATP is a substrate of the biotin carboxylase reaction, and UniProt annotates an ATP-grasp domain in PycA.
+    supported_by:
+    - reference_id: file:PSEPK/pycA/pycA-uniprot.txt
+      supporting_text: &#39;FT   DOMAIN          119..315&#39;
+- term:
+    id: GO:0046872
+    label: metal ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Generic metal-binding parent term with limited specificity for this first-pass review.
+    action: KEEP_AS_NON_CORE
+    reason: Metal ion binding may reflect the broader ATP-grasp/biotin carboxylase family chemistry, but the specific useful annotations here are biotin carboxylase activity and ATP binding.
+- term:
+    id: GO:0004736
+    label: pyruvate carboxylase activity
+  evidence_type: IC
+  original_reference_id: file:projects/P_PUTIDA/deep-research/PSEPK__tca_cycle__ppu00020-deep-research-openscientist.md
+  qualifier: contributes_to
+  review:
+    summary: PycA is inferred to contribute to the two-subunit pyruvate carboxylase activity together with PycB.
+    action: NEW
+    reason: The pathway report assigns pycA and pycB to the two-subunit biotin-dependent pyruvate carboxylase system. PycA supplies the biotin carboxylase subreaction and should not be interpreted as independently catalyzing the full pyruvate carboxylase reaction.
+    supported_by:
+    - reference_id: file:projects/P_PUTIDA/deep-research/PSEPK__tca_cycle__ppu00020-deep-research-openscientist.md
+      supporting_text: &#39;The two-subunit biotin-dependent form: biotin carboxylase *pycA* (K01959) + carboxyltransferase *pycB* (K01960) (Finding F004).&#39;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations
+    between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/pycA/pycA-uniprot.txt
+  title: UniProtKB entry Q88C36 for Pseudomonas putida KT2440 pycA
+  findings:
+  - statement: UniProt annotates PycA as a biotin carboxylase with an ATP-dependent carboxybiotin-forming reaction.
+    supporting_text: &#39;Reaction=N(6)-biotinyl-L-lysyl-[protein] + hydrogencarbonate + ATP =&#39;
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: UniProt entry for the exact target accession Q88C36; protein-existence level is predicted.
+- id: file:projects/P_PUTIDA/deep-research/PSEPK__tca_cycle__ppu00020-deep-research-openscientist.md
+  title: OpenScientist PSEPK TCA-cycle pathway report
+  findings:
+  - statement: The PSEPK pathway report assigns pycA and pycB to a two-subunit biotin-dependent pyruvate carboxylase system.
+    supporting_text: &#39;The two-subunit biotin-dependent form: biotin carboxylase *pycA* (K01959) + carboxyltransferase *pycB* (K01960) (Finding F004).&#39;
+    reference_section_type: RESULTS
+  - statement: The report notes that pycA/pycB are weak PE4 predicted calls.
+    supporting_text: UniProt protein-existence level 4 (&#34;Predicted&#34;) — the weakest evidence tier in the set.
+    reference_section_type: DISCUSSION
+  reference_review:
+    relevance: HIGH
+    correctness: UNVERIFIED
+    review_notes: Provider-generated module/pathway report used for first-pass pathway curation; useful for module context but the pycA/pycB assignment remains predicted/PE4.
+core_functions:
+- description: ATP-dependent biotin carboxylase subunit that contributes to the inferred two-subunit pyruvate carboxylase system producing anaplerotic oxaloacetate.
+  molecular_function:
+    id: GO:0004075
+    label: biotin carboxylase activity
+  contributes_to_molecular_function:
+    id: GO:0004736
+    label: pyruvate carboxylase activity
+  supported_by:
+  - reference_id: file:PSEPK/pycA/pycA-uniprot.txt
+    supporting_text: &#39;Reaction=N(6)-biotinyl-L-lysyl-[protein] + hydrogencarbonate + ATP =&#39;
+  - reference_id: file:projects/P_PUTIDA/deep-research/PSEPK__tca_cycle__ppu00020-deep-research-openscientist.md
+    supporting_text: &#39;The two-subunit biotin-dependent form: biotin carboxylase *pycA* (K01959) + carboxyltransferase *pycB* (K01960) (Finding F004).&#39;
+suggested_questions:
+- question: Is the predicted PycA/PycB two-subunit enzyme the physiologically relevant pyruvate carboxylase in P. putida KT2440, and how is it distinguished from acetyl-CoA carboxylase biotin-carboxylase chemistry?
+suggested_experiments:
+- description: Reconstitute PycA/PycB in vitro with the appropriate biotin carrier and test pyruvate-dependent oxaloacetate formation, then assess pycA/pycB mutant growth on gluconeogenic and anaplerotic carbon-source regimes.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

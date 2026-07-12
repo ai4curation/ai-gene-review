@@ -1,0 +1,1873 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>acnA-I - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>acnA-I</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88L24" target="_blank" class="term-link">
+                        Q88L24
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "acnA-I";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88L24" data-a="DESCRIPTION: Aconitate hydratase/aconitase of Pseudomonas putid..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Aconitate hydratase/aconitase of Pseudomonas putida KT2440. AcnA-I catalyzes the reversible citrate-to-isocitrate isomerization through cis-aconitate, covering the aconitase step of the tricarboxylic acid cycle. The pathway-level evidence indicates that P. putida has both acnA-I and acnB, with aconitase chemistry shared between the TCA cycle and methylcitrate-related metabolism.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003994" target="_blank" class="term-link">
+                                    GO:0003994
+                                </a>
+                            </span>
+                            <span class="term-label">aconitate hydratase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88L24" data-a="GO:0003994" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct core molecular function for this aconitase.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt annotates Q88L24 as aconitate hydratase/aconitase, EC 4.2.1.3, catalyzing citrate = D-threo-isocitrate. The PSEPK pathway report identifies acnA-I and acnB as the genes covering the TCA-cycle aconitase step, with a caveat that these enzymes are shared with methylcitrate metabolism.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/acnA-I/acnA-I-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=citrate = D-threo-isocitrate;</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:projects/P_PUTIDA/deep-research/PSEPK__tca_cycle__ppu00020-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">Both are present, but both carry bifunctional aconitate hydratase / 2-methylisocitrate dehydratase annotations</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006099" target="_blank" class="term-link">
+                                    GO:0006099
+                                </a>
+                            </span>
+                            <span class="term-label">tricarboxylic acid cycle</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000041
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88L24" data-a="GO:0006099" data-r="GO_REF:0000041" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct TCA-cycle process annotation for citrate/isocitrate interconversion.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt places Q88L24 in the tricarboxylic acid cycle, and the PSEPK pathway report concludes that step 2 of the oxidative TCA cycle is covered by acnA-I/acnB. The methylcitrate-cycle sharing caveat affects module boundary interpretation, not the correctness of the TCA annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/acnA-I/acnA-I-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">isocitrate from oxaloacetate: step 2/2.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Aconitase catalyzing the reversible citrate/isocitrate isomerization through cis-aconitate in the TCA cycle, with probable sharing of this chemistry with methylcitrate-cycle metabolism.</h3>
+                <span class="vote-buttons" data-g="Q88L24" data-a="FUNCTION: Aconitase catalyzing the reversible citrate/isocit..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003994" target="_blank" class="term-link">
+                            aconitate hydratase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006099" target="_blank" class="term-link">
+                                tricarboxylic acid cycle
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/acnA-I/acnA-I-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Reaction=citrate = D-threo-isocitrate;</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:projects/P_PUTIDA/deep-research/PSEPK__tca_cycle__ppu00020-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">Both are present, but both carry bifunctional aconitate hydratase / 2-methylisocitrate dehydratase annotations</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000041.md" target="_blank" class="term-link">
+                            GO_REF:0000041
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniPathway vocabulary mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/acnA-I/acnA-I-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry Q88L24 for Pseudomonas putida KT2440 acnA-I</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt annotates acnA-I as aconitate hydratase catalyzing citrate/isocitrate interconversion.</div>
+
+                        <div class="finding-text">"Reaction=citrate = D-threo-isocitrate;"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt places acnA-I in the TCA-cycle isocitrate-from-oxaloacetate pathway step.</div>
+
+                        <div class="finding-text">"isocitrate from oxaloacetate: step 2/2."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:projects/P_PUTIDA/deep-research/PSEPK__tca_cycle__ppu00020-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist PSEPK TCA-cycle pathway report</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The PSEPK pathway report identifies acnA-I/acnB as covering the aconitase step while noting methylcitrate-cycle sharing.</div>
+
+                        <div class="finding-text">"Both are present, but both carry bifunctional aconitate hydratase / 2-methylisocitrate dehydratase annotations"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the condition-specific division of labor between acnA-I and acnB for TCA-cycle aconitase activity versus methylcitrate-cycle 2-methylisocitrate dehydratase activity?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88L24" data-a="Q: What is the condition-specific division of labor b..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Compare acnA-I and acnB mutant growth and enzyme activity on citrate, acetate, propionate, and methylcitrate-cycle substrates to resolve TCA versus methylcitrate specialization.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q88L24" data-a="EXPERIMENT: Compare acnA-I and acnB mutant growth and enzyme a..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(acnA-I-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88L24" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: **acnA-I** (PP_2112, UniProt Q88L24)</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-11T18:16:58.954208</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="acnA-I-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="acnA-I-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-acna-i-pp_2112-uniprot-q88l24">Functional Annotation Report: <strong>acnA-I</strong> (PP_2112, UniProt Q88L24)</h1>
+<h3 id="aconitate-hydratase-aconitase-ec-4213-pseudomonas-putida-kt2440">Aconitate hydratase (Aconitase, EC 4.2.1.3) — <em>Pseudomonas putida</em> KT2440</h3>
+<hr />
+<h2 id="1-summary-answer-to-the-research-question">1. Summary (Answer to the Research Question)</h2>
+<p><strong>acnA-I (PP_2112, Q88L24) encodes a cytoplasmic, [4Fe-4S]-cluster-dependent aconitase (aconitate hydratase, EC 4.2.1.3) that catalyzes the reversible, stereospecific isomerization of citrate to D-<em>threo</em>-isocitrate via the enzyme-bound intermediate <em>cis</em>-aconitate — the second step of the tricarboxylic acid (TCA/Krebs) cycle.</strong> Sequence, structural, and evolutionary evidence identify it specifically as an <strong>AcnA-type</strong> enzyme (73% identical to the biochemically characterized <em>Escherichia coli</em> AcnA), i.e. the stable, iron/oxidative-stress-inducible "maintenance" aconitase, as opposed to the exponential-phase catabolic AcnB or the propionate/2-methylcitrate-dedicated aconitases encoded elsewhere in the genome. Like other AcnA/IRP-family proteins, it is predicted to be <strong>bifunctional</strong>: when its Fe-S cluster is lost under iron limitation or oxidative stress, the apo-protein can act as a post-transcriptional mRNA-binding regulator.</p>
+<p><strong>Gene identity was verified</strong> at every step: the symbol <em>acnA-I</em>, the aconitate hydratase description, the aconitase/IPM-isomerase family, the AcnA_IRP swivel and aconitase domains, and the organism <em>P. putida</em> KT2440 are all mutually consistent with the enzyme characterized below. There was <strong>no</strong> evidence of a same-symbol collision with an unrelated gene.</p>
+<hr />
+<h2 id="2-molecular-function-and-reaction-catalyzed">2. Molecular Function and Reaction Catalyzed</h2>
+<h3 id="21-the-reaction">2.1 The reaction</h3>
+<p>AcnA-I is an <strong>aconitate hydratase (aconitase)</strong>, EC 4.2.1.3, catalyzing:</p>
+<blockquote>
+<p><strong>citrate ⇌ <em>cis</em>-aconitate + H₂O ⇌ D-<em>threo</em>-isocitrate</strong></p>
+</blockquote>
+<p>The overall reaction is a net isomerization (a dehydration followed by a stereochemically distinct re-hydration) that moves a hydroxyl group from the C3 to the C2 position of the tricarboxylic acid, proceeding through the tightly bound intermediate <em>cis</em>-aconitate (UniProt Q88L24 catalytic activity: "citrate = D-threo-isocitrate"; UniPathway: <em>tricarboxylic acid cycle; isocitrate from oxaloacetate: step 2/2</em>). Aconitases are iron–sulfur proteins that "catalyse the reversible isomerization of citrate and isocitrate via the intermediate <em>cis</em>-aconitate in the Krebs cycle" (Baothman et al., 2013, PMID 23637460).</p>
+<h3 id="22-catalytic-cofactor-and-mechanism">2.2 Catalytic cofactor and mechanism</h3>
+<p>Catalysis depends on a <strong>[4Fe-4S] cluster</strong> (UniProt cofactor annotation; keywords 4Fe-4S, Iron-sulfur). Three of the four irons are ligated by cysteine residues; the fourth iron (<strong>Fe4</strong>) is coordinatively unsaturated and directly binds the substrate's hydroxyl and a carboxylate, acting as a Lewis acid during the dehydration/rehydration. Crystallographic studies of the homologous mitochondrial aconitase established that "Fe4 of the [4Fe-4S] cluster is five-coordinate," and that the mechanistic model extends "to all three natural substrates of aconitase" — citrate, <em>cis</em>-aconitate, and isocitrate (Lauble et al., 1994, PMID 8151704).</p>
+<p><strong>Residue-level evidence for an intact active site in AcnA-I:</strong><br />
+- The three cluster-ligating cysteines occur in the canonical single-Cys + Cys-X-X-Cys geometry: <strong>Cys454, Cys520, Cys523</strong> in PP_2112.<br />
+- These map <strong>one-to-one</strong> onto the curated <em>E. coli</em> AcnA ligands <strong>Cys435, Cys501, Cys504</strong> (UniProt P25516), whose Fe-S cluster was characterized by EPR and magnetic-CD spectroscopy and shown to "strongly resemble those of the mammalian enzymes" (Jordan et al., 1999, PMID 10585860).<br />
+- The active-site stretch <strong>ITSCTNTSNP</strong> (surrounding the first ligand cysteine) is <strong>identical</strong> in PP_2112 (452–461) and <em>E. coli</em> AcnA (433–442), indicating full conservation of the catalytic pocket.</p>
+<h3 id="23-substrate-specificity">2.3 Substrate specificity</h3>
+<p>AcnA-I is expected to act on the <strong>canonical TCA tricarboxylates (citrate/<em>cis</em>-aconitate/isocitrate)</strong>. In some AcnA enzymes the same active site can also hydrate 2-methyl-<em>cis</em>-aconitate to 2-methylisocitrate in the 2-methylcitrate (propionate) cycle (Horswill &amp; Escalante-Semerena, 2001, PMID 11294638). However, in <em>P. putida</em> KT2440 that propionate-catabolic role is delegated to a <strong>separate, dedicated gene cluster</strong> (see Section 4), so AcnA-I's physiological substrate is the standard TCA-cycle citrate/isocitrate pair.</p>
+<hr />
+<h2 id="3-subcellular-localization">3. Subcellular Localization</h2>
+<p>AcnA-I functions in the <strong>cytoplasm (cytosol)</strong>. UniProt Q88L24 annotates only structural domains (aconitase large subunit, residues 76–581; AcnA/IPM swivel, 710–837) and contains <strong>no signal peptide and no transmembrane segment</strong>, ruling out periplasmic, membrane, or extracellular localization. This is consistent with the aconitase/IRP1 family being soluble cytosolic proteins — mammalian IRP1/cytosolic aconitase is "a well-established cytosolic protein" (Gu et al., 2022, PMID 36142654). The TCA cycle and the enzyme's potential mRNA targets both reside in the same compartment.</p>
+<hr />
+<h2 id="4-genomic-context-paralogs-and-pathway-placement">4. Genomic Context, Paralogs, and Pathway Placement</h2>
+<p><em>P. putida</em> KT2440 encodes <strong>three</strong> aconitase-family (EC 4.2.1.3) proteins plus an aconitate isomerase, revealing a division of labour:</p>
+<table>
+<thead>
+<tr>
+<th>Locus</th>
+<th>Gene</th>
+<th>UniProt</th>
+<th>Length</th>
+<th>Role (inferred)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>PP_2112</strong></td>
+<td><strong>acnA-I</strong></td>
+<td><strong>Q88L24</strong></td>
+<td><strong>913 aa</strong></td>
+<td><strong>Standalone AcnA-type TCA-cycle aconitase (this report)</strong></td>
+</tr>
+<tr>
+<td>PP_2336</td>
+<td>acnA-II</td>
+<td>Q88KF4</td>
+<td>862 aa</td>
+<td>AcnA-type, within the propionate/2-methylcitrate cluster</td>
+</tr>
+<tr>
+<td>PP_2337</td>
+<td>prpF</td>
+<td>Q88KF3</td>
+<td>396 aa</td>
+<td>Aconitate isomerase (2-methyl-aconitate handling)</td>
+</tr>
+<tr>
+<td>PP_2339</td>
+<td>acnB</td>
+<td>Q88KF1</td>
+<td>869 aa</td>
+<td>AcnB-type; also 2-methylisocitrate dehydratase (EC 4.2.1.99)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>acnA-I (PP_2112) sits alone</strong> on the chromosome, whereas acnA-II/prpF/acnB form a contiguous cluster associated with <strong>2-methylcitrate / propionate catabolism</strong>. This mirrors the observation that acnA-type genes recur "in a number of putative prp operons" (Horswill &amp; Escalante-Semerena, 2001, PMID 11294638) — but importantly, PP_2112 is the copy that is <em>not</em> in such an operon, marking it as the <strong>general TCA-cycle housekeeping/maintenance aconitase</strong>.</p>
+<p><strong>Pathway:</strong> The reaction is step 2 of the TCA cycle (citrate → isocitrate), feeding isocitrate to isocitrate dehydrogenase and, at branch points, to the glyoxylate shunt. In <em>P. putida</em>, whose metabolism is organised around the TCA cycle and gluconeogenesis, this step is central to energy generation and to biosynthetic precursor supply (2-oxoglutarate, succinyl-CoA, oxaloacetate).</p>
+<hr />
+<h2 id="5-evolutionary-bioinformatic-evidence-for-the-acna-assignment">5. Evolutionary / Bioinformatic Evidence for the AcnA Assignment</h2>
+<p>Global (Needleman–Wunsch) pairwise identity of PP_2112 against reference aconitases:</p>
+<table>
+<thead>
+<tr>
+<th>Reference</th>
+<th>UniProt</th>
+<th>% identity to PP_2112</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>E. coli</em> <strong>AcnA</strong></td>
+<td>P25516</td>
+<td><strong>72.6%</strong></td>
+</tr>
+<tr>
+<td><em>P. putida</em> AcnA-II</td>
+<td>Q88KF4</td>
+<td>54.3%</td>
+</tr>
+<tr>
+<td>Pig mitochondrial aconitase / IRP1 homolog</td>
+<td>P16276</td>
+<td>43.3%</td>
+</tr>
+<tr>
+<td><em>P. putida</em> AcnB</td>
+<td>Q88KF1</td>
+<td>34.5%</td>
+</tr>
+<tr>
+<td><em>E. coli</em> <strong>AcnB</strong></td>
+<td>P36683</td>
+<td>34.9%</td>
+</tr>
+</tbody>
+</table>
+<p>The ~2-fold identity gap between the AcnA clade (&gt;54%) and the AcnB clade (~35%) unambiguously assigns PP_2112 to the <strong>AcnA subfamily</strong>. Because <em>E. coli</em> AcnA is biochemically well characterized, this <strong>orthology</strong> (not merely family membership) licenses transfer of its established properties to PP_2112.</p>
+<p><strong>Independent structural support:</strong> the AlphaFold model of AcnA-I (AF-Q88L24-F1) is <strong>very high confidence</strong> (mean pLDDT 92.4; 96.8% of residues &gt;70, 80.4% &gt;90), indicating the four-domain aconitase architecture (three large-subunit domains plus the AcnA/IPM swivel domain closing over the active-site cleft) is modeled reliably — consistent with a canonical aconitase fold competent for [4Fe-4S] binding and catalysis.</p>
+<p><strong>Properties of the AcnA archetype</strong> (transferable to AcnA-I):<br />
+- A <strong>stable, aerobic stationary-phase enzyme, specifically induced by iron and oxidative stress</strong>, with higher affinity for citrate and a broad pH optimum — "consistent with its role as a maintenance or survival enzyme during nutritional or oxidative stress," in contrast to the catabolic, less stable AcnB (Jordan et al., 1999, PMID 10585860).<br />
+- In <em>Salmonella</em>, acnA expression is controlled by CRP (glucose starvation), FNR (oxygen starvation), Fur (iron starvation), and SoxR (oxidative stress) (Baothman et al., 2013, PMID 23637460).</p>
+<hr />
+<h2 id="6-secondary-moonlighting-function-cluster-dependent-rna-binding">6. Secondary (Moonlighting) Function: Cluster-Dependent RNA Binding</h2>
+<p>AcnA-family proteins are <strong>bifunctional</strong>, resembling the vertebrate iron-regulatory proteins (IRP1) in "having alternative mRNA-binding and catalytic activities" (Tang &amp; Guest, 1999, PMID 10589714). When the labile [4Fe-4S] cluster is disassembled by oxidants or iron starvation, the <strong>apo-protein</strong> switches to a site-specific RNA-binding mode:<br />
+- In <em>E. coli</em>, apo-AcnA/AcnB bind the 3′UTRs of acn mRNAs, and the apo-forms have &gt;3-fold higher mRNA affinity than the holo-enzymes; "the apo-proteins function as post-transcriptional regulators by site-specific binding to acn mRNAs," with AcnA <strong>stabilizing sodA (superoxide dismutase) mRNA</strong> — coupling aconitase status to the oxidative-stress defence (Tang et al., 2002, PMID 11932448).<br />
+- The switch is cluster-dependent, exactly as for mammalian IRP1, which is "a bifunctional protein with mutually exclusive RNA-binding or enzymatic activities that depend on the presence of a 4Fe-4S cluster" (Gu et al., 2022, PMID 36142654).</p>
+<p>PP_2112 carries the UniProt <strong>RNA-binding</strong> keyword (GO:0003723) and the <strong>AcnA_IRP swivel domain (IPR044137)</strong>, so this regulatory potential is structurally encoded. Direct experimental demonstration of RNA targets specifically for the <em>P. putida</em> protein has not been reported; this role is inferred from strong orthology and conserved domain architecture.</p>
+<hr />
+<h2 id="7-supported-and-refuted-hypotheses">7. Supported and Refuted Hypotheses</h2>
+<p><strong>Supported:</strong><br />
+- H1 — AcnA-I is a genuine [4Fe-4S] aconitase catalyzing citrate↔isocitrate in the TCA cycle. <em>(Curated annotation + residue-level active-site conservation.)</em><br />
+- H2 — PP_2112 is an AcnA-type (not AcnB-type) enzyme, orthologous to <em>E. coli</em> AcnA. <em>(73% vs 35% identity; clade separation.)</em><br />
+- H3 — The enzyme is cytoplasmic. <em>(No signal/TM; family is cytosolic.)</em><br />
+- H4 — Physiological substrate is the standard TCA citrate/isocitrate pair, with propionate/2-methylcitrate handled by the separate acnA-II/acnB/prpF cluster. <em>(Paralog/genomic-context analysis.)</em></p>
+<p><strong>Supported by inference (not yet experimentally confirmed in <em>P. putida</em>):</strong><br />
+- H5 — Apo-AcnA-I can moonlight as a post-transcriptional RNA-binding regulator under iron/oxidative stress. <em>(Orthology + IRP swivel domain + RNA-binding keyword; awaits direct experimental validation.)</em></p>
+<p><strong>Refuted:</strong><br />
+- That PP_2112 is the exponential-phase catabolic AcnB (35% identity — rejected) or a dedicated 2-methylcitrate-cycle enzyme (that function maps to PP_2336–2339 — rejected as its primary role).</p>
+<hr />
+<h2 id="8-limitations-and-future-directions">8. Limitations and Future Directions</h2>
+<ul>
+<li><strong>Direct experimental data specific to PP_2112 are sparse.</strong> Targeted PubMed searches returned no primary <em>P. putida</em> AcnA-I characterization; conclusions rest on (i) curated database annotation, (ii) very high orthology to the experimentally characterized <em>E. coli</em>/<em>Salmonella</em> AcnA, and (iii) residue-level structural conservation. This is strong but indirect for the moonlighting role.</li>
+<li><strong>Future work:</strong> purify AcnA-I and measure kinetic constants (Km for citrate/isocitrate) and pH profile; test single/double aconitase knockouts (acnA-I vs acnA-II/acnB) for growth-phase, iron-, and oxidative-stress phenotypes; perform EPR/MCD on the cluster; and use RNA-immunoprecipitation/CLIP to identify apo-AcnA-I mRNA targets in <em>P. putida</em>.</li>
+</ul>
+<hr />
+<h2 id="9-key-references">9. Key References</h2>
+<ul>
+<li>Baothman OAS, Rolfe MD, Green J. <em>Characterization of Salmonella enterica serovar Typhimurium aconitase A.</em> Microbiology 2013. <strong>PMID 23637460</strong>.</li>
+<li>Jordan PA, Tang Y, Bradbury AJ, Thomson AJ, Guest JR. <em>Biochemical and spectroscopic characterization of E. coli aconitases (AcnA and AcnB).</em> Biochem J 1999. <strong>PMID 10585860</strong>.</li>
+<li>Tang Y, Guest JR. <em>Direct evidence for mRNA binding and post-transcriptional regulation by E. coli aconitases.</em> Microbiology 1999. <strong>PMID 10589714</strong>.</li>
+<li>Tang Y, Quail MA, Artymiuk PJ, Guest JR, Green J. <em>E. coli aconitases and oxidative stress: post-transcriptional regulation of sodA.</em> Microbiology 2002. <strong>PMID 11932448</strong>.</li>
+<li>Lauble H, Kennedy MC, Beinert H, Stout CD. <em>Crystal structures of aconitase with trans-aconitate and nitrocitrate bound.</em> J Mol Biol 1994. <strong>PMID 8151704</strong>.</li>
+<li>Horswill AR, Escalante-Semerena JC. <em>In vitro conversion of propionate to pyruvate ... PrpD and aconitase.</em> Biochemistry 2001. <strong>PMID 11294638</strong>.</li>
+<li>Gu Y, Fillebeen C, Pantopoulos K. <em>Human IRP1 translocates to the nucleus in a cell-specific and iron-dependent manner.</em> 2022. <strong>PMID 36142654</strong>.</li>
+<li>UniProt Q88L24 (acnA-I / PP_2112); P25516 (<em>E. coli</em> AcnA); P36683 (<em>E. coli</em> AcnB); Q88KF1/Q88KF4/Q88KF3 (<em>P. putida</em> paralogs).</li>
+</ul>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="acnA-I-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="acnA-I-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88L24
+gene_symbol: acnA-I
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: Aconitate hydratase/aconitase of Pseudomonas putida KT2440. AcnA-I catalyzes the reversible citrate-to-isocitrate isomerization through cis-aconitate, covering the aconitase step of the tricarboxylic acid cycle. The pathway-level evidence indicates that P. putida has both acnA-I and acnB, with aconitase chemistry shared between the TCA cycle and methylcitrate-related metabolism.
+existing_annotations:
+- term:
+    id: GO:0003994
+    label: aconitate hydratase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Correct core molecular function for this aconitase.
+    action: ACCEPT
+    reason: UniProt annotates Q88L24 as aconitate hydratase/aconitase, EC 4.2.1.3, catalyzing citrate = D-threo-isocitrate. The PSEPK pathway report identifies acnA-I and acnB as the genes covering the TCA-cycle aconitase step, with a caveat that these enzymes are shared with methylcitrate metabolism.
+    supported_by:
+    - reference_id: file:PSEPK/acnA-I/acnA-I-uniprot.txt
+      supporting_text: &#39;Reaction=citrate = D-threo-isocitrate;&#39;
+    - reference_id: file:projects/P_PUTIDA/deep-research/PSEPK__tca_cycle__ppu00020-deep-research-openscientist.md
+      supporting_text: Both are present, but both carry bifunctional aconitate hydratase / 2-methylisocitrate dehydratase annotations
+- term:
+    id: GO:0006099
+    label: tricarboxylic acid cycle
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000041
+  qualifier: involved_in
+  review:
+    summary: Correct TCA-cycle process annotation for citrate/isocitrate interconversion.
+    action: ACCEPT
+    reason: UniProt places Q88L24 in the tricarboxylic acid cycle, and the PSEPK pathway report concludes that step 2 of the oxidative TCA cycle is covered by acnA-I/acnB. The methylcitrate-cycle sharing caveat affects module boundary interpretation, not the correctness of the TCA annotation.
+    supported_by:
+    - reference_id: file:PSEPK/acnA-I/acnA-I-uniprot.txt
+      supporting_text: &#39;isocitrate from oxaloacetate: step 2/2.&#39;
+references:
+- id: GO_REF:0000041
+  title: Gene Ontology annotation based on UniPathway vocabulary mapping
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/acnA-I/acnA-I-uniprot.txt
+  title: UniProtKB entry Q88L24 for Pseudomonas putida KT2440 acnA-I
+  findings:
+  - statement: UniProt annotates acnA-I as aconitate hydratase catalyzing citrate/isocitrate interconversion.
+    supporting_text: &#39;Reaction=citrate = D-threo-isocitrate;&#39;
+    reference_section_type: RESULTS
+  - statement: UniProt places acnA-I in the TCA-cycle isocitrate-from-oxaloacetate pathway step.
+    supporting_text: &#39;isocitrate from oxaloacetate: step 2/2.&#39;
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: UniProt entry for the exact target accession Q88L24; protein-existence level is homology-inferred.
+- id: file:projects/P_PUTIDA/deep-research/PSEPK__tca_cycle__ppu00020-deep-research-openscientist.md
+  title: OpenScientist PSEPK TCA-cycle pathway report
+  findings:
+  - statement: The PSEPK pathway report identifies acnA-I/acnB as covering the aconitase step while noting methylcitrate-cycle sharing.
+    supporting_text: Both are present, but both carry bifunctional aconitate hydratase / 2-methylisocitrate dehydratase annotations
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: UNVERIFIED
+    review_notes: Provider-generated module/pathway report used for first-pass pathway curation; consistent with UniProt labels.
+core_functions:
+- description: Aconitase catalyzing the reversible citrate/isocitrate isomerization through cis-aconitate in the TCA cycle, with probable sharing of this chemistry with methylcitrate-cycle metabolism.
+  molecular_function:
+    id: GO:0003994
+    label: aconitate hydratase activity
+  directly_involved_in:
+  - id: GO:0006099
+    label: tricarboxylic acid cycle
+  supported_by:
+  - reference_id: file:PSEPK/acnA-I/acnA-I-uniprot.txt
+    supporting_text: &#39;Reaction=citrate = D-threo-isocitrate;&#39;
+  - reference_id: file:projects/P_PUTIDA/deep-research/PSEPK__tca_cycle__ppu00020-deep-research-openscientist.md
+    supporting_text: Both are present, but both carry bifunctional aconitate hydratase / 2-methylisocitrate dehydratase annotations
+suggested_questions:
+- question: What is the condition-specific division of labor between acnA-I and acnB for TCA-cycle aconitase activity versus methylcitrate-cycle 2-methylisocitrate dehydratase activity?
+suggested_experiments:
+- description: Compare acnA-I and acnB mutant growth and enzyme activity on citrate, acetate, propionate, and methylcitrate-cycle substrates to resolve TCA versus methylcitrate specialization.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
