@@ -222,6 +222,40 @@ Behavior of the multicellular slug and tip organizer.
 
 (`mlcD` was already reviewed prior to this project. `tgrC1` = `lagC`/`gp150`.)
 
+## Protein families & paralog coverage
+
+Most reviewed genes are **single members of larger *Dictyostelium* paralog
+families** — the pipeline caches each gene's PANTHER family at fetch time. The
+first pass reviewed one representative per developmental module; the sister
+paralogs (which typically perform the same molecular job at a **different
+developmental stage**) remain to be curated. These intra-family sisters are
+where IBA/IEA propagation *within* a family most often produces
+over-annotation, so they are high-value targets.
+
+| Reviewed member | Family (PANTHER) | Sister paralogs not yet reviewed |
+|-----------------|------------------|----------------------------------|
+| carA (cAR1) | GPCR cAMP receptor (PTHR23112) | **carB (cAR2), carC (cAR3), carD (cAR4)** |
+| acaA (ACA) | Adenylate cyclase (PTHR45627) | **acgA (ACG), acrA (ACR/ACB)** |
+| rasC | Ras small-GTPase superfamily (PTHR24070) | **rasG**, rasB, rasD, rasS, rapA |
+| pdsA + regA | Cyclic-nucleotide PDE (PTHR11347/PTHR28283) | gbpA, gbpB, pdeD, pdeE |
+| pkaC | cNMP-dependent kinase (PTHR24353) | **pkaR (regulatory subunit)** |
+| statA | STAT (PTHR11801) | **statB, statC, statD** |
+| dhkA | Two-component histidine kinase (PTHR43719) | dhkB, dhkC, dhkE … (~15-member family) |
+| grlE | GABA-B / Grl GPCR (PTHR10519) | grlA–grlR (~17 family GPCRs) |
+| csaA + tgrB1 + tgrC1 | IPT/TIG domain (PTHR31341) | polymorphic *tgr* allorecognition locus (~14 tgrB/tgrC genes) |
+| ecmA + ecmB | ECM protein A family (PTHR31797) | ecmC, ecmF, ecmO |
+| cotB | spore-coat (no clean PANTHER) | cotA, cotC, cotD, other PsB-complex coat proteins |
+| ctnA (countin) | small-aggregate / counting factor (PTHR35884) | cf45-1, cf50, countin-2 |
+| mhcA | Myosin (PTHR13140) | myosin-I family (mlcD light chain already reviewed) |
+
+`gbfA`, `cotB`, and `ctnA` map to *Dictyostelium*-specific / novel families with
+no paralog set to chase.
+
+**Highest-value paralog batch (direct functional sisters):** `carB`, `carC`,
+`carD`, `acgA`, `acrA`, `rasG`, `pkaR`, `statC` — these complete the cAMP
+receptor series, the three developmental adenylate cyclases, the two principal
+chemotaxis Ras proteins, the PKA holoenzyme (C+R), and a second STAT.
+
 ## Existing DICDI reviews in the repo
 
 - `genes/DICDI/mlcD` — myosin light chain (Module 3, motility)
