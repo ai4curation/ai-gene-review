@@ -1,6 +1,6 @@
 ---
 title: "IBA Annotation Quality Project"
-maturity: COMPLETE
+maturity: MATURE
 tags: [PIPELINE, FLAGSHIP]
 species: [human, CANAL, MYCTU, VIBCH, SCHPO, ECOLI, mouse, rat, worm, yeast, ANOGA, POPTR, DANRE, DICDI]
 genes:
@@ -611,6 +611,22 @@ Each of these rows carries a structured `review.propagation_review`
 and a representative seed) in the corresponding
 `genes/DICDI/<gene>/<gene>-ai-review.yaml`. Full module and paralog context:
 [Dictyostelium Development Project](DICTYOSTELIUM_DEVELOPMENT.md).
+
+> **Connection to pathway satisfiability.** The JAK-STAT case is the clearest
+> instance of a broader, *automatable* rule. `GO:0007259` "signaling via
+> **JAK**-STAT" names an obligate component — a Janus kinase — that the
+> *Dictyostelium* genome does not encode (the Dd-STATs are activated by the TKL
+> kinases Pyk2/Pyk3). Read as a boolean formula over required components under a
+> **genome-content oracle**, the annotation is *unsatisfiable* and the IBA
+> transfer is unsupportable — so it is rescoped to the JAK-independent parent
+> `GO:0097696` STAT signaling. This is the signaling-domain analogue of the
+> genome-content check in the
+> [Pathway satisfiability project](PATHWAY_SATISFIABILITY.md): a process/pathway
+> term whose definition entails a component **absent from the target's genome**
+> is a candidate `LINEAGE_OR_TAXON_MISMATCH` over-propagation (cf. the
+> purinergic-receptor terms removed from cAR2/3/4 — no P2X/P2Y receptors in
+> *Dictyostelium*). Turning that into a detector would generalise the hand-made
+> taxon-mismatch REMOVE/MODIFY calls above.
 
 ## Genes with IBA Issues
 
