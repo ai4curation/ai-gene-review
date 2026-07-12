@@ -116,6 +116,8 @@ The rescored axes remain associated (Pearson 0.688; Spearman 0.617), so they sho
 
 ARGO95 contains 955 HF-catalogue terms: 658 `CNN` (68.9%; 629 exact frozen-GOA matches and 29 supported as non-novel by other established local evidence), 125 `NPI`, 5 `PLI`, 29 `REP`, 61 `LSP`, 23 `COR`, and 54 `UNC`. A frozen-ontology [ID/label adjudication](BIOREASON_COMPARISON/argo95-ontology-pair-adjudication.tsv) reviewed all 76 nonnegative mismatched or unresolved raw pairs and changed 56 calls so that assessment follows the supplied GO ID rather than an intended but incompatible label. Raw model pairs remain unchanged and are explicitly flagged in their review rationales.
 
+The ontology authority for this audit is the official archived 2026-03-25 `go-basic.obo`, pinned by SHA-256 in `benchmark-policy.yaml` and checked at load time with both obsolete and active sentinel terms. That release, and the current GO API, explicitly mark terms such as `GO:0005615` extracellular space and `GO:0005844` polysome obsolete. Committed GOA snapshots can lag those obsoletions, and the mixed-date legacy `cache/ontologies/go.tsv` flag is not used for benchmark adjudication.
+
 The ARGO139 GO-GPT files were rebuilt from raw web exports with ontology-aware leaf pruning. The cleaned set contains 5,923 terms: 1,900 exact positive AIGR matches (`CNN`), 129 exact rejected/over-annotated matches (`NPI`), and 3,894 unresolved terms (`UNC`). Because unresolved entries still require manual assessment, 138/139 documents are `DRAFT`; only the fully resolved `BACSU/ftsZ` document is `COMPLETE`. This is a transparent pending review, not a completed GO-GPT performance result.
 
 ## Results (138-gene performance set; 139 collected exports)

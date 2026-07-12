@@ -12,7 +12,12 @@ import yaml
 from ai_gene_review.bioreason_ontology import (
     FROZEN_GO_ADAPTER,
     GO_RELEASE,
+    GO_RELEASE_SENTINELS,
+    GO_RELEASE_SHA256,
     GO_RELEASE_URL,
+    ensure_frozen_go,
+    frozen_go_sha256,
+    get_go_adapter,
 )
 
 
@@ -54,7 +59,31 @@ def test_benchmark_and_refresh_commands_share_frozen_go_release() -> None:
 
     assert frozen["ontology_release"] == GO_RELEASE
     assert frozen["ontology_url"] == GO_RELEASE_URL
+    assert frozen["ontology_sha256"] == GO_RELEASE_SHA256
+    assert frozen["ontology_integrity_sentinels"] == {
+        "obsolete": [
+            go_id
+            for go_id, (_, is_obsolete) in GO_RELEASE_SENTINELS.items()
+            if is_obsolete
+        ],
+        "active": [
+            go_id
+            for go_id, (_, is_obsolete) in GO_RELEASE_SENTINELS.items()
+            if not is_obsolete
+        ],
+    }
     assert FROZEN_GO_ADAPTER == "frozen-go-2026-03-25"
+
+
+def test_frozen_go_checksum_and_release_sentinels() -> None:
+    path = ensure_frozen_go()
+    assert frozen_go_sha256(path) == GO_RELEASE_SHA256
+
+    adapter = get_go_adapter()
+    obsolete = set(adapter.obsoletes())
+    for go_id, (label, is_obsolete) in GO_RELEASE_SENTINELS.items():
+        assert adapter.label(go_id) == label
+        assert (go_id in obsolete) is is_obsolete
 
 
 def test_argo139_truncated_sequences_are_flagged_not_excluded() -> None:
