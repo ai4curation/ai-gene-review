@@ -99,9 +99,13 @@ def load_review_terms(review_file, goa_file):
     return terms
 
 def main():
-    import torch
-    from gogpt.inference import GOGPTPredictor, GOTokenizerJSON, OrganismMapperJSON
-    from transformers import AutoTokenizer
+    import torch  # type: ignore[import-not-found]
+    from gogpt.inference import (  # type: ignore[import-not-found]
+        GOGPTPredictor,
+        GOTokenizerJSON,
+        OrganismMapperJSON,
+    )
+    from transformers import AutoTokenizer  # type: ignore[import-not-found]
     
     print("Loading GO-GPT model...", flush=True)
     predictor = object.__new__(GOGPTPredictor)

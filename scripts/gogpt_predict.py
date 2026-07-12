@@ -172,7 +172,7 @@ def load_review_decisions(review_file: Path) -> dict[str, set[str]]:
 def load_review_terms(review_file: Path) -> dict[str, set[str]]:
     """Load GO terms by aspect for callers that only need term membership."""
     review = yaml.safe_load(review_file.read_text()) or {}
-    terms = {"MF": set(), "BP": set(), "CC": set()}
+    terms: dict[str, set[str]] = {"MF": set(), "BP": set(), "CC": set()}
     full_to_short = {value: key for key, value in ASPECT_FULL.items()}
 
     for annotation in review.get("existing_annotations", []) or []:
@@ -382,7 +382,7 @@ def build_prediction_entry(
     existing_prediction = existing_prediction or {}
     canonical_label = canonical_go_label(term["id"], go_labels, go_adapter)
     existing_review = existing_prediction.get("review")
-    if is_manual_review(existing_review):
+    if isinstance(existing_review, dict) and is_manual_review(existing_review):
         review = normalize_review_confidence(existing_review)
     else:
         assessment, summary = deterministic_assessment(term["id"], review_decisions)
@@ -692,11 +692,15 @@ def refresh_web_exports(
 
 def load_predictor(model_dir: Path) -> Any:
     """Load the local GO-GPT predictor."""
-    import torch
-    from transformers import AutoTokenizer
+    import torch  # type: ignore[import-not-found]
+    from transformers import AutoTokenizer  # type: ignore[import-not-found]
 
     sys.path.insert(0, str(Path.home() / "repos/BioReason-Pro/gogpt/src"))
-    from gogpt.inference import GOGPTPredictor, GOTokenizerJSON, OrganismMapperJSON
+    from gogpt.inference import (  # type: ignore[import-not-found]
+        GOGPTPredictor,
+        GOTokenizerJSON,
+        OrganismMapperJSON,
+    )
 
     predictor = object.__new__(GOGPTPredictor)
     predictor.device = torch.device(

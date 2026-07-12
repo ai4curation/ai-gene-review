@@ -105,7 +105,7 @@ def extract_go_terms(generation: str) -> list[tuple[str, str, str]]:
 
 
 def load_goa_terms(goa_file: Path) -> set[str]:
-    terms = set()
+    terms: set[str] = set()
     if not goa_file.exists():
         return terms
     with goa_file.open() as handle:
