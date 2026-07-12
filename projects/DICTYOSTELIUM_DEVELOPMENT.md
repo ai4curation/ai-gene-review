@@ -251,10 +251,23 @@ over-annotation, so they are high-value targets.
 `gbfA`, `cotB`, and `ctnA` map to *Dictyostelium*-specific / novel families with
 no paralog set to chase.
 
-**Highest-value paralog batch (direct functional sisters):** `carB`, `carC`,
-`carD`, `acgA`, `acrA`, `rasG`, `pkaR`, `statC` — these complete the cAMP
-receptor series, the three developmental adenylate cyclases, the two principal
-chemotaxis Ras proteins, the PKA holoenzyme (C+R), and a second STAT.
+**Highest-value paralog batch (direct functional sisters) — ✅ REVIEWED:**
+`carB` (cAR2), `carC` (cAR3), `carD` (cAR4), `acgA` (ACG), `acrA` (ACR),
+`rasG`, `pkaR`, `statC` — completing the cAMP receptor series (cAR1–4), the
+three developmental adenylate cyclases (ACA/ACG/ACR), the two principal
+chemotaxis Ras proteins (RasC/RasG), the PKA holoenzyme (C+R), and a second
+STAT. All 8 reviewed and validated.
+
+This batch confirmed the predicted **intra-family IBA/IEA over-propagation**:
+the aggregation-stage "adenylate cyclase-activating cAMP receptor" role was
+mis-transferred onto the later paralogs cAR4 (MARK_AS_OVER_ANNOTATED) and the
+purinergic-receptor IEA was removed from cAR2/cAR3/cAR4; ACR's degenerate
+histidine-kinase/receiver domains carried phosphorelay/transferase IEAs refuted
+by its functional paper (REMOVE); statC carried metazoan JAK-STAT / defense /
+proliferation terms corrected to STAT signaling and removed.
+
+**Still open (lower priority):** wider *tgr* allorecognition locus, remaining
+Ras/Rap members, dhk/grl family members, ecm/cot paralogs, statB/statD.
 
 ## Existing DICDI reviews in the repo
 
