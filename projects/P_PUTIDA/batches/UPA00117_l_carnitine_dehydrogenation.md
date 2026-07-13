@@ -8,7 +8,7 @@ autolink_gene_symbols: false
 
 # PSEPK UPA00117: UniPathway UPA00117
 
-- Module seed: `l_carnitine_dehydrogenation`
+- Pathway seed: `l_carnitine_dehydrogenation` (single-step; no standalone module retained)
 - Candidate genes from membership table: 1
 - Primary bucket genes: 1
 - Existing review files: 1
@@ -17,13 +17,13 @@ autolink_gene_symbols: false
 
 ## Required Workflow
 
-- [x] Curate or update the species-neutral module.
-- [x] Run module-level OpenScientist deep research.
+- [x] Assess module granularity and record the single-step pathway curation.
+- [x] Run generic OpenScientist retrieval for the pathway seed.
 - [x] Run module + pathway + PSEPK OpenScientist deep research.
 - [x] Fetch all selected genes with `just fetch-gene PSEPK <gene>`.
 - [x] Run OpenScientist deep research for selected genes.
 - [x] Curate each selected gene review.
-- [x] Validate module and gene reviews.
+- [x] Validate gene review; standalone module retired/deferred.
 - [ ] Open one PR for this module/pathway.
 - [ ] Shepherd PR through review, CI, and merge readiness.
 
@@ -37,11 +37,13 @@ autolink_gene_symbols: false
 
 Generated UTC: 2026-07-11T21:08:35.324367+00:00
 
-- Created `modules/l_carnitine_dehydrogenation.yaml` as a compact UPA00117
-  module centered on `lcdH` / PP_0302 / Q88R32.
+- Retired the previous `modules/l_carnitine_dehydrogenation.yaml` seed:
+  UPA00117 is a single LcdH oxidation step and should not be represented as a
+  standalone one-part module. Reintroduce it only inside a broader multi-part
+  carnitine-utilization module.
 - OpenScientist gene-level research completed:
   `genes/PSEPK/lcdH/lcdH-deep-research-openscientist.md`.
-- OpenScientist generic module research completed:
+- OpenScientist generic retrieval completed:
   `modules/l_carnitine_dehydrogenation-deep-research-openscientist.md`.
 - OpenScientist PSEPK module+pathway research completed:
   `projects/P_PUTIDA/deep-research/PSEPK__l_carnitine_dehydrogenation__upa00117-deep-research-openscientist.md`.

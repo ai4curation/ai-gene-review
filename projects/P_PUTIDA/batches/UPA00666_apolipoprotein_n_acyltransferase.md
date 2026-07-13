@@ -8,7 +8,7 @@ autolink_gene_symbols: false
 
 # PSEPK UPA00666: UniPathway UPA00666
 
-- Module seed: `apolipoprotein_n_acyltransferase`
+- Pathway seed: `apolipoprotein_n_acyltransferase` (single-step; no standalone module retained)
 - Candidate genes from membership table: 1
 - Primary bucket genes: 1
 - Existing review files: 1
@@ -17,13 +17,13 @@ autolink_gene_symbols: false
 
 ## Required Workflow
 
-- [x] Curate or update the species-neutral module.
-- [x] Run module-level OpenScientist deep research.
+- [x] Assess module granularity and record the single-step pathway curation.
+- [x] Run generic OpenScientist retrieval for the pathway seed.
 - [x] Run module + pathway + PSEPK OpenScientist deep research.
 - [x] Fetch all selected genes with `just fetch-gene PSEPK <gene>`.
 - [x] Run OpenScientist deep research for selected genes.
 - [x] Curate each selected gene review.
-- [x] Validate module and gene reviews.
+- [x] Validate gene review; standalone module retired/deferred.
 - [ ] Open one PR for this module/pathway.
 - [ ] Shepherd PR through review, CI, and merge readiness.
 
@@ -36,3 +36,8 @@ autolink_gene_symbols: false
 ## Notes
 
 Generated UTC: 2026-07-11T21:36:02.996296+00:00
+
+- Retired the previous `modules/apolipoprotein_n_acyltransferase.yaml` seed:
+  UPA00666 is a single Lnt N-acylation step and should not be represented as a
+  standalone one-part module. Reintroduce it only inside a broader multi-part
+  bacterial lipoprotein maturation module.

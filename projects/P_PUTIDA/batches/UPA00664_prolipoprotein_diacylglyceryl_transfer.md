@@ -8,7 +8,7 @@ autolink_gene_symbols: false
 
 # PSEPK UPA00664: prolipoprotein diacylglyceryl transfer
 
-- Module seed: `prolipoprotein_diacylglyceryl_transfer`
+- Pathway seed: `prolipoprotein_diacylglyceryl_transfer` (single-step; no standalone module retained)
 - Candidate genes from membership table: 1
 - Primary bucket genes: 1
 - Existing review files: 1
@@ -17,13 +17,13 @@ autolink_gene_symbols: false
 
 ## Required Workflow
 
-- [x] Curate or update the species-neutral module.
-- [x] Run module-level OpenScientist deep research.
+- [x] Assess module granularity and record the single-step pathway curation.
+- [x] Run generic OpenScientist retrieval for the pathway seed.
 - [x] Run module + pathway + PSEPK OpenScientist deep research.
 - [x] Fetch all selected genes with `just fetch-gene PSEPK <gene>`.
 - [x] Run OpenScientist deep research for selected genes.
 - [x] Curate each selected gene review.
-- [x] Validate module and gene reviews.
+- [x] Validate gene review; standalone module retired/deferred.
 - [ ] Open one PR for this module/pathway.
 - [ ] Shepherd PR through review, CI, and merge readiness.
 
@@ -39,15 +39,17 @@ Generated UTC: 2026-07-11T21:26:52.045157+00:00
 
 Curator notes, 2026-07-11:
 
-- New module created and validated:
-  `modules/prolipoprotein_diacylglyceryl_transfer.yaml`.
+- Retired the previous `modules/prolipoprotein_diacylglyceryl_transfer.yaml`
+  seed: UPA00664 is a single Lgt diacylglyceryl-transfer step and should not be
+  represented as a standalone one-part module. Reintroduce it only inside a
+  broader multi-part bacterial lipoprotein maturation module.
 - Fetched, OpenScientist-backed, curated, and validated the single UniPathway
   member: `lgt` / PP_5142 / Q88CN8.
 - `lgt` accepts GO:0008961
   `phosphatidylglycerol-prolipoprotein diacylglyceryl transferase activity`,
   GO:0042158 `lipoprotein biosynthetic process`, and GO:0005886 `plasma
   membrane`.
-- OpenScientist generic module research completed:
+- OpenScientist generic retrieval completed:
   `modules/prolipoprotein_diacylglyceryl_transfer-deep-research-openscientist.md`.
 - OpenScientist PSEPK module+pathway research completed and resolved the
   expected local UniPathway candidate set: one candidate, `lgt` / PP_5142 /
