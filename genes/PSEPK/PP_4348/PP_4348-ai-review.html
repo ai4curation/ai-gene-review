@@ -1,0 +1,2532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PP_4348 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PP_4348</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88EV4" target="_blank" class="term-link">
+                        Q88EV4
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PP_4348";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88EV4" data-a="DESCRIPTION: PP_4348 encodes a PLP-dependent cystathionine beta..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PP_4348 encodes a PLP-dependent cystathionine beta-lyase-family enzyme. It is the candidate second enzyme of the trans-sulfuration branch of L-methionine biosynthesis in KT2440, hydrolyzing cystathionine to L-homocysteine, pyruvate, and ammonium.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006520" target="_blank" class="term-link">
+                                    GO:0006520
+                                </a>
+                            </span>
+                            <span class="term-label">amino acid metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88EV4" data-a="GO:0006520" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Amino acid metabolic process is true but too broad for PP_4348.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The InterPro2GO parent term should not obscure the specific cystathionine beta-lyase/trans-sulfuration role supported by the local protein name and UniProt catalytic activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4348/PP_4348-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0006520	amino acid metabolic process</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4348/PP_4348-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0019346	transsulfuration</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019346" target="_blank" class="term-link">
+                                    GO:0019346
+                                </a>
+                            </span>
+                            <span class="term-label">transsulfuration</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88EV4" data-a="GO:0019346" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Transsulfuration is appropriate for a cystathionine beta-lyase candidate.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PP_4348 is annotated as cystathionine beta-lyase, and GapMind models the trans-sulfuration route as MetB plus MetC/cystathionine beta-lyase.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4348/PP_4348-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SubName: Full=Cystathionine beta-lyase</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4348/PP_4348-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">PP_4348 (Q88EV4) of *Pseudomonas putida* KT2440 is a cytoplasmic, PLP-dependent **cystathionine β-lyase (MetC, EC 4.4.1.8)**</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4348/PP_4348-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0019346	transsulfuration</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:modules/experimental/gapmind-mining/cache/gapmind/aa/met.steps
+
+                                </span>
+
+                                <div class="support-text">transsulfuration: metA metB metC</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030170" target="_blank" class="term-link">
+                                    GO:0030170
+                                </a>
+                            </span>
+                            <span class="term-label">pyridoxal phosphate binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88EV4" data-a="GO:0030170" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Pyridoxal phosphate binding is a catalytic cofactor feature for PP_4348.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PLP binding supports the beta-lyase reaction but is secondary to the cystathionine-cleavage function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4348/PP_4348-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Name=pyridoxal 5&#39;-phosphate</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4348/PP_4348-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0030170	pyridoxal phosphate binding</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0047804" target="_blank" class="term-link">
+                                    GO:0047804
+                                </a>
+                            </span>
+                            <span class="term-label">cysteine-S-conjugate beta-lyase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88EV4" data-a="GO:0047804" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The beta-lyase activity captures the PP_4348 trans-sulfuration reaction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt records cystathionine beta-lyase catalytic activity producing L-homocysteine, pyruvate, and ammonium from cystathionine, matching the module need for a cystathionine-cleavage step.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4348/PP_4348-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=L,L-cystathionine + H2O = L-homocysteine + pyruvate + NH4(+)</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4348/PP_4348-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0047804	cysteine-S-conjugate beta-lyase activity</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Candidate PLP-dependent cystathionine beta-lyase that produces L-homocysteine in the trans-sulfuration branch of L-methionine biosynthesis.</h3>
+                <span class="vote-buttons" data-g="Q88EV4" data-a="FUNCTION: Candidate PLP-dependent cystathionine beta-lyase t..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0047804" target="_blank" class="term-link">
+                            cysteine-S-conjugate beta-lyase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071265" target="_blank" class="term-link">
+                                L-methionine biosynthetic process
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019346" target="_blank" class="term-link">
+                                transsulfuration
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071269" target="_blank" class="term-link">
+                                L-homocysteine biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_4348/PP_4348-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">SubName: Full=Cystathionine beta-lyase</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_4348/PP_4348-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Reaction=L,L-cystathionine + H2O = L-homocysteine + pyruvate + NH4(+)</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_4348/PP_4348-goa.tsv
+
+                        </span>
+
+                        <div class="finding-text">GO:0019346	transsulfuration</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_4348/PP_4348-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">PP_4348 (Q88EV4) of *Pseudomonas putida* KT2440 is a cytoplasmic, PLP-dependent **cystathionine β-lyase (MetC, EC 4.4.1.8)**</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_4348/PP_4348-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for PP_4348</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt identifies PP_4348 as cystathionine beta-lyase with a cystathionine to homocysteine catalytic reaction.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_4348/PP_4348-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO GOA annotations for PP_4348</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The fetched GOA table contains the four annotations reviewed for PP_4348.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_4348/PP_4348-fitness.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">FEBA/RB-TnSeq fitness data for PP_4348</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The fitness script found no strong PP_4348 mutant phenotype in the available conditions, which is compatible with route redundancy or missing methionine-limited conditions.</div>
+
+                        <div class="finding-text">"Significant fitness defects** (t &lt; -4): 0"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:modules/experimental/gapmind-mining/cache/gapmind/aa/met.steps
+
+                    </span>
+                </div>
+
+                <div class="reference-title">GapMind methionine biosynthesis step definitions</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">GapMind represents trans-sulfuration as a MetB plus MetC/cystathionine beta-lyase route.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_4348/PP_4348-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist gene research for PP_4348</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">OpenScientist confirmed PP_4348 as a MetC/cystathionine beta-lyase for the trans-sulfuration branch.</div>
+
+                        <div class="finding-text">"PP_4348 (Q88EV4) of *Pseudomonas putida* KT2440 is a cytoplasmic, PLP-dependent **cystathionine β-lyase (MetC, EC 4.4.1.8)**"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does PP_4348 provide the physiological cystathionine beta-lyase activity for methionine trans-sulfuration, or is direct sulfhydrylation dominant in KT2440?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88EV4" data-a="Q: Does PP_4348 provide the physiological cystathioni..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Measure PP_4348 cystathionine beta-lyase activity and test metB/PP_4348 double mutants for methionine auxotrophy under defined conditions.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: enzymology and targeted genetics</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88EV4" data-a="EXPERIMENT: Measure PP_4348 cystathionine beta-lyase activity ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PP_4348-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88EV4" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation of PP_4348 (Q88EV4): Cystathionine β-Lyase of *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">8 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-11T16:39:36.358084</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="PP_4348-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="PP_4348-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-of-pp_4348-q88ev4-cystathionine-lyase-of-pseudomonas-putida-kt2440">Functional Annotation of PP_4348 (Q88EV4): Cystathionine β-Lyase of <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="summary">Summary</h2>
+<p><strong>PP_4348 (UniProt Q88EV4) of <em>Pseudomonas putida</em> KT2440 encodes a cytoplasmic, pyridoxal-5′-phosphate (PLP)-dependent cystathionine β-lyase (MetC; EC 4.4.1.8).</strong> Its primary, physiological function is to catalyze the α,β-elimination reaction that cleaves the Cβ–S bond of L,L-cystathionine, yielding <strong>L-homocysteine, pyruvate, and ammonia</strong> (Rhea RHEA:13965). This is the penultimate step of <em>de novo</em> methionine biosynthesis via the transsulfuration branch, mapped by KEGG to the methionine biosynthesis module M00017 (aspartate ⇒ homoserine ⇒ methionine). The gene symbol PP_4348, the organism <em>P. putida</em> KT2440, the trans-sulfuration enzyme family assignment, and the diagnostic InterPro/Pfam domains (IPR006233 bacterial cystathionine β-lyase; IPR000277 Cys/Met-metabolism PLP-dependent enzyme; PF01053) all coincide with the biochemistry described below. The gene identity is unambiguous — the well-known <em>P. putida</em> methionine γ-lyase is a <em>distinct</em> gene (<em>mdeA</em>/P13254), not this locus.</p>
+<p>Structurally, PP_4348 belongs to the fold-type I family of PLP-dependent enzymes (the "γ-family" of the Cys/Met-metabolism group). Like its extensively characterized <em>Escherichia coli</em> ortholog MetC, it is expected to assemble as a homotetramer of catalytically active dimers, with each ~364-residue subunit organized into three functional domains. The PLP cofactor is anchored as an internal aldimine (Schiff base) to an active-site lysine — <strong>Lys186 in PP_4348</strong>, corresponding to the experimentally validated catalytic Lys210 of <em>E. coli</em> MetC. A pairwise global alignment performed in this investigation shows PP_4348 is most similar to <em>E. coli</em> cystathionine β-lyase (43.9% identity) — higher than to cystathionine γ-synthase MetB (41.8%), MalY (41.3%), or <em>P. putida</em> methionine γ-lyase (41.1%) — and that every key active-site residue defined by the <em>E. coli</em> crystal structure is conserved one-to-one. This colinear, intact catalytic constellation demonstrates that PP_4348 is a functional, canonical cystathionine β-lyase rather than a degenerate homolog.</p>
+<p>Physiologically, direct experimental work in <em>P. putida</em> (Vermeij &amp; Kertesz, 1999) showed that the transsulfuration enzymes cystathionine γ-synthase and cystathionine β-lyase are expressed at low basal levels but are strongly upregulated during growth on cysteine as the sole sulfur source, while the organism's dominant methionine route is direct sulfhydrylation of O-succinylhomoserine. PP_4348 therefore provides the forward (cysteine → methionine) transsulfuration route producing homocysteine; because <em>P. putida</em> lacks cystathionine γ-lyase (no reverse transsulfuration), the enzyme acts only in the biosynthetic direction. Like other members of its family, MetC is catalytically promiscuous, also exhibiting cysteine-S-conjugate β-lyase activity (EC 4.4.1.13) and, in some bacterial homologs, alliinase and D-amino-acid–metabolizing activities; however, L-cystathionine β-elimination is the enzyme's physiological reaction. The enzyme operates in the cytoplasm, consistent with the absence of a signal peptide in Q88EV4 and the cytosolic nature of the transsulfuration pathway.</p>
+<hr />
+<h2 id="gene-protein-identity-verification">Gene / Protein Identity Verification</h2>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UniProt accession</td>
+<td>Q88EV4</td>
+<td>UniProt</td>
+</tr>
+<tr>
+<td>Locus / gene</td>
+<td>PP_4348</td>
+<td>UniProt / EMBL AAN69927.1</td>
+</tr>
+<tr>
+<td>Organism</td>
+<td><em>Pseudomonas putida</em> KT2440 (PSEPK)</td>
+<td>UniProt</td>
+</tr>
+<tr>
+<td>Length</td>
+<td>364 aa</td>
+<td>UniProt</td>
+</tr>
+<tr>
+<td>EC / reaction</td>
+<td>4.4.1.8 · RHEA:13965</td>
+<td>UniProt catalytic activity</td>
+</tr>
+<tr>
+<td>Cofactor</td>
+<td>PLP, Schiff base at <strong>Lys186</strong></td>
+<td>UniProt features</td>
+</tr>
+<tr>
+<td>Family</td>
+<td>Trans-sulfuration enzymes</td>
+<td>UniProt similarity</td>
+</tr>
+<tr>
+<td>Signatures</td>
+<td>IPR006233 (<strong>Cys_b_lyase_bac</strong>, bacterial-CBL specific), IPR000277, PF01053, COG0626, SSF53383</td>
+<td>InterPro/UniProt</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Verification result:</strong> The gene symbol, organism, reaction, cofactor, and domain architecture are internally consistent and match authoritative family models. The bacterial-CBL–specific InterPro signature <strong>IPR006233</strong> and the annotated catalytic reaction directly support the "cystathionine β-lyase" assignment. <strong>No ambiguity detected.</strong> No source contradicts the assignment.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-pp_4348-is-a-plp-dependent-cystathionine-lyase-metc-ec-4418">Finding 1 — PP_4348 is a PLP-dependent cystathionine β-lyase (MetC, EC 4.4.1.8)</h3>
+<p>The core functional assignment is that PP_4348/Q88EV4 catalyzes:</p>
+<blockquote>
+<p><strong>L,L-cystathionine + H₂O → L-homocysteine + pyruvate + NH₄⁺</strong> (Rhea RHEA:13965)</p>
+</blockquote>
+<p>This reaction is annotated in UniProt with a PLP cofactor bound through a Schiff base to Lys186 (N6-(pyridoxal phosphate)lysine). The reaction is an α,β-elimination that cleaves the Cβ–S bond of cystathionine. InterPro assigns PP_4348 the bacterial-cystathionine-β-lyase-specific signature <strong>IPR006233 (Cys_b_lyase_bac)</strong> in addition to the broader <strong>IPR000277 (Cys/Met-metabolism PLP-dependent enzyme)</strong>, Pfam <strong>PF01053 (Cys_Met_Meta_PP)</strong>, eggNOG <strong>COG0626</strong>, and SUPFAM <strong>SSF53383 (PLP-dependent transferases, fold-type I)</strong>. The bacterial-CBL-specific signature is particularly diagnostic — it distinguishes cystathionine β-lyases from the closely related γ-synthases and γ-lyases of the same fold.</p>
+<p>A pairwise global alignment performed in this investigation quantifies the family placement. PP_4348 (364 aa) is most similar to <em>E. coli</em> cystathionine β-lyase MetC (P06721) at <strong>43.9%</strong> aligned identity, exceeding its similarity to cystathionine γ-synthase MetB (41.8%), MalY (41.3%), and <em>P. putida</em> methionine γ-lyase (41.1%). Although these figures are close — reflecting deep conservation of the fold-type I scaffold across the Cys/Met family — the highest identity is to the β-lyase, and the diagnostic InterPro signature resolves any residual ambiguity.</p>
+<p>The reaction chemistry is supported by literature. A 2024/2025 structural study of <em>Bacillus cereus</em> cystathionine β-lyase states that these enzymes "catalyze the conversion of cystathionine to homocysteine and pyruvate" <a href="https://pubmed.ncbi.nlm.nih.gov/39644606/">PMID: 39644606</a>, matching the UniProt reaction for PP_4348. Foundational structural work on <em>E. coli</em> CBL establishes that "Cystathionine beta-lyase (CBL) is a member of the gamma-family of PLP-dependent enzymes, that cleaves C beta-S bonds of a broad variety of substrates" <a href="https://pubmed.ncbi.nlm.nih.gov/8831789/">PMID: 8831789</a> — consistent with PP_4348's PLP cofactor and β-elimination mechanism.</p>
+<h3 id="finding-2-pp_4348-operates-in-the-transsulfuration-branch-of-methionine-biosynthesis-and-is-induced-by-cysteine-as-sole-sulfur-source">Finding 2 — PP_4348 operates in the transsulfuration branch of methionine biosynthesis and is induced by cysteine as sole sulfur source</h3>
+<p>The most decisive organism-specific evidence comes from Vermeij &amp; Kertesz (1999), who directly measured transsulfuration enzyme activities in <em>Pseudomonas putida</em> S-313 <a href="https://pubmed.ncbi.nlm.nih.gov/10482527/">PMID: 10482527</a>. They reported that "The enzymes of the transsulfuration pathway (cystathionine gamma-synthase and cystathionine beta-lyase) were expressed at low levels in both pseudomonads but were strongly upregulated during growth with cysteine as the sole sulfur source." This establishes both the <em>presence</em> and the <em>sulfur-source–dependent regulation</em> of cystathionine β-lyase in <em>P. putida</em>.</p>
+<p>Critically, the same study showed that "Both these organisms used direct sulfhydrylation of O-succinylhomoserine for the synthesis of methionine," meaning the dominant methionine route in <em>P. putida</em> is direct sulfhydrylation, not transsulfuration. PP_4348 therefore provides a <em>supplementary</em> transsulfuration route producing homocysteine (subsequently methylated to methionine by MetE/MetH), important particularly when cysteine or sulfur flux favors the cystathionine intermediate. Because <em>P. putida</em> lacks cystathionine γ-lyase (no reverse transsulfuration), the enzyme acts unidirectionally in the forward, cysteine → methionine biosynthetic direction. This regulatory and pathway context — low basal expression, cysteine inducibility, forward direction only — precisely defines PP_4348's metabolic niche.</p>
+<h3 id="finding-3-catalytic-mechanism-substrate-positioning-and-cytoplasmic-localization">Finding 3 — Catalytic mechanism, substrate positioning, and cytoplasmic localization</h3>
+<p>Studies of <em>E. coli</em> CBL (Clausen et al., 1996/1997) show a fold-type I PLP enzyme with three domains per monomer that assembles into a <strong>homotetramer of active dimers</strong>: "A homotetramer with 222 symmetry is built up by crystallographic and non-crystallographic symmetry. Each monomer of CBL can be described in terms of three spatially and functionally different domains" <a href="https://pubmed.ncbi.nlm.nih.gov/8831789/">PMID: 8831789</a>. Catalysis begins with the PLP forming an internal aldimine (Schiff base) with the active-site lysine (Lys186 in PP_4348); binding of substrate converts this to an external aldimine, and α,β-elimination cleaves the Cβ–S bond of cystathionine <a href="https://pubmed.ncbi.nlm.nih.gov/9165088/">PMID: 9165088</a>.</p>
+<p>The determinant of <em>reaction-type selection</em> within the Cys/Met family is understood at the residue level. Messerschmidt et al. (2003) explain that "In CBLs this position is occupied by either tyrosine or hydrophobic residues directing binding of CTT [cystathionine] such that S is in the gamma-position" <a href="https://pubmed.ncbi.nlm.nih.gov/12715888/">PMID: 12715888</a>. In γ-family enzymes the equivalent position is a conserved glutamate; in β-lyases a tyrosine/hydrophobic residue reorients the substrate so that its sulfur sits in the γ-position, which geometrically dictates β-elimination rather than γ-chemistry. This is the molecular basis for why PP_4348 performs β-elimination on cystathionine.</p>
+<p>Regarding localization, Q88EV4 has no signal peptide or transmembrane segment, and the transsulfuration pathway is cytosolic; PP_4348 is therefore a <strong>soluble cytoplasmic protein</strong> that carries out its function in the cytoplasm. The enzyme (and its bacterial homologs) also displays promiscuous cysteine-S-conjugate β-lyase activity (UniProt GO:0047804), a hallmark of the broad substrate tolerance of the family.</p>
+<h3 id="finding-4-all-catalytic-and-active-site-residues-are-conserved-in-pp_4348-structure-based-evidence">Finding 4 — All catalytic and active-site residues are conserved in PP_4348 (structure-based evidence)</h3>
+<p>A residue-by-residue alignment of PP_4348 (Q88EV4) to <em>E. coli</em> MetC (P06721) shows one-to-one conservation of every key active-site residue defined by the <em>E. coli</em> crystal structure (Clausen et al., 1996):</p>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th><em>E. coli</em> MetC residue</th>
+<th>PP_4348 residue</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Catalytic PLP Schiff-base lysine</td>
+<td>Lys210</td>
+<td><strong>Lys186</strong></td>
+</tr>
+<tr>
+<td>Substrate-orienting tyrosine</td>
+<td>Tyr56</td>
+<td>Tyr35</td>
+</tr>
+<tr>
+<td>Active-site tyrosine</td>
+<td>Tyr111</td>
+<td>Tyr91</td>
+</tr>
+<tr>
+<td>Binds PLP pyridine nitrogen</td>
+<td>Asp185</td>
+<td>Asp161</td>
+</tr>
+<tr>
+<td>Active-site threonine</td>
+<td>Thr222</td>
+<td>Thr201</td>
+</tr>
+<tr>
+<td>Substrate-carboxylate region tyrosine</td>
+<td>Tyr338</td>
+<td>Tyr312</td>
+</tr>
+</tbody>
+</table>
+<p>The PLP-Schiff-base lysine mapping (Lys210 → Lys186) exactly matches the independently annotated UniProt PLP-lysine feature for Q88EV4, providing internal cross-validation. The <em>E. coli</em> structure defines the PLP-binding second domain: "The second domain (residues 61 to 256) harbors PLP and has an alpha/beta-structure with a seven-stranded beta-sheet as the central part" <a href="https://pubmed.ncbi.nlm.nih.gov/8831789/">PMID: 8831789</a>. The intact, colinear active-site constellation demonstrates that PP_4348 possesses a functional, canonical CBL catalytic machinery.</p>
+<h3 id="finding-5-kegg-pathway-placement-ec-number-nuance-and-genomic-context">Finding 5 — KEGG pathway placement, EC-number nuance, and genomic context</h3>
+<p>KEGG (ppu:PP_4348) maps the gene to pathway <strong>ppu00270</strong> (Cysteine and methionine metabolism), <strong>ppu00450</strong> (Selenocompound metabolism), <strong>ppu01230</strong> (Biosynthesis of amino acids), and <strong>module M00017</strong> (Methionine biosynthesis, aspartate ⇒ homoserine ⇒ methionine), confirming its physiological placement at the cystathionine → homocysteine step. Its Pfam architecture includes Cys_Met_Meta_PP, Beta_elim_lyase, and Aminotran_5 motifs — all consistent with a fold-type I PLP enzyme.</p>
+<p>A notable annotation nuance: KEGG assigns KO <strong>K01760 / EC 4.4.1.13</strong> (cysteine-S-conjugate β-lyase) whereas UniProt annotates <strong>EC 4.4.1.8</strong> (cystathionine β-lyase). Both are carbon-sulfur lyase (subclass 4.4.1) reactions that cleave a Cβ–S bond and are catalyzed by the same active site; the discrepancy reflects the enzyme's catalytic promiscuity, not a different enzyme.</p>
+<p>The gene occupies KT2440 genome position ~4,940,549–4,941,643 and is <strong>not embedded in a classical methionine operon</strong>. It is flanked by PP_4347 (pseudogene), PP_4349 (conserved hypothetical), PP_4346 (D-Ala–D-Ala ligase), and PP_4350 (a NifS/IscS-family cysteine desulfurase). Its standalone genomic arrangement is consistent with the low basal, sulfur-source–regulated expression reported by Vermeij &amp; Kertesz (1999).</p>
+<h3 id="finding-6-substratereaction-specificity-determinants-are-experimentally-defined-and-conserved">Finding 6 — Substrate/reaction-specificity determinants are experimentally defined and conserved</h3>
+<p>Site-directed mutagenesis of <em>E. coli</em> CBL (Lodha &amp; Aitken, 2011) experimentally established the functional roles of individual active-site residues in the α,β-elimination of L-cystathionine. The study confirmed the exact reaction: "Cystathionine β-lyase (CBL) catalyzes the hydrolysis of L-cystathionine (L-Cth) to produce L-homocysteine, pyruvate, and ammonia" <a href="https://pubmed.ncbi.nlm.nih.gov/21958132/">PMID: 21958132</a>. It further demonstrated "A novel role for residue S339 as a determinant of reaction specificity, via tethering of the catalytic base, K210" — with the S339-to-Ala variant reducing kcat/Km ~1000-fold. Tyr238 was shown to interact with the substrate's distal carboxylate and Tyr56 with the distal amino group.</p>
+<p>In PP_4348, the corresponding catalytic base (Lys210 → Lys186) and the specificity tyrosines (Tyr56 → Tyr35, Tyr111 → Tyr91, Tyr338 → Tyr312) are all conserved. This places the experimentally validated <em>E. coli</em> specificity determinants directly onto the PP_4348 active site.</p>
+<p>The family's promiscuity is well documented: bacterial MetCs display alliinase activity <a href="https://pubmed.ncbi.nlm.nih.gov/38810088/">PMID: 38810088</a> and participate in D-amino acid metabolism <a href="https://pubmed.ncbi.nlm.nih.gov/29592871/">PMID: 29592871</a>. These secondary activities are consistent with the broad Cβ–S lyase capability of the family, but L-cystathionine β-elimination remains the physiological reaction of PP_4348.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<h3 id="position-in-methionine-biosynthesis">Position in methionine biosynthesis</h3>
+<p>PP_4348 catalyzes the penultimate step of methionine biosynthesis via the transsulfuration branch:</p>
+<div class="codehilite"><pre><span></span><code>(sulfur assimilation)
+        │
+        ▼
+   L-cysteine ─────────────────────────┐
+                        │  (cystathionine γ-synthase, MetB)
+   O-succinyl-L-homoserine ────────────►│
+                        ▼
+            L,L-CYSTATHIONINE
+                        │
+                        │  ★ PP_4348 = cystathionine β-lyase (MetC)
+                        │     EC 4.4.1.8, PLP-dependent
+                        │     Cβ–S bond cleavage (α,β-elimination)
+                        ▼
+      L-HOMOCYSTEINE  +  pyruvate  +  NH₄⁺
+                        │
+                        │  (MetE / MetH methyltransferase)
+                        ▼
+                 L-METHIONINE
+                        │
+                        ▼
+              S-adenosylmethionine
+</code></pre></div>
+
+<p>In <em>P. putida</em>, this transsulfuration route runs in parallel with — and is subordinate to — the dominant <strong>direct sulfhydrylation</strong> of O-succinylhomoserine. Transsulfuration is upregulated when cysteine is the sole sulfur source, situating PP_4348 as a conditionally important, cysteine-inducible enzyme. Because <em>P. putida</em> has no cystathionine γ-lyase, the pathway is one-directional (biosynthetic; cysteine → methionine).</p>
+<h3 id="catalytic-mechanism">Catalytic mechanism</h3>
+<div class="codehilite"><pre><span></span><code><span class="w">  </span><span class="n">Internal</span><span class="w"> </span><span class="n">aldimine</span><span class="w"> </span><span class="p">(</span><span class="n">resting</span><span class="p">)</span><span class="w">          </span><span class="k">External</span><span class="w"> </span><span class="n">aldimine</span><span class="w"> </span><span class="p">(</span><span class="n">substrate</span><span class="o">-</span><span class="n">bound</span><span class="p">)</span>
+<span class="w">   </span><span class="n">PLP</span><span class="o">=</span><span class="n">N</span><span class="err">–</span><span class="n">Lys186</span><span class="w">  </span><span class="err">───────────────►</span><span class="w">  </span><span class="n">PLP</span><span class="o">=</span><span class="n">N</span><span class="err">–</span><span class="o">[</span><span class="n">cystathionine</span><span class="o">]</span><span class="w">  </span><span class="err">───────────────►</span>
+<span class="p">(</span><span class="n">transaldimination</span><span class="p">)</span><span class="w">             </span><span class="p">(</span><span class="n">Cα</span><span class="w"> </span><span class="n">deprotonation</span><span class="w"> </span><span class="err">→</span>
+<span class="w">                                 </span><span class="n">α</span><span class="p">,</span><span class="n">β</span><span class="o">-</span><span class="n">elimination</span><span class="w"> </span><span class="k">at</span><span class="w"> </span><span class="n">Cβ</span><span class="err">–</span><span class="n">S</span><span class="p">)</span>
+<span class="w">                                        </span><span class="err">│</span>
+<span class="w">                                        </span><span class="err">▼</span>
+<span class="w">          </span><span class="k">release</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="n">L</span><span class="o">-</span><span class="n">homocysteine</span><span class="w"> </span><span class="p">(</span><span class="n">thiol</span><span class="w"> </span><span class="n">leaving</span><span class="w"> </span><span class="k">group</span><span class="p">)</span>
+<span class="w">          </span><span class="o">+</span><span class="w"> </span><span class="n">aminoacrylate</span><span class="err">–</span><span class="n">PLP</span><span class="w"> </span><span class="n">intermediate</span>
+<span class="w">                                        </span><span class="err">│</span>
+<span class="w">                          </span><span class="p">(</span><span class="n">hydrolysis</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">reprotonation</span><span class="p">)</span>
+<span class="w">                                        </span><span class="err">▼</span>
+<span class="w">     </span><span class="n">pyruvate</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">NH₄</span><span class="err">⁺</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">regenerated</span><span class="w"> </span><span class="n">PLP</span><span class="o">=</span><span class="n">N</span><span class="err">–</span><span class="n">Lys186</span>
+</code></pre></div>
+
+<p>The reaction specificity — β-elimination rather than the γ-elimination performed by cystathionine γ-synthase/γ-lyase — is dictated by active-site geometry. In β-lyases, a tyrosine/hydrophobic residue (in place of the conserved glutamate of γ-enzymes) orients cystathionine so that its sulfur occupies the γ-position, positioning the Cβ–S bond for cleavage. This is the structural switch, conserved in PP_4348, that defines its catalytic outcome.</p>
+<h3 id="comparative-summary">Comparative summary</h3>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Assignment for PP_4348</th>
+<th>Basis</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Primary reaction</td>
+<td>L,L-cystathionine → L-homocysteine + pyruvate + NH₄⁺</td>
+<td>UniProt RHEA:13965; PMID 39644606, 21958132</td>
+</tr>
+<tr>
+<td>EC number</td>
+<td>4.4.1.8 (UniProt); 4.4.1.13 also mapped by KEGG (promiscuity)</td>
+<td>UniProt / KEGG K01760</td>
+</tr>
+<tr>
+<td>Cofactor</td>
+<td>PLP, Schiff base at Lys186</td>
+<td>UniProt feature; alignment to Ec Lys210</td>
+</tr>
+<tr>
+<td>Fold</td>
+<td>Fold-type I PLP transferase, homotetramer</td>
+<td>SSF53383; PMID 8831789</td>
+</tr>
+<tr>
+<td>Pathway</td>
+<td>Methionine biosynthesis (transsulfuration branch)</td>
+<td>KEGG M00017; PMID 10482527</td>
+</tr>
+<tr>
+<td>Direction</td>
+<td>Forward (Cys → Met) only; no reverse transsulfuration</td>
+<td>PMID 10482527</td>
+</tr>
+<tr>
+<td>Regulation</td>
+<td>Low basal; induced by cysteine as sole S source</td>
+<td>PMID 10482527</td>
+</tr>
+<tr>
+<td>Localization</td>
+<td>Cytoplasm</td>
+<td>No signal peptide in Q88EV4</td>
+</tr>
+<tr>
+<td>Secondary activities</td>
+<td>Cysteine-S-conjugate β-lyase, alliinase, D-AA metabolism</td>
+<td>GO:0047804; PMID 38810088, 29592871</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbrev.)</th>
+<th>How it supports the annotation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10482527/">10482527</a></td>
+<td><em>Pathways of assimilative sulfur metabolism in Pseudomonas putida</em></td>
+<td><strong>Organism-specific.</strong> Directly measures cystathionine β-lyase in <em>P. putida</em>, shows cysteine-inducible transsulfuration and dominant direct sulfhydrylation. Anchors Finding 2.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/8831789/">8831789</a></td>
+<td><em>Crystal structure of E. coli cystathionine β-lyase at 1.83 Å</em></td>
+<td>Defines the fold, homotetramer, three-domain monomer, PLP-binding domain, and the catalytic residues mapped onto PP_4348. Anchors Findings 1, 3, 4.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/9165088/">9165088</a></td>
+<td><em>Mode of action of cystathionine β-lyase</em></td>
+<td>Establishes the PLP-dependent Cβ–S cleavage mechanism (internal/external aldimine, α,β-elimination). Supports Finding 3.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12715888/">12715888</a></td>
+<td><em>Determinants of enzymatic specificity in the Cys-Met-metabolism PLP-dependent enzyme family</em></td>
+<td>Explains the tyrosine/hydrophobic vs. glutamate switch that makes CBLs perform β- rather than γ-elimination. Supports Finding 3.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/21958132/">21958132</a></td>
+<td><em>Side-chain hydroxyls Y56, Y111, Y238, Y338, S339 as specificity determinants in E. coli CBL</em></td>
+<td>Experimentally defines catalytic base K210 and specificity residues (all conserved in PP_4348) and confirms the exact reaction/products. Anchors Finding 6.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/39644606/">39644606</a></td>
+<td><em>Crystal structures of cystathionine β-lyase from Bacillus cereus</em></td>
+<td>Independent confirmation of the cystathionine → homocysteine + pyruvate reaction. Supports Finding 1.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/38810088/">38810088</a></td>
+<td><em>Identification and characterization of bacterial alliinase (MetC)</em></td>
+<td>Documents family promiscuity (bacterial MetCs with alliinase activity). Supports Finding 6.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/29592871/">29592871</a></td>
+<td><em>Cystathionine β-lyase is involved in D-amino acid metabolism</em></td>
+<td>Documents secondary D-amino-acid–related activity of CBL. Supports Finding 6.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10965031/">10965031</a></td>
+<td><em>Crystal structure of L-methionine γ-lyase from P. putida</em></td>
+<td>Shows the related <em>P. putida</em> MGL shares the fold with CBL/CGS; context for family relationships and for distinguishing PP_4348 from <em>mdeA</em>.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/17300162/">17300162</a></td>
+<td><em>Inhibitors of bacterial cystathionine β-lyase</em></td>
+<td>Highlights that methionine biosynthesis is absent in mammals, making bacterial CBL an antibiotic target — underscoring the enzyme's physiological importance.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Consistency of the evidence:</strong> Independent lines — UniProt/Rhea reaction annotation, diagnostic InterPro/Pfam signatures, quantitative pairwise alignment (43.9% identity to <em>E. coli</em> MetC, higher than any other family member), one-to-one active-site residue conservation including the PLP lysine, KEGG pathway/module placement, and direct enzymological measurement in <em>P. putida</em> itself — all converge on the same conclusion. No source contradicts the cystathionine β-lyase assignment.</p>
+<hr />
+<h2 id="supported-vs-refuted-hypotheses">Supported vs. Refuted Hypotheses</h2>
+<p><strong>Supported</strong><br />
+- PP_4348 is a PLP-dependent cystathionine β-lyase (EC 4.4.1.8) — catalytic reaction, PLP-Lys186, IPR006233 signature, and sequence homology all agree.<br />
+- It functions in the transsulfuration branch of methionine biosynthesis in the cytoplasm.<br />
+- It is regulated (induced on cysteine) and operates in the forward direction only, given the absence of cystathionine γ-lyase in <em>P. putida</em>.</p>
+<p><strong>Refuted / excluded</strong><br />
+- PP_4348 is <strong>not</strong> the <em>P. putida</em> methionine γ-lyase (<em>mdeA</em>, P13254) — that is a separate gene; sequence identity to it (41.1%) is lower than to <em>E. coli</em> MetC (43.9%).<br />
+- No evidence that PP_4348 acts in reverse transsulfuration (methionine → cysteine); <em>P. putida</em> lacks the requisite γ-lyase.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct biochemical characterization of the PP_4348 gene product specifically.</strong> Vermeij &amp; Kertesz (1999) measured cystathionine β-lyase <em>enzyme activity</em> in <em>P. putida</em> but did not link that activity to the PP_4348 locus by genetics or purification. The residue-level and reaction assignments for PP_4348 rest on high-confidence homology inference from <em>E. coli</em> MetC, not on a purified PP_4348 protein. Kinetic parameters (kcat, Km for L-cystathionine) for the PP_4348 enzyme are unknown.</p>
+</li>
+<li>
+<p><strong>The Vermeij &amp; Kertesz work used <em>P. putida</em> S-313, not strain KT2440.</strong> These are closely related and the pathway logic is expected to be conserved, but strain-level regulatory differences are possible.</p>
+</li>
+<li>
+<p><strong>EC-number ambiguity (4.4.1.8 vs 4.4.1.13).</strong> UniProt and KEGG differ. The interpretation here — that this reflects catalytic promiscuity of a single active site — is well supported by family literature but has not been experimentally resolved for PP_4348 itself. The relative in vivo importance of the cysteine-S-conjugate β-lyase side activity is unquantified.</p>
+</li>
+<li>
+<p><strong>Alignment identities among family members are close (41–44%).</strong> The β-lyase assignment relies on the InterPro bacterial-CBL signature and the direction of the identity ranking rather than a large margin. A crystal structure or biochemical assay would remove any residual uncertainty.</p>
+</li>
+<li>
+<p><strong>Regulatory circuitry not defined at the gene level.</strong> The trans-acting regulators controlling PP_4348's cysteine-inducible, sulfur-source–dependent expression in KT2440 (e.g., a CysB/MetR-type regulator) have not been identified.</p>
+</li>
+<li>
+<p><strong>Localization is inferred</strong>, not experimentally fractionated — it rests on absence of secretion/membrane signals plus the cytosolic nature of the pathway.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Recombinant expression and enzymology.</strong> Clone PP_4348 from KT2440, express with an affinity tag, purify, and measure steady-state kinetics for L,L-cystathionine (expected products: L-homocysteine, pyruvate, NH₄⁺). Determine kcat and Km and compare to <em>E. coli</em> MetC. Assay UV-vis for the characteristic PLP internal aldimine (~420 nm).</p>
+</li>
+<li>
+<p><strong>Substrate-specificity panel.</strong> Test the purified enzyme against L-cystathionine, cysteine-S-conjugates, alliin/S-alk(en)yl-L-cysteine sulfoxides, djenkolate, and O-acetyl/O-succinylhomoserine to quantify the physiological reaction versus promiscuous activities, directly resolving the EC 4.4.1.8 vs 4.4.1.13 question.</p>
+</li>
+<li>
+<p><strong>Genetic knockout and complementation.</strong> Construct a ΔPP_4348 mutant in KT2440; test methionine auxotrophy/growth phenotypes under different sulfur sources (sulfate, cysteine, methionine). Predicted outcome: a conditional methionine requirement most pronounced when cysteine is the sole sulfur source, given the dominant direct-sulfhydrylation route.</p>
+</li>
+<li>
+<p><strong>Active-site validation by mutagenesis.</strong> Substitute Lys186 (catalytic PLP lysine) and the specificity tyrosines (Tyr35, Tyr91, Tyr312) to confirm the homology-based residue assignments and quantify their catalytic contributions, mirroring the <em>E. coli</em> Lodha &amp; Aitken (2011) study.</p>
+</li>
+<li>
+<p><strong>Structural determination or modeling.</strong> Solve a crystal structure (or generate a validated AlphaFold model with PLP docked) to confirm the fold-type I homotetramer and the geometry that positions cystathionine sulfur in the γ-position for β-elimination.</p>
+</li>
+<li>
+<p><strong>Expression profiling in KT2440.</strong> Use RT-qPCR or RNA-seq across sulfur sources (sulfate vs. cysteine vs. methionine) to confirm cysteine-inducible expression of PP_4348 specifically in KT2440 and identify the responsible regulator.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>PP_4348 (Q88EV4) of <em>Pseudomonas putida</em> KT2440 is a cytoplasmic, PLP-dependent <strong>cystathionine β-lyase (MetC, EC 4.4.1.8)</strong> that cleaves the Cβ–S bond of L,L-cystathionine to produce L-homocysteine, pyruvate, and ammonia — the transsulfuration step of methionine biosynthesis (KEGG M00017). The assignment is supported by convergent, mutually consistent evidence: diagnostic bacterial-CBL InterPro/Pfam signatures, full conservation of the experimentally validated <em>E. coli</em> MetC active site (including the PLP Schiff-base Lys186), correct pathway placement, and direct enzymological detection of cysteine-inducible cystathionine β-lyase activity in <em>P. putida</em>. In this organism the enzyme runs only in the forward, cysteine → methionine direction (no reverse transsulfuration) and supplements the dominant direct-sulfhydrylation route. The gene symbol, organism, and protein family are unambiguous — there is no confounding gene-symbol conflict.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="PP_4348-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="PP_4348-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:39644606</li>
+<li>PMID:8831789</li>
+<li>PMID:10482527</li>
+<li>PMID:9165088</li>
+<li>PMID:12715888</li>
+<li>PMID:21958132</li>
+<li>PMID:38810088</li>
+<li>PMID:29592871</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Fitness</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PP_4348-fitness.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88EV4" data-a="DOC: Fitness" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="febarb-tnseq-fitness-data-pp_4348">FEBA/RB-TnSeq Fitness Data: PP_4348</h1>
+<p><strong>Organism</strong>: PSEPK (FEBA orgId: Putida)<br />
+<strong>Locus tag</strong>: PP_4348<br />
+<strong>Total experiments</strong>: 29</p>
+<p><strong>Significant fitness defects</strong> (t &lt; -4): 0<br />
+<strong>Significant fitness gains</strong> (t &gt; 4): 0</p>
+<h2 id="interpretation">Interpretation</h2>
+<p>No strong fitness phenotypes detected across all conditions tested. This may indicate functional redundancy, the gene may be essential (and thus not represented in the mutant library), or the relevant condition was not tested.</p>
+<h2 id="top-fitness-phenotypes">Top Fitness Phenotypes</h2>
+<p>Showing experiments with strongest fitness effects (|t| &gt; 4):</p>
+<table>
+<thead>
+<tr>
+<th>Condition</th>
+<th>Fitness</th>
+<th>t-score</th>
+<th>Group</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td></td>
+<td>0.00</td>
+<td>0.0</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>0.00</td>
+<td>0.0</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>0.00</td>
+<td>0.0</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>0.00</td>
+<td>0.0</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>0.00</td>
+<td>0.0</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>0.00</td>
+<td>0.0</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>0.00</td>
+<td>0.0</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>0.00</td>
+<td>0.0</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>0.00</td>
+<td>0.0</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>0.00</td>
+<td>0.0</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2 id="data-source">Data Source</h2>
+<p>Data from the Fitness Browser (fit.genomics.lbl.gov), based on RB-TnSeq experiments from the Deutschbauer lab. See: Wetmore et al. (2015) "Rapid quantification of mutant fitness in diverse bacteria by sequencing randomly bar-coded transposons" mBio 6:e00306-15.</p>
+<h3 id="how-to-interpret-fitness-values">How to interpret fitness values</h3>
+<ul>
+<li><strong>Fitness = 0</strong>: No effect of gene disruption</li>
+<li><strong>Fitness &lt; -1</strong> (t &lt; -4): Gene is important for growth in this condition</li>
+<li><strong>Fitness &gt; 1</strong> (t &gt; 4): Gene disruption improves growth (possible regulatory role)</li>
+<li><strong>Cofitness &gt; 0.8</strong>: Strong evidence for shared pathway/complex</li>
+<li><strong>Cofitness 0.5-0.8</strong>: Moderate evidence for functional relationship</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88EV4
+gene_symbol: PP_4348
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: PP_4348 encodes a PLP-dependent cystathionine beta-lyase-family enzyme.
+  It is the candidate second enzyme of the trans-sulfuration branch of L-methionine
+  biosynthesis in KT2440, hydrolyzing cystathionine to L-homocysteine, pyruvate,
+  and ammonium.
+existing_annotations:
+- term:
+    id: GO:0006520
+    label: amino acid metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: Amino acid metabolic process is true but too broad for PP_4348.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The InterPro2GO parent term should not obscure the specific cystathionine
+      beta-lyase/trans-sulfuration role supported by the local protein name and UniProt
+      catalytic activity.
+    supported_by:
+    - reference_id: file:PSEPK/PP_4348/PP_4348-goa.tsv
+      supporting_text: &#34;GO:0006520\tamino acid metabolic process&#34;
+    - reference_id: file:PSEPK/PP_4348/PP_4348-goa.tsv
+      supporting_text: &#34;GO:0019346\ttranssulfuration&#34;
+- term:
+    id: GO:0019346
+    label: transsulfuration
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: Transsulfuration is appropriate for a cystathionine beta-lyase candidate.
+    action: ACCEPT
+    reason: PP_4348 is annotated as cystathionine beta-lyase, and GapMind models
+      the trans-sulfuration route as MetB plus MetC/cystathionine beta-lyase.
+    supported_by:
+    - reference_id: file:PSEPK/PP_4348/PP_4348-uniprot.txt
+      supporting_text: &#34;SubName: Full=Cystathionine beta-lyase&#34;
+    - reference_id: file:PSEPK/PP_4348/PP_4348-deep-research-openscientist.md
+      supporting_text: &#34;PP_4348 (Q88EV4) of *Pseudomonas putida* KT2440 is a cytoplasmic, PLP-dependent **cystathionine β-lyase (MetC, EC 4.4.1.8)**&#34;
+    - reference_id: file:PSEPK/PP_4348/PP_4348-goa.tsv
+      supporting_text: &#34;GO:0019346\ttranssulfuration&#34;
+    - reference_id: file:modules/experimental/gapmind-mining/cache/gapmind/aa/met.steps
+      supporting_text: &#34;transsulfuration: metA metB metC&#34;
+- term:
+    id: GO:0030170
+    label: pyridoxal phosphate binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Pyridoxal phosphate binding is a catalytic cofactor feature for PP_4348.
+    action: KEEP_AS_NON_CORE
+    reason: PLP binding supports the beta-lyase reaction but is secondary to the
+      cystathionine-cleavage function.
+    supported_by:
+    - reference_id: file:PSEPK/PP_4348/PP_4348-uniprot.txt
+      supporting_text: &#34;Name=pyridoxal 5&#39;-phosphate&#34;
+    - reference_id: file:PSEPK/PP_4348/PP_4348-goa.tsv
+      supporting_text: &#34;GO:0030170\tpyridoxal phosphate binding&#34;
+- term:
+    id: GO:0047804
+    label: cysteine-S-conjugate beta-lyase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: The beta-lyase activity captures the PP_4348 trans-sulfuration reaction.
+    action: ACCEPT
+    reason: UniProt records cystathionine beta-lyase catalytic activity producing
+      L-homocysteine, pyruvate, and ammonium from cystathionine, matching the module
+      need for a cystathionine-cleavage step.
+    supported_by:
+    - reference_id: file:PSEPK/PP_4348/PP_4348-uniprot.txt
+      supporting_text: &#34;Reaction=L,L-cystathionine + H2O = L-homocysteine + pyruvate + NH4(+)&#34;
+    - reference_id: file:PSEPK/PP_4348/PP_4348-goa.tsv
+      supporting_text: &#34;GO:0047804\tcysteine-S-conjugate beta-lyase activity&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: file:PSEPK/PP_4348/PP_4348-uniprot.txt
+  title: UniProtKB entry for PP_4348
+  findings:
+  - statement: UniProt identifies PP_4348 as cystathionine beta-lyase with a cystathionine
+      to homocysteine catalytic reaction.
+- id: file:PSEPK/PP_4348/PP_4348-goa.tsv
+  title: QuickGO GOA annotations for PP_4348
+  findings:
+  - statement: The fetched GOA table contains the four annotations reviewed for PP_4348.
+- id: file:PSEPK/PP_4348/PP_4348-fitness.md
+  title: FEBA/RB-TnSeq fitness data for PP_4348
+  findings:
+  - statement: The fitness script found no strong PP_4348 mutant phenotype in the
+      available conditions, which is compatible with route redundancy or missing
+      methionine-limited conditions.
+    supporting_text: &#34;Significant fitness defects** (t &lt; -4): 0&#34;
+- id: file:modules/experimental/gapmind-mining/cache/gapmind/aa/met.steps
+  title: GapMind methionine biosynthesis step definitions
+  findings:
+  - statement: GapMind represents trans-sulfuration as a MetB plus MetC/cystathionine
+      beta-lyase route.
+- id: file:PSEPK/PP_4348/PP_4348-deep-research-openscientist.md
+  title: OpenScientist gene research for PP_4348
+  findings:
+  - statement: OpenScientist confirmed PP_4348 as a MetC/cystathionine beta-lyase
+      for the trans-sulfuration branch.
+    supporting_text: &#34;PP_4348 (Q88EV4) of *Pseudomonas putida* KT2440 is a cytoplasmic, PLP-dependent **cystathionine β-lyase (MetC, EC 4.4.1.8)**&#34;
+core_functions:
+- description: Candidate PLP-dependent cystathionine beta-lyase that produces L-homocysteine
+    in the trans-sulfuration branch of L-methionine biosynthesis.
+  molecular_function:
+    id: GO:0047804
+    label: cysteine-S-conjugate beta-lyase activity
+  directly_involved_in:
+  - id: GO:0071265
+    label: L-methionine biosynthetic process
+  - id: GO:0019346
+    label: transsulfuration
+  - id: GO:0071269
+    label: L-homocysteine biosynthetic process
+  supported_by:
+  - reference_id: file:PSEPK/PP_4348/PP_4348-uniprot.txt
+    supporting_text: &#34;SubName: Full=Cystathionine beta-lyase&#34;
+  - reference_id: file:PSEPK/PP_4348/PP_4348-uniprot.txt
+    supporting_text: &#34;Reaction=L,L-cystathionine + H2O = L-homocysteine + pyruvate + NH4(+)&#34;
+  - reference_id: file:PSEPK/PP_4348/PP_4348-goa.tsv
+    supporting_text: &#34;GO:0019346\ttranssulfuration&#34;
+  - reference_id: file:PSEPK/PP_4348/PP_4348-deep-research-openscientist.md
+    supporting_text: &#34;PP_4348 (Q88EV4) of *Pseudomonas putida* KT2440 is a cytoplasmic, PLP-dependent **cystathionine β-lyase (MetC, EC 4.4.1.8)**&#34;
+proposed_new_terms: []
+suggested_questions:
+- question: Does PP_4348 provide the physiological cystathionine beta-lyase activity
+    for methionine trans-sulfuration, or is direct sulfhydrylation dominant in KT2440?
+suggested_experiments:
+- description: Measure PP_4348 cystathionine beta-lyase activity and test metB/PP_4348
+    double mutants for methionine auxotrophy under defined conditions.
+  experiment_type: enzymology and targeted genetics
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
