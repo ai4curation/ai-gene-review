@@ -12,10 +12,13 @@ NAD+-dependent interconversion of dihydroxyacetone phosphate (DHAP) and sn-glyce
 - Reaction (UniProt CATALYTIC ACTIVITY): "sn-glycerol 3-phosphate + NAD(+) =
   dihydroxyacetone phosphate + NADH + H(+)" ; EC=1.1.1.8; Rhea:RHEA:11092
   [file:human/GPD1/GPD1-uniprot.txt].
-- Physiological direction is **left-to-right** as written by UniProt, i.e. the
-  reductive/biosynthetic direction DHAP + NADH -> G3P + NAD+ ("PhysiologicalDirection=left-to-right;
-  Xref=Rhea:RHEA:11093" [file:human/GPD1/GPD1-uniprot.txt]). This regenerates cytosolic NAD+
-  and supplies G3P as the glycerol backbone for glycerolipid/triglyceride synthesis.
+- Direction note: UniProt writes the reaction as G3P + NAD+ = DHAP + NADH and annotates
+  "PhysiologicalDirection=left-to-right; Xref=Rhea:RHEA:11093" [file:human/GPD1/GPD1-uniprot.txt],
+  which is the **oxidative** direction (G3P -> DHAP). The predominant cellular role of cytosolic
+  GPD1, however, is the **reductive** direction DHAP + NADH -> G3P + NAD+ (Reactome R-HSA-75889,
+  "DHAP is converted to G3P by GPD1/GPD1L"; "GPD1/GPD1L reduces dihydroxyacetone phosphate with NADH").
+  This regenerates cytosolic NAD+ and supplies G3P as the glycerol backbone for
+  glycerolipid/triglyceride synthesis and the glycerol-phosphate shuttle.
 - The enzyme is strictly **NAD+**-preferring: KM=140 uM for NAD vs KM=1070 mM for NADP
   ("KM=140 uM for NAD"; "KM=1070 mM for NADP" [file:human/GPD1/GPD1-uniprot.txt]). The ~10,000-fold
   higher KM for NADP means the dual-cofactor [NAD(P)+] term (GO:0047952) overstates cofactor
