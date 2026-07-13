@@ -162,7 +162,11 @@ needed, write them as notes or a clearly named manual research file.
 For each module:
 
 1. Define the expected pathway shape in `modules/*.yaml` or identify that a new
-   module document is needed.
+   module document is needed. A standalone module must have more than one
+   substantive part. If a UniPathway/KEGG bucket is a single gene, single enzyme,
+   or single reaction, record the curation in the batch page and fold it into a
+   broader multi-step module later rather than creating or retaining a one-part
+   `ModuleReview`.
 2. Pull candidate PSEPK genes from the metadata table using EC, KEGG `ppu:*`,
    BioCyc monomers, UniPathway, InterPro/Pfam/PANTHER families, GO IDs, keywords,
    protein names, and locus tags.
@@ -201,7 +205,8 @@ Each module batch should leave behind:
 
 - A module checklist in this subfolder naming candidate genes, expected steps,
   and gap decisions.
-- Any revised or new `modules/*.yaml` files.
+- Any revised or new `modules/*.yaml` files, only when the reusable module has
+  more than one substantive part.
 - A short list of genes promoted from metadata-only triage to full review.
 - Links to completed gene reviews and validation commands run.
 - Notes on GO term gaps, obsolete/broad terms, and cases where a PSEPK enzyme
