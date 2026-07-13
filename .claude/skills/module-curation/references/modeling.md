@@ -37,9 +37,12 @@ module-level MF concepts only when the node itself is intentionally a
 - Use `connections` for relationships between document-scoped ids. For reaction
   chains, add `chaining_status` and `chaining_note` when the advisory CoA
   continuity check needs curator adjudication.
-- Avoid a one-part wrapper unless the parent carries meaningful context or is an
-  intentional concrete instantiation of a reusable template. If one protein has
-  multiple mechanistic roles, model multiple parts or multiple leaf annotons.
+- Do not use a one-part wrapper as a standalone module. The root module boundary
+  should expose at least two substantive parts/roles/steps; if the proposed
+  scope is one gene, one enzyme, or one reaction, record it as pathway/gene
+  curation until it can be folded into a broader module. If one protein has
+  multiple mechanistic roles, model those roles explicitly, but do not mistake a
+  single leaf annoton for a module.
 
 ## Participants
 
@@ -68,6 +71,7 @@ module-level MF concepts only when the node itself is intentionally a
 ## Common Anti-Patterns
 
 - Module-level MF term on a process module when the MF belongs to a step.
+- Single species-specific enzyme or reaction represented as a standalone module.
 - Broad process term as module core when a specific process/reaction term exists.
 - Parent and child locations both asserted without explanation.
 - Species-specific wording in a reusable module label or description.

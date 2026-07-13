@@ -23,6 +23,10 @@ not a flat list of annotations or a species-specific note disguised as a module.
    - Which genes/proteins are core members, and which are activation context,
      substrate supply, regulation, upstream/downstream biology, or separate modules?
    - Is this a concrete species/pathway instance or an abstract reusable motif?
+   - Does the boundary have at least two substantive parts/roles/steps? If it
+     collapses to one gene, one enzyme, or one reaction, do not create or retain
+     a standalone `ModuleReview`; record it as pathway/gene curation and fold it
+     into a broader module later.
 3. Model the structure:
    - Put module-level process/complex/context terms on `module.concepts` and
      `module.context`.
@@ -56,9 +60,9 @@ Load only the reference needed for the decision at hand:
 
 ## Curation Rules
 
-- Prefer a small, explicit decomposition over a one-part wrapper that adds no
-  modeling value. If a module has one gene but two separable roles, model two
-  parts or annotons.
+- Do not create or retain one-part modules. A standalone module needs at least
+  two substantive parts/roles/steps at the modeled boundary; otherwise keep the
+  work as pathway/gene curation or fold it into a broader multi-part module.
 - Avoid redundant parent/child context such as both cytoplasm and cytosol unless
   the distinction is intentional and explained.
 - Do not use broad parent processes as the module core when a specific process

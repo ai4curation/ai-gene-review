@@ -11,6 +11,24 @@ just render-module modules/<module>.yaml
 git diff --check
 ```
 
+Check that each edited standalone module has a real decomposition. Prefer at
+least two root `module.parts`; a root `variant_sets` decomposition is acceptable
+only when it has multiple substantive alternatives. A single gene, enzyme, or
+reaction should be recorded as pathway/gene curation instead of a module:
+
+```bash
+python3 - <<'PY' modules/<module>.yaml
+import sys, yaml
+for path in sys.argv[1:]:
+    data = yaml.safe_load(open(path)) or {}
+    module = data.get("module") or {}
+    parts = module.get("parts") or []
+    variants = sum(len(vs.get("variants") or []) for vs in module.get("variant_sets") or [])
+    if len(parts) < 2 and variants < 2:
+        raise SystemExit(f"{path}: standalone modules need at least two substantive parts or variants")
+PY
+```
+
 If project markdown changed, render the touched project page:
 
 ```bash
